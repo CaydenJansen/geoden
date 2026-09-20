@@ -14131,7 +14131,7 @@ button,
       .map-hunt-overlay.playing .map-hunt-map {
         width:100% !important; height:100% !important; min-height:0 !important; aspect-ratio:auto !important;
       }
-      .map-hunt-overlay.playing .map-hunt-map-canvas { object-fit:contain; object-position:center; }
+      .map-hunt-overlay.playing .map-hunt-map-canvas { object-fit:fill; object-position:center; }
       .map-hunt-prompt { max-width:calc(100% - 54px); }
       .map-hunt-zoom-controls { right:6px; top:6px; gap:5px; }
       .map-hunt-zoom-button { width:36px; height:36px; min-height:36px; }
@@ -14141,7 +14141,7 @@ button,
   </style>
 
 
-  <style id="maphunt-single-render-v0543">
+  <style id="maphunt-single-render-v0546">
     /* v0.54.4 — Canvas is the only visible geography renderer. SVG remains only
        for transparent hit-testing and temporary text labels. */
     #mapHuntMap path[data-map-hunt-code],
@@ -25154,7 +25154,17 @@ button,
       }
     }
 
-    function bigMapFeatureNeedsMarker(path, feature, screenScale = 1, maxAreaRatio = .45) {
+    const BIG_MAP_FORCE_MARKER_CODES = new Set([
+      // European microstates / dependencies that are genuinely hard to tap.
+      "AD","LI","SM","VA","MC","MT","GI","IM","JE","GG","AX",
+      // Tiny island states / territories where the land itself can disappear at overview scale.
+      "SG","BH","MV","NR","TV","KI","MH","FM","PW","TO","WS",
+      "AG","DM","GD","KN","LC","VC","BB","AI","BM","KY","MS","TC","VG","VI",
+      "AW","CW","BQ","SX","BL","MF","FO"
+    ]);
+
+    function bigMapFeatureNeedsMarker(code, path, feature, screenScale = 1, maxAreaRatio = .45) {
+      if (BIG_MAP_FORCE_MARKER_CODES.has(String(code || "").toUpperCase())) return true;
       const safe = globeFeaturePaintIsSafe(path, feature, maxAreaRatio);
       if (!safe) return true;
       let area = Infinity;
@@ -25175,10 +25185,10 @@ button,
       const screenH = height * scale;
       const maxDim = Math.max(screenW, screenH);
       const minDim = Math.min(screenW, screenH);
-      // Markers are a last resort, not a label for every small country. If the
-      // actual country will still be visibly several pixels across at the home
-      // view, let the geography speak for itself.
-      return screenArea < 5.5 || maxDim < 5.0 || (minDim < 1.35 && maxDim < 10);
+      // Only fall back to a dot when the rendered geography would be nearly
+      // impossible to see/tap. Normal small countries (Belgium, Switzerland,
+      // Moldova, Slovenia, etc.) stay as their actual shapes.
+      return screenArea < 1.15 || maxDim < 2.25 || (minDim < .42 && maxDim < 4.5);
     }
 
     function appendGlobeFeedbackMarker(layer, projection, c, options = {}) {
@@ -35484,6 +35494,18 @@ Try again`;
     const BIG_MAP_MAX_ZOOM = 64;
     const BIG_MAP_ZOOM_STEP = 1.6;
 
+    function bigMapAutoFitCodes(setKey, codes) {
+      const list = Array.from(codes || []);
+      // Russia is part of the Europe study set, but using its full transcontinental
+      // geometry for the Home crop makes Europe unnecessarily wide. Keep Russia
+      // fully playable/rendered; simply ignore its bounds when framing Europe.
+      if (setKey === "europe") {
+        const withoutRussia = list.filter(code => code !== "RU");
+        if (withoutRussia.length) return withoutRussia;
+      }
+      return list;
+    }
+
     function bigMapFitTransform(width, height, codes, featureBounds, markerPoints) {
       if (!window.d3) return null;
       let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
@@ -35611,7 +35633,8 @@ Try again`;
     function fitChainToActiveArea({ animate = false } = {}) {
       if (!chainState?.zoom || !chainWorldMap || !window.d3 || !chainState?.canvasData) return;
       const { width, height, featureBounds, markerPointMap } = chainState.canvasData;
-      const transform = bigMapFitTransform(width, height, chainState.codes, featureBounds, markerPointMap) || d3.zoomIdentity;
+      const fitCodes = bigMapAutoFitCodes(chainState.setKey, chainState.codes);
+      const transform = bigMapFitTransform(width, height, fitCodes, featureBounds, markerPointMap) || d3.zoomIdentity;
       chainState.homeTransform = transform;
       const canvas = d3.select(chainWorldMap);
       const target = animate ? canvas.transition().duration(180) : canvas;
@@ -35825,7 +35848,7 @@ Try again`;
       const homeScale = Math.max(1, Number(provisionalHome.k) || 1);
       const tiny = new Set();
       for (const item of selectedFeatures) {
-        try { if (!item.safe || bigMapFeatureNeedsMarker(pathMeasure, item.feature, homeScale, .45)) tiny.add(item.code); }
+        try { if (!item.safe || bigMapFeatureNeedsMarker(item.code, pathMeasure, item.feature, homeScale, .45)) tiny.add(item.code); }
         catch (_) { tiny.add(item.code); }
       }
       const markerPoints = chainState.codes.map(countryByCode)
@@ -37421,7 +37444,7 @@ Try again`;
       return bigMapFitTransform(
         width,
         height,
-        codes,
+        bigMapAutoFitCodes(mapHuntState.setKey, codes),
         mapHuntState.featureBounds || new Map(),
         mapHuntState.markerPoints || new Map()
       ) || d3.zoomIdentity;
@@ -37500,7 +37523,28 @@ Try again`;
         if (!feature) return null;
         return { ...feature, properties:{ ...(feature.properties || {}), __geodenCode:code } };
       }).filter(Boolean);
-      const width = 1000, height = 555;
+      // Match the logical Canvas/SVG coordinate space to the actual phone map
+      // box. Previously Map Hunt always rendered a 1000×555 landscape bitmap
+      // and `object-fit: contain` letterboxed it inside the tall mobile panel.
+      const playWasHidden = mapHuntPlay?.classList.contains("hidden");
+      const loadingWasHidden = mapHuntLoading?.classList.contains("hidden");
+      if (playWasHidden) {
+        if (!loadingWasHidden) mapHuntLoading?.classList.add("hidden");
+        mapHuntPlay.style.visibility = "hidden";
+        mapHuntPlay.classList.remove("hidden");
+        await new Promise(resolve => window.requestAnimationFrame(resolve));
+      }
+      const mapRect = mapHuntMap?.getBoundingClientRect?.();
+      const mobileMap = window.matchMedia?.("(max-width: 520px)")?.matches;
+      const fallbackWidth = Math.max(300, Math.round((window.visualViewport?.width || window.innerWidth || 390) - 14));
+      const width = Math.max(300, Math.round(Number(mapRect?.width) || fallbackWidth));
+      const fallbackHeight = Math.max(mobileMap ? 360 : 300, Math.round(width / (mobileMap ? .78 : 1.8)));
+      const height = Math.max(mobileMap ? 360 : 300, Math.round(Number(mapRect?.height) || fallbackHeight));
+      if (playWasHidden) {
+        mapHuntPlay.classList.add("hidden");
+        mapHuntPlay.style.visibility = "";
+        if (!loadingWasHidden) mapHuntLoading?.classList.remove("hidden");
+      }
       const projection = d3.geoNaturalEarth1()
         .fitExtent([[12,12],[width-12,height-12]], { type:"Sphere" });
       const path = d3.geoPath(projection);
@@ -37554,13 +37598,12 @@ Try again`;
         return { feature, code, safe };
       });
       const provisionalHome = bigMapFitTransform(width, height, mapHuntState.roundCodes, mapHuntState.featureBounds, allProjectedPoints) || d3.zoomIdentity;
-      const approximateViewportScale = window.matchMedia?.("(max-width: 520px)")?.matches
-        ? Math.max(.28, Math.min(1, (window.visualViewport?.width || window.innerWidth || 390) / width))
-        : Math.max(.55, Math.min(1, Math.min(820, window.innerWidth || 820) / width));
-      const homeScreenScale = Math.max(.05, (Number(provisionalHome.k) || 1) * approximateViewportScale);
+      // width/height are now CSS-pixel logical dimensions, so the fitted zoom
+      // scale already represents the on-screen size of each country.
+      const homeScreenScale = Math.max(.05, Number(provisionalHome.k) || 1);
       const tiny = new Set();
       for (const item of preparedFeatures) {
-        try { if (!item.safe || bigMapFeatureNeedsMarker(path, item.feature, homeScreenScale, .45)) tiny.add(item.code); }
+        try { if (!item.safe || bigMapFeatureNeedsMarker(item.code, path, item.feature, homeScreenScale, .45)) tiny.add(item.code); }
         catch (_) { tiny.add(item.code); }
       }
 
@@ -37612,7 +37655,7 @@ Try again`;
       if (mapHuntCanvas) {
         mapHuntCanvas.width = Math.round(width * dpr);
         mapHuntCanvas.height = Math.round(height * dpr);
-        mapHuntCanvas.style.aspectRatio = `${width} / ${height}`;
+        mapHuntCanvas.style.aspectRatio = "auto";
       }
 
       mapHuntState.projection = projection;
@@ -37658,8 +37701,8 @@ Try again`;
         wrongFeedbackCode:"",
         revealFlashCode:"",
         revealFlashDim:false,
-        mapWidth:1000,
-        mapHeight:555,
+        mapWidth:1,
+        mapHeight:1,
         homeTransform:null,
         needsRender:false
       };
