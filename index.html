@@ -14140,6 +14140,45 @@ button,
     }
   </style>
 
+
+  <style id="maphunt-single-render-v0543">
+    /* v0.54.4 — Canvas is the only visible geography renderer. SVG remains only
+       for transparent hit-testing and temporary text labels. */
+    #mapHuntMap path[data-map-hunt-code],
+    #mapHuntMap circle[data-map-hunt-code],
+    #mapHuntMap circle[data-map-hunt-halo],
+    #mapHuntMap .map-hunt-context-country {
+      fill:transparent !important;
+      stroke:transparent !important;
+      opacity:0 !important;
+      filter:none !important;
+      animation:none !important;
+      transition:none !important;
+    }
+    #mapHuntMap path[data-map-hunt-code],
+    #mapHuntMap circle[data-map-hunt-code] { pointer-events:all !important; }
+    #mapHuntMap .map-hunt-context-country,
+    #mapHuntMap circle[data-map-hunt-halo] { pointer-events:none !important; }
+  </style>
+
+
+  <style id="maphunt-hit-testing-v0544">
+    /* v0.54.4 — Canvas is visual; one transparent SVG surface owns interaction.
+       Country selection is computed geometrically, so transparent country paths
+       never need to receive pointer events. */
+    #mapHuntMap { cursor:pointer !important; }
+    #mapHuntMap .map-hunt-hit-surface {
+      fill:rgba(0,0,0,.001) !important;
+      stroke:none !important;
+      opacity:1 !important;
+      pointer-events:all !important;
+      cursor:pointer !important;
+    }
+    #mapHuntMap path[data-map-hunt-code],
+    #mapHuntMap circle[data-map-hunt-code],
+    #mapHuntMap circle[data-map-hunt-halo] { pointer-events:none !important; }
+  </style>
+
 </head>
 
 <body>
@@ -15495,10 +15534,10 @@ button,
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
 
   <script>
-    const GEODEN_VERSION = "0.54.1";
+    const GEODEN_VERSION = "0.54.4";
     // Input policy: autocomplete/typeahead is ordinary entry and remains unassisted.
     // Only an actual spelling correction (or an explicit hint/reveal) counts as help.
-    const GEODEN_BUILD_DATE = "2026-09-20";
+    const GEODEN_BUILD_DATE = "2026-09-21";
     const GEODEN_EXPECTED_COUNTRY_COUNT = 195;
     const GEODEN_EXPECTED_TERRITORY_COUNT = 26;
     const GEODEN_EXPECTED_ADDITIONAL_PLACE_COUNT = 4;
@@ -28519,9 +28558,9 @@ button,
     }
 
     function globeMaximumScale() {
-      // 120× the whole-globe radius is enough to make micro-islands enormous
-      // while avoiding pathological million-pixel path coordinates.
-      return globeMinimumScale() * 120;
+      // 240× the whole-globe radius gives twice the previous close-zoom range
+      // for microstates and dense geography while keeping the same camera model.
+      return globeMinimumScale() * 240;
     }
 
     function updateGlobeZoomControls() {
@@ -29286,7 +29325,7 @@ button,
     function updateLocationZoomButtons(state) {
       const k = Number(state?.transform?.k) || 1;
       if (state?.ui?.out) state.ui.out.disabled = k <= 1.001;
-      if (state?.ui?.inc) state.ui.inc.disabled = k >= 7.99;
+      if (state?.ui?.inc) state.ui.inc.disabled = k >= 15.99;
       if (state?.ui?.reset) state.ui.reset.disabled = k <= 1.001;
     }
 
@@ -29304,7 +29343,7 @@ button,
       };
 
       const zoom = d3.zoom()
-        .scaleExtent([1, 8])
+        .scaleExtent([1, 16])
         .extent([[0, 0], [420, 320]])
         .translateExtent([[0, 0], [420, 320]])
         .filter(event => {
@@ -35442,7 +35481,7 @@ Try again`;
     // Keep the two full-map games on one interaction model. Both can zoom from
     // the whole-world overview (1×) to 32×, and both treat the fitted playable
     // area as their Home/Reset view.
-    const BIG_MAP_MAX_ZOOM = 32;
+    const BIG_MAP_MAX_ZOOM = 64;
     const BIG_MAP_ZOOM_STEP = 1.6;
 
     function bigMapFitTransform(width, height, codes, featureBounds, markerPoints) {
@@ -37193,6 +37232,9 @@ Try again`;
 
     function mapHuntCanvasCountryStyle(code) {
       const base = mapHuntResultClass(code);
+      if (mapHuntState?.revealFlashCode === code && mapHuntState?.awaitingRevealClick) {
+        return { fill:"#c95845", stroke:"#ffffff", line:2.0, alpha:mapHuntState.revealFlashDim ? .42 : 1 };
+      }
       if (mapHuntState?.wrongFeedbackCode === code) return { fill:"#9fa5a2", stroke:"#f7f4ed", line:1.35 };
       if (base === "inactive") return { fill:"#d9d8d2", stroke:"#f3efe6", line:.72, alpha:.42 };
       if (base === "try-1") return { fill:"#2f7d4d", stroke:"#ffffff", line:1.0 };
@@ -37204,6 +37246,7 @@ Try again`;
 
     function mapHuntCanvasMarkerFill(code) {
       const base = mapHuntResultClass(code);
+      if (mapHuntState?.revealFlashCode === code && mapHuntState?.awaitingRevealClick) return "#c95845";
       if (mapHuntState?.wrongFeedbackCode === code) return "#626866";
       if (base === "inactive") return "#aaa9a3";
       if (base === "try-1") return "#2f7d4d";
@@ -37290,6 +37333,10 @@ Try again`;
       for (const point of markerPoints) {
         const code = point.country?.code;
         if (!code || !Number.isFinite(point.x) || !Number.isFinite(point.y)) continue;
+        ctx.save();
+        if (mapHuntState?.revealFlashCode === code && mapHuntState?.awaitingRevealClick) {
+          ctx.globalAlpha = mapHuntState.revealFlashDim ? .42 : 1;
+        }
         ctx.beginPath();
         ctx.arc(point.x, point.y, screenToGeo(visiblePx), 0, Math.PI * 2);
         ctx.fillStyle = mapHuntCanvasMarkerFill(code);
@@ -37297,6 +37344,7 @@ Try again`;
         ctx.lineWidth = screenToGeo(mapHuntResultClass(code) === "revealed" ? 3.0 : 2.0);
         ctx.fill();
         ctx.stroke();
+        ctx.restore();
       }
 
       ctx.restore();
@@ -37308,15 +37356,15 @@ Try again`;
     }
 
     function resolveMapHuntClick(event) {
-      if (!mapHuntState || !mapHuntState.layer || !window.d3 || event.defaultPrevented) return;
-      const targetEl = event.target?.closest?.("[data-map-hunt-code]");
-      const targetCode = targetEl?.getAttribute?.("data-map-hunt-code") || "";
-      const targetIsPath = targetEl?.tagName?.toLowerCase?.() === "path";
-      const targetIsMarker = targetEl?.classList?.contains?.("map-hunt-marker");
-      const targetEligible = mapHuntEligibleCode(targetCode);
+      if (!mapHuntState || !window.d3 || event.defaultPrevented) return;
+      const t = mapHuntState.zoomTransform || d3.zoomIdentity;
+      const pointer = d3.pointer(event, mapHuntMap);
+      if (!pointer?.every?.(Number.isFinite)) return;
+      const mapPoint = t.invert(pointer);
+      const [x, y] = mapPoint;
+      if (![x, y].every(Number.isFinite)) return;
 
-      const [x, y] = d3.pointer(event, mapHuntState.layer.node());
-      const metrics = mapHuntMarkerMetrics(mapHuntState.zoomTransform);
+      const metrics = mapHuntMarkerMetrics(t);
       const markerPoints = mapHuntState.markerPoints || new Map();
       let nearest = null;
       for (const [code, point] of markerPoints) {
@@ -37327,24 +37375,32 @@ Try again`;
         if (!nearest || screenDist < nearest.distance) nearest = { code, distance:screenDist };
       }
 
-      // Clicking inside a genuine country polygon should prefer that country.
-      // A nearby microstate only wins if the tap is actually on/very near its
-      // visible dot; this stops São Tomé-style targets stealing mainland clicks.
-      if (targetIsPath && targetEligible) {
+      // Resolve the country from geographic containment instead of relying on
+      // invisible SVG path paint. This makes the entire country interior tappable
+      // on browsers that only hit-test transparent SVG strokes/borders.
+      let targetCode = "";
+      const geo = mapHuntState.projection?.invert?.([x, y]);
+      if (geo?.every?.(Number.isFinite)) {
+        const candidates = mapHuntState.canvasData?.selectedFeatures || [];
+        for (const item of candidates) {
+          if (!item?.safe || !item.code || !mapHuntEligibleCode(item.code)) continue;
+          try {
+            if (d3.geoContains(item.feature, geo)) {
+              targetCode = item.code;
+              break;
+            }
+          } catch (_) {}
+        }
+      }
+
+      // A genuine microstate marker gets priority only when the tap is actually
+      // on/very near its visible dot; otherwise the containing country wins.
+      if (targetCode) {
         if (nearest && nearest.distance <= metrics.visiblePx + 2.5) handleMapHuntGuess(nearest.code);
         else handleMapHuntGuess(targetCode);
         return;
       }
-
-      // When a dot (or water/context near one) is tapped, choose the nearest
-      // eligible microstate rather than whichever overlapping SVG circle happens
-      // to be painted on top.
-      if (nearest && (targetIsMarker || nearest.distance <= metrics.hitPx)) {
-        handleMapHuntGuess(nearest.code);
-        return;
-      }
-
-      if (targetEligible && targetCode) handleMapHuntGuess(targetCode);
+      if (nearest && nearest.distance <= metrics.hitPx) handleMapHuntGuess(nearest.code);
     }
 
     function applyMapHuntViewTransform(transform) {
@@ -37454,6 +37510,10 @@ Try again`;
       svg.on(".zoom", null);
       svg.on("click.maphunt", null);
       svg.selectAll("*").remove();
+      svg.append("rect")
+        .attr("class", "map-hunt-hit-surface")
+        .attr("x", 0).attr("y", 0)
+        .attr("width", width).attr("height", height);
 
       const layer = svg.append("g").attr("class", "map-hunt-map-layer");
       if (mapHuntState.setKey !== "world") {
@@ -37464,8 +37524,9 @@ Try again`;
           .join("path")
           .attr("class", "map-hunt-context-country")
           .attr("d", path)
-          .style("fill", "transparent")
-          .style("stroke", "transparent")
+          .style("fill", "transparent", "important")
+          .style("stroke", "transparent", "important")
+          .style("opacity", "0", "important")
           .style("pointer-events", "none");
       }
       const represented = new Set();
@@ -37508,9 +37569,10 @@ Try again`;
         .attr("class", "map-hunt-country unanswered")
         .attr("d", item => item.safe ? path(item.feature) : null)
         .attr("data-map-hunt-code", item => item.code)
-        .style("fill", "transparent")
-        .style("stroke", "transparent")
-        .style("pointer-events", "all");
+        .style("fill", "transparent", "important")
+        .style("stroke", "transparent", "important")
+        .style("opacity", "0", "important")
+        .style("pointer-events", "none");
 
       const markerCountries = mapHuntState.allCodes.map(countryByCode).filter(c => c && (!represented.has(c.code) || tiny.has(c.code)));
       const markerPoints = markerCountries.map(c => {
@@ -37537,9 +37599,10 @@ Try again`;
         .attr("class", "map-hunt-marker unanswered")
         .attr("data-map-hunt-code", d => d.country.code)
         .attr("cx", d => d.x).attr("cy", d => d.y).attr("r", 6.3)
-        .style("fill", "transparent")
-        .style("stroke", "transparent")
-        .style("pointer-events", "all");
+        .style("fill", "transparent", "important")
+        .style("stroke", "transparent", "important")
+        .style("opacity", "0", "important")
+        .style("pointer-events", "none");
 
       layer.append("g").attr("class", "map-hunt-result-labels");
       layer.append("g").attr("class", "map-hunt-temp-labels");
