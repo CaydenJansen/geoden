@@ -10752,9 +10752,6 @@ button,
     .chain-marker-halo.weakened { stroke:#8a641d; }
     .chain-marker-halo.available { stroke:#2864f0; }
     .chain-marker-halo.partial { stroke:#b77a13; }
-    .chain-legend { display:flex; flex-wrap:wrap; gap:9px 14px; padding:8px 2px 2px; color:var(--muted); font-size:.65rem; font-weight:780; }
-    .chain-legend-item { display:inline-flex; align-items:center; gap:5px; }
-    .chain-legend-dot { width:10px; height:10px; border-radius:999px; }
     .chain-input-wrap { position:relative; margin-top:10px; }
     .chain-input-row { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; margin-top:0; }
     .chain-input { width:100%; min-height:48px; border:1px solid rgba(23,23,23,.13); border-radius:13px; background:white; color:var(--text); padding:0 13px; font:inherit; font-size:.94rem; font-weight:750; outline:none; }
@@ -10780,8 +10777,6 @@ button,
     .chain-hint { border-color:rgba(40,100,240,.18); background:rgba(40,100,240,.07); color:var(--accent-dark); }
     .chain-give-up { border-color:rgba(183,75,64,.18); background:rgba(183,75,64,.07); color:var(--incorrect-dark); }
     .chain-hint:disabled, .chain-give-up:disabled { opacity:.42; cursor:default; }
-    .chain-progress-track { height:6px; overflow:hidden; border-radius:999px; background:rgba(23,23,23,.09); margin-top:8px; }
-    .chain-progress-fill { height:100%; width:0; background:var(--correct); border-radius:inherit; transition:width 180ms ease; }
     .chain-finish { margin-top:10px; padding:13px; border:1px solid rgba(47,125,77,.25); border-radius:14px; background:var(--correct-soft); text-align:center; }
     .chain-finish.hidden { display:none; }
     .chain-finish-title { font-size:1.25rem; font-weight:950; letter-spacing:-.03em; }
@@ -12064,13 +12059,26 @@ button,
       border-radius:17px;
       background:#dce7e8;
     }
+    .map-hunt-map-canvas,
     .map-hunt-map {
       display:block;
       width:100%;
       min-height:300px;
       aspect-ratio:1.8/1;
+    }
+    .map-hunt-map-canvas {
+      position:absolute;
+      inset:0;
+      z-index:1;
+      background:#dce7e8;
+      pointer-events:none;
+    }
+    .map-hunt-map {
+      position:relative;
+      z-index:2;
       touch-action:none;
       cursor:crosshair;
+      background:transparent;
     }
     .map-hunt-context-country {
       fill:#b9bfbd;
@@ -14027,7 +14035,7 @@ button,
   </style>
 
   <style id="mapcrawl-canvas-v0537">
-    /* v0.53.8 — Map Crawl can zoom deeper, and autocomplete across typed game
+    /* v0.53.9 — big-map zoom/home consistency, plus autocomplete across typed game
        modes searches the full GeoDen answer database rather than only the active
        region/currently-playable subset. */
 
@@ -14041,6 +14049,97 @@ button,
       touch-action:none;
     }
   </style>
+
+  <style id="mobile-big-map-v0541">
+    /* v0.54.2 — phone play screens are visual-viewport driven. The map and the
+       current action stay on-screen together; the keyboard shrinks the map
+       instead of covering the submit controls. */
+    @media (max-width:520px) {
+      .chain-overlay.playing {
+        align-items:stretch !important; justify-content:stretch !important; padding:0 !important;
+        background:var(--panel) !important; backdrop-filter:none !important;
+      }
+      .chain-overlay.playing .chain-panel {
+        width:100vw !important; height:var(--geoden-visual-height,100dvh) !important;
+        max-width:none !important; max-height:var(--geoden-visual-height,100dvh) !important;
+        margin:0 !important; padding:max(6px,env(safe-area-inset-top)) 8px max(6px,env(safe-area-inset-bottom)) !important;
+        display:flex !important; flex-direction:column !important; overflow:hidden !important;
+        border:0 !important; border-radius:0 !important; box-shadow:none !important;
+      }
+      .chain-overlay.playing .special-game-head {
+        flex:0 0 auto; align-items:center; margin-bottom:4px; gap:8px;
+      }
+      .chain-overlay.playing .special-game-title { font-size:1.28rem; line-height:1; }
+      .chain-overlay.playing .special-game-subtitle { display:none; }
+      .chain-overlay.playing .special-game-close { min-height:34px; padding:0 10px; }
+      .chain-overlay.playing #chainFillPlay {
+        flex:1 1 auto; min-height:0; display:flex !important; flex-direction:column; overflow:hidden;
+      }
+      .chain-overlay.playing .chain-toolbar {
+        flex:0 0 auto; grid-template-columns:minmax(0,1fr) auto auto !important; gap:5px; margin-bottom:5px;
+      }
+      .chain-overlay.playing .chain-status-title { font-size:.76rem; line-height:1.08; }
+      .chain-overlay.playing .chain-status-meta { font-size:.61rem; line-height:1.1; }
+      .chain-overlay.playing .chain-timer { min-width:48px; font-size:.82rem; }
+      .chain-overlay.playing .chain-restart {
+        grid-column:auto !important; width:auto !important; min-height:32px; padding:0 7px; font-size:.6rem; white-space:nowrap;
+      }
+      .chain-overlay.playing .chain-map-wrap {
+        flex:0 0 auto; width:100%; min-height:0; margin:0; aspect-ratio:1.45 / 1;
+      }
+      .chain-overlay.playing .chain-map {
+        width:100%; height:100%; min-height:0 !important; aspect-ratio:auto !important;
+      }
+      .chain-overlay.playing .chain-zoom-controls { right:7px; top:7px; gap:5px; }
+      .chain-overlay.playing .chain-zoom-button { width:36px; height:36px; min-height:36px; border-radius:10px; }
+      .chain-overlay.playing .chain-input-wrap { flex:0 0 auto; margin-top:6px; }
+      .chain-overlay.playing .chain-input-row { gap:6px; }
+      .chain-overlay.playing .chain-input { min-height:44px; padding:0 11px; font-size:.88rem; }
+      .chain-overlay.playing .chain-submit { min-width:82px; min-height:44px; }
+      .chain-overlay.playing .chain-suggestions { max-height:min(190px,30vh); }
+      .chain-overlay.playing .chain-feedback { flex:0 0 auto; min-height:17px; margin-top:4px; font-size:.65rem; line-height:1.18; }
+      .chain-overlay.playing .chain-help-row {
+        flex:0 0 auto; display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-top:2px;
+      }
+      .chain-overlay.playing .chain-hint,
+      .chain-overlay.playing .chain-give-up {
+        width:100%; min-height:32px; padding:0 6px; font-size:.62rem;
+      }
+      .chain-overlay.playing .chain-spelling-help { grid-column:1/-1; width:100%; min-height:30px; }
+      .chain-overlay.playing .chain-finish { flex:0 0 auto; }
+
+      /* When the keyboard is actually visible, trade chrome for map/action room. */
+      .geoden-keyboard-open .chain-overlay.playing .special-game-head { margin-bottom:2px; }
+      .geoden-keyboard-open .chain-overlay.playing .special-game-title { font-size:1rem; }
+      .geoden-keyboard-open .chain-overlay.playing .special-game-close { min-height:30px; font-size:.64rem; }
+      .geoden-keyboard-open .chain-overlay.playing .chain-status-title { display:none; }
+      .geoden-keyboard-open .chain-overlay.playing .chain-toolbar { margin-bottom:3px; }
+      .geoden-keyboard-open .chain-overlay.playing .chain-map-wrap { min-height:0; }
+      .geoden-keyboard-open .chain-overlay.playing .chain-feedback:not(.good):not(.bad):not(.near) { display:none; }
+      .geoden-keyboard-open .chain-overlay.playing .chain-help-row { margin-top:1px; }
+
+      .map-hunt-overlay.playing .map-hunt-panel {
+        height:var(--geoden-visual-height,100dvh) !important;
+        max-height:var(--geoden-visual-height,100dvh) !important;
+      }
+      .map-hunt-overlay.playing .special-game-head { align-items:center; margin-bottom:3px !important; }
+      .map-hunt-overlay.playing .special-game-title { font-size:1.2rem; line-height:1; }
+      .map-hunt-overlay.playing .special-game-close { min-height:34px; }
+      .map-hunt-overlay.playing .map-hunt-toolbar { margin-bottom:4px; }
+      .map-hunt-overlay.playing .map-hunt-map-wrap { flex:1 1 auto !important; min-height:0 !important; }
+      .map-hunt-overlay.playing .map-hunt-map-canvas,
+      .map-hunt-overlay.playing .map-hunt-map {
+        width:100% !important; height:100% !important; min-height:0 !important; aspect-ratio:auto !important;
+      }
+      .map-hunt-overlay.playing .map-hunt-map-canvas { object-fit:contain; object-position:center; }
+      .map-hunt-prompt { max-width:calc(100% - 54px); }
+      .map-hunt-zoom-controls { right:6px; top:6px; gap:5px; }
+      .map-hunt-zoom-button { width:36px; height:36px; min-height:36px; }
+      .map-hunt-progress-track { margin-top:4px; }
+      .map-hunt-feedback { margin-top:3px; font-size:.65rem; }
+    }
+  </style>
+
 </head>
 
 <body>
@@ -15165,6 +15264,7 @@ button,
             <button class="special-game-option" type="button" data-chain-set="northAmerica">North America</button>
             <button class="special-game-option" type="button" data-chain-set="southAmerica">South America</button>
             <button class="special-game-option" type="button" data-chain-set="oceania">Oceania</button>
+            <button class="special-game-option" type="button" data-chain-set="caribbean">Caribbean</button>
           </div>
           <label class="territory-inline-toggle">
             <input id="chainTerritoriesToggle" type="checkbox" />
@@ -15218,7 +15318,7 @@ button,
             <input class="chain-input" id="chainGuessInput" type="text" autocomplete="off" autocapitalize="words" spellcheck="false" placeholder="Name an available place…" aria-label="Map Crawl answer" aria-autocomplete="list" aria-controls="chainSuggestions" aria-expanded="false" />
             <button class="chain-submit" id="chainGuessBtn" type="button">Add</button>
           </div>
-          <div class="chain-suggestions hidden" id="chainSuggestions" role="listbox" aria-label="Available answer suggestions"></div>
+          <div class="chain-suggestions hidden" id="chainSuggestions" role="listbox" aria-label="Answer suggestions"></div>
         </div>
         <div class="chain-feedback" id="chainFeedback" aria-live="polite"></div>
         <div class="chain-help-row">
@@ -15257,6 +15357,7 @@ button,
             <button class="special-game-option" type="button" data-map-hunt-set="northAmerica">North America</button>
             <button class="special-game-option" type="button" data-map-hunt-set="southAmerica">South America</button>
             <button class="special-game-option" type="button" data-map-hunt-set="oceania">Oceania</button>
+            <button class="special-game-option" type="button" data-map-hunt-set="caribbean">Caribbean</button>
           </div>
           <label class="territory-inline-toggle">
             <input id="mapHuntTerritoriesToggle" type="checkbox" />
@@ -15289,6 +15390,7 @@ button,
         </div>
 
         <div class="map-hunt-map-wrap">
+          <canvas class="map-hunt-map-canvas" id="mapHuntCanvas" aria-hidden="true"></canvas>
           <div class="map-hunt-prompt" id="mapHuntPromptCard">
             <div class="map-hunt-prompt-kicker" id="mapHuntPromptKicker">Find this place</div>
             <div class="map-hunt-prompt-text" id="mapHuntPromptText">Zimbabwe</div>
@@ -15361,6 +15463,7 @@ button,
             <button class="special-game-option" type="button" data-ranking-set="northAmerica">North America</button>
             <button class="special-game-option" type="button" data-ranking-set="southAmerica">South America</button>
             <button class="special-game-option" type="button" data-ranking-set="oceania">Oceania</button>
+            <button class="special-game-option" type="button" data-ranking-set="caribbean">Caribbean</button>
           </div>
           <label class="territory-inline-toggle">
             <input id="rankingTerritoriesToggle" type="checkbox" />
@@ -15392,7 +15495,7 @@ button,
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
 
   <script>
-    const GEODEN_VERSION = "0.53.8";
+    const GEODEN_VERSION = "0.54.1";
     // Input policy: autocomplete/typeahead is ordinary entry and remains unassisted.
     // Only an actual spelling correction (or an explicit hint/reveal) counts as help.
     const GEODEN_BUILD_DATE = "2026-09-20";
@@ -15657,6 +15760,7 @@ button,
     const INTERACTIVE_CITY_MODE_KEY = "flag-by-flag-interactive-city-mode-v1";
     const FLASH_FLOW_PREFS_KEY = "geoden-flash-flow-prefs-v1";
     const LAST_RESUMABLE_MODE_KEY = "geoden-last-resumable-mode-v1";
+    const RESUMABLE_ACTIVITY_KEY = "geoden-resumable-activity-v2";
     const SPRINT_SET_KEY = "geoden-sprint-set-v1";
     const DAILY_PROGRESS_KEY = "flag-by-flag-daily-progress-v1";
     const SESSION_CHOICE_KEY = "flag-by-flag-session-choice-v1";
@@ -18012,9 +18116,26 @@ button,
       return !!studySession && studySession.active !== false;
     }
 
+    let resumableModeActivity = (() => {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(RESUMABLE_ACTIVITY_KEY) || "{}");
+        return {
+          study: Math.max(0, Number(parsed?.study) || 0),
+          chain: Math.max(0, Number(parsed?.chain) || 0),
+          maphunt: Math.max(0, Number(parsed?.maphunt) || 0)
+        };
+      } catch (_) {
+        return { study:0, chain:0, maphunt:0 };
+      }
+    })();
+
     function noteResumableMode(mode) {
       if (!["study", "chain", "maphunt"].includes(mode)) return;
-      try { localStorage.setItem(LAST_RESUMABLE_MODE_KEY, mode); } catch (_) {}
+      resumableModeActivity[mode] = Date.now();
+      try {
+        localStorage.setItem(LAST_RESUMABLE_MODE_KEY, mode);
+        localStorage.setItem(RESUMABLE_ACTIVITY_KEY, JSON.stringify(resumableModeActivity));
+      } catch (_) {}
     }
 
     function preferredResumableMode() {
@@ -18025,11 +18146,31 @@ button,
         chain: hasResumableChain(),
         maphunt: hasResumableMapHunt()
       };
+      const candidates = Object.keys(available).filter(mode => available[mode]);
+      if (!candidates.length) return "";
+
+      const ranked = candidates
+        .map(mode => ({ mode, touched:Math.max(0, Number(resumableModeActivity[mode]) || 0) }))
+        .sort((a,b) => b.touched - a.touched);
+      if (ranked[0]?.touched > 0) return ranked[0].mode;
+
       if (available[saved]) return saved;
-      if (available.study) return "study";
-      if (available.chain) return "chain";
       if (available.maphunt) return "maphunt";
+      if (available.chain) return "chain";
+      if (available.study) return "study";
       return "";
+    }
+
+    function noteCurrentResumableMode() {
+      if (mapHuntOverlay?.classList.contains("open") && hasResumableMapHunt()) {
+        noteResumableMode("maphunt");
+        return;
+      }
+      if (chainFillOverlay?.classList.contains("open") && hasResumableChain()) {
+        noteResumableMode("chain");
+        return;
+      }
+      if (hasActiveStudyRun()) noteResumableMode("study");
     }
 
     function activeSessionProgressText() {
@@ -22959,6 +23100,7 @@ button,
     }
 
     function openMatchingMode(allowCloseToRun = false, autoStart = false) {
+      if (hasActiveStudyRun()) noteResumableMode("study");
       matchingReturnMenuAllowClose = !!allowCloseToRun;
       matchingOverlay.classList.add("open");
       if (matchingState) {
@@ -22969,6 +23111,7 @@ button,
     }
 
     function closeMatchingToMenu() {
+      if (hasActiveStudyRun()) noteResumableMode("study");
       matchingBuildToken += 1;
       matchingOverlay.classList.remove("open");
       clearMatchingSelection();
@@ -24970,6 +25113,33 @@ button,
       } catch (_) {
         return false;
       }
+    }
+
+    function bigMapFeatureNeedsMarker(path, feature, screenScale = 1, maxAreaRatio = .45) {
+      const safe = globeFeaturePaintIsSafe(path, feature, maxAreaRatio);
+      if (!safe) return true;
+      let area = Infinity;
+      let width = Infinity;
+      let height = Infinity;
+      try { area = path.area(feature); } catch (_) {}
+      try {
+        const bounds = path.bounds(feature);
+        if (Array.isArray(bounds) && bounds[0] && bounds[1]) {
+          width = Math.abs(bounds[1][0] - bounds[0][0]);
+          height = Math.abs(bounds[1][1] - bounds[0][1]);
+        }
+      } catch (_) {}
+      if (![area, width, height].every(Number.isFinite)) return true;
+      const scale = Math.max(.05, Number(screenScale) || 1);
+      const screenArea = area * scale * scale;
+      const screenW = width * scale;
+      const screenH = height * scale;
+      const maxDim = Math.max(screenW, screenH);
+      const minDim = Math.min(screenW, screenH);
+      // Markers are a last resort, not a label for every small country. If the
+      // actual country will still be visibly several pixels across at the home
+      // view, let the geography speak for itself.
+      return screenArea < 5.5 || maxDim < 5.0 || (minDim < 1.35 && maxDim < 10);
     }
 
     function appendGlobeFeedbackMarker(layer, projection, c, options = {}) {
@@ -31087,6 +31257,7 @@ button,
 
     function openDetectiveMode(resume = true) {
       if (studySession?.interaction !== "detective" || studySession?.active === false) return;
+      noteResumableMode("study");
       matchingOverlay?.classList.remove("open");
       rapidOverlay?.classList.remove("open");
       startOverlay.classList.remove("open");
@@ -31096,6 +31267,7 @@ button,
     }
 
     function closeDetectiveToMenu() {
+      if (hasActiveStudyRun()) noteResumableMode("study");
       detectiveOverlay.classList.remove("open");
       openStartOverlay(true);
     }
@@ -33227,6 +33399,7 @@ Try again`;
 
     function openRapidMode(resume = true) {
       if (studySession?.interaction !== "rapid") return;
+      noteResumableMode("study");
       matchingOverlay?.classList.remove("open");
       detectiveOverlay?.classList.remove("open");
       rapidOverlay.classList.add("open");
@@ -33250,6 +33423,7 @@ Try again`;
     }
 
     function closeRapidToMenu() {
+      if (hasActiveStudyRun()) noteResumableMode("study");
       if (isSprintSession()) pauseSprintTimer();
       rapidOverlay.classList.remove("open");
       openStartOverlay(true);
@@ -34129,7 +34303,10 @@ Try again`;
       startStudySession("finite", Math.min(5, available), interaction, "review", recapSet);
     });
 
-    mainMenuBtn.addEventListener("click", () => openStartOverlay(true));
+    mainMenuBtn.addEventListener("click", () => {
+      noteCurrentResumableMode();
+      openStartOverlay(true);
+    });
 
     matchingCloseBtn.addEventListener("click", closeMatchingToMenu);
     matchingSettingsBtn.addEventListener("click", () => openSettings("matching"));
@@ -34856,6 +35033,30 @@ Try again`;
     });
 
 
+    let geodenMobileViewportBaseline = 0;
+    let geodenMobileViewportWidth = 0;
+    function syncGeodenMobileViewport() {
+      const vv = window.visualViewport;
+      const h = Math.max(240, Math.round(vv?.height || window.innerHeight || document.documentElement.clientHeight || 600));
+      const w = Math.max(240, Math.round(vv?.width || window.innerWidth || document.documentElement.clientWidth || 390));
+      if (!geodenMobileViewportWidth || Math.abs(w - geodenMobileViewportWidth) > 80) {
+        geodenMobileViewportWidth = w;
+        geodenMobileViewportBaseline = h;
+      }
+      const focused = document.activeElement;
+      const textEntryFocused = !!focused && (focused.matches?.("input, textarea, [contenteditable='true']"));
+      if (!textEntryFocused) geodenMobileViewportBaseline = Math.max(geodenMobileViewportBaseline, h);
+      const keyboardOpen = w <= 520 && textEntryFocused && geodenMobileViewportBaseline - h > 90;
+      document.documentElement.style.setProperty("--geoden-visual-height", `${h}px`);
+      document.documentElement.classList.toggle("geoden-keyboard-open", keyboardOpen);
+    }
+    syncGeodenMobileViewport();
+    window.addEventListener("resize", syncGeodenMobileViewport, { passive:true });
+    window.visualViewport?.addEventListener("resize", syncGeodenMobileViewport, { passive:true });
+    window.visualViewport?.addEventListener("scroll", syncGeodenMobileViewport, { passive:true });
+    document.addEventListener("focusin", syncGeodenMobileViewport);
+    document.addEventListener("focusout", () => window.setTimeout(syncGeodenMobileViewport, 40));
+
     /* ---------- Map Crawl ---------- */
     const chainFillOverlay = document.getElementById("chainFillOverlay");
     const chainFillCloseBtn = document.getElementById("chainFillCloseBtn");
@@ -34877,9 +35078,6 @@ Try again`;
     const chainZoomOutBtn = document.getElementById("chainZoomOutBtn");
     const chainZoomInBtn = document.getElementById("chainZoomInBtn");
     const chainZoomResetBtn = document.getElementById("chainZoomResetBtn");
-    const chainPartialLegend = document.getElementById("chainPartialLegend");
-    const chainWeakenedLegend = document.getElementById("chainWeakenedLegend");
-    const chainProgressFill = document.getElementById("chainProgressFill");
     const chainGuessInput = document.getElementById("chainGuessInput");
     const chainGuessBtn = document.getElementById("chainGuessBtn");
     const chainSuggestions = document.getElementById("chainSuggestions");
@@ -34912,7 +35110,7 @@ Try again`;
     }
 
     const specialGamePrefs = loadSpecialGamePrefs();
-    const chainSetChoices = new Set(["world", "europe", "africa", "asia", "northAmerica", "southAmerica", "oceania"]);
+    const chainSetChoices = new Set(["world", "europe", "africa", "asia", "northAmerica", "southAmerica", "oceania", "caribbean"]);
     let chainSet = chainSetChoices.has(specialGamePrefs.chainSet) ? specialGamePrefs.chainSet : "world";
     let chainAnswerMode = ["country", "capital", "both"].includes(specialGamePrefs.chainAnswerMode) ? specialGamePrefs.chainAnswerMode : "country";
     let chainRuleMode = ["open", "fortified"].includes(specialGamePrefs.chainRuleMode) ? specialGamePrefs.chainRuleMode : "open";
@@ -34937,8 +35135,6 @@ Try again`;
           ? "A place usually opens once half its land neighbours are filled."
           : "Fill a neighbouring place; islands use their nearest route.";
       }
-      chainPartialLegend?.classList.toggle("hidden", chainAnswerMode !== "both");
-      chainWeakenedLegend?.classList.toggle("hidden", chainRuleMode !== "fortified");
       if (chainAutocompleteToggle) chainAutocompleteToggle.checked = !!chainAutocompleteEnabled;
     }
 
@@ -35243,6 +35439,53 @@ Try again`;
       return countries.find(c => c.code === code) || null;
     }
 
+    // Keep the two full-map games on one interaction model. Both can zoom from
+    // the whole-world overview (1×) to 32×, and both treat the fitted playable
+    // area as their Home/Reset view.
+    const BIG_MAP_MAX_ZOOM = 32;
+    const BIG_MAP_ZOOM_STEP = 1.6;
+
+    function bigMapFitTransform(width, height, codes, featureBounds, markerPoints) {
+      if (!window.d3) return null;
+      let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+      const includePoint = (x, y) => {
+        if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+        x0 = Math.min(x0, x); y0 = Math.min(y0, y);
+        x1 = Math.max(x1, x); y1 = Math.max(y1, y);
+      };
+      for (const code of (codes || [])) {
+        const bounds = featureBounds?.get?.(code);
+        if (bounds) {
+          includePoint(bounds[0]?.[0], bounds[0]?.[1]);
+          includePoint(bounds[1]?.[0], bounds[1]?.[1]);
+        }
+        const point = markerPoints?.get?.(code);
+        if (point) includePoint(point.x, point.y);
+      }
+      if (![x0, y0, x1, y1].every(Number.isFinite)) return d3.zoomIdentity;
+      const spanX = Math.max(10, x1 - x0);
+      const spanY = Math.max(10, y1 - y0);
+      const mobile = window.matchMedia?.("(max-width: 520px)")?.matches;
+      // Same visual breathing room in both map games, but clamp it on narrow
+      // canvases so a phone still devotes most of its map to the playable area.
+      const padX = Math.min(mobile ? 58 : 42, Math.max(18, width * .16));
+      const padY = Math.min(mobile ? 44 : 34, Math.max(16, height * .16));
+      const usableW = Math.max(40, width - padX * 2);
+      const usableH = Math.max(40, height - padY * 2);
+      let k = Math.min(usableW / spanX, usableH / spanY);
+      k = Math.max(1, Math.min(BIG_MAP_MAX_ZOOM, k));
+      const cx = (x0 + x1) / 2;
+      const cy = (y0 + y1) / 2;
+      return d3.zoomIdentity.translate(width / 2 - k * cx, height / 2 - k * cy).scale(k);
+    }
+
+    function bigMapTransformsMatch(a, b, tolerance = .01) {
+      if (!a || !b) return false;
+      return Math.abs((Number(a.k) || 1) - (Number(b.k) || 1)) <= tolerance &&
+        Math.abs((Number(a.x) || 0) - (Number(b.x) || 0)) <= tolerance &&
+        Math.abs((Number(a.y) || 0) - (Number(b.y) || 0)) <= tolerance;
+    }
+
     function chainElapsedMs() {
       if (!chainState) return 0;
       return Math.max(0, (chainState.finishedAt || Date.now()) - chainState.startedAt);
@@ -35284,10 +35527,11 @@ Try again`;
     }
 
     function updateChainZoomButtons() {
-      const k = Number(chainState?.zoomTransform?.k) || 1;
+      const transform = chainState?.zoomTransform || d3.zoomIdentity;
+      const k = Number(transform?.k) || 1;
       if (chainZoomOutBtn) chainZoomOutBtn.disabled = k <= 1.001;
-      if (chainZoomInBtn) chainZoomInBtn.disabled = k >= 31.99;
-      if (chainZoomResetBtn) chainZoomResetBtn.disabled = k <= 1.001;
+      if (chainZoomInBtn) chainZoomInBtn.disabled = k >= BIG_MAP_MAX_ZOOM - .01;
+      if (chainZoomResetBtn) chainZoomResetBtn.disabled = !chainState?.homeTransform || bigMapTransformsMatch(transform, chainState.homeTransform);
     }
 
     function destroyChainZoom(state = chainState) {
@@ -35300,7 +35544,7 @@ Try again`;
     function attachChainZoom(canvasSelection, width, height) {
       if (!chainState || !canvasSelection || !window.d3) return;
       const zoom = d3.zoom()
-        .scaleExtent([1, 32])
+        .scaleExtent([1, BIG_MAP_MAX_ZOOM])
         .extent([[0, 0], [width, height]])
         .translateExtent([[0, 0], [width, height]])
         .filter(event => {
@@ -35325,11 +35569,19 @@ Try again`;
       d3.select(chainWorldMap).transition().duration(150).call(chainState.zoom.scaleBy, factor);
     }
 
+    function fitChainToActiveArea({ animate = false } = {}) {
+      if (!chainState?.zoom || !chainWorldMap || !window.d3 || !chainState?.canvasData) return;
+      const { width, height, featureBounds, markerPointMap } = chainState.canvasData;
+      const transform = bigMapFitTransform(width, height, chainState.codes, featureBounds, markerPointMap) || d3.zoomIdentity;
+      chainState.homeTransform = transform;
+      const canvas = d3.select(chainWorldMap);
+      const target = animate ? canvas.transition().duration(180) : canvas;
+      target.call(chainState.zoom.transform, transform);
+      updateChainZoomButtons();
+    }
+
     function resetChainZoom(animated = true) {
-      if (!chainState?.zoom || !chainWorldMap || !window.d3) return;
-      const svg = d3.select(chainWorldMap);
-      const target = animated ? svg.transition().duration(170) : svg;
-      target.call(chainState.zoom.transform, d3.zoomIdentity);
+      fitChainToActiveArea({ animate:animated });
     }
 
     function chainCanvasStatusStyle(status) {
@@ -35512,19 +35764,38 @@ Try again`;
       const ctx = chainWorldMap.getContext("2d", { alpha:false });
       const pathCanvas = d3.geoPath(projection).context(ctx);
       const represented = new Set();
-      const tiny = new Set();
       const selectedFeatures = rawSelected.map(item => {
         const safe = globeFeaturePaintIsSafe(pathMeasure, item.feature, .45);
         if (safe) represented.add(item.code);
-        try { if (!safe || pathMeasure.area(item.feature) < 10) tiny.add(item.code); } catch (_) { tiny.add(item.code); }
         return { ...item, safe };
       });
+      const featureBounds = new Map();
+      const projectedPoints = new Map();
+      for (const c of chainState.codes.map(countryByCode).filter(Boolean)) {
+        const point = projection([c.lon, c.lat]);
+        if (point?.every(Number.isFinite)) projectedPoints.set(c.code, { x:point[0], y:point[1] });
+      }
+      for (const item of selectedFeatures) {
+        if (!item.safe) continue;
+        try {
+          const bounds = pathMeasure.bounds(item.feature);
+          if (bounds?.flat?.().every(Number.isFinite)) featureBounds.set(item.code, bounds);
+        } catch (_) {}
+      }
+      const provisionalHome = bigMapFitTransform(width, height, chainState.codes, featureBounds, projectedPoints) || d3.zoomIdentity;
+      const homeScale = Math.max(1, Number(provisionalHome.k) || 1);
+      const tiny = new Set();
+      for (const item of selectedFeatures) {
+        try { if (!item.safe || bigMapFeatureNeedsMarker(pathMeasure, item.feature, homeScale, .45)) tiny.add(item.code); }
+        catch (_) { tiny.add(item.code); }
+      }
       const markerPoints = chainState.codes.map(countryByCode)
         .filter(c => c && (!represented.has(c.code) || tiny.has(c.code)))
         .map(c => {
-          const point = projection([c.lon, c.lat]);
-          return { code:c.code, x:point?.[0] ?? -20, y:point?.[1] ?? -20 };
+          const point = projectedPoints.get(c.code);
+          return { code:c.code, x:point?.x ?? -20, y:point?.y ?? -20 };
         });
+      const markerPointMap = new Map(markerPoints.map(point => [point.code, { x:point.x, y:point.y }]));
 
       destroyChainZoom();
       chainState.projection = projection;
@@ -35533,11 +35804,14 @@ Try again`;
         contextFeatures: features.filter(feature => globeFeaturePaintIsSafe(pathMeasure, feature, .45)),
         selectedFeatures,
         markerPoints,
+        markerPointMap,
+        featureBounds,
         pathCanvas
       };
       chainState.rendererReady = true;
       chainState.lastAvailability = chainAvailability();
       attachChainZoom(d3.select(chainWorldMap), width, height);
+      fitChainToActiveArea({ animate:false });
       drawChainCanvas(chainState.lastAvailability);
       updateChainMapStates();
     }
@@ -35932,6 +36206,7 @@ Try again`;
 
     function submitChainGuess() {
       if (!chainState || chainState.finishedAt || !chainGuessInput) return;
+      noteResumableMode("chain");
       let raw = chainGuessInput.value.trim();
       let usedInputAssist = !!chainState.assistedInputValue && interactiveLooseNormalize(raw) === chainState.assistedInputValue;
       let spellingFixed = "";
@@ -36105,9 +36380,15 @@ Try again`;
       window.setTimeout(() => chainPlayAgainBtn?.focus({ preventScroll: true }), 20);
     }
 
+    function setChainPlayLayout(playing) {
+      chainFillOverlay?.classList.toggle("playing", !!playing);
+    }
+
     async function startChainGame() {
       const token = ++chainBuildToken;
+      setChainPlayLayout(true);
       if (!window.d3 || !window.topojson) {
+        setChainPlayLayout(false);
         chainFillPlay.classList.add("hidden");
         chainFillLoading.classList.add("hidden");
         chainFillSetup.classList.remove("hidden");
@@ -36166,8 +36447,11 @@ Try again`;
           projection:null,
           rendererReady:false,
           canvasData:null,
+          homeTransform:null,
+          zoomTransform:null,
           lastAvailability:null
         };
+        noteResumableMode("chain");
         const startPart = chainPartState(startCode);
         startPart.country = true;
         startPart.capital = true;
@@ -36180,13 +36464,15 @@ Try again`;
         chainFeedback.textContent = chainStartInstruction();
         chainFeedback.className = "chain-feedback";
         startChainTimer();
-        window.setTimeout(() => chainGuessInput?.focus(), 30);
+        const shouldAutofocus = window.matchMedia?.("(min-width: 521px) and (pointer: fine)")?.matches;
+        if (shouldAutofocus) window.setTimeout(() => chainGuessInput?.focus({ preventScroll:true }), 30);
       } catch (err) {
         if (token !== chainBuildToken || !chainFillOverlay?.classList.contains("open")) return;
         chainState = null;
         chainFillLoading.classList.add("hidden");
         chainFillPlay.classList.add("hidden");
         chainFillSetup.classList.remove("hidden");
+        setChainPlayLayout(false);
         updateChainSetupHelp();
         if (chainRuleHelp) chainRuleHelp.textContent = "That map couldn’t be built. Try again, or choose another map when you’re online.";
         window.setTimeout(() => chainFillStartBtn?.focus({ preventScroll: true }), 0);
@@ -36205,6 +36491,7 @@ Try again`;
       chainFillPlay.classList.add("hidden");
       chainFillSetup.classList.remove("hidden");
       chainFinish.classList.add("hidden");
+      setChainPlayLayout(false);
       if (chainGuessInput) chainGuessInput.value = "";
       if (chainGuessBtn) chainGuessBtn.disabled = true;
       if (chainHintBtn) {
@@ -36219,7 +36506,6 @@ Try again`;
 
     function openChainFill(resume = true) {
       syncTerritoryPreferenceControls?.();
-      noteResumableMode("chain");
       setSpecialOptionActive(chainSetOptions, "data-chain-set", chainSet);
       setSpecialOptionActive(chainAnswerOptions, "data-chain-answer", chainAnswerMode);
       setSpecialOptionActive(chainRuleOptions, "data-chain-rule", chainRuleMode);
@@ -36227,6 +36513,8 @@ Try again`;
       chainFillOverlay?.classList.add("open");
 
       if (resume && hasResumableChain()) {
+        noteResumableMode("chain");
+        setChainPlayLayout(true);
         chainFillSetup.classList.add("hidden");
         chainFillLoading.classList.add("hidden");
         chainFillPlay.classList.remove("hidden");
@@ -36248,11 +36536,13 @@ Try again`;
     }
 
     function closeChainFill() {
+      if (hasResumableChain()) noteResumableMode("chain");
       chainBuildToken += 1;
       stopChainTimer();
       // Menu is a pause. Keep the board and D3 transform alive so Resume returns
       // to the exact Map Crawl instead of the older standard/detective session.
       chainFillOverlay?.classList.remove("open");
+      setChainPlayLayout(false);
       if (menuPlayMode === "chain") openStartOverlay(true, true);
     }
 
@@ -36330,8 +36620,8 @@ Try again`;
       chainGuessInput.focus({ preventScroll:true });
       try { chainGuessInput.setSelectionRange(chainGuessInput.value.length, chainGuessInput.value.length); } catch (_) {}
     });
-    chainZoomOutBtn?.addEventListener("click", event => { event.stopPropagation(); chainZoomBy(1 / 1.6); });
-    chainZoomInBtn?.addEventListener("click", event => { event.stopPropagation(); chainZoomBy(1.6); });
+    chainZoomOutBtn?.addEventListener("click", event => { event.stopPropagation(); chainZoomBy(1 / BIG_MAP_ZOOM_STEP); });
+    chainZoomInBtn?.addEventListener("click", event => { event.stopPropagation(); chainZoomBy(BIG_MAP_ZOOM_STEP); });
     chainZoomResetBtn?.addEventListener("click", event => { event.stopPropagation(); resetChainZoom(); });
     updateChainSetupHelp();
 
@@ -36352,6 +36642,7 @@ Try again`;
     const mapHuntPromptKicker = document.getElementById("mapHuntPromptKicker");
     const mapHuntPromptText = document.getElementById("mapHuntPromptText");
     const mapHuntPromptFlag = document.getElementById("mapHuntPromptFlag");
+    const mapHuntCanvas = document.getElementById("mapHuntCanvas");
     const mapHuntMap = document.getElementById("mapHuntMap");
     const mapHuntZoomOutBtn = document.getElementById("mapHuntZoomOutBtn");
     const mapHuntZoomInBtn = document.getElementById("mapHuntZoomInBtn");
@@ -36375,6 +36666,7 @@ Try again`;
     let mapHuntRevealTimer = null;
     let mapHuntRevealInterval = null;
     let mapHuntResizeRaf = null;
+    let mapHuntCanvasDrawRaf = 0;
 
     function mapHuntShuffle(items) {
       const copy = [...items];
@@ -36429,12 +36721,14 @@ Try again`;
         return `${base} ${mapHuntResultClass(code)}`;
       });
       if (!codeSet) svg.selectAll("[data-map-hunt-halo]").attr("class", "map-hunt-reveal-halo");
+      requestMapHuntCanvasDraw();
       updateMapHuntResultLabels();
 
       const done = mapHuntState.results.size;
       const total = mapHuntState.roundCodes.length;
       if (mapHuntProgressFill) mapHuntProgressFill.style.width = `${total ? done / total * 100 : 0}%`;
       updateMapHuntMarkerScale(mapHuntState.zoomTransform || d3.zoomIdentity);
+      requestMapHuntCanvasDraw();
     }
 
     function mapHuntCurrentCountry() {
@@ -36546,11 +36840,13 @@ Try again`;
         window.clearTimeout(mapHuntWrongFeedbackTimer);
         mapHuntWrongFeedbackTimer = null;
       }
+      if (mapHuntState) mapHuntState.wrongFeedbackCode = "";
       if (!mapHuntMap || !window.d3) return;
       const svg = d3.select(mapHuntMap);
       svg.selectAll("circle.map-hunt-marker").interrupt("maphunt-pop");
       svg.selectAll(".wrong-tap").classed("wrong-tap", false);
       svg.selectAll("text.map-hunt-temp-label").remove();
+      requestMapHuntCanvasDraw();
     }
 
     function showMapHuntWrongFeedback(code) {
@@ -36563,6 +36859,7 @@ Try again`;
       clicked.classed("wrong-tap", false);
       clicked.each(function() { try { void this.getBoundingClientRect(); } catch (_) {} });
       clicked.classed("wrong-tap", true);
+      if (mapHuntState) mapHuntState.wrongFeedbackCode = code;
       pulseMapHuntMarker(code);
       if (c && point && mapHuntState?.layer) {
         let group = mapHuntState.layer.select("g.map-hunt-temp-labels");
@@ -36574,12 +36871,15 @@ Try again`;
           .text(c.name);
         updateMapHuntMarkerScale(mapHuntState.zoomTransform || d3.zoomIdentity);
       }
+      requestMapHuntCanvasDraw();
       mapHuntWrongFeedbackTimer = window.setTimeout(() => {
         mapHuntWrongFeedbackTimer = null;
         if (!mapHuntMap || !window.d3) return;
         const currentSvg = d3.select(mapHuntMap);
         currentSvg.selectAll(`[data-map-hunt-code="${code}"]`).classed("wrong-tap", false);
         currentSvg.selectAll("text.map-hunt-temp-label").remove();
+        if (mapHuntState?.wrongFeedbackCode === code) mapHuntState.wrongFeedbackCode = "";
+        requestMapHuntCanvasDraw();
       }, 950);
     }
 
@@ -36592,11 +36892,13 @@ Try again`;
         window.clearInterval(mapHuntRevealInterval);
         mapHuntRevealInterval = null;
       }
+      if (mapHuntState) { mapHuntState.revealFlashCode = ""; mapHuntState.revealFlashDim = false; }
       if (!mapHuntMap || !window.d3) return;
       const svg = d3.select(mapHuntMap);
       svg.selectAll(".reveal-flash, .reveal-dim").classed("reveal-flash reveal-dim", false);
       svg.selectAll("text.map-hunt-reveal-label").remove();
       updateMapHuntMarkerScale(mapHuntState?.zoomTransform || d3.zoomIdentity);
+      requestMapHuntCanvasDraw();
     }
 
     function flashMapHuntTargetReveal(code) {
@@ -36607,6 +36909,8 @@ Try again`;
       const svg = d3.select(mapHuntMap);
       const target = svg.selectAll(`[data-map-hunt-code="${code}"]`);
       target.classed("reveal-flash", true);
+      mapHuntState.revealFlashCode = code;
+      mapHuntState.revealFlashDim = false;
       target.each(function() { try { void this.getBoundingClientRect(); } catch (_) {} });
       svg.selectAll(`[data-map-hunt-halo="${code}"]`).classed("reveal-flash", true);
       if (c && point && mapHuntState.layer) {
@@ -36629,11 +36933,14 @@ Try again`;
           return;
         }
         dim = !dim;
+        mapHuntState.revealFlashDim = dim;
         const currentSvg = d3.select(mapHuntMap);
         currentSvg.selectAll(`[data-map-hunt-code="${code}"]`).classed("reveal-dim", dim);
         currentSvg.selectAll(`[data-map-hunt-halo="${code}"]`).classed("reveal-dim", dim);
+        requestMapHuntCanvasDraw();
       }, 480);
       updateMapHuntMarkerScale(mapHuntState.zoomTransform || d3.zoomIdentity);
+      requestMapHuntCanvasDraw();
     }
 
     function mapHuntScheduleNext(delay = 650) {
@@ -36679,6 +36986,7 @@ Try again`;
 
     function handleMapHuntGuess(code) {
       if (!mapHuntState || mapHuntState.finished || mapHuntState.locked) return;
+      noteResumableMode("maphunt");
       if (!code) return;
       if (mapHuntState.revision && !mapHuntState.roundSet?.has(code)) return;
       const target = mapHuntCurrentCountry();
@@ -36879,7 +37187,119 @@ Try again`;
         if (!mapHuntState?.svg || !mapHuntOverlay?.classList.contains("open")) return;
         mapHuntState.viewportScale = measureMapHuntViewportScale();
         updateMapHuntMarkerScale(mapHuntState.zoomTransform || d3.zoomIdentity);
+        requestMapHuntCanvasDraw();
       });
+    }
+
+    function mapHuntCanvasCountryStyle(code) {
+      const base = mapHuntResultClass(code);
+      if (mapHuntState?.wrongFeedbackCode === code) return { fill:"#9fa5a2", stroke:"#f7f4ed", line:1.35 };
+      if (base === "inactive") return { fill:"#d9d8d2", stroke:"#f3efe6", line:.72, alpha:.42 };
+      if (base === "try-1") return { fill:"#2f7d4d", stroke:"#ffffff", line:1.0 };
+      if (base === "try-2") return { fill:"#d6b63b", stroke:"#ffffff", line:1.0 };
+      if (base === "try-3") return { fill:"#dc8434", stroke:"#ffffff", line:1.0 };
+      if (base === "revealed") return { fill:"#8f342e", stroke:"#ffffff", line:1.7 };
+      return { fill:"#c9cbc6", stroke:"#f3efe6", line:.72 };
+    }
+
+    function mapHuntCanvasMarkerFill(code) {
+      const base = mapHuntResultClass(code);
+      if (mapHuntState?.wrongFeedbackCode === code) return "#626866";
+      if (base === "inactive") return "#aaa9a3";
+      if (base === "try-1") return "#2f7d4d";
+      if (base === "try-2") return "#d6b63b";
+      if (base === "try-3") return "#dc8434";
+      if (base === "revealed") return "#8f342e";
+      return "#777b79";
+    }
+
+    function requestMapHuntCanvasDraw() {
+      if (!mapHuntState?.rendererReady || !mapHuntCanvas?.getContext) return;
+      if (mapHuntCanvasDrawRaf) return;
+      mapHuntCanvasDrawRaf = window.requestAnimationFrame(() => {
+        mapHuntCanvasDrawRaf = 0;
+        drawMapHuntCanvas();
+      });
+    }
+
+    function drawMapHuntCanvas() {
+      const data = mapHuntState?.canvasData;
+      if (!data || !mapHuntCanvas?.getContext) return;
+      const { width, height, dpr, contextFeatures, selectedFeatures, markerPoints, pathCanvas } = data;
+      const ctx = mapHuntCanvas.getContext("2d", { alpha:false });
+      if (!ctx || !pathCanvas) return;
+      const t = mapHuntState.zoomTransform || d3.zoomIdentity;
+      const metrics = mapHuntMarkerMetrics(t);
+      const { k, viewportScale, haloPx, visiblePx } = metrics;
+      const screenToGeo = px => px / Math.max(.0001, k * viewportScale);
+
+      ctx.setTransform(1,0,0,1,0,0);
+      ctx.fillStyle = "#dce7e8";
+      ctx.fillRect(0, 0, mapHuntCanvas.width, mapHuntCanvas.height);
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+      ctx.save();
+      ctx.translate(t.x, t.y);
+      ctx.scale(k, k);
+      ctx.lineJoin = "round";
+      ctx.lineCap = "round";
+
+      if (mapHuntState.setKey !== "world") {
+        ctx.save();
+        ctx.globalAlpha = .26;
+        ctx.fillStyle = "#b9bfbd";
+        ctx.strokeStyle = "#f3efe6";
+        ctx.lineWidth = screenToGeo(.62);
+        for (const feature of contextFeatures) {
+          ctx.beginPath();
+          pathCanvas(feature);
+          ctx.fill();
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      for (const item of selectedFeatures) {
+        if (!item.safe || !item.code) continue;
+        const style = mapHuntCanvasCountryStyle(item.code);
+        ctx.save();
+        ctx.globalAlpha = style.alpha ?? 1;
+        ctx.beginPath();
+        pathCanvas(item.feature);
+        ctx.fillStyle = style.fill;
+        ctx.strokeStyle = style.stroke;
+        ctx.lineWidth = screenToGeo(style.line);
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      if (mapHuntState?.revealFlashCode && mapHuntState.awaitingRevealClick) {
+        const point = mapHuntState.markerPoints?.get(mapHuntState.revealFlashCode);
+        if (point) {
+          ctx.save();
+          ctx.globalAlpha = mapHuntState.revealFlashDim ? .28 : .86;
+          ctx.beginPath();
+          ctx.arc(point.x, point.y, screenToGeo(haloPx), 0, Math.PI * 2);
+          ctx.strokeStyle = "#8f342e";
+          ctx.lineWidth = screenToGeo(2.2);
+          ctx.stroke();
+          ctx.restore();
+        }
+      }
+
+      for (const point of markerPoints) {
+        const code = point.country?.code;
+        if (!code || !Number.isFinite(point.x) || !Number.isFinite(point.y)) continue;
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, screenToGeo(visiblePx), 0, Math.PI * 2);
+        ctx.fillStyle = mapHuntCanvasMarkerFill(code);
+        ctx.strokeStyle = "#f7f4ed";
+        ctx.lineWidth = screenToGeo(mapHuntResultClass(code) === "revealed" ? 3.0 : 2.0);
+        ctx.fill();
+        ctx.stroke();
+      }
+
+      ctx.restore();
     }
 
     function mapHuntEligibleCode(code) {
@@ -36942,33 +37362,21 @@ Try again`;
       if (!mapHuntState || !window.d3) return d3.zoomIdentity;
       const width = Number(mapHuntState.mapWidth) || 1000;
       const height = Number(mapHuntState.mapHeight) || 555;
-      const featureBounds = mapHuntState.featureBounds || new Map();
-      const markerPoints = mapHuntState.markerPoints || new Map();
-      let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
-      const includePoint = (x, y) => {
-        if (!Number.isFinite(x) || !Number.isFinite(y)) return;
-        x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y);
-      };
-      for (const code of (codes || [])) {
-        const bounds = featureBounds.get(code);
-        if (bounds) {
-          includePoint(bounds[0]?.[0], bounds[0]?.[1]);
-          includePoint(bounds[1]?.[0], bounds[1]?.[1]);
-        }
-        const point = markerPoints.get(code);
-        if (point) includePoint(point.x, point.y);
-      }
-      if (![x0,y0,x1,y1].every(Number.isFinite)) return d3.zoomIdentity;
-      const spanX = Math.max(10, x1 - x0);
-      const spanY = Math.max(10, y1 - y0);
-      const mobile = window.matchMedia?.("(max-width: 520px)")?.matches;
-      const padX = mobile ? 58 : 42;
-      const padY = mobile ? 44 : 34;
-      let k = Math.min((width - padX * 2) / spanX, (height - padY * 2) / spanY);
-      k = Math.max(1, Math.min(12, k));
-      const cx = (x0 + x1) / 2;
-      const cy = (y0 + y1) / 2;
-      return d3.zoomIdentity.translate(width / 2 - k * cx, height / 2 - k * cy).scale(k);
+      return bigMapFitTransform(
+        width,
+        height,
+        codes,
+        mapHuntState.featureBounds || new Map(),
+        mapHuntState.markerPoints || new Map()
+      ) || d3.zoomIdentity;
+    }
+
+    function updateMapHuntZoomButtons() {
+      const transform = mapHuntState?.zoomTransform || d3.zoomIdentity;
+      const k = Number(transform?.k) || 1;
+      if (mapHuntZoomOutBtn) mapHuntZoomOutBtn.disabled = k <= 1.001;
+      if (mapHuntZoomInBtn) mapHuntZoomInBtn.disabled = k >= BIG_MAP_MAX_ZOOM - .01;
+      if (mapHuntZoomResetBtn) mapHuntZoomResetBtn.disabled = !mapHuntState?.homeTransform || bigMapTransformsMatch(transform, mapHuntState.homeTransform);
     }
 
     function fitMapHuntToActiveArea({ animate = false } = {}) {
@@ -36977,6 +37385,7 @@ Try again`;
       mapHuntState.homeTransform = transform;
       if (animate) mapHuntState.svg.transition().duration(180).call(mapHuntState.zoom.transform, transform);
       else mapHuntState.svg.call(mapHuntState.zoom.transform, transform);
+      updateMapHuntZoomButtons();
     }
 
     function attachMapHuntZoom(svg, layer, width, height) {
@@ -36986,7 +37395,7 @@ Try again`;
       // slow/jittery viewBox rewriting that also triggered Samsung paint bands.
       layer.attr("transform", null);
       const zoom = d3.zoom()
-        .scaleExtent([1, 12])
+        .scaleExtent([1, BIG_MAP_MAX_ZOOM])
         .extent([[0, 0], [width, height]])
         .translateExtent([[0, 0], [width, height]])
         .filter(event => {
@@ -36999,6 +37408,8 @@ Try again`;
           mapHuntState.zoomTransform = event.transform;
           layer.attr("transform", event.transform.toString());
           updateMapHuntMarkerScale(event.transform);
+          requestMapHuntCanvasDraw();
+          updateMapHuntZoomButtons();
         });
       mapHuntState.zoom = zoom;
       mapHuntState.svg = svg;
@@ -37010,6 +37421,8 @@ Try again`;
       mapHuntState.viewportScale = measureMapHuntViewportScale();
       svg.call(zoom).on("dblclick.zoom", null);
       updateMapHuntMarkerScale(d3.zoomIdentity);
+      requestMapHuntCanvasDraw();
+      updateMapHuntZoomButtons();
     }
 
     function mapHuntZoomBy(factor) {
@@ -37032,9 +37445,6 @@ Try again`;
         return { ...feature, properties:{ ...(feature.properties || {}), __geodenCode:code } };
       }).filter(Boolean);
       const width = 1000, height = 555;
-      // Regional Map Hunt rounds still use a world-scale projection so the
-      // learner can see where the active region sits relative to the rest of
-      // Earth. Countries outside the selected set are visual context only.
       const projection = d3.geoNaturalEarth1()
         .fitExtent([[12,12],[width-12,height-12]], { type:"Sphere" });
       const path = d3.geoPath(projection);
@@ -37044,10 +37454,7 @@ Try again`;
       svg.on(".zoom", null);
       svg.on("click.maphunt", null);
       svg.selectAll("*").remove();
-      svg.append("path")
-        .datum({type:"Sphere"})
-        .attr("d", path)
-        .attr("fill", "#dce7e8");
+
       const layer = svg.append("g").attr("class", "map-hunt-map-layer");
       if (mapHuntState.setKey !== "world") {
         layer.append("g")
@@ -37056,42 +37463,59 @@ Try again`;
           .data(features)
           .join("path")
           .attr("class", "map-hunt-context-country")
-          .attr("d", path);
+          .attr("d", path)
+          .style("fill", "transparent")
+          .style("stroke", "transparent")
+          .style("pointer-events", "none");
       }
       const represented = new Set();
-      const tiny = new Set();
       mapHuntState.labelPoints = new Map();
       mapHuntState.featureBounds = new Map();
-      for (const feature of selectedFeatures) {
-        const code = feature.properties?.__geodenCode || "";
-        if (!code) continue;
-        try {
-          const centroid = path.centroid(feature);
-          if (Number.isFinite(centroid?.[0]) && Number.isFinite(centroid?.[1])) {
-            mapHuntState.labelPoints.set(code, { x:centroid[0], y:centroid[1] });
-          }
-          const bounds = path.bounds(feature);
-          if (bounds?.flat?.().every(Number.isFinite)) mapHuntState.featureBounds.set(code, bounds);
-        } catch (_) {}
+      const allProjectedPoints = new Map();
+      for (const c of mapHuntState.allCodes.map(countryByCode).filter(Boolean)) {
+        const point = projection([c.lon, c.lat]);
+        if (point?.every(Number.isFinite)) allProjectedPoints.set(c.code, { x:point[0], y:point[1] });
       }
+      const preparedFeatures = selectedFeatures.map(feature => {
+        const code = feature.properties?.__geodenCode || "";
+        const safe = globeFeaturePaintIsSafe(path, feature, .45);
+        if (code) {
+          if (safe) represented.add(code);
+          try {
+            const centroid = path.centroid(feature);
+            if (Number.isFinite(centroid?.[0]) && Number.isFinite(centroid?.[1])) {
+              mapHuntState.labelPoints.set(code, { x:centroid[0], y:centroid[1] });
+            }
+            const bounds = path.bounds(feature);
+            if (bounds?.flat?.().every(Number.isFinite)) mapHuntState.featureBounds.set(code, bounds);
+          } catch (_) {}
+        }
+        return { feature, code, safe };
+      });
+      const provisionalHome = bigMapFitTransform(width, height, mapHuntState.roundCodes, mapHuntState.featureBounds, allProjectedPoints) || d3.zoomIdentity;
+      const approximateViewportScale = window.matchMedia?.("(max-width: 520px)")?.matches
+        ? Math.max(.28, Math.min(1, (window.visualViewport?.width || window.innerWidth || 390) / width))
+        : Math.max(.55, Math.min(1, Math.min(820, window.innerWidth || 820) / width));
+      const homeScreenScale = Math.max(.05, (Number(provisionalHome.k) || 1) * approximateViewportScale);
+      const tiny = new Set();
+      for (const item of preparedFeatures) {
+        try { if (!item.safe || bigMapFeatureNeedsMarker(path, item.feature, homeScreenScale, .45)) tiny.add(item.code); }
+        catch (_) { tiny.add(item.code); }
+      }
+
       layer.append("g").selectAll("path")
-        .data(selectedFeatures).join("path")
+        .data(preparedFeatures).join("path")
         .attr("class", "map-hunt-country unanswered")
-        .attr("d", feature => globeFeaturePaintIsSafe(path, feature, .45) ? path(feature) : null)
-        .attr("data-map-hunt-code", feature => {
-          const code = feature.properties?.__geodenCode || "";
-          if (code) {
-            const safe = globeFeaturePaintIsSafe(path, feature, .45);
-            if (safe) represented.add(code);
-            try { if (!safe || path.area(feature) < 13) tiny.add(code); } catch (_) { tiny.add(code); }
-          }
-          return code;
-        });
+        .attr("d", item => item.safe ? path(item.feature) : null)
+        .attr("data-map-hunt-code", item => item.code)
+        .style("fill", "transparent")
+        .style("stroke", "transparent")
+        .style("pointer-events", "all");
 
       const markerCountries = mapHuntState.allCodes.map(countryByCode).filter(c => c && (!represented.has(c.code) || tiny.has(c.code)));
       const markerPoints = markerCountries.map(c => {
-        const point = projection([c.lon, c.lat]);
-        return { country:c, x:point?.[0] ?? -20, y:point?.[1] ?? -20 };
+        const point = allProjectedPoints.get(c.code);
+        return { country:c, x:point?.x ?? -20, y:point?.y ?? -20 };
       });
       mapHuntState.markerPoints = new Map(markerPoints.map(point => [point.country.code, { x:point.x, y:point.y }]));
       for (const point of markerPoints) {
@@ -37104,21 +37528,44 @@ Try again`;
         .data(markerPoints).join("circle")
         .attr("class", "map-hunt-reveal-halo")
         .attr("data-map-hunt-halo", d => d.country.code)
-        .attr("cx", d => d.x).attr("cy", d => d.y).attr("r", 10);
+        .attr("cx", d => d.x).attr("cy", d => d.y).attr("r", 10)
+        .style("fill", "transparent")
+        .style("stroke", "transparent")
+        .style("pointer-events", "none");
       markers.selectAll("circle.map-hunt-marker")
         .data(markerPoints).join("circle")
         .attr("class", "map-hunt-marker unanswered")
         .attr("data-map-hunt-code", d => d.country.code)
-        .attr("cx", d => d.x).attr("cy", d => d.y).attr("r", 6.3);
+        .attr("cx", d => d.x).attr("cy", d => d.y).attr("r", 6.3)
+        .style("fill", "transparent")
+        .style("stroke", "transparent")
+        .style("pointer-events", "all");
 
       layer.append("g").attr("class", "map-hunt-result-labels");
       layer.append("g").attr("class", "map-hunt-temp-labels");
       layer.append("g").attr("class", "map-hunt-reveal-labels");
+
+      const dpr = Math.max(1, Math.min(2, Number(window.devicePixelRatio) || 1));
+      if (mapHuntCanvas) {
+        mapHuntCanvas.width = Math.round(width * dpr);
+        mapHuntCanvas.height = Math.round(height * dpr);
+        mapHuntCanvas.style.aspectRatio = `${width} / ${height}`;
+      }
+
       mapHuntState.projection = projection;
+      mapHuntState.canvasData = {
+        width, height, dpr,
+        contextFeatures: features.filter(feature => globeFeaturePaintIsSafe(path, feature, .45)),
+        selectedFeatures: preparedFeatures,
+        markerPoints,
+        pathCanvas: d3.geoPath(projection).context(mapHuntCanvas?.getContext?.("2d", { alpha:false }) || null)
+      };
+      mapHuntState.rendererReady = true;
       attachMapHuntZoom(svg, layer, width, height);
       svg.on("click.maphunt", event => resolveMapHuntClick(event));
       updateMapHuntMapStates();
       fitMapHuntToActiveArea({ animate:false });
+      requestMapHuntCanvasDraw();
     }
 
     function makeMapHuntState(allCodes, roundCodes, revision = false) {
@@ -37143,6 +37590,11 @@ Try again`;
         labelPoints:new Map(),
         markerPoints:new Map(),
         featureBounds:new Map(),
+        canvasData:null,
+        rendererReady:false,
+        wrongFeedbackCode:"",
+        revealFlashCode:"",
+        revealFlashDim:false,
         mapWidth:1000,
         mapHeight:555,
         homeTransform:null,
@@ -37170,6 +37622,7 @@ Try again`;
         if (!allCodes.length) throw new Error("No places available");
         const state = makeMapHuntState(allCodes, allCodes, false);
         mapHuntState = state;
+        noteResumableMode("maphunt");
         await renderMapHuntMap();
         if (token !== mapHuntBuildToken || !mapHuntOverlay?.classList.contains("open")) {
           // Closing during the async map build is a pause. If this same board
@@ -37246,10 +37699,10 @@ Try again`;
 
     function openMapHunt() {
       syncTerritoryPreferenceControls?.();
-      noteResumableMode("maphunt");
       updateMapHuntSetupHelp();
       const canResume = !!(mapHuntState?.svg && mapHuntMap?.childNodes?.length);
       if (canResume) {
+        noteResumableMode("maphunt");
         setMapHuntPlayLayout(true);
         mapHuntSetup?.classList.add("hidden");
         mapHuntLoading?.classList.add("hidden");
@@ -37258,6 +37711,7 @@ Try again`;
         // Closing to the menu is a pause, not a reset. Keep the exact prompt,
         // miss count, map colours and revision state the player left behind.
         updateMapHuntMapStates();
+        requestMapHuntCanvasDraw();
         if (mapHuntState.needsRender && !mapHuntState.finished) {
           mapHuntState.needsRender = false;
           renderMapHuntPrompt();
@@ -37271,6 +37725,7 @@ Try again`;
     }
 
     function closeMapHunt() {
+      if (hasResumableMapHunt()) noteResumableMode("maphunt");
       mapHuntBuildToken += 1;
       // Keep a completed/in-progress board in memory so a World run is not
       // discarded just because the player checked the menu. Any pending answer
@@ -37306,8 +37761,8 @@ Try again`;
     mapHuntRevisionBtn?.addEventListener("click", startMapHuntRevision);
     mapHuntReplayBtn?.addEventListener("click", startMapHuntGame);
     mapHuntChangeBtn?.addEventListener("click", () => resetMapHuntToSetup(true));
-    mapHuntZoomOutBtn?.addEventListener("click", event => { event.stopPropagation(); mapHuntZoomBy(1 / 1.6); });
-    mapHuntZoomInBtn?.addEventListener("click", event => { event.stopPropagation(); mapHuntZoomBy(1.6); });
+    mapHuntZoomOutBtn?.addEventListener("click", event => { event.stopPropagation(); mapHuntZoomBy(1 / BIG_MAP_ZOOM_STEP); });
+    mapHuntZoomInBtn?.addEventListener("click", event => { event.stopPropagation(); mapHuntZoomBy(BIG_MAP_ZOOM_STEP); });
     mapHuntZoomResetBtn?.addEventListener("click", event => { event.stopPropagation(); resetMapHuntZoom(); });
     window.addEventListener("resize", refreshMapHuntViewportMetrics, { passive:true });
     window.visualViewport?.addEventListener("resize", refreshMapHuntViewportMetrics, { passive:true });
