@@ -14025,6 +14025,18 @@ button,
       text-wrap:balance;
     }
   </style>
+
+  <style id="mapcrawl-canvas-v0537">
+    /* v0.53.7 — Map Crawl is rasterised to canvas. Samsung/Android was visibly
+       corrupting recoloured SVG geography into horizontal bands during zoom. */
+    canvas.chain-map {
+      display:block;
+      width:100%;
+      background:#dce7e8;
+      image-rendering:auto;
+      touch-action:none;
+    }
+  </style>
 </head>
 
 <body>
@@ -15118,7 +15130,7 @@ button,
             <button class="special-game-option" type="button" data-sprint-set="oceania">Oceania</button>
             <button class="special-game-option" type="button" data-sprint-set="caribbean">Caribbean</button>
           </div>
-          <div class="special-game-help">Questions mix place names, flags, capitals, currencies and silhouettes from the selected region.</div>
+          <div class="special-game-help">Questions mix place names, flags, capitals and silhouettes from the selected region.</div>
         </div>
         <div class="sprint-rules-card" aria-label="Sprint rules">
           <strong>60 seconds</strong><span> · keep trying until you get it · correct answers advance automatically · give up if you want to move on</span>
@@ -15189,7 +15201,7 @@ button,
           <button class="chain-restart" id="chainRestartBtn" type="button">Change setup</button>
         </div>
         <div class="chain-map-wrap">
-          <svg class="chain-map" id="chainWorldMap" role="img" aria-label="Map Crawl map"></svg>
+          <canvas class="chain-map" id="chainWorldMap" role="img" aria-label="Map Crawl map"></canvas>
           <div class="chain-zoom-hint hidden" aria-hidden="true"></div>
           <div class="chain-zoom-controls" aria-label="Map zoom controls">
             <button class="chain-zoom-button" id="chainZoomOutBtn" type="button" aria-label="Zoom out">−</button>
@@ -15197,13 +15209,6 @@ button,
             <button class="chain-zoom-button chain-zoom-reset" id="chainZoomResetBtn" type="button" aria-label="Reset map view">↺</button>
           </div>
         </div>
-        <div class="chain-legend" aria-label="Map status legend">
-          <span class="chain-legend-item"><span class="chain-legend-dot" style="background:#2f7d4d"></span>Filled</span>
-          <span class="chain-legend-item hidden" id="chainPartialLegend"><span class="chain-legend-dot" style="background:#e4ab42"></span>One answer left</span>
-          <span class="chain-legend-item"><span class="chain-legend-dot" style="background:#8fb1fb"></span>Available</span>
-          <span class="chain-legend-item hidden" id="chainWeakenedLegend"><span class="chain-legend-dot" style="background:#cfcbc0"></span>Needs more land neighbours</span>
-        </div>
-        <div class="chain-progress-track" aria-hidden="true"><div class="chain-progress-fill" id="chainProgressFill"></div></div>
         <div class="chain-input-wrap">
           <div class="chain-input-row">
             <input class="chain-input" id="chainGuessInput" type="text" autocomplete="off" autocapitalize="words" spellcheck="false" placeholder="Name an available place…" aria-label="Map Crawl answer" aria-autocomplete="list" aria-controls="chainSuggestions" aria-expanded="false" />
@@ -15383,7 +15388,7 @@ button,
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
 
   <script>
-    const GEODEN_VERSION = "0.53.6";
+    const GEODEN_VERSION = "0.53.7";
     // Input policy: autocomplete/typeahead is ordinary entry and remains unassisted.
     // Only an actual spelling correction (or an explicit hint/reveal) counts as help.
     const GEODEN_BUILD_DATE = "2026-09-20";
@@ -18264,8 +18269,7 @@ button,
     }
 
     function hasResumableChain() {
-      const map = document.getElementById("chainWorldMap");
-      return !!(chainState && map?.childNodes?.length);
+      return !!(chainState?.rendererReady);
     }
 
     function updateSessionChoiceUI() {
@@ -34911,6 +34915,7 @@ Try again`;
     let chainSpellingSuggestion = null;
     let chainSuggestionIndex = -1;
     let chainPreviousStartCode = null;
+    let chainCanvasDrawRaf = 0;
 
     function updateChainSetupHelp() {
       if (chainAnswerHelp) {
@@ -35267,44 +35272,8 @@ Try again`;
     }
 
     function refreshChainMarkerEmphasis(availability = chainAvailability()) {
-      if (!chainState || !chainWorldMap || !window.d3) return;
-      const unresolved = Math.max(0, chainState.codes.length - availability.filled.size);
-      const k = Math.max(1, Number(chainState.zoomTransform?.k) || 1);
-      const lateGame = unresolved > 0 && unresolved <= 5;
-      const finalPair = unresolved > 0 && unresolved <= 2;
-      const svg = d3.select(chainWorldMap);
-
-      // Keep country/marker strokes visually stable without vector-effect.
-      // This is intentionally done with a few root variables rather than
-      // repainting every path during a pan/zoom frame.
-      chainWorldMap.style.setProperty("--chain-context-stroke", `${.55 / k}px`);
-      chainWorldMap.style.setProperty("--chain-country-stroke", `${.7 / k}px`);
-      chainWorldMap.style.setProperty("--chain-weakened-stroke", `${1.25 / k}px`);
-      chainWorldMap.style.setProperty("--chain-active-stroke", `${1.35 / k}px`);
-      chainWorldMap.style.setProperty("--chain-filled-stroke", `${1.05 / k}px`);
-      chainWorldMap.style.setProperty("--chain-marker-stroke", `${2 / k}px`);
-      chainWorldMap.style.setProperty("--chain-halo-stroke", `${1.6 / k}px`);
-
-      svg.selectAll(".chain-marker").each(function() {
-        const code = this.getAttribute("data-chain-code");
-        const status = chainStatusClass(code, availability);
-        const screenRadius = status === "filled"
-          ? 4.8
-          : finalPair ? 10.5
-          : lateGame ? 8.2
-          : 6.2;
-        d3.select(this).attr("r", screenRadius / k);
-      });
-
-      svg.selectAll(".chain-marker-halo").each(function() {
-        const code = this.getAttribute("data-chain-halo-code");
-        const status = chainStatusClass(code, availability);
-        const emphasise = lateGame && status !== "filled";
-        const markerRadius = finalPair ? 10.5 : 8.2;
-        d3.select(this)
-          .attr("class", `chain-marker-halo ${status}${emphasise ? " emphasis" : ""}`)
-          .attr("r", (markerRadius + (finalPair ? 5.5 : 4.2)) / k);
-      });
+      if (!chainState?.rendererReady || !chainWorldMap) return;
+      requestChainCanvasDraw(availability);
     }
 
     function updateChainZoomButtons() {
@@ -35321,8 +35290,8 @@ Try again`;
       state.zoomTransform = null;
     }
 
-    function attachChainZoom(svg, layer, width, height) {
-      if (!chainState || !svg || !layer || !window.d3) return;
+    function attachChainZoom(canvasSelection, width, height) {
+      if (!chainState || !canvasSelection || !window.d3) return;
       const zoom = d3.zoom()
         .scaleExtent([1, 12])
         .extent([[0, 0], [width, height]])
@@ -35335,13 +35304,12 @@ Try again`;
         .on("zoom.chain", event => {
           if (!chainState) return;
           chainState.zoomTransform = event.transform;
-          layer.attr("transform", event.transform.toString());
-          refreshChainMarkerEmphasis();
+          requestChainCanvasDraw();
           updateChainZoomButtons();
         });
       chainState.zoom = zoom;
       chainState.zoomTransform = d3.zoomIdentity;
-      svg.call(zoom).on("dblclick.zoom", null);
+      canvasSelection.call(zoom).on("dblclick.zoom", null);
       updateChainZoomButtons();
     }
 
@@ -35357,17 +35325,118 @@ Try again`;
       target.call(chainState.zoom.transform, d3.zoomIdentity);
     }
 
+    function chainCanvasStatusStyle(status) {
+      if (status === "filled") return { fill:"#2f7d4d", stroke:"#ffffff", line:1.05 };
+      if (status === "partial") return { fill:"#e4ab42", stroke:"#ffffff", line:1.35 };
+      if (status === "available") return { fill:"#8fb1fb", stroke:"#2864f0", line:1.35 };
+      if (status === "weakened") return { fill:"#cfcbc0", stroke:"#aa7e2b", line:1.25 };
+      return { fill:"#b9bab5", stroke:"#f3efe6", line:.7 };
+    }
+
+    function chainCanvasMarkerFill(status) {
+      if (status === "filled") return "#2f7d4d";
+      if (status === "partial") return "#e4ab42";
+      if (status === "available") return "#2864f0";
+      if (status === "weakened") return "#b48b42";
+      return "#8f8e89";
+    }
+
+    function chainCanvasHaloStroke(status) {
+      if (status === "partial") return "#b77a13";
+      if (status === "available") return "#2864f0";
+      if (status === "weakened") return "#8a641d";
+      return "#6d6961";
+    }
+
+    function requestChainCanvasDraw(availability = null) {
+      if (!chainState?.rendererReady || !chainWorldMap) return;
+      if (availability) chainState.lastAvailability = availability;
+      if (chainCanvasDrawRaf) return;
+      chainCanvasDrawRaf = window.requestAnimationFrame(() => {
+        chainCanvasDrawRaf = 0;
+        drawChainCanvas(chainState?.lastAvailability || chainAvailability());
+      });
+    }
+
+    function drawChainCanvas(availability = chainAvailability()) {
+      const data = chainState?.canvasData;
+      if (!data || !chainWorldMap?.getContext) return;
+      const { width, height, dpr, contextFeatures, selectedFeatures, markerPoints, pathCanvas } = data;
+      const ctx = chainWorldMap.getContext("2d", { alpha:false });
+      if (!ctx) return;
+      const t = chainState.zoomTransform || d3.zoomIdentity;
+      const k = Math.max(1, Number(t.k) || 1);
+      const unresolved = Math.max(0, chainState.codes.length - availability.filled.size);
+      const lateGame = unresolved > 0 && unresolved <= 5;
+      const finalPair = unresolved > 0 && unresolved <= 2;
+
+      // Reset to device-pixel space and paint a clean ocean background every frame.
+      ctx.setTransform(1,0,0,1,0,0);
+      ctx.fillStyle = "#dce7e8";
+      ctx.fillRect(0,0,chainWorldMap.width,chainWorldMap.height);
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+      ctx.save();
+      ctx.translate(t.x, t.y);
+      ctx.scale(k, k);
+      ctx.lineJoin = "round";
+      ctx.lineCap = "round";
+
+      if (chainState.setKey !== "world") {
+        ctx.save();
+        ctx.globalAlpha = .26;
+        ctx.fillStyle = "#b9bfbd";
+        ctx.strokeStyle = "#f3efe6";
+        ctx.lineWidth = .55 / k;
+        for (const feature of contextFeatures) {
+          ctx.beginPath();
+          pathCanvas(feature);
+          ctx.fill();
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      for (const item of selectedFeatures) {
+        if (!item.safe) continue;
+        const status = chainStatusClass(item.code, availability);
+        const style = chainCanvasStatusStyle(status);
+        ctx.beginPath();
+        pathCanvas(item.feature);
+        ctx.fillStyle = style.fill;
+        ctx.strokeStyle = style.stroke;
+        ctx.lineWidth = style.line / k;
+        ctx.fill();
+        ctx.stroke();
+      }
+
+      for (const point of markerPoints) {
+        const status = chainStatusClass(point.code, availability);
+        const screenRadius = status === "filled" ? 4.8 : finalPair ? 10.5 : lateGame ? 8.2 : 6.2;
+        if (lateGame && status !== "filled") {
+          const haloRadius = (finalPair ? 10.5 : 8.2) + (finalPair ? 5.5 : 4.2);
+          ctx.beginPath();
+          ctx.arc(point.x, point.y, haloRadius / k, 0, Math.PI * 2);
+          ctx.strokeStyle = chainCanvasHaloStroke(status);
+          ctx.globalAlpha = .72;
+          ctx.lineWidth = 1.6 / k;
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+        }
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, screenRadius / k, 0, Math.PI * 2);
+        ctx.fillStyle = chainCanvasMarkerFill(status);
+        ctx.strokeStyle = "#f7f4ed";
+        ctx.lineWidth = 2 / k;
+        ctx.fill();
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
     function updateChainMapStates() {
       if (!chainState || !chainWorldMap) return;
       const availability = chainAvailability();
-      const svg = d3.select(chainWorldMap);
-      svg.selectAll("[data-chain-code]")
-        .attr("class", function() {
-          const code = this.getAttribute("data-chain-code");
-          const marker = this.tagName.toLowerCase() === "circle";
-          return `${marker ? "chain-marker" : "chain-country"} ${chainStatusClass(code, availability)}`;
-        });
-
+      chainState.lastAvailability = availability;
       const filledCount = availability.filled.size;
       const total = chainState.codes.length;
       if (chainStatusMeta) {
@@ -35378,9 +35447,8 @@ Try again`;
         const ready = availability.available.size;
         chainWorldMap.setAttribute("aria-label", `${countrySetDisplayName(chainState.setKey)} Map Crawl map. ${filledCount} of ${total} filled; ${ready} place${ready === 1 ? "" : "s"} ready.`);
       }
-      if (chainProgressFill) chainProgressFill.style.width = `${total ? filledCount / total * 100 : 0}%`;
       if (chainGiveUpBtn) chainGiveUpBtn.disabled = !!chainState.finishedAt || availability.available.size === 0;
-      refreshChainMarkerEmphasis(availability);
+      requestChainCanvasDraw(availability);
       if (chainGuessInput) {
         chainGuessInput.classList.toggle("capital-answer-target", chainState.answerMode === "capital");
         chainGuessInput.placeholder = chainState.answerMode === "capital"
@@ -35399,71 +35467,71 @@ Try again`;
 
     async function renderChainMap() {
       const world = await loadWorld();
-      if (!chainState || !window.d3 || !window.topojson) throw new Error("Map unavailable");
+      if (!chainState || !window.d3 || !window.topojson || !chainWorldMap?.getContext) throw new Error("Map unavailable");
       const features = topojson.feature(world, world.objects.countries).features;
-      const selectedFeatures = chainState.codes.map(code => {
+      const rawSelected = chainState.codes.map(code => {
         const c = countryByCode(code);
         const feature = mapFeatureForCountry(c, features, true);
-        if (!feature) return null;
-        return { ...feature, properties:{ ...(feature.properties || {}), __geodenCode:code } };
+        return feature ? { code, feature } : null;
       }).filter(Boolean);
-      const width = 1000, height = 555;
-      // Keep the whole world visible even for regional games. The selected set
-      // is painted on top while everything outside it stays as quiet geographic
-      // context, so Europe/Africa/etc. retain their real position on Earth.
-      const projection = d3.geoNaturalEarth1()
-        .fitExtent([[12,12],[width-12,height-12]], { type:"Sphere" });
-      const path = d3.geoPath(projection);
-      const svg = d3.select(chainWorldMap)
-        .attr("viewBox", `0 0 ${width} ${height}`)
-        .attr("preserveAspectRatio", "xMidYMid meet");
-      svg.on(".zoom", null);
-      svg.selectAll("*").remove();
-      svg.append("path").datum({type:"Sphere"}).attr("d",path).attr("fill","#dce7e8");
-      const layer = svg.append("g").attr("class", "chain-map-layer");
-      if (chainState.setKey !== "world") {
-        layer.append("g")
-          .attr("class", "chain-map-context")
-          .selectAll("path")
-          .data(features)
-          .join("path")
-          .attr("class", "chain-context-country")
-          .attr("d", path);
+
+      // Measure the actual on-screen map while keeping the play UI invisible.
+      // D3 zoom on canvas uses CSS pixels, so matching the backing logical size
+      // to the rendered box keeps touch/pointer movement natural and precise.
+      const playWasHidden = chainFillPlay?.classList.contains("hidden");
+      if (playWasHidden) {
+        chainFillPlay.style.visibility = "hidden";
+        chainFillPlay.classList.remove("hidden");
+        await new Promise(resolve => window.requestAnimationFrame(resolve));
       }
+      const rect = chainWorldMap.getBoundingClientRect();
+      const fallbackWidth = Math.max(300, Math.min(728, window.innerWidth - 34));
+      const width = Math.max(300, Math.round(rect.width || fallbackWidth));
+      const mobile = window.matchMedia?.("(max-width: 520px)")?.matches;
+      const height = Math.max(mobile ? 230 : 270, Math.round(rect.height || width / (mobile ? 1.45 : 1.8)));
+      if (playWasHidden) {
+        chainFillPlay.classList.add("hidden");
+        chainFillPlay.style.visibility = "";
+      }
+
+      const dpr = Math.max(1, Math.min(2, Number(window.devicePixelRatio) || 1));
+      chainWorldMap.width = Math.round(width * dpr);
+      chainWorldMap.height = Math.round(height * dpr);
+      chainWorldMap.style.aspectRatio = `${width} / ${height}`;
+
+      const projection = d3.geoNaturalEarth1()
+        .fitExtent([[8,8],[width-8,height-8]], { type:"Sphere" });
+      const pathMeasure = d3.geoPath(projection);
+      const ctx = chainWorldMap.getContext("2d", { alpha:false });
+      const pathCanvas = d3.geoPath(projection).context(ctx);
       const represented = new Set();
       const tiny = new Set();
-      layer.append("g").selectAll("path")
-        .data(selectedFeatures).join("path")
-        .attr("d", feature => globeFeaturePaintIsSafe(path, feature, .45) ? path(feature) : null)
-        .attr("data-chain-code", feature => {
-          const code = feature.properties?.__geodenCode || "";
-          if (code) {
-            const safeFeature = globeFeaturePaintIsSafe(path, feature, .45);
-            if (safeFeature) represented.add(code);
-            try { if (!safeFeature || path.area(feature) < 10) tiny.add(code); } catch (_) { tiny.add(code); }
-          }
-          return code;
-        });
-      const markerCountries = chainState.codes.map(countryByCode).filter(c => c && (!represented.has(c.code) || tiny.has(c.code)));
-      const markerPoints = markerCountries.map(c => {
-        const point = projection([c.lon, c.lat]);
-        return { country:c, x:point?.[0] ?? -20, y:point?.[1] ?? -20 };
+      const selectedFeatures = rawSelected.map(item => {
+        const safe = globeFeaturePaintIsSafe(pathMeasure, item.feature, .45);
+        if (safe) represented.add(item.code);
+        try { if (!safe || pathMeasure.area(item.feature) < 10) tiny.add(item.code); } catch (_) { tiny.add(item.code); }
+        return { ...item, safe };
       });
-      layer.append("g").selectAll("circle")
-        .data(markerPoints).join("circle")
-        .attr("class", "chain-marker-halo")
-        .attr("data-chain-halo-code", d => d.country.code)
-        .attr("cx", d => d.x)
-        .attr("cy", d => d.y)
-        .attr("r", 0);
-      layer.append("g").selectAll("circle")
-        .data(markerPoints).join("circle")
-        .attr("data-chain-code", d => d.country.code)
-        .attr("cx", d => d.x)
-        .attr("cy", d => d.y)
-        .attr("r", 6.2);
+      const markerPoints = chainState.codes.map(countryByCode)
+        .filter(c => c && (!represented.has(c.code) || tiny.has(c.code)))
+        .map(c => {
+          const point = projection([c.lon, c.lat]);
+          return { code:c.code, x:point?.[0] ?? -20, y:point?.[1] ?? -20 };
+        });
+
+      destroyChainZoom();
       chainState.projection = projection;
-      attachChainZoom(svg, layer, width, height);
+      chainState.canvasData = {
+        width, height, dpr,
+        contextFeatures: features.filter(feature => globeFeaturePaintIsSafe(pathMeasure, feature, .45)),
+        selectedFeatures,
+        markerPoints,
+        pathCanvas
+      };
+      chainState.rendererReady = true;
+      chainState.lastAvailability = chainAvailability();
+      attachChainZoom(d3.select(chainWorldMap), width, height);
+      drawChainCanvas(chainState.lastAvailability);
       updateChainMapStates();
     }
 
@@ -36090,7 +36158,10 @@ Try again`;
           lastFilledCode:startCode,
           startedAt:Date.now(),
           finishedAt:null,
-          projection:null
+          projection:null,
+          rendererReady:false,
+          canvasData:null,
+          lastAvailability:null
         };
         const startPart = chainPartState(startCode);
         startPart.country = true;
@@ -36122,6 +36193,7 @@ Try again`;
       chainBuildToken += 1;
       stopChainTimer();
       destroyChainZoom();
+      if (chainCanvasDrawRaf) { window.cancelAnimationFrame(chainCanvasDrawRaf); chainCanvasDrawRaf = 0; }
       chainState = null;
       chainFillLoading.classList.add("hidden");
       chainFillLoading.textContent = "Building the map…";
