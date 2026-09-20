@@ -14027,6 +14027,10 @@ button,
   </style>
 
   <style id="mapcrawl-canvas-v0537">
+    /* v0.53.8 — Map Crawl can zoom deeper, and autocomplete across typed game
+       modes searches the full GeoDen answer database rather than only the active
+       region/currently-playable subset. */
+
     /* v0.53.7 — Map Crawl is rasterised to canvas. Samsung/Android was visibly
        corrupting recoloured SVG geography into horizontal bands during zoom. */
     canvas.chain-map {
@@ -15168,7 +15172,7 @@ button,
           </label>
         </div>
         <div class="special-game-field">
-          <div class="special-game-label">Answers</div>
+          <div class="special-game-label">Answer with</div>
           <div class="special-game-options" id="chainAnswerOptions" role="group" aria-label="Choose answer type">
             <button class="special-game-option active" type="button" data-chain-answer="country">Place names</button>
             <button class="special-game-option" type="button" data-chain-answer="capital">Capital names</button>
@@ -15177,7 +15181,7 @@ button,
           <div class="special-game-help" id="chainAnswerHelp">Enter any available place.</div>
           <label class="territory-inline-toggle">
             <input id="chainAutocompleteToggle" type="checkbox" checked />
-            <span class="territory-inline-toggle-copy"><strong>Typeahead suggestions</strong><span class="territory-inline-toggle-meta">Suggest playable place or capital names after 1 letter</span></span>
+            <span class="territory-inline-toggle-copy"><strong>Typeahead suggestions</strong><span class="territory-inline-toggle-meta">Search all GeoDen place or capital names after 1 letter</span></span>
           </label>
         </div>
         <div class="special-game-field">
@@ -15388,7 +15392,7 @@ button,
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
 
   <script>
-    const GEODEN_VERSION = "0.53.7";
+    const GEODEN_VERSION = "0.53.8";
     // Input policy: autocomplete/typeahead is ordinary entry and remains unassisted.
     // Only an actual spelling correction (or an explicit hint/reveal) counts as help.
     const GEODEN_BUILD_DATE = "2026-09-20";
@@ -23336,21 +23340,26 @@ button,
     async function interactiveCandidateTexts(stage) {
       if (interactiveCandidateCache.has(stage)) return interactiveCandidateCache.get(stage);
 
+      // Autocomplete is input assistance, not a reveal of what is currently in
+      // play. Always search the complete GeoDen answer database; submission
+      // logic still decides whether the typed answer is valid for this round.
+      const autocompleteCountries = countries.filter(Boolean);
+
       if (stage === "neighbours") {
-        const values = enabledGeographyEntities().map(country => country.name).sort((a,b) => a.localeCompare(b));
+        const values = autocompleteCountries.map(country => country.name).sort((a,b) => a.localeCompare(b));
         interactiveCandidateCache.set(stage, Promise.resolve(values));
         return values;
       }
 
       if (stage === "capital") {
-        const values = [...new Set(enabledGeographyEntities().flatMap(country => capitalNamesForCountry(country)).filter(Boolean))]
+        const values = [...new Set(autocompleteCountries.flatMap(country => capitalNamesForCountry(country)).filter(Boolean))]
           .sort((a,b) => a.localeCompare(b));
         interactiveCandidateCache.set(stage, Promise.resolve(values));
         return values;
       }
 
       if (stage === "currency") {
-        const values = [...new Set(enabledGeographyEntities().flatMap(country =>
+        const values = [...new Set(autocompleteCountries.flatMap(country =>
           (CURRENCY_CODES_BY_COUNTRY[country.code] || []).map(currencyDisplayName)
         ).filter(Boolean))].sort((a,b) => a.localeCompare(b));
         interactiveCandidateCache.set(stage, Promise.resolve(values));
@@ -23361,7 +23370,7 @@ button,
         const values = [];
         const seen = new Set();
 
-        for (const country of enabledGeographyEntities()) {
+        for (const country of autocompleteCountries) {
           const details = languageDetailsForCountry(country);
           const source = [
             ...(details.official || []),
@@ -23384,7 +23393,7 @@ button,
         return values;
       }
 
-      const promise = Promise.all(enabledGeographyEntities().map(async c => {
+      const promise = Promise.all(autocompleteCountries.map(async c => {
         try {
           const datum = await matchingDatumForCountry(c, stage);
           return datum?.text || "";
@@ -31454,7 +31463,9 @@ button,
         detectiveSuggestions.classList.add("hidden");
         return;
       }
-      const matches = detectiveCountryCandidates()
+      // Suggestions deliberately span the whole GeoDen place database, even
+      // when the current Detective session uses a smaller region/set.
+      const matches = countries.filter(Boolean)
         .map(country => {
           const name = interactiveLooseNormalize(country.name);
           const aliases = countryAcceptedAnswerNames(country).slice(1).map(interactiveLooseNormalize);
@@ -32546,24 +32557,20 @@ Try again`;
 
     async function rapidCandidateTexts(round) {
       const target = RAPID_TYPES[round.type]?.target;
-      const sprintCountries = isSprintSession()
-        ? countrySetIndices(studySession.sprint.set).map(i => countries[i]).filter(Boolean)
-        : null;
+      const autocompleteCountries = countries.filter(Boolean);
+      // Rapid Fire and Sprint typeahead always searches every known answer. The
+      // selected region/question still controls correctness after submission.
       if (target === "country") {
-        const pool = sprintCountries || enabledGeographyEntities();
-        return pool.map(c => c.name).sort((a,b) => a.localeCompare(b));
+        return autocompleteCountries.map(c => c.name).sort((a,b) => a.localeCompare(b));
       }
       if (target === "capital") {
-        if (sprintCountries) return [...new Set(sprintCountries.flatMap(rapidCapitalTargets).filter(Boolean))].sort((a,b) => a.localeCompare(b));
-        return interactiveCandidateTexts("capital");
+        return [...new Set(autocompleteCountries.flatMap(rapidCapitalTargets).filter(Boolean))].sort((a,b) => a.localeCompare(b));
       }
       if (target === "currency") {
-        if (sprintCountries) return [...new Set(sprintCountries.flatMap(rapidCurrencyTargets).filter(Boolean))].sort((a,b) => a.localeCompare(b));
-        return interactiveCandidateTexts("currency");
+        return [...new Set(autocompleteCountries.flatMap(rapidCurrencyTargets).filter(Boolean))].sort((a,b) => a.localeCompare(b));
       }
       if (target === "largestCity") {
-        const pool = sprintCountries || countries;
-        return [...new Set(pool.map(rapidLargestCity).filter(Boolean))].sort((a,b) => a.localeCompare(b));
+        return [...new Set(autocompleteCountries.map(rapidLargestCity).filter(Boolean))].sort((a,b) => a.localeCompare(b));
       }
       return [];
     }
@@ -34920,7 +34927,7 @@ Try again`;
     function updateChainSetupHelp() {
       if (chainAnswerHelp) {
         chainAnswerHelp.textContent = chainAnswerMode === "capital"
-          ? "Enter a capital for any available place."
+          ? "Enter the capital of any available place."
           : chainAnswerMode === "both"
             ? "Place or capital — complete both."
             : "Enter any available place.";
@@ -34937,7 +34944,7 @@ Try again`;
 
     function chainStartInstruction() {
       const answer = chainAnswerMode === "capital"
-        ? "Enter a capital for any available place."
+        ? "Enter the capital of any available place."
         : chainAnswerMode === "both"
           ? "Start with any available place or its capital. Part-filled places need one more answer."
           : "Enter any available place.";
@@ -35279,7 +35286,7 @@ Try again`;
     function updateChainZoomButtons() {
       const k = Number(chainState?.zoomTransform?.k) || 1;
       if (chainZoomOutBtn) chainZoomOutBtn.disabled = k <= 1.001;
-      if (chainZoomInBtn) chainZoomInBtn.disabled = k >= 11.99;
+      if (chainZoomInBtn) chainZoomInBtn.disabled = k >= 31.99;
       if (chainZoomResetBtn) chainZoomResetBtn.disabled = k <= 1.001;
     }
 
@@ -35293,7 +35300,7 @@ Try again`;
     function attachChainZoom(canvasSelection, width, height) {
       if (!chainState || !canvasSelection || !window.d3) return;
       const zoom = d3.zoom()
-        .scaleExtent([1, 12])
+        .scaleExtent([1, 32])
         .extent([[0, 0], [width, height]])
         .translateExtent([[0, 0], [width, height]])
         .filter(event => {
@@ -35452,7 +35459,7 @@ Try again`;
       if (chainGuessInput) {
         chainGuessInput.classList.toggle("capital-answer-target", chainState.answerMode === "capital");
         chainGuessInput.placeholder = chainState.answerMode === "capital"
-          ? "Capital of an available place…"
+          ? "Type an available capital…"
           : chainState.answerMode === "both"
             ? "Place or capital…"
             : "Name an available place…";
@@ -35786,17 +35793,15 @@ Try again`;
 
     function chainSuggestionEntries() {
       if (!chainState || chainState.finishedAt) return [];
-      const availability = chainAvailability();
-      const allowed = new Set([...availability.available, ...availability.partial]);
+      // Map Crawl autocomplete is intentionally global. Seeing a name in the
+      // typeahead does not mean it is currently reachable (or even on this map);
+      // submitChainGuess remains the authority on whether it can be filled.
       const entries = [];
-      for (const code of allowed) {
-        const country = countryByCode(code);
-        if (!country) continue;
-        const part = chainPartState(code);
-        if ((chainState.answerMode === "country" || chainState.answerMode === "both") && !part.country) {
+      for (const country of countries.filter(Boolean)) {
+        if (chainState.answerMode === "country" || chainState.answerMode === "both") {
           entries.push({ answer: country.name, kind: "Place", country });
         }
-        if ((chainState.answerMode === "capital" || chainState.answerMode === "both") && !part.capital) {
+        if (chainState.answerMode === "capital" || chainState.answerMode === "both") {
           for (const capital of chainCapitalNames(country)) entries.push({ answer: capital, kind: "Capital", country });
         }
       }
