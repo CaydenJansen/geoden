@@ -9916,6 +9916,19 @@ button,
   .rapid-choice-grid { grid-template-columns:1fr; }
   .rapid-scorebar { align-items:flex-start; flex-direction:column; gap:3px; }
 }
+
+/* v0.51.1 — progression controls should never feel lost below the fold.
+   JS brings newly available actions into view; scroll margins keep them clear
+   of phone safe areas/browser chrome when the panel scrolls. */
+.rapid-next,
+.detective-next,
+.matching-next-round,
+.rapid-location-map .city-location-lock {
+  scroll-margin-block: 18px max(28px, env(safe-area-inset-bottom));
+}
+.rapid-location-map .city-location-lock:not(.hidden) {
+  box-shadow: 0 9px 24px rgba(40,100,240,.24);
+}
 /* ---------- v10.12 text layout system ---------- */
 /* Shared rule: compact controls should never solve lack of space by breaking
    words into vertical letter columns. Prefer earlier stacking, balanced wraps,
@@ -12922,7 +12935,7 @@ button,
 
   <style id="maphunt-viewbox-stability-v0507">
     /* v0.50.7 — viewBox zoom keeps Android SVG paths stable. */
-    .map-hunt-map-layer { transform:none !important; }
+    .map-hunt-map-layer-legacy-viewbox { transform:none !important; }
     .map-hunt-context-country { stroke-width:var(--mh-context-stroke,.55px) !important; }
     .map-hunt-country { stroke-width:var(--mh-country-stroke,.72px) !important; }
     .map-hunt-country.try-1,
@@ -13062,6 +13075,954 @@ button,
         min-height: 44px;
         padding-bottom: 5px;
       }
+    }
+  </style>
+
+  <style id="geoden-v0510-fixes">
+    .flash-flow-settings {
+      display:grid; gap:8px; margin:10px 0 12px; padding:11px;
+      border:1px solid rgba(23,23,23,.09); border-radius:14px; background:rgba(255,255,255,.30);
+    }
+    .flash-flow-settings.hidden { display:none !important; }
+    .flash-flow-grid { display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+    .flash-flow-option-group { min-width:0; display:grid; gap:5px; }
+    .flash-flow-option-label { color:var(--muted); font-size:.67rem; font-weight:850; letter-spacing:.06em; text-transform:uppercase; }
+    @media (max-width:520px) { .flash-flow-grid { grid-template-columns:1fr; } }
+
+    /* v0.51.1: restore explicit submit/continue flow for Rapid Fire location
+       questions and auto-surface progression controls that appear below fold. */
+
+    /* v0.51.0: explicit touch rail scrolling. The JS pointer scroller owns
+       coarse-pointer horizontal gestures so nested panel scrolling cannot steal them. */
+    @media (pointer:coarse), (hover:none) {
+      .matching-pool-cards {
+        touch-action:none !important;
+        -webkit-overflow-scrolling:auto !important;
+        scroll-behavior:auto !important;
+        overflow-x:auto !important; overflow-y:hidden !important;
+      }
+      .matching-pool-cards .matching-card { touch-action:none !important; }
+    }
+
+    /* Samsung/Android SVG safe paint path. Keep D3's transform-based gesture
+       model (so pan/zoom feels normal) but avoid non-scaling strokes and SVG
+       paint transitions, which can rasterise into horizontal noise bands. */
+    .map-hunt-map-layer, .chain-map-layer { transform-box:fill-box; transform-origin:0 0; }
+    .map-hunt-context-country, .map-hunt-country, .map-hunt-marker, .map-hunt-reveal-halo,
+    .chain-context-country, .chain-country, .chain-marker, .chain-marker-halo {
+      vector-effect:none !important;
+      transition:none !important;
+      filter:none !important;
+      animation:none !important;
+    }
+    .chain-context-country { stroke-width:var(--chain-context-stroke,.55px) !important; }
+    .chain-country { stroke-width:var(--chain-country-stroke,.7px) !important; }
+    .chain-country.weakened { stroke-width:var(--chain-weakened-stroke,1.25px) !important; }
+    .chain-country.available, .chain-country.partial { stroke-width:var(--chain-active-stroke,1.35px) !important; }
+    .chain-country.filled { stroke-width:var(--chain-filled-stroke,1.05px) !important; }
+    .chain-marker { stroke-width:var(--chain-marker-stroke,2px) !important; }
+    .chain-marker-halo { stroke-width:var(--chain-halo-stroke,1.6px) !important; }
+  </style>
+
+  <style id="sprint-v0520">
+    .sprint-rules-card {
+      padding:12px 13px; border:1px solid rgba(23,23,23,.09); border-radius:13px;
+      background:rgba(255,255,255,.42); color:var(--muted); font-size:.76rem; line-height:1.35;
+    }
+    .sprint-rules-card strong { color:var(--text); font-weight:900; }
+    .rapid-sprint-timer {
+      min-width:58px; padding:5px 9px; border-radius:999px; background:rgba(40,100,240,.10);
+      color:var(--accent-dark); font-weight:900; font-variant-numeric:tabular-nums; text-align:center;
+    }
+    .rapid-sprint-timer.urgent { background:rgba(183,75,64,.11); color:var(--incorrect-dark); }
+    .rapid-overlay.sprint-active .rapid-help-actions { display:none !important; }
+    .rapid-overlay.sprint-active #rapidNextBtn { display:none !important; }
+    .rapid-overlay.sprint-active .rapid-result { padding-bottom:14px; }
+    @media (max-width:520px) {
+      .sprint-panel { max-height:calc(100dvh - 12px); overflow:auto; }
+      .rapid-sprint-timer { margin-left:auto; }
+    }
+  </style>
+
+  <style id="sprint-feedback-capital-emphasis-v0521">
+    /* v0.52.1 — make capital-answer prompts unmistakable without styling
+       questions where a capital is merely the clue. */
+    .capital-target-word {
+      color: var(--accent-dark);
+      font-weight: 950;
+      text-decoration-line: underline;
+      text-decoration-thickness: .11em;
+      text-underline-offset: .14em;
+      text-decoration-color: rgba(40,100,240,.48);
+    }
+    .stage-label.capital-target-label,
+    .rapid-kicker.capital-target-label {
+      color: var(--accent-dark);
+    }
+    .chain-input.capital-answer-target {
+      border-color: rgba(40,100,240,.38);
+      box-shadow: inset 0 0 0 1px rgba(40,100,240,.06);
+    }
+    .chain-input.capital-answer-target::placeholder {
+      color: #315f9d;
+      opacity: .9;
+      font-weight: 820;
+    }
+
+    /* Sprint answers need to register even when the player is moving quickly.
+       The toast is viewport-fixed so a large flag/silhouette can never push the
+       feedback below the fold. */
+    .rapid-sprint-feedback {
+      position: fixed;
+      left: 50%;
+      bottom: max(18px, calc(env(safe-area-inset-bottom) + 12px));
+      z-index: 240;
+      width: min(520px, calc(100vw - 28px));
+      transform: translateX(-50%);
+      padding: 12px 16px;
+      border: 1px solid rgba(23,23,23,.10);
+      border-radius: 16px;
+      background: rgba(248,245,238,.97);
+      box-shadow: 0 14px 42px rgba(0,0,0,.20);
+      color: var(--text);
+      font-size: clamp(.88rem, 3.8vw, 1.02rem);
+      line-height: 1.25;
+      font-weight: 900;
+      text-align: center;
+      pointer-events: none;
+      backdrop-filter: blur(8px);
+    }
+    .rapid-sprint-feedback.correct {
+      color: var(--correct-dark);
+      border-color: rgba(47,125,77,.34);
+      background: rgba(240,248,242,.97);
+    }
+    .rapid-sprint-feedback.wrong {
+      color: var(--incorrect-dark);
+      border-color: rgba(183,75,64,.34);
+      background: rgba(251,242,240,.98);
+    }
+    .rapid-overlay.sprint-active .rapid-question-card.sprint-answer-correct {
+      border-color: rgba(47,125,77,.46);
+      box-shadow: inset 0 0 0 2px rgba(47,125,77,.08);
+    }
+    .rapid-overlay.sprint-active .rapid-question-card.sprint-answer-wrong {
+      border-color: rgba(183,75,64,.48);
+      box-shadow: inset 0 0 0 2px rgba(183,75,64,.08);
+    }
+    .rapid-overlay.sprint-active .rapid-result-kicker {
+      font-size: .72rem;
+      letter-spacing: .11em;
+    }
+    .rapid-overlay.sprint-active .rapid-answer {
+      font-size: clamp(1.3rem, 5.6vw, 1.75rem);
+    }
+  </style>
+
+
+  <style id="sprint-retry-feedback-v0522">
+    /* v0.52.2 — Sprint is timed practice, not one-shot assessment. Wrong
+       answers keep the current question active; feedback fills the viewport so
+       it cannot be missed, while Give up remains reachable at the bottom. */
+    .rapid-sprint-feedback {
+      inset: 0 !important;
+      left: 0 !important;
+      bottom: auto !important;
+      width: auto !important;
+      transform: none !important;
+      display: grid;
+      place-items: center;
+      padding: max(24px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom));
+      border: 0 !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      font-size: clamp(2.1rem, 10vw, 4.8rem) !important;
+      line-height: 1.02 !important;
+      letter-spacing: -.045em;
+      font-weight: 950 !important;
+      white-space: pre-line;
+      text-wrap: balance;
+      text-shadow: 0 2px 18px rgba(255,255,255,.7);
+      backdrop-filter: none !important;
+    }
+    .rapid-sprint-feedback.correct {
+      color: #1d6b3f !important;
+      background: rgba(47,125,77,.19) !important;
+    }
+    .rapid-sprint-feedback.wrong {
+      color: #93372f !important;
+      background: rgba(183,75,64,.18) !important;
+    }
+    .rapid-overlay.sprint-active .rapid-question-card { padding-bottom:72px; }
+    .rapid-overlay.sprint-active .rapid-help-actions {
+      display: flex !important;
+      position: fixed;
+      right: max(16px, env(safe-area-inset-right));
+      bottom: max(14px, calc(env(safe-area-inset-bottom) + 8px));
+      z-index: 85;
+      justify-content: flex-end;
+      margin: 0;
+      padding: 0;
+      background: transparent;
+      pointer-events: none;
+    }
+    .rapid-overlay.sprint-active #rapidHintBtn { display:none !important; }
+    .rapid-overlay.sprint-active #rapidRevealBtn {
+      display:inline-flex !important;
+      align-items:center;
+      justify-content:center;
+      min-height:42px;
+      padding:0 14px;
+      border:1px solid rgba(183,75,64,.18);
+      border-radius:12px;
+      background:rgba(183,75,64,.07);
+      color:var(--incorrect-dark);
+      font-weight:900;
+      pointer-events:auto;
+    }
+    .rapid-overlay.sprint-active .rapid-choice.wrong:disabled {
+      opacity:.42;
+    }
+  </style>
+
+
+  <style id="sprint-give-up-access-v0523">
+    /* v0.52.3 — Sprint is time-critical: keep Give up in the same interaction
+       zone as the answer controls instead of making the player travel to a
+       viewport corner. */
+    .rapid-overlay.sprint-active .rapid-question-card {
+      padding-bottom:14px;
+    }
+    .rapid-overlay.sprint-active .rapid-help-actions {
+      display:flex !important;
+      position:static !important;
+      inset:auto !important;
+      width:100%;
+      justify-content:center;
+      margin:10px 0 0;
+      padding:0;
+      background:transparent;
+      pointer-events:auto;
+    }
+    .rapid-overlay.sprint-active .rapid-feedback:empty {
+      display:none;
+    }
+    .rapid-overlay.sprint-active #rapidHintBtn {
+      display:none !important;
+    }
+    .rapid-overlay.sprint-active #rapidRevealBtn {
+      display:inline-flex !important;
+      align-items:center;
+      justify-content:center;
+      width:min(230px, 100%);
+      min-height:46px;
+      padding:0 20px;
+      border:1px solid rgba(183,75,64,.22);
+      border-radius:13px;
+      background:rgba(183,75,64,.075);
+      color:var(--incorrect-dark);
+      font-size:.82rem;
+      font-weight:920;
+      pointer-events:auto;
+    }
+    .rapid-overlay.sprint-active #rapidRevealBtn:hover {
+      background:rgba(183,75,64,.12);
+    }
+    @media (max-width:520px) {
+      .rapid-overlay.sprint-active .rapid-help-actions { margin-top:8px; }
+      .rapid-overlay.sprint-active #rapidRevealBtn {
+        width:min(260px, 100%);
+        min-height:44px;
+      }
+    }
+  </style>
+
+
+  <style id="sprint-feedback-silhouette-fix-v0524">
+    /* v0.52.5 — Sprint uses only the centered transient feedback bubble;
+       suppress the normal persistent Rapid Fire result card to avoid duplicate answers. */
+
+    /* v0.52.4 — keep Sprint result feedback local to the question instead of
+       taking over the viewport, and make the question card itself provide the
+       subtle green/red wash. */
+    .rapid-overlay.sprint-active .rapid-question-card {
+      position: relative;
+      transition: background 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+    }
+    .rapid-overlay.sprint-active .rapid-question-card.sprint-answer-correct {
+      background: rgba(47,125,77,.075);
+      border-color: rgba(47,125,77,.34);
+      box-shadow: inset 0 0 0 1px rgba(47,125,77,.06);
+    }
+    .rapid-overlay.sprint-active .rapid-question-card.sprint-answer-wrong {
+      background: rgba(183,75,64,.065);
+      border-color: rgba(183,75,64,.34);
+      box-shadow: inset 0 0 0 1px rgba(183,75,64,.05);
+    }
+    .rapid-overlay.sprint-active .rapid-sprint-feedback {
+      position: absolute !important;
+      inset: 50% auto auto 50% !important;
+      z-index: 70;
+      width: auto !important;
+      max-width: min(300px, calc(100% - 28px));
+      transform: translate(-50%, -50%) !important;
+      display: block;
+      padding: 10px 16px !important;
+      border: 1px solid rgba(23,23,23,.10) !important;
+      border-radius: 14px !important;
+      box-shadow: 0 10px 28px rgba(0,0,0,.16) !important;
+      font-size: .92rem !important;
+      line-height: 1.22 !important;
+      letter-spacing: 0 !important;
+      font-weight: 920 !important;
+      text-align: center;
+      white-space: pre-line;
+      text-wrap: balance;
+      text-shadow: none !important;
+      backdrop-filter: blur(6px) !important;
+      pointer-events: none;
+    }
+    .rapid-overlay.sprint-active .rapid-sprint-feedback.correct {
+      color: var(--correct-dark) !important;
+      background: rgba(244,251,246,.97) !important;
+      border-color: rgba(47,125,77,.34) !important;
+    }
+    .rapid-overlay.sprint-active .rapid-sprint-feedback.wrong {
+      color: var(--incorrect-dark) !important;
+      background: rgba(253,246,244,.98) !important;
+      border-color: rgba(183,75,64,.34) !important;
+    }
+
+    /* Silhouette SVGs use several different viewBox sizes across GeoDen. The
+       renderer now fits to the actual viewBox, so these containers can stay
+       centred without country outlines sitting in one corner. */
+    .rapid-cue svg,
+    .rapid-choice svg {
+      overflow: visible;
+    }
+
+    @media (max-width:520px) {
+      .rapid-overlay.sprint-active .rapid-sprint-feedback {
+        max-width: calc(100% - 20px);
+        padding: 9px 13px !important;
+        font-size: .86rem !important;
+      }
+    }
+  </style>
+
+
+  <style id="sprint-layout-v0528">
+    /* v0.52.8 — back out the flex-fill Sprint layout. Keep the question in
+       ordinary content flow and size visuals explicitly, so images never rely
+       on percentage heights inside an indefinite flex item. */
+    .rapid-overlay.sprint-active .rapid-panel {
+      height:auto;
+      max-height:calc(100dvh - 20px);
+      overflow:auto;
+      overscroll-behavior:contain;
+    }
+    .rapid-overlay.sprint-active .rapid-head { margin-bottom:7px; }
+    .rapid-overlay.sprint-active .rapid-scorebar { margin-bottom:9px; }
+    .rapid-overlay.sprint-active .rapid-question-card {
+      display:block;
+      min-height:0;
+      overflow:visible;
+      padding:12px;
+    }
+    .rapid-overlay.sprint-active .rapid-question {
+      font-size:clamp(1.05rem, 3vw, 1.48rem);
+      line-height:1.04;
+    }
+    .rapid-overlay.sprint-active .rapid-cue {
+      min-height:0;
+      height:min(24dvh, 210px);
+      max-height:210px;
+      margin-top:9px;
+      overflow:hidden;
+    }
+    .rapid-overlay.sprint-active .rapid-cue img {
+      display:block;
+      width:auto !important;
+      height:auto !important;
+      max-width:min(330px, 76%) !important;
+      max-height:min(20dvh, 178px) !important;
+      object-fit:contain !important;
+    }
+    .rapid-overlay.sprint-active .rapid-cue svg {
+      width:100%;
+      height:min(21dvh, 180px) !important;
+      max-height:180px !important;
+      display:block;
+    }
+    .rapid-overlay.sprint-active .rapid-cue-text {
+      padding:10px 12px;
+      font-size:clamp(1.55rem, 6vh, 2.8rem);
+    }
+    .rapid-overlay.sprint-active .rapid-answer-area { margin-top:9px; }
+    .rapid-overlay.sprint-active .rapid-choice-grid {
+      grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+      gap:7px;
+    }
+    .rapid-overlay.sprint-active .rapid-choice {
+      min-height:0;
+      height:min(13dvh, 102px);
+      padding:6px;
+      border-radius:13px;
+    }
+    .rapid-overlay.sprint-active .rapid-choice img,
+    .rapid-overlay.sprint-active .rapid-choice svg {
+      width:100%;
+      height:min(9dvh, 72px) !important;
+      max-height:min(9dvh, 72px) !important;
+      object-fit:contain;
+    }
+    .rapid-overlay.sprint-active .rapid-help-actions { margin-top:7px; }
+    .rapid-overlay.sprint-active #rapidRevealBtn { min-height:40px; }
+
+    /* Visual-choice questions need less clue height than typed questions, so
+       all four options and Give up remain in the immediate interaction area. */
+    .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-choice .rapid-cue {
+      height:min(19dvh, 158px);
+      max-height:158px;
+    }
+    .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-choice .rapid-cue img {
+      max-height:min(16dvh, 132px) !important;
+    }
+    .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-choice .rapid-cue svg {
+      height:min(17dvh, 140px) !important;
+      max-height:140px !important;
+    }
+
+    @media (max-height:780px) {
+      .rapid-overlay.sprint-active .rapid-panel { padding:10px; }
+      .rapid-overlay.sprint-active .rapid-head { margin-bottom:4px; }
+      .rapid-overlay.sprint-active .rapid-title { font-size:1.42rem; }
+      .rapid-overlay.sprint-active .rapid-round-status { margin-top:2px; }
+      .rapid-overlay.sprint-active .rapid-scorebar { margin-bottom:6px; padding-block:6px; }
+      .rapid-overlay.sprint-active .rapid-question-card { padding:9px 10px; }
+      .rapid-overlay.sprint-active .rapid-question { font-size:clamp(1rem, 2.6vw, 1.28rem); }
+      .rapid-overlay.sprint-active .rapid-cue { height:min(21dvh, 155px); max-height:155px; margin-top:6px; }
+      .rapid-overlay.sprint-active .rapid-cue img { max-height:min(17dvh, 128px) !important; }
+      .rapid-overlay.sprint-active .rapid-cue svg { height:min(18dvh, 136px) !important; max-height:136px !important; }
+      .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-choice .rapid-cue { height:min(16dvh, 118px); max-height:118px; }
+      .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-choice .rapid-cue img { max-height:min(13dvh, 96px) !important; }
+      .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-choice .rapid-cue svg { height:min(14dvh, 102px) !important; max-height:102px !important; }
+      .rapid-overlay.sprint-active .rapid-answer-area { margin-top:6px; }
+      .rapid-overlay.sprint-active .rapid-choice { height:min(10.5dvh, 76px); }
+      .rapid-overlay.sprint-active .rapid-choice img,
+      .rapid-overlay.sprint-active .rapid-choice svg { height:min(7.5dvh, 54px) !important; max-height:min(7.5dvh, 54px) !important; }
+      .rapid-overlay.sprint-active .rapid-help-actions { margin-top:5px; }
+      .rapid-overlay.sprint-active #rapidRevealBtn { min-height:36px; }
+    }
+
+    @media (max-width:520px) {
+      .rapid-overlay.sprint-active .rapid-panel { max-height:calc(100dvh - 12px); padding:9px; }
+      .rapid-overlay.sprint-active .rapid-head { gap:7px; }
+      .rapid-overlay.sprint-active .rapid-title { font-size:1.32rem; }
+      .rapid-overlay.sprint-active .rapid-menu { min-height:36px; }
+      .rapid-overlay.sprint-active .rapid-scorebar { font-size:.64rem; padding:6px 8px; }
+      .rapid-overlay.sprint-active .rapid-question-card { padding:9px; }
+      .rapid-overlay.sprint-active .rapid-question { font-size:clamp(1rem, 5.2vw, 1.22rem); }
+      .rapid-overlay.sprint-active .rapid-cue { height:min(21dvh, 152px); max-height:152px; }
+      .rapid-overlay.sprint-active .rapid-cue img { max-width:min(280px, 86%) !important; max-height:min(17dvh, 124px) !important; }
+      .rapid-overlay.sprint-active .rapid-cue svg { height:min(18dvh, 132px) !important; max-height:132px !important; }
+      .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-choice .rapid-cue { height:min(15dvh, 108px); max-height:108px; }
+      .rapid-overlay.sprint-active .rapid-choice { height:min(10.5dvh, 78px); }
+      .rapid-overlay.sprint-active .rapid-choice img,
+      .rapid-overlay.sprint-active .rapid-choice svg { height:min(7.4dvh, 54px) !important; max-height:min(7.4dvh, 54px) !important; }
+      .rapid-overlay.sprint-active #rapidRevealBtn { min-height:38px; width:min(220px,100%); }
+    }
+
+    @media (max-height:640px) {
+      .rapid-overlay.sprint-active .rapid-eyebrow { display:none; }
+      .rapid-overlay.sprint-active .rapid-title { font-size:1.18rem; }
+      .rapid-overlay.sprint-active .rapid-round-status { font-size:.65rem; }
+      .rapid-overlay.sprint-active .rapid-scorebar { padding:5px 7px; }
+      .rapid-overlay.sprint-active .rapid-kicker { font-size:.56rem; }
+      .rapid-overlay.sprint-active .rapid-question { margin-top:2px; }
+      .rapid-overlay.sprint-active .rapid-cue { height:min(18dvh, 108px); max-height:108px; }
+      .rapid-overlay.sprint-active .rapid-cue img { max-height:min(14dvh, 86px) !important; }
+      .rapid-overlay.sprint-active .rapid-cue svg { height:min(15dvh, 92px) !important; max-height:92px !important; }
+      .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-choice .rapid-cue { height:min(13dvh, 78px); max-height:78px; }
+      .rapid-overlay.sprint-active .rapid-choice { height:min(9.2dvh, 58px); }
+      .rapid-overlay.sprint-active .rapid-choice img,
+      .rapid-overlay.sprint-active .rapid-choice svg { height:min(6.2dvh, 40px) !important; max-height:min(6.2dvh, 40px) !important; }
+      .rapid-overlay.sprint-active #rapidRevealBtn { min-height:34px; }
+    }
+  </style>
+
+
+  <style id="sprint-visual-polish-v0529">
+    /* v0.52.9 — use available space instead of keeping Sprint visual answers
+       permanently tiny. Short screens still inherit the compact v0.52.8 rules. */
+    @media (min-height: 800px) and (min-width: 620px) {
+      .rapid-overlay.sprint-active .rapid-question-card { padding:14px 16px; }
+      .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-choice .rapid-cue {
+        height:min(21dvh, 190px);
+        max-height:190px;
+      }
+      .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-choice .rapid-cue img {
+        max-height:min(18dvh, 158px) !important;
+        max-width:min(420px, 82%) !important;
+      }
+      .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-choice .rapid-cue svg {
+        height:min(19dvh, 166px) !important;
+        max-height:166px !important;
+      }
+      .rapid-overlay.sprint-active .rapid-choice {
+        height:min(14dvh, 126px);
+        min-height:104px;
+        padding:8px;
+      }
+      .rapid-overlay.sprint-active .rapid-choice img,
+      .rapid-overlay.sprint-active .rapid-choice svg {
+        height:min(10.5dvh, 94px) !important;
+        max-height:94px !important;
+      }
+    }
+
+    @media (min-height: 980px) and (min-width: 760px) {
+      .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-choice .rapid-cue {
+        height:min(23dvh, 225px);
+        max-height:225px;
+      }
+      .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-choice .rapid-cue img {
+        max-height:min(20dvh, 188px) !important;
+        max-width:min(500px, 84%) !important;
+      }
+      .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-choice .rapid-cue svg {
+        height:min(20dvh, 190px) !important;
+        max-height:190px !important;
+      }
+      .rapid-overlay.sprint-active .rapid-choice {
+        height:min(15dvh, 148px);
+        min-height:124px;
+      }
+      .rapid-overlay.sprint-active .rapid-choice img,
+      .rapid-overlay.sprint-active .rapid-choice svg {
+        height:min(11.8dvh, 112px) !important;
+        max-height:112px !important;
+      }
+    }
+
+    /* The transient result belongs over the clue, leaving the visual choices
+       readable underneath. Its exact vertical position is set from the cue's
+       actual bounding box by positionSprintFeedbackOverCue(). */
+    .rapid-overlay.sprint-active .rapid-sprint-feedback {
+      inset:auto auto auto 50% !important;
+      transform:translate(-50%, -50%) !important;
+      max-width:min(340px, calc(100% - 36px));
+      z-index:90;
+    }
+
+    /* When visual labels are revealed, keep them inside their cards as a small
+       caption overlay rather than adding height that gets clipped by compact
+       Sprint tiles. */
+    .rapid-overlay.sprint-active .rapid-choice-grid.reveal-labels .rapid-choice-label {
+      display:block;
+      position:absolute;
+      left:6px;
+      right:6px;
+      bottom:5px;
+      z-index:3;
+      max-width:none;
+      padding:4px 6px;
+      border-radius:8px;
+      background:rgba(247,244,237,.94);
+      box-shadow:0 1px 5px rgba(0,0,0,.08);
+      color:var(--text);
+      font-size:clamp(.58rem, 1.35vw, .72rem);
+      line-height:1.08;
+      font-weight:900;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      pointer-events:none;
+    }
+    .rapid-overlay.sprint-active .rapid-choice-grid.reveal-labels .rapid-choice img,
+    .rapid-overlay.sprint-active .rapid-choice-grid.reveal-labels .rapid-choice svg {
+      transform:translateY(-8px);
+    }
+
+    /* Fine border rendering makes high-detail microstate silhouettes read as
+       borders rather than blue blobs. */
+    .rapid-overlay.sprint-active .rapid-choice svg path,
+    .rapid-overlay.sprint-active .rapid-cue svg path {
+      shape-rendering:geometricPrecision;
+    }
+
+    @media (max-height: 640px) {
+      .rapid-overlay.sprint-active .rapid-choice-grid.reveal-labels .rapid-choice-label {
+        font-size:.54rem;
+        padding:3px 4px;
+        bottom:3px;
+      }
+      .rapid-overlay.sprint-active .rapid-choice-grid.reveal-labels .rapid-choice img,
+      .rapid-overlay.sprint-active .rapid-choice-grid.reveal-labels .rapid-choice svg {
+        transform:translateY(-5px);
+      }
+    }
+  </style>
+
+
+
+  <style id="sprint-adaptive-visuals-v0530">
+    /* v0.53.0 — Sprint visuals should expand when the viewport has room, while
+       short screens compact smoothly. These variables size the actual assets,
+       not just their containers, so flags and silhouettes use the space. */
+    .rapid-overlay.sprint-active {
+      --sprint-cue-h: clamp(128px, 23dvh, 248px);
+      --sprint-choice-h: clamp(92px, 16dvh, 190px);
+    }
+    .rapid-overlay.sprint-active .rapid-cue {
+      height: var(--sprint-cue-h) !important;
+      max-height: var(--sprint-cue-h) !important;
+    }
+    .rapid-overlay.sprint-active .rapid-cue img {
+      width:auto !important;
+      height:auto !important;
+      max-width:min(620px, 91%) !important;
+      max-height:calc(var(--sprint-cue-h) - 18px) !important;
+      object-fit:contain !important;
+    }
+    .rapid-overlay.sprint-active .rapid-cue svg {
+      width:100% !important;
+      height:calc(var(--sprint-cue-h) - 10px) !important;
+      max-height:none !important;
+    }
+
+    /* A text clue above visual choices does not need to consume as much height,
+       leaving more of the screen for the assets the player is comparing. */
+    .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-choice .rapid-cue {
+      height:clamp(112px, 18dvh, 205px) !important;
+      max-height:none !important;
+    }
+    .rapid-overlay.sprint-active .rapid-choice {
+      height:var(--sprint-choice-h) !important;
+      min-height:0 !important;
+      padding:7px !important;
+    }
+    .rapid-overlay.sprint-active .rapid-choice img,
+    .rapid-overlay.sprint-active .rapid-choice svg {
+      width:100% !important;
+      height:calc(var(--sprint-choice-h) - 14px) !important;
+      max-height:none !important;
+      object-fit:contain !important;
+    }
+
+    /* Tall displays should feel intentionally roomy instead of leaving half the
+       panel blank. Keep caps so even large desktops do not become cartoonish. */
+    @media (min-height: 900px) {
+      .rapid-overlay.sprint-active {
+        --sprint-cue-h: clamp(190px, 25dvh, 285px);
+        --sprint-choice-h: clamp(148px, 17dvh, 210px);
+      }
+      .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-choice .rapid-cue {
+        height:clamp(155px, 20dvh, 225px) !important;
+      }
+      .rapid-overlay.sprint-active .rapid-choice-grid { gap:10px; }
+    }
+
+    @media (min-height: 1050px) and (min-width: 700px) {
+      .rapid-overlay.sprint-active {
+        --sprint-cue-h: 300px;
+        --sprint-choice-h: 220px;
+      }
+      .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-choice .rapid-cue {
+        height:235px !important;
+      }
+    }
+
+    /* Compact only when vertical room is genuinely tight. Scrolling remains a
+       safety fallback, but ordinary laptop/phone layouts should fit naturally. */
+    @media (max-height: 720px) {
+      .rapid-overlay.sprint-active {
+        --sprint-cue-h: clamp(104px, 19dvh, 138px);
+        --sprint-choice-h: clamp(70px, 11.5dvh, 86px);
+      }
+      .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-choice .rapid-cue {
+        height:clamp(82px, 14dvh, 104px) !important;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .rapid-overlay.sprint-active {
+        --sprint-cue-h: clamp(118px, 21dvh, 180px);
+        --sprint-choice-h: clamp(82px, 12.8dvh, 108px);
+      }
+      .rapid-overlay.sprint-active .rapid-cue img {
+        max-width:min(360px, 92%) !important;
+      }
+    }
+
+    /* Feedback sits over the active content and should remain compact enough
+       that it reads instantly without obscuring most of the question. */
+    .rapid-overlay.sprint-active .rapid-sprint-feedback {
+      font-size:clamp(.82rem, 1.7vw, .98rem) !important;
+      max-width:min(300px, calc(100% - 32px)) !important;
+      padding:9px 14px !important;
+    }
+  </style>
+
+
+  <style id="sprint-taller-visual-choices-v0531">
+    /* v0.53.1 — use spare vertical room in Sprint's 2×2 visual-choice grid.
+       Previous passes enlarged the artwork but left the choice cards too short;
+       the rows themselves now grow on ordinary/tall displays. */
+    @media (min-height: 721px) {
+      .rapid-overlay.sprint-active {
+        --sprint-choice-h: clamp(132px, 20dvh, 238px);
+      }
+      .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-choice .rapid-choice-grid {
+        gap: clamp(8px, 1.1dvh, 13px);
+      }
+      .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-choice .rapid-choice {
+        height: var(--sprint-choice-h) !important;
+      }
+      .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-choice .rapid-choice img,
+      .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-choice .rapid-choice svg {
+        height: calc(var(--sprint-choice-h) - 16px) !important;
+        max-height: none !important;
+        width: 100% !important;
+        object-fit: contain !important;
+      }
+    }
+
+    @media (min-height: 880px) {
+      .rapid-overlay.sprint-active {
+        --sprint-choice-h: clamp(176px, 21.5dvh, 270px);
+      }
+    }
+
+    @media (min-height: 1040px) and (min-width: 620px) {
+      .rapid-overlay.sprint-active {
+        --sprint-choice-h: clamp(210px, 22dvh, 300px);
+      }
+      .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-choice {
+        padding-bottom: 16px;
+      }
+    }
+
+    /* Keep short-screen rules genuinely compact. */
+    @media (max-height: 720px) {
+      .rapid-overlay.sprint-active {
+        --sprint-choice-h: clamp(70px, 11.5dvh, 92px);
+      }
+    }
+  </style>
+
+  <style id="sprint-space-feedback-v0532">
+    /* v0.53.2 — use the spare Sprint viewport for the ACTUAL visual-choice
+       rows. The old max-height breakpoints made Retina/short-CSS viewports look
+       needlessly tiny even when the panel had lots of unused room. */
+    .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-choice {
+      --sprint-choice-h: clamp(108px, 18dvh, 220px);
+      --sprint-visual-cue-h: clamp(118px, 20dvh, 235px);
+    }
+
+    .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-choice .rapid-choice-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      grid-auto-rows: var(--sprint-choice-h) !important;
+      gap: clamp(8px, 1.25dvh, 14px) !important;
+    }
+
+    .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-choice .rapid-choice {
+      height: 100% !important;
+      min-height: var(--sprint-choice-h) !important;
+      padding: clamp(7px, 1dvh, 11px) !important;
+    }
+
+    .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-choice .rapid-choice img,
+    .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-choice .rapid-choice svg {
+      width: 100% !important;
+      height: calc(var(--sprint-choice-h) - 18px) !important;
+      max-height: none !important;
+      object-fit: contain !important;
+    }
+
+    /* Only a genuinely visual clue should expand to the larger clue stage.
+       Text clues such as “Indonesia” stay compact so the answer grid gets the
+       extra room instead. */
+    .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-cue .rapid-cue {
+      height: var(--sprint-visual-cue-h) !important;
+      max-height: var(--sprint-visual-cue-h) !important;
+    }
+    .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-cue .rapid-cue img {
+      max-width: min(680px, 94%) !important;
+      max-height: calc(var(--sprint-visual-cue-h) - 16px) !important;
+    }
+    .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-cue .rapid-cue svg {
+      height: calc(var(--sprint-visual-cue-h) - 10px) !important;
+      max-height: none !important;
+    }
+
+    /* Text clue + visual answers: don't waste a tall cue box on a country name. */
+    .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-choice:not(.sprint-visual-cue) .rapid-cue {
+      height: clamp(92px, 14dvh, 150px) !important;
+      max-height: 150px !important;
+    }
+
+    /* Taller screens can use noticeably more of the panel without making
+       shorter laptop/phone layouts scroll. */
+    @media (min-height: 760px) {
+      .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-choice {
+        --sprint-choice-h: clamp(138px, 19dvh, 235px);
+        --sprint-visual-cue-h: clamp(150px, 21dvh, 255px);
+      }
+    }
+    @media (min-height: 900px) {
+      .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-choice {
+        --sprint-choice-h: clamp(168px, 20dvh, 255px);
+        --sprint-visual-cue-h: clamp(180px, 22dvh, 275px);
+      }
+    }
+
+    /* Small phone screens still compact, but not to the postage-stamp sizes of
+       the previous pass. */
+    @media (max-width: 520px) {
+      .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-choice {
+        --sprint-choice-h: clamp(88px, 15.5dvh, 128px);
+        --sprint-visual-cue-h: clamp(104px, 18dvh, 150px);
+      }
+      .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-choice:not(.sprint-visual-cue) .rapid-cue {
+        height: clamp(80px, 12dvh, 112px) !important;
+      }
+    }
+
+    /* The feedback bubble is positioned in JS at the exact centre of rapidCue.
+       Keep CSS from reintroducing a broad-card/header anchor. */
+    .rapid-overlay.sprint-active .rapid-sprint-feedback {
+      left: 50% !important;
+      right: auto !important;
+      bottom: auto !important;
+      transform: translate(-50%, -50%) !important;
+      max-width: min(310px, calc(100% - 36px)) !important;
+    }
+  </style>
+
+  <style id="sprint-balanced-visuals-v0534">
+    /* v0.53.4 — keep the primary visual clue visibly larger than answer assets.
+       Builds on the bounded sizing system from v0.53.3. Earlier passes
+       stacked several viewport breakpoints on top of each other, causing some
+       screens to swing from postage-stamp assets to full-screen clues. The JS
+       sizing helper supplies these variables from the current viewport. */
+    .rapid-overlay.sprint-active .rapid-question-card {
+      --sprint-main-visual-h: 250px;
+      --sprint-choice-cue-h: 215px;
+      --sprint-text-cue-h: 112px;
+      --sprint-choice-row-h: 145px;
+      --sprint-feedback-top: 50%;
+    }
+
+    /* Typed-answer questions with a visual clue: large enough to study, never
+       allowed to consume most of the viewport. */
+    .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-cue:not(.sprint-visual-choice) .rapid-cue {
+      height:var(--sprint-main-visual-h) !important;
+      max-height:var(--sprint-main-visual-h) !important;
+      min-height:0 !important;
+      overflow:hidden !important;
+    }
+    .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-cue:not(.sprint-visual-choice) .rapid-cue img {
+      width:auto !important;
+      height:auto !important;
+      max-width:90% !important;
+      max-height:calc(var(--sprint-main-visual-h) - 18px) !important;
+      object-fit:contain !important;
+    }
+    .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-cue:not(.sprint-visual-choice) .rapid-cue svg {
+      width:100% !important;
+      height:calc(var(--sprint-main-visual-h) - 8px) !important;
+      max-height:calc(var(--sprint-main-visual-h) - 8px) !important;
+    }
+
+    /* Visual multiple choice: give the clue sensible space, then let both rows
+       of answers share the remaining room. */
+    .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-choice.sprint-visual-cue .rapid-cue {
+      height:var(--sprint-choice-cue-h) !important;
+      max-height:var(--sprint-choice-cue-h) !important;
+      min-height:0 !important;
+      overflow:hidden !important;
+    }
+    .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-choice.sprint-visual-cue .rapid-cue img {
+      width:auto !important;
+      height:auto !important;
+      max-width:88% !important;
+      max-height:calc(var(--sprint-choice-cue-h) - 14px) !important;
+      object-fit:contain !important;
+    }
+    .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-choice.sprint-visual-cue .rapid-cue svg {
+      width:100% !important;
+      height:calc(var(--sprint-choice-cue-h) - 8px) !important;
+      max-height:calc(var(--sprint-choice-cue-h) - 8px) !important;
+    }
+
+    /* Country/capital text used as the clue should stay compact so the visual
+       choices get the space instead. */
+    .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-choice:not(.sprint-visual-cue) .rapid-cue {
+      height:var(--sprint-text-cue-h) !important;
+      max-height:var(--sprint-text-cue-h) !important;
+      min-height:0 !important;
+    }
+
+    .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-choice .rapid-choice-grid {
+      grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+      grid-template-rows:repeat(2,var(--sprint-choice-row-h)) !important;
+      grid-auto-rows:var(--sprint-choice-row-h) !important;
+      gap:10px !important;
+    }
+    .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-choice .rapid-choice {
+      height:var(--sprint-choice-row-h) !important;
+      min-height:var(--sprint-choice-row-h) !important;
+      padding:8px !important;
+      overflow:hidden !important;
+    }
+    .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-choice .rapid-choice img,
+    .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-choice .rapid-choice svg {
+      width:100% !important;
+      height:calc(var(--sprint-choice-row-h) - 16px) !important;
+      max-height:calc(var(--sprint-choice-row-h) - 16px) !important;
+      object-fit:contain !important;
+    }
+
+    /* Artificial centroid dots were useful as a debugging aid for tiny islands,
+       but they are not part of a country's silhouette. */
+    .silhouette-island-visibility { display:none !important; }
+
+    /* The result bubble is anchored by a CSS variable measured from rapidCue.
+       Reset the old inset:50% rule completely so it cannot fight the JS value. */
+    .rapid-overlay.sprint-active .rapid-sprint-feedback {
+      inset:auto !important;
+      left:50% !important;
+      top:var(--sprint-feedback-top) !important;
+      right:auto !important;
+      bottom:auto !important;
+      transform:translate(-50%,-50%) !important;
+      max-width:min(320px,calc(100% - 32px)) !important;
+    }
+
+    @media (max-width:520px) {
+      .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-choice .rapid-choice-grid { gap:7px !important; }
+      .rapid-overlay.sprint-active .rapid-question-card.sprint-visual-choice .rapid-choice { padding:6px !important; }
+    }
+  </style>
+
+
+  <style id="sprint-centered-prompts-v0535">
+    /* v0.53.5 — Sprint is read at speed, so keep the instruction target in the
+       same visual lane as the clue and answer area. */
+    .rapid-overlay.sprint-active .rapid-kicker,
+    .rapid-overlay.sprint-active .rapid-question {
+      text-align:center !important;
+    }
+    .rapid-overlay.sprint-active .rapid-kicker {
+      width:100%;
+      justify-content:center;
+    }
+    .rapid-overlay.sprint-active .rapid-question {
+      margin-left:auto;
+      margin-right:auto;
+      max-width:100%;
+      text-wrap:balance;
     }
   </style>
 </head>
@@ -13343,6 +14304,10 @@ button,
                   <span class="mode-discovery-title" id="modeGroupGames">Games</span>
                 </div>
                 <div class="mode-discovery-options mode-discovery-options-four">
+                  <button class="play-mode-button sprint-mode-button" id="sprintModeBtn" type="button" data-play-mode="sprint" aria-pressed="false">
+                    <span class="play-mode-name">Sprint</span>
+                    <span class="play-mode-meta">60-second regional challenge</span>
+                  </button>
                   <button class="play-mode-button detective-mode-button" id="detectiveModeBtn" type="button" data-play-mode="detective" aria-pressed="false">
                     <span class="play-mode-name">Detective</span>
                     <span class="play-mode-meta">Guess from clues</span>
@@ -13385,15 +14350,15 @@ button,
             <details class="session-step hidden" id="quizStyleDisclosure" data-session-step="quiz-style">
               <summary class="session-step-summary">
                 <span class="session-step-label">Quiz style</span>
-                <span class="session-step-value" id="sessionQuizStyleValue">Rapid Fire</span>
+                <span class="session-step-value" id="sessionQuizStyleValue">Mixed Practice</span>
                 <span class="session-step-chevron" aria-hidden="true">⌄</span>
               </summary>
               <div class="session-step-body quiz-style-step-body">
                 <div class="quiz-style-picker" id="quizStylePicker" role="group" aria-label="Choose quiz style">
-                  <button class="quiz-style-option" type="button" data-quiz-style="interactive" aria-pressed="false">Standard</button>
-                  <button class="quiz-style-option rapid-mode-button active" type="button" data-quiz-style="rapid" aria-pressed="true">Rapid Fire</button>
+                  <button class="quiz-style-option" type="button" data-quiz-style="interactive" aria-pressed="false">Country Deep Dive</button>
+                  <button class="quiz-style-option rapid-mode-button active" type="button" data-quiz-style="rapid" aria-pressed="true">Mixed Practice</button>
                 </div>
-                <div class="quiz-style-help" id="quizStyleHelp">Standard works through your chosen challenges place by place, with retries and hints. Rapid Fire mixes quick one-shot questions and can reverse the direction, such as capital → place.</div>
+                <div class="quiz-style-help" id="quizStyleHelp">Country Deep Dive works through one place comprehensively before moving on. Mixed Practice bounces between places and facts with quick one-shot questions, including reversed prompts such as capital → place.</div>
               </div>
             </details>
 
@@ -13808,7 +14773,7 @@ button,
     <div class="rapid-panel">
       <div class="rapid-head">
         <div class="rapid-head-copy">
-          <div class="rapid-eyebrow">Rapid Fire</div>
+          <div class="rapid-eyebrow">Mixed Practice</div>
           <h2 class="rapid-title" id="rapidTitle">Mixed questions</h2>
           <div class="rapid-round-status" id="rapidRoundStatus">Question 1</div>
         </div>
@@ -13818,9 +14783,11 @@ button,
       <div class="rapid-scorebar">
         <span id="rapidScore">0/0 correct</span>
         <span id="rapidStreak">0 clean streak</span>
+        <span class="rapid-sprint-timer hidden" id="rapidSprintTimer">1:00</span>
       </div>
 
       <div class="rapid-question-card" id="rapidQuestionCard">
+        <div class="rapid-sprint-feedback hidden" id="rapidSprintFeedback" role="status" aria-live="assertive"></div>
         <div class="rapid-kicker" id="rapidKicker">FLAG → PLACE</div>
         <div class="rapid-question" id="rapidQuestion">Which place is this?</div>
         <div class="rapid-cue" id="rapidCue"></div>
@@ -13850,7 +14817,7 @@ button,
       </div>
 
       <div class="rapid-complete hidden" id="rapidComplete">
-        <div class="rapid-complete-eyebrow">Rapid Fire</div>
+        <div class="rapid-complete-eyebrow">Mixed Practice</div>
         <h3 class="rapid-complete-title">Session complete</h3>
         <div class="rapid-complete-score" id="rapidCompleteScore">0%</div>
         <div class="rapid-complete-meta" id="rapidCompleteMeta"></div>
@@ -13942,13 +14909,34 @@ button,
       </section>
 
       <section class="interactive-city-mode-settings hidden" id="interactiveCityModeSettings" aria-labelledby="interactiveCityModeSettingsLabel">
-        <div class="tune-section-label" id="interactiveCityModeSettingsLabel">Capital &amp; largest-city answers</div>
-        <div class="interactive-city-mode-picker" id="interactiveCityModePicker" role="group" aria-label="How capital and largest-city questions are answered">
+        <div class="tune-section-label" id="interactiveCityModeSettingsLabel">Largest-city answers</div>
+        <div class="interactive-city-mode-picker" id="interactiveCityModePicker" role="group" aria-label="How largest-city questions are answered">
           <button class="interactive-city-mode-button" type="button" data-interactive-city-mode="names" aria-pressed="false">Names</button>
           <button class="interactive-city-mode-button" type="button" data-interactive-city-mode="locations" aria-pressed="false">Locations</button>
           <button class="interactive-city-mode-button" type="button" data-interactive-city-mode="mixed" aria-pressed="false">Mixed</button>
         </div>
-        <div class="interactive-city-mode-help">Names, map locations, or a mix of both.</div>
+        <div class="interactive-city-mode-help">Largest-city names, positions, or a mix. Capital name and Capital position are separate challenges.</div>
+      </section>
+
+      <section class="flash-flow-settings hidden" id="flashFlowSettings" aria-labelledby="flashFlowSettingsLabel">
+        <div class="tune-section-label" id="flashFlowSettingsLabel">Flash card flow</div>
+        <div class="flash-flow-grid">
+          <div class="flash-flow-option-group">
+            <div class="flash-flow-option-label">Challenge order</div>
+            <div class="interactive-city-mode-picker" id="flashOrderPicker" role="group" aria-label="Flash card challenge order">
+              <button class="interactive-city-mode-button" type="button" data-flash-order="fixed" aria-pressed="false">Set order</button>
+              <button class="interactive-city-mode-button" type="button" data-flash-order="random" aria-pressed="false">Random each place</button>
+            </div>
+          </div>
+          <div class="flash-flow-option-group">
+            <div class="flash-flow-option-label">Session flow</div>
+            <div class="interactive-city-mode-picker" id="flashMixPicker" role="group" aria-label="Flash card session flow">
+              <button class="interactive-city-mode-button" type="button" data-flash-flow="country" aria-pressed="false">One place at a time</button>
+              <button class="interactive-city-mode-button" type="button" data-flash-flow="mixed" aria-pressed="false">Mix all cards</button>
+            </div>
+          </div>
+        </div>
+        <div class="interactive-city-mode-help">Random order reshuffles the enabled challenges for each place. Mix all cards can jump between places after every card.</div>
       </section>
 
       <div class="tune-order-head">
@@ -14106,6 +15094,39 @@ button,
     <div class="country-transition-label" id="countryTransitionLabel"></div>
   </div>
 
+
+
+  <div class="chain-overlay sprint-overlay" id="sprintOverlay" role="dialog" aria-modal="true" aria-labelledby="sprintTitle">
+    <div class="chain-panel sprint-panel">
+      <div class="special-game-head">
+        <div>
+          <h2 class="special-game-title" id="sprintTitle">Sprint</h2>
+          <p class="special-game-subtitle">Answer as many random geography questions as you can in 60 seconds.</p>
+        </div>
+        <button class="special-game-close" id="sprintCloseBtn" type="button">Menu</button>
+      </div>
+      <div class="special-game-setup">
+        <div class="special-game-field">
+          <div class="special-game-label">Region</div>
+          <div class="special-game-options" id="sprintSetOptions" role="group" aria-label="Choose Sprint region">
+            <button class="special-game-option active" type="button" data-sprint-set="world">World</button>
+            <button class="special-game-option" type="button" data-sprint-set="europe">Europe</button>
+            <button class="special-game-option" type="button" data-sprint-set="africa">Africa</button>
+            <button class="special-game-option" type="button" data-sprint-set="asia">Asia</button>
+            <button class="special-game-option" type="button" data-sprint-set="northAmerica">North America</button>
+            <button class="special-game-option" type="button" data-sprint-set="southAmerica">South America</button>
+            <button class="special-game-option" type="button" data-sprint-set="oceania">Oceania</button>
+            <button class="special-game-option" type="button" data-sprint-set="caribbean">Caribbean</button>
+          </div>
+          <div class="special-game-help">Questions mix place names, flags, capitals, currencies and silhouettes from the selected region.</div>
+        </div>
+        <div class="sprint-rules-card" aria-label="Sprint rules">
+          <strong>60 seconds</strong><span> · keep trying until you get it · correct answers advance automatically · give up if you want to move on</span>
+        </div>
+        <button class="special-game-start" id="sprintStartBtn" type="button">Start Sprint →</button>
+      </div>
+    </div>
+  </div>
 
 
   <div class="chain-overlay" id="chainFillOverlay" role="dialog" aria-modal="true" aria-labelledby="chainFillTitle">
@@ -14362,10 +15383,10 @@ button,
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
 
   <script>
-    const GEODEN_VERSION = "0.50.16";
+    const GEODEN_VERSION = "0.53.6";
     // Input policy: autocomplete/typeahead is ordinary entry and remains unassisted.
     // Only an actual spelling correction (or an explicit hint/reveal) counts as help.
-    const GEODEN_BUILD_DATE = "2026-09-19";
+    const GEODEN_BUILD_DATE = "2026-09-20";
     const GEODEN_EXPECTED_COUNTRY_COUNT = 195;
     const GEODEN_EXPECTED_TERRITORY_COUNT = 26;
     const GEODEN_EXPECTED_ADDITIONAL_PLACE_COUNT = 4;
@@ -14625,6 +15646,9 @@ button,
     const DETECTIVE_CONFIG_KEY = "flag-by-flag-detective-config-v1";
     const INTERACTIVE_CHOICE_COUNT_KEY = "flag-by-flag-interactive-choice-count-v1";
     const INTERACTIVE_CITY_MODE_KEY = "flag-by-flag-interactive-city-mode-v1";
+    const FLASH_FLOW_PREFS_KEY = "geoden-flash-flow-prefs-v1";
+    const LAST_RESUMABLE_MODE_KEY = "geoden-last-resumable-mode-v1";
+    const SPRINT_SET_KEY = "geoden-sprint-set-v1";
     const DAILY_PROGRESS_KEY = "flag-by-flag-daily-progress-v1";
     const SESSION_CHOICE_KEY = "flag-by-flag-session-choice-v1";
     const CONFUSION_KEY = "geoden-country-confusions-v1";
@@ -14679,15 +15703,15 @@ button,
       custom: "Custom"
     };
 
-    const ALL_STAGES = ["flag", "country", "capital", "largestCity", "languages", "currency", "historyFacts", "globe", "neighbours", "silhouette", "cityMap"];
+    const ALL_STAGES = ["flag", "country", "capital", "capitalPosition", "largestCity", "languages", "currency", "historyFacts", "globe", "neighbours", "silhouette", "cityMap"];
     const INTERACTIVE_STAGES = new Set([
-      "flag", "country", "capital", "largestCity", "languages",
+      "flag", "country", "capital", "capitalPosition", "largestCity", "languages",
       "currency", "globe", "neighbours", "silhouette"
     ]);
     // Rapid Fire tests the same facts as Quiz, but only the challenge types
     // that have a fast one-question format are available in this style.
     const RAPID_CHALLENGE_STAGES = new Set([
-      "flag", "country", "capital", "largestCity", "currency", "silhouette"
+      "flag", "country", "capital", "capitalPosition", "largestCity", "currency", "silhouette"
     ]);
     const RAPID_BASIC_STAGES = ["flag", "country", "capital"];
 
@@ -14705,10 +15729,16 @@ button,
         revealButton: "Reveal country →"
       },
       capital: {
-        name: "Capital",
+        name: "Capital name",
         desc: "Recall the capital or capitals; hints reveal opening letters",
         prompt: "What is the capital?",
         revealButton: "Reveal capital →"
+      },
+      capitalPosition: {
+        name: "Capital position",
+        desc: "Locate the capital on the place map",
+        prompt: "Where is the capital?",
+        revealButton: "Reveal capital position →"
       },
       largestCity: {
         name: "Largest city",
@@ -15146,6 +16176,28 @@ button,
     const stageLabel = document.getElementById("stageLabel");
     const promptQuestion = document.getElementById("promptQuestion");
     const promptNote = document.getElementById("promptNote");
+
+    function setCapitalTargetPrompt(element, text, emphasise = false) {
+      if (!element) return;
+      const value = String(text ?? "");
+      element.textContent = value;
+      element.classList.toggle("capital-target-prompt", !!emphasise);
+      if (!emphasise || !/\bcapitals?\b/i.test(value)) return;
+      const fragment = document.createDocumentFragment();
+      const pattern = /\bcapitals?\b/gi;
+      let last = 0;
+      for (const match of value.matchAll(pattern)) {
+        const index = Number(match.index) || 0;
+        if (index > last) fragment.appendChild(document.createTextNode(value.slice(last, index)));
+        const span = document.createElement("span");
+        span.className = "capital-target-word";
+        span.textContent = match[0];
+        fragment.appendChild(span);
+        last = index + match[0].length;
+      }
+      if (last < value.length) fragment.appendChild(document.createTextNode(value.slice(last)));
+      element.replaceChildren(fragment);
+    }
     const flagAnswerWrap = document.getElementById("flagAnswerWrap");
     const flagLarge = document.getElementById("flagLarge");
     const textAnswer = document.getElementById("textAnswer");
@@ -15348,6 +16400,9 @@ button,
     const interactiveChoiceCountPicker = document.getElementById("interactiveChoiceCountPicker");
     const interactiveCityModeSettings = document.getElementById("interactiveCityModeSettings");
     const interactiveCityModePicker = document.getElementById("interactiveCityModePicker");
+    const flashFlowSettings = document.getElementById("flashFlowSettings");
+    const flashOrderPicker = document.getElementById("flashOrderPicker");
+    const flashMixPicker = document.getElementById("flashMixPicker");
     const stageSettingsEl = document.getElementById("stageSettings");
     const settingsWarning = document.getElementById("settingsWarning");
     const settingsHapticsToggle = document.getElementById("settingsHapticsToggle");
@@ -15413,6 +16468,7 @@ button,
     let detectiveConfig = loadDetectiveConfig();
     let interactiveChoiceCount = loadInteractiveChoiceCount();
     let interactiveCityMode = loadInteractiveCityMode();
+    let flashFlowPrefs = loadFlashFlowPrefs();
     let currentStage = loadCurrentStage();
     let phase = loadPhase();
 
@@ -15456,6 +16512,10 @@ button,
     let matchingDrawerTouchStartX = null;
     let matchingRailSwipeState = null;
     let matchingRailMomentumFrame = null;
+    // Special-game state is declared with the rest of the app state so the Home
+    // resume card can safely inspect it during initial menu rendering.
+    let chainState = null;
+    let mapHuntState = null;
     let savedSessionChoice = null;
     try { savedSessionChoice = JSON.parse(localStorage.getItem(SESSION_CHOICE_KEY)); } catch (_) {}
     let selectedSessionMode = savedSessionChoice?.mode === "unlimited" ? "unlimited" : "finite";
@@ -16020,7 +17080,21 @@ button,
           matchingRoundNo: Math.max(0, Number(saved.matchingRoundNo) || 0),
           detective: saved.detective && typeof saved.detective === "object" ? saved.detective : null,
           rapid: saved.rapid && typeof saved.rapid === "object" ? saved.rapid : null,
+          flashOrders: saved.flashOrders && typeof saved.flashOrders === "object" ? saved.flashOrders : {},
+          flashDeck: Array.isArray(saved.flashDeck) ? saved.flashDeck.filter(item => item && item.countryCode && item.cueStage && item.targetStage) : [],
+          flashPlaceCount: Math.max(0, Number(saved.flashPlaceCount) || 0),
+          flashPrefs: saved.flashPrefs && typeof saved.flashPrefs === "object"
+            ? { order:saved.flashPrefs.order === "random" ? "random" : "fixed", flow:saved.flashPrefs.flow === "mixed" ? "mixed" : "country" }
+            : null,
           dailyChallenge: saved.dailyChallenge && typeof saved.dailyChallenge === "object" ? saved.dailyChallenge : null,
+          sprint: saved.sprint && typeof saved.sprint === "object" ? {
+            enabled: saved.sprint.enabled === true,
+            set: Object.prototype.hasOwnProperty.call(COUNTRY_SET_LABELS, saved.sprint.set) ? saved.sprint.set : "world",
+            durationMs: Math.max(1000, Number(saved.sprint.durationMs) || 60000),
+            remainingMs: Math.max(0, Number(saved.sprint.remainingMs) || 0),
+            runningStartedAt: null,
+            ended: saved.sprint.ended === true
+          } : null,
           historyArchivedAt: Number(saved.historyArchivedAt) || null
         };
       } catch (_) {
@@ -16030,6 +17104,10 @@ button,
 
     function saveStudySession() {
       if (studySession) {
+        if (studySession?.sprint?.enabled && studySession.sprint.runningStartedAt) {
+          studySession.sprint.remainingMs = sprintRemainingMs();
+          studySession.sprint.runningStartedAt = Date.now();
+        }
         if (studySession.active === false) archiveCompletedSession(studySession);
         localStorage.setItem(STUDY_SESSION_KEY, JSON.stringify(studySession));
       } else localStorage.removeItem(STUDY_SESSION_KEY);
@@ -16037,6 +17115,9 @@ button,
 
     function sessionCountryTotal() {
       if (!studySession) return countries.length;
+      if (studySession.interaction === "standard" && currentFlashPrefs().flow === "mixed" && studySession.phase !== "revision" && Array.isArray(studySession.flashDeck) && studySession.flashDeck.length) {
+        return studySession.flashDeck.length;
+      }
 
       if (studySession.mode === "finite") {
         return Math.max(1, Math.min(countries.length, Number(studySession.limit) || countries.length));
@@ -16728,7 +17809,7 @@ button,
       }
       if (smartReviewPoolMeta) {
         smartReviewPoolMeta.textContent = !reviewSupported
-          ? (menuPlayMode === "rapid" ? "Use Standard Quiz" : `Not used in ${modeDisplayName(menuPlayMode)}`)
+          ? (menuPlayMode === "rapid" ? "Use Country Deep Dive" : `Not used in ${modeDisplayName(menuPlayMode)}`)
           : reviewPlan.dueFacts > 0
             ? `${reviewPlan.dueFacts} due now`
             : reviewCount > 0
@@ -16866,12 +17947,13 @@ button,
 
     function modeDisplayName(mode = menuPlayMode) {
       if (mode === "matching") return "Matching";
-      if (mode === "interactive") return "Quiz · Standard";
+      if (mode === "interactive") return "Quiz · Country Deep Dive";
       if (mode === "detective") return "Detective";
-      if (mode === "rapid") return "Quiz · Rapid Fire";
+      if (mode === "rapid") return "Quiz · Mixed Practice";
       if (mode === "maphunt") return "Map Hunt";
       if (mode === "chain") return "Map Crawl";
       if (mode === "ranking") return "Ranking";
+      if (mode === "sprint") return "Sprint";
       return "Flash card";
     }
 
@@ -16921,6 +18003,26 @@ button,
       return !!studySession && studySession.active !== false;
     }
 
+    function noteResumableMode(mode) {
+      if (!["study", "chain", "maphunt"].includes(mode)) return;
+      try { localStorage.setItem(LAST_RESUMABLE_MODE_KEY, mode); } catch (_) {}
+    }
+
+    function preferredResumableMode() {
+      let saved = "";
+      try { saved = localStorage.getItem(LAST_RESUMABLE_MODE_KEY) || ""; } catch (_) {}
+      const available = {
+        study: hasActiveStudyRun(),
+        chain: hasResumableChain(),
+        maphunt: hasResumableMapHunt()
+      };
+      if (available[saved]) return saved;
+      if (available.study) return "study";
+      if (available.chain) return "chain";
+      if (available.maphunt) return "maphunt";
+      return "";
+    }
+
     function activeSessionProgressText() {
       const total = Math.max(1, sessionCountryTotal());
       if (studySession?.phase === "revision") {
@@ -16932,15 +18034,37 @@ button,
     }
 
     function updateActiveSessionResumeCard() {
-      const active = hasActiveStudyRun();
+      const resumeMode = preferredResumableMode();
+      const active = !!resumeMode;
       activeSessionResumeBtn?.classList.toggle("hidden", !active);
       if (startSessionEyebrow) {
         startSessionEyebrow.textContent = "Start a new session";
       }
       if (!active) return;
 
-      const mode = modeDisplayName(studySession.interaction);
-      const strategy = countryPoolDisplayName(studySession.pool);
+      if (resumeMode === "chain") {
+        const availability = chainAvailability();
+        const filled = availability?.filled?.size || 0;
+        const total = chainState?.codes?.length || 0;
+        if (activeSessionResumeTitle) activeSessionResumeTitle.textContent = "Resume Map Crawl";
+        if (activeSessionResumeMeta) activeSessionResumeMeta.textContent = `${countrySetDisplayName(chainState?.setKey || chainSet)} · ${filled} of ${total} filled`;
+        if (activeSessionResumeAction) activeSessionResumeAction.textContent = "Resume →";
+        activeSessionResumeBtn?.setAttribute("aria-label", `Resume Map Crawl, ${filled} of ${total} filled`);
+        return;
+      }
+      if (resumeMode === "maphunt") {
+        const done = mapHuntState?.results?.size || 0;
+        const total = mapHuntState?.roundCodes?.length || 0;
+        if (activeSessionResumeTitle) activeSessionResumeTitle.textContent = "Resume Map Hunt";
+        if (activeSessionResumeMeta) activeSessionResumeMeta.textContent = `${countrySetDisplayName(mapHuntState?.setKey || mapHuntSet)} · ${done} of ${total}`;
+        if (activeSessionResumeAction) activeSessionResumeAction.textContent = "Resume →";
+        activeSessionResumeBtn?.setAttribute("aria-label", `Resume Map Hunt, ${done} of ${total}`);
+        return;
+      }
+
+      const sprintRun = studySession?.sprint?.enabled === true;
+      const mode = sprintRun ? "Sprint" : modeDisplayName(studySession.interaction);
+      const strategy = sprintRun ? countrySetDisplayName(studySession.sprint.set || studySession.countrySet || "world") : countryPoolDisplayName(studySession.pool);
       const setName = countrySetDisplayName(studySession.countrySet || "world");
       const stageName = ["standard", "interactive"].includes(studySession.interaction)
         ? (STAGE_META[currentStage]?.name || "Study")
@@ -16950,8 +18074,10 @@ button,
             ? "Detective case"
             : "Mixed question";
 
-      if (activeSessionResumeTitle) activeSessionResumeTitle.textContent = "Resume current session";
-      if (activeSessionResumeMeta) activeSessionResumeMeta.textContent = `${mode} · ${strategy} · ${activeSessionProgressText()} · ${stageName} · ${setName}`;
+      if (activeSessionResumeTitle) activeSessionResumeTitle.textContent = sprintRun ? "Resume Sprint" : "Resume current session";
+      if (activeSessionResumeMeta) activeSessionResumeMeta.textContent = sprintRun
+        ? `${strategy} · ${Math.ceil(Math.max(0, Number(studySession.sprint.remainingMs) || 0) / 1000)} sec left · ${Number(studySession.rapid?.correct) || 0} correct`
+        : `${mode} · ${strategy} · ${activeSessionProgressText()} · ${stageName} · ${setName}`;
       if (activeSessionResumeAction) activeSessionResumeAction.textContent = "Resume →";
       activeSessionResumeBtn?.setAttribute("aria-label", `Resume current session: ${mode}, ${strategy}, ${activeSessionProgressText()}, ${stageName}, ${setName}`);
     }
@@ -17051,7 +18177,7 @@ button,
       const strategyStep = document.querySelector('[data-session-step="strategy"]');
       const lengthStep = document.querySelector('[data-session-step="length"]');
       const setStep = document.querySelector('[data-session-step="set"]');
-      const specialMode = ["chain", "ranking", "maphunt"].includes(menuPlayMode);
+      const specialMode = ["chain", "ranking", "maphunt", "sprint"].includes(menuPlayMode);
       const quizMode = ["interactive", "rapid"].includes(menuPlayMode);
       const setupEyebrow = document.getElementById("startSessionEyebrow");
       const customizeDisclosure = document.getElementById("sessionCustomizeDisclosure");
@@ -17060,7 +18186,7 @@ button,
         quizStyleStep.classList.toggle("hidden", !quizMode || specialMode);
         if (!quizMode) quizStyleStep.open = false;
       }
-      if (quizStyleValue) quizStyleValue.textContent = menuPlayMode === "interactive" ? "Standard" : "Rapid Fire";
+      if (quizStyleValue) quizStyleValue.textContent = menuPlayMode === "interactive" ? "Country Deep Dive" : "Mixed Practice";
       if (strategyStep) strategyStep.classList.toggle("hidden", specialMode);
       if (lengthStep) lengthStep.classList.toggle("hidden", specialMode);
       if (setStep) setStep.classList.toggle("hidden", specialMode);
@@ -17133,7 +18259,13 @@ button,
     }
 
     function hasResumableMapHunt() {
-      return !!(mapHuntState?.svg && mapHuntMap?.childNodes?.length);
+      const map = document.getElementById("mapHuntMap");
+      return !!(mapHuntState?.svg && map?.childNodes?.length);
+    }
+
+    function hasResumableChain() {
+      const map = document.getElementById("chainWorldMap");
+      return !!(chainState && map?.childNodes?.length);
     }
 
     function updateSessionChoiceUI() {
@@ -17157,7 +18289,7 @@ button,
       if (["chain", "ranking", "maphunt"].includes(menuPlayMode)) {
         startConfirmBtn.disabled = false;
         startConfirmBtn.textContent = menuPlayMode === "chain"
-          ? "Start new Map Crawl →"
+          ? (hasResumableChain() ? (chainState?.finishedAt ? "View Map Crawl results →" : "Resume Map Crawl →") : "Start new Map Crawl →")
           : menuPlayMode === "maphunt"
             ? (hasResumableMapHunt()
                 ? (mapHuntState?.finished ? "View Map Hunt results →" : "Resume Map Hunt →")
@@ -17214,9 +18346,9 @@ button,
 
     function studyFocusUnavailableReason(pool, mode = menuPlayMode) {
       if (pool !== "review") return "";
-      if (mode === "rapid") return "Review focuses on specific due facts. Rapid Fire is a quick mixed quiz, so use Standard Quiz or Flash card for Review.";
-      if (mode === "matching") return "Review focuses on specific due facts, while Matching needs a full board of comparable cards. Use Random or New here, or Standard Quiz / Flash card for Review.";
-      if (mode === "detective") return "Review focuses on specific due facts, while Detective builds a complete clue case for each place. Use Random or New here, or Standard Quiz / Flash card for Review.";
+      if (mode === "rapid") return "Review focuses on specific due facts. Mixed Practice is a quick mixed quiz, so use Country Deep Dive or Flash card for Review.";
+      if (mode === "matching") return "Review focuses on specific due facts, while Matching needs a full board of comparable cards. Use Random or New here, or Country Deep Dive / Flash card for Review.";
+      if (mode === "detective") return "Review focuses on specific due facts, while Detective builds a complete clue case for each place. Use Random or New here, or Country Deep Dive / Flash card for Review.";
       return "";
     }
 
@@ -17506,7 +18638,7 @@ button,
 
     function setMenuPlayMode(mode) {
       if (mode === "quiz") mode = lastQuizStyle;
-      menuPlayMode = ["matching", "interactive", "detective", "rapid", "chain", "ranking", "maphunt"].includes(mode) ? mode : "standard";
+      menuPlayMode = ["matching", "interactive", "detective", "rapid", "chain", "ranking", "maphunt", "sprint"].includes(mode) ? mode : "standard";
       if (["interactive", "rapid"].includes(menuPlayMode)) {
         lastQuizStyle = menuPlayMode;
         localStorage.setItem(QUIZ_STYLE_KEY, lastQuizStyle);
@@ -17535,7 +18667,20 @@ button,
     }
 
     function resumeCurrentSessionFromMenu() {
-      if (!hasActiveStudyRun()) return;
+      const resumeMode = preferredResumableMode();
+      if (resumeMode === "chain") {
+        startOverlay.classList.remove("open");
+        menuPlayMode = "chain";
+        openChainFill(true);
+        return;
+      }
+      if (resumeMode === "maphunt") {
+        startOverlay.classList.remove("open");
+        menuPlayMode = "maphunt";
+        openMapHunt();
+        return;
+      }
+      if (resumeMode !== "study" || !hasActiveStudyRun()) return;
       startOverlay.classList.remove("open");
       if (studySession?.interaction === "matching") {
         menuPlayMode = "matching";
@@ -17544,7 +18689,7 @@ button,
         menuPlayMode = "detective";
         openDetectiveMode(true);
       } else if (studySession?.interaction === "rapid") {
-        menuPlayMode = "rapid";
+        menuPlayMode = studySession?.sprint?.enabled ? "sprint" : "rapid";
         openRapidMode(true);
       } else {
         menuPlayMode = studySession?.interaction === "interactive" ? "interactive" : "standard";
@@ -17556,6 +18701,7 @@ button,
       matchingOverlay?.classList.remove("open");
       detectiveOverlay?.classList.remove("open");
       rapidOverlay?.classList.remove("open");
+      document.getElementById("sprintOverlay")?.classList.remove("open");
       document.getElementById("mapHuntOverlay")?.classList.remove("open");
       renderDailyGoalUI();
       renderDailyChallengeCard();
@@ -17895,11 +19041,57 @@ button,
         matchingRoundNo: 0,
         detective: interaction === "detective" ? detectiveDefaultState() : null,
         rapid: interaction === "rapid" ? rapidDefaultState() : null,
+        flashOrders: {},
+        flashDeck: [],
+        flashPlaceCount: 0,
+        flashPrefs: interaction === "standard" ? { ...flashFlowPrefs } : null,
         dailyChallenge: normalizedPool === "daily" ? (() => {
           const spec = dailyChallengeSpec();
           return { key: spec.key, seed: spec.seed, version: DAILY_CHALLENGE_CONTENT_VERSION };
         })() : null
       };
+      if (studySession.interaction === "standard" && currentFlashPrefs().flow === "mixed" && normalizedPool !== "review" && !focusedPractice) {
+        const placeCount = mode === "finite" ? Math.min(Number(limit) || poolCount, poolCount) : poolCount;
+        const selectedIndices = countryOrder.slice(0, placeCount);
+        const deck = [];
+        for (const countryIndex of selectedIndices) {
+          const c = countries[countryIndex];
+          if (!c) continue;
+          let stages = config.order.filter(stage => config.enabled[stage] && stage !== "historyFacts" && countryStageIsAvailable(c, stage));
+          stages = flashOrderForCountry(c, stages);
+          if (!stages.length) continue;
+
+          if (stages.length === 1) {
+            const targetStage = stages[0];
+            const cueStage = flashFallbackCue(c, targetStage);
+            if (cueStage) deck.push({ countryCode:c.code, cueStage, targetStage });
+            continue;
+          }
+
+          for (let i = 0; i < stages.length; i++) {
+            const targetStage = stages[i];
+            const cueStage = stages[(i - 1 + stages.length) % stages.length];
+            if (cueStage !== targetStage) deck.push({ countryCode:c.code, cueStage, targetStage });
+          }
+        }
+        studySession.flashPlaceCount = placeCount;
+        studySession.flashDeck = interactiveShuffle(deck);
+        if (studySession.flashDeck.length) {
+          countryOrder = studySession.flashDeck.map(card => countries.findIndex(c => c.code === card.countryCode)).filter(i => i >= 0);
+          studySession.poolCount = countryOrder.length;
+          if (studySession.mode === "finite") studySession.limit = countryOrder.length;
+          localStorage.setItem(COUNTRY_ORDER_KEY, JSON.stringify(countryOrder));
+        } else {
+          // If a pathological configuration produces no usable cue→target pairs,
+          // fall back to normal one-place-at-a-time Flash Cards rather than
+          // starting an empty/broken run.
+          studySession.flashPrefs.flow = "country";
+          studySession.flashDeck = [];
+          studySession.poolCount = poolCount;
+          studySession.limit = limit;
+        }
+      }
+      noteResumableMode("study");
       saveStudySession();
 
       smartReview.sinceReview = 0;
@@ -18013,8 +19205,9 @@ button,
               }
             }
 
-            // New stages default on when upgrading an existing game.
-            for (const stage of missing) enabled[stage] = true;
+            // Most new stages default on when upgrading; Capital position is a
+            // distinct optional challenge and should not silently replace Capital name.
+            for (const stage of missing) enabled[stage] = stage === "capitalPosition" ? false : true;
 
             if (Object.values(enabled).some(Boolean)) {
               return { order, enabled };
@@ -18266,6 +19459,59 @@ button,
       localStorage.setItem(INTERACTIVE_CITY_MODE_KEY, interactiveCityMode);
     }
 
+    function loadFlashFlowPrefs() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(FLASH_FLOW_PREFS_KEY));
+        return {
+          order: saved?.order === "random" ? "random" : "fixed",
+          flow: saved?.flow === "mixed" ? "mixed" : "country"
+        };
+      } catch (_) {
+        return { order:"fixed", flow:"country" };
+      }
+    }
+
+    function saveFlashFlowPrefs() {
+      localStorage.setItem(FLASH_FLOW_PREFS_KEY, JSON.stringify(flashFlowPrefs));
+    }
+
+    function currentFlashPrefs() {
+      if (studySession?.interaction === "standard" && studySession.flashPrefs) return studySession.flashPrefs;
+      return flashFlowPrefs;
+    }
+
+    function flashFallbackCue(c, targetStage) {
+      const preferred = targetStage === "country"
+        ? ["flag", "silhouette", "globe", "capital", "largestCity", "currency", "languages", "neighbours", "cityMap"]
+        : ["country", "flag", "silhouette", "globe", "capital", "largestCity", "currency", "languages", "neighbours", "cityMap"];
+      return preferred.find(stage =>
+        stage !== targetStage &&
+        countryStageIsAvailable(c, stage) &&
+        !(stage === "largestCity" && largestCityIsCapital(c) && targetStage === "capital")
+      ) || null;
+    }
+
+    function flashOrderForCountry(c, baseStages) {
+      const stages = [...baseStages];
+      if (!c || currentFlashPrefs().order !== "random" || isLookupMode() || studySession?.interaction !== "standard") return stages;
+      if (!studySession.flashOrders || typeof studySession.flashOrders !== "object") studySession.flashOrders = {};
+      const saved = Array.isArray(studySession.flashOrders[c.code])
+        ? studySession.flashOrders[c.code].filter(stage => stages.includes(stage))
+        : [];
+      const missing = stages.filter(stage => !saved.includes(stage));
+      if (saved.length + missing.length === stages.length && saved.length === stages.length) return saved;
+      const shuffled = interactiveShuffle(stages);
+      studySession.flashOrders[c.code] = shuffled;
+      saveStudySession();
+      return shuffled;
+    }
+
+    function activeFlashDeckCard() {
+      if (studySession?.interaction !== "standard" || currentFlashPrefs().flow !== "mixed" || studySession.phase === "revision") return null;
+      const deck = Array.isArray(studySession.flashDeck) ? studySession.flashDeck : [];
+      return deck[Math.max(0, Number(index) || 0)] || null;
+    }
+
     function factFocusForCountry(c) {
       if (!c || isLookupMode() || studySession?.pool !== "review" || !studySession?.factFocus) return [];
       const stages = studySession.factFocus[c.code];
@@ -18288,6 +19534,7 @@ button,
 
     function countryStageIsAvailable(c, stage) {
       if (!c || !stage) return false;
+      if (stage === "capitalPosition") return countryStageIsAvailable(c, "cityMap") && cityLocationTargetsForStage(c, "capital").length > 0;
       return !(Array.isArray(c.unavailableStages) && c.unavailableStages.includes(stage));
     }
 
@@ -18325,6 +19572,14 @@ button,
 
       if (!(studySession?.interaction === "interactive" && !isLookupMode()) && Array.isArray(c?.unavailableStages)) {
         stages = stages.filter(stage => countryStageIsAvailable(c, stage));
+      }
+
+      if (!isLookupMode() && studySession?.interaction === "standard") {
+        const deckCard = activeFlashDeckCard();
+        if (deckCard && deckCard.countryCode === c?.code) {
+          return [deckCard.cueStage, deckCard.targetStage].filter((stage, i, list) => stage && list.indexOf(stage) === i && countryStageIsAvailable(c, stage));
+        }
+        stages = flashOrderForCountry(c, stages);
       }
 
       // A Progress → Practice action is an explicit one-off request. Allow its
@@ -18374,14 +19629,7 @@ button,
         stages[0] !== "historyFacts"
       ) {
         const target = stages[0];
-        const preferred = target === "country"
-          ? ["flag", "silhouette", "globe", "capital", "largestCity", "currency", "languages", "neighbours", "cityMap"]
-          : ["country", "flag", "silhouette", "globe", "capital", "largestCity", "currency", "languages", "neighbours", "cityMap"];
-        const cue = preferred.find(stage =>
-          stage !== target &&
-          countryStageIsAvailable(c, stage) &&
-          !(stage === "largestCity" && largestCityIsCapital(c) && target === "capital")
-        );
+        const cue = flashFallbackCue(c, target);
         if (cue) return [cue, target];
       }
 
@@ -18553,6 +19801,10 @@ button,
     }
 
     function currentCountry() {
+      const flashCard = activeFlashDeckCard();
+      if (flashCard?.countryCode && !lookupCountryCode && !reviewCountryCode) {
+        return countryByCode(flashCard.countryCode);
+      }
       if (lookupCountryCode) {
         return countries.find(c => c.code === lookupCountryCode) || null;
       }
@@ -20692,6 +21944,47 @@ button,
       );
     }
 
+    // D3's spherical path renderer is sensitive to polygon winding. A tiny
+    // island polygon with the opposite winding can be interpreted as the
+    // complement of the island (essentially "everything except this dot"),
+    // which paints as a giant rectangle in fitted silhouette cards. Normalise
+    // only polygons whose spherical area is larger than a hemisphere, leaving
+    // ordinary country geometry untouched. This particularly protects
+    // archipelagos such as Maldives while also fixing the same failure mode for
+    // any future high-detail atlas feature.
+    function normalizeSilhouetteWinding(target) {
+      if (!target?.geometry || !window.d3) return target;
+
+      const normalizePolygon = coords => {
+        if (!Array.isArray(coords) || !coords.length) return coords;
+        try {
+          const polygon = { type:"Polygon", coordinates:coords };
+          if (d3.geoArea(polygon) <= Math.PI * 2) return coords;
+          return coords.map(ring => Array.isArray(ring) ? [...ring].reverse() : ring);
+        } catch (_) {
+          return coords;
+        }
+      };
+
+      if (target.geometry.type === "Polygon") {
+        const coordinates = normalizePolygon(target.geometry.coordinates);
+        if (coordinates === target.geometry.coordinates) return target;
+        return { ...target, geometry:{ ...target.geometry, coordinates } };
+      }
+
+      if (target.geometry.type === "MultiPolygon") {
+        let changed = false;
+        const coordinates = target.geometry.coordinates.map(coords => {
+          const normalized = normalizePolygon(coords);
+          if (normalized !== coords) changed = true;
+          return normalized;
+        });
+        return changed ? { ...target, geometry:{ ...target.geometry, coordinates } } : target;
+      }
+
+      return target;
+    }
+
     function appendIslandVisibilityDots(svg, projection, target, radius = 2) {
       if (!target?.geometry || !projection || !window.d3) return;
 
@@ -20739,20 +22032,38 @@ button,
         const features = topojson.feature(world, world.objects.countries).features;
         let target = mapFeatureForCountry(country, features);
         if (!target) return false;
-        target = mainTerritoryGeometry(country, target);
-        const projection = silhouetteProjectionForTarget(target, [[7, 5], [153, 95]]);
+        target = studySilhouetteGeometry(country, target);
+        // Match the internal SVG coordinate box to the card's *rendered* aspect
+        // ratio. A fixed 180×110 viewBox inside a very wide Sprint tile causes
+        // large horizontal letterboxing, making even a correctly fitted country
+        // look tiny. Keeping the viewBox ratio aligned lets the silhouette use
+        // the actual visual space without distorting the geography.
+        const rect = svgEl.getBoundingClientRect?.();
+        const renderedWidth = Math.max(1, Number(rect?.width) || svgEl.clientWidth || 160);
+        const renderedHeight = Math.max(1, Number(rect?.height) || svgEl.clientHeight || 100);
+        const renderedRatio = Math.max(.55, Math.min(6, renderedWidth / renderedHeight));
+        const boxHeight = 100;
+        const boxWidth = Math.max(72, Math.round(boxHeight * renderedRatio));
+        svgEl.setAttribute("viewBox", `0 0 ${boxWidth} ${boxHeight}`);
+        const padX = Math.max(4, boxWidth * .025);
+        const padY = Math.max(3, boxHeight * .035);
+        const projection = silhouetteProjectionForTarget(target, [[padX, padY], [boxWidth - padX, boxHeight - padY]]);
         const path = d3.geoPath(projection);
         const svg = d3.select(svgEl);
         svg.selectAll("*").remove();
         const islandBoost = silhouetteNeedsIslandBoost(country, target);
 
+        const highDetail = shouldUseHighDetailSilhouette(country);
         appendSilhouetteShape(svg, target, path, {
-          thinThreshold: 7,
-          normalStroke: islandBoost ? 1.35 : .55,
-          thinStroke: 2.7
+          // Thick outline strokes can turn a narrow detailed microstate into a
+          // featureless blob. High-detail geometry gets a finer outline so its
+          // actual border remains visible in Sprint/Matching choice cards.
+          thinThreshold: highDetail ? 4.25 : 7,
+          normalStroke: islandBoost ? (highDetail ? .85 : 1.35) : (highDetail ? .32 : .55),
+          thinStroke: highDetail ? 1.35 : 2.7
         });
 
-        if (islandBoost) appendIslandVisibilityDots(svg, projection, target, 1.25);
+        // Keep silhouettes literal: do not add artificial island visibility dots.
         return true;
       } catch (_) {
         return false;
@@ -20962,6 +22273,7 @@ button,
           matchingVerifyBtn.classList.add("hidden");
           matchingNewRoundBtn.textContent = "Back to home ✓";
           matchingNewRoundBtn.classList.remove("hidden");
+          ensureProgressionActionVisible(matchingNewRoundBtn, matchingOverlay?.querySelector(".matching-panel"));
           return;
         }
 
@@ -21620,6 +22932,7 @@ button,
         matchingNewRoundBtn.textContent = "Continue →";
       }
       matchingNewRoundBtn.classList.remove("hidden");
+      ensureProgressionActionVisible(matchingNewRoundBtn, matchingOverlay?.querySelector(".matching-panel"));
     }
 
     function nextMatchingRoundOrMenu() {
@@ -21669,7 +22982,10 @@ button,
     }
 
     function beginMatchingRailSwipe(event, strip) {
-      if (!strip || !(event.pointerType === "touch" || event.pointerType === "pen")) return;
+      // Coarse pointers use the explicit rail scroller below. This avoids the
+      // nested-overflow gesture failures seen in Samsung/Android browsers while
+      // leaving desktop mouse/trackpad behaviour unchanged.
+      if (!strip) return;
 
       cancelMatchingRailMomentum();
 
@@ -22140,9 +23456,12 @@ button,
     }
 
     function chooseInteractiveSuggestion() {
+      if (interactiveSuggestions.classList.contains("hidden")) return false;
       const buttons = interactiveSuggestionButtons();
       let choiceIndex = interactiveSuggestionIndex;
-      if (choiceIndex < 0 && buttons.length === 1) choiceIndex = 0;
+      // Enter should be fast: if the player has not moved the highlight,
+      // accept the top visible autocomplete result.
+      if (choiceIndex < 0 && buttons.length) choiceIndex = 0;
       if (choiceIndex < 0 || !buttons[choiceIndex]) return false;
       interactiveInput.value = buttons[choiceIndex].dataset.value || buttons[choiceIndex].textContent || "";
       interactiveSuggestions.classList.add("hidden");
@@ -22495,7 +23814,7 @@ button,
       };
 
       stageLabel.textContent = "CAPITALS";
-      promptQuestion.textContent = `Name all ${targets.length} capitals, one at a time.`;
+      setCapitalTargetPrompt(promptQuestion, `Name all ${targets.length} capital cities, one at a time.`, true);
       interactiveFeedback.textContent = "";
       renderInteractiveCapitalProgress();
       interactiveCandidateTexts("capital").catch(() => {});
@@ -23992,8 +25311,8 @@ button,
 
     function capitalPromptFor(c) {
       return hasMultipleCapitals(c)
-        ? "What are the capitals?"
-        : "What is the capital?";
+        ? "Name the capital cities."
+        : "Name the capital city.";
     }
 
     function cityMapPromptFor(c) {
@@ -24025,14 +25344,16 @@ button,
       stageLabel.textContent = stage === "country"
         ? (c?.isTerritory ? "TERRITORY NAME" : c?.isAdditionalPlace ? "PLACE NAME" : "COUNTRY NAME")
         : STAGE_META[stage].name;
-      promptQuestion.textContent = stage === "country"
+      stageLabel.classList.toggle("capital-target-label", stage === "capital" || stage === "capitalPosition");
+      setCapitalTargetPrompt(promptQuestion, stage === "country"
         ? (c?.isTerritory ? "Which territory is this?" : c?.isAdditionalPlace ? "Which place is this?" : STAGE_META[stage].prompt)
-        : STAGE_META[stage].prompt;
+        : STAGE_META[stage].prompt, false);
       promptNote.textContent = promptNoteFor(stage);
 
       if (stage === "capital") {
-        promptQuestion.textContent = capitalPromptFor(c);
-        if (hasMultipleCapitals(c)) stageLabel.textContent = "CAPITALS";
+        setCapitalTargetPrompt(promptQuestion, capitalPromptFor(c), true);
+        if (hasMultipleCapitals(c)) stageLabel.textContent = "CAPITAL NAMES";
+        else stageLabel.textContent = "CAPITAL NAME";
       }
 
       if (stage === "cityMap") {
@@ -24095,6 +25416,15 @@ button,
         } else {
           loadSilhouetteWorld().catch(() => {});
         }
+      }
+
+      if (stage === "capitalPosition") {
+        cityMapWrap.classList.remove("hidden");
+        cityMapLegend.classList.add("hidden");
+        renderCityMapBase(c);
+        stageLabel.textContent = "CAPITAL POSITION";
+        setCapitalTargetPrompt(promptQuestion, "Where is the capital?", true);
+        promptNote.textContent = "Picture the capital's position, then reveal it.";
       }
 
       if (stage === "cityMap") {
@@ -24202,6 +25532,17 @@ button,
       if (stage === "silhouette") {
         silhouetteWrap.classList.remove("hidden");
         renderSilhouette(c);
+      }
+
+      if (stage === "capitalPosition") {
+        // Keep the same geometry as the prompt, but reveal only the capital
+        // marker(s). Largest-city position remains a separate challenge.
+        promptQuestion.classList.remove("hidden");
+        promptQuestion.textContent = "Where is the capital?";
+        promptQuestion.style.visibility = "hidden";
+        cityMapWrap.classList.remove("hidden");
+        cityMapLegend.classList.add("hidden");
+        renderCapitalPositionReveal(c);
       }
 
       if (stage === "cityMap") {
@@ -26288,21 +27629,31 @@ button,
     }
 
     const HIGH_DETAIL_SILHOUETTE_CODES = new Set([
-      "AD","AG","BB","BH","BN","BS","CV","CY","DM","FJ","GD","JM","KM","KN",
-      "LC","LI","LU","MC","MT","MU","MV","NR","PW","QA","SC","SG","SM","ST",
-      "TL","TO","TT","TV","VA","VC","VU","WS","FM","MH"
+      // Microstates, island states and smaller countries benefit noticeably from
+      // the 10m atlas. Keep this deliberately broad: silhouette study should
+      // favour recognisable border detail over saving a few MB after first load.
+      "AD","AG","AL","AM","BB","BE","BH","BN","BS","BA","BT","BZ","CH","CR",
+      "CV","CY","DJ","DK","DM","DO","EE","FJ","GD","GM","GQ","GW","HR","HT",
+      "IL","JM","JO","KM","KN","KW","LB","LC","LI","LT","LU","LV","MC","MD",
+      "ME","MK","MT","MU","MV","NR","NL","PS","PW","QA","RW","SC","SG","SI",
+      "SK","SL","SM","ST","SZ","TL","TO","TT","TV","AE","VA","VC","VU","WS",
+      "FM","MH","TW"
     ]);
 
     function shouldUseHighDetailSilhouette(c) {
-      return !!c && HIGH_DETAIL_SILHOUETTE_CODES.has(c.code);
+      // Silhouettes are a recognition exercise, so geometry quality matters more
+      // than saving one atlas download. Use the 10m source for every place; the
+      // loader caches it after the first request and falls back gracefully.
+      return !!c;
     }
 
     async function loadHighDetailSilhouetteWorld() {
       if (highDetailSilhouetteWorldData) return highDetailSilhouetteWorldData;
       if (highDetailSilhouetteWorldPromise) return highDetailSilhouetteWorldPromise;
 
-      // Only tiny countries pay the cost of the ~3.5 MB 10m atlas. Everyone
-      // else keeps using the much lighter 50m geometry for faster phone loads.
+      // Silhouette study prefers the 10m atlas for every place so small borders
+      // remain recognisable. The result is cached and falls back to the lighter
+      // silhouette atlas if the detailed request fails.
       highDetailSilhouetteWorldPromise = fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-10m.json")
         .then(r => {
           if (!r.ok) throw new Error("High-detail map request failed");
@@ -27520,6 +28871,56 @@ button,
       return MAIN_TERRITORY_ONLY_CODES.has(c.code);
     }
 
+    // v0.52.8 — study silhouettes should teach the recognisable country shape,
+    // not let a microscopic remote island/territory determine the scale. Keep
+    // the largest polygon, nearby pieces, and genuinely substantial islands;
+    // discard only tiny components that are far from the main landmass. This
+    // preserves archipelagos (Maldives, Indonesia, Philippines, etc.) while
+    // making countries such as Australia render at a useful size.
+    function trimRemoteSilhouetteParts(c, target) {
+      if (!c || !target?.geometry || target.geometry.type !== "MultiPolygon" || !window.d3) return target;
+      const coords = target.geometry.coordinates || [];
+      if (coords.length < 2) return target;
+
+      try {
+        const parts = coords.map((part, index) => {
+          const polygon = { type:"Polygon", coordinates:part };
+          return {
+            index,
+            part,
+            area:Math.max(0, Number(d3.geoArea(polygon)) || 0),
+            centroid:d3.geoCentroid(polygon)
+          };
+        }).filter(item => item.centroid?.length === 2 && item.centroid.every(Number.isFinite));
+        if (!parts.length) return target;
+
+        const main = parts.reduce((best, item) => !best || item.area > best.area ? item : best, null);
+        if (!main || !main.area) return target;
+
+        const nearbyRadius = 12 * Math.PI / 180;
+        const substantialRadius = 40 * Math.PI / 180;
+        const substantialRatio = .0045;
+        const kept = parts.filter(item => {
+          if (item.index === main.index) return true;
+          const distance = d3.geoDistance(main.centroid, item.centroid);
+          const ratio = item.area / main.area;
+          return distance <= nearbyRadius || (ratio >= substantialRatio && distance <= substantialRadius);
+        }).map(item => item.part);
+
+        if (!kept.length || kept.length === coords.length) return target;
+        return { ...target, geometry:{ ...target.geometry, coordinates:kept } };
+      } catch (_) {
+        return target;
+      }
+    }
+
+    function studySilhouetteGeometry(c, target) {
+      let display = normalizeSilhouetteWinding(target);
+      display = mainTerritoryGeometry(c, display);
+      display = trimRemoteSilhouetteParts(c, display);
+      return display;
+    }
+
 
     async function renderSilhouette(c) {
       silhouetteLoading.textContent = "Loading silhouette…";
@@ -27544,9 +28945,9 @@ button,
         ) return;
 
         const features = topojson.feature(world, world.objects.countries).features;
-        const target = mapFeatureForCountry(c, features);
+        let target = mapFeatureForCountry(c, features);
         if (!target) throw new Error("Country shape not found");
-        const displayTarget = mainTerritoryGeometry(c, target);
+        const displayTarget = studySilhouetteGeometry(c, target);
 
         const svg = d3.select(silhouetteEl);
         svg.selectAll("*").remove();
@@ -27564,7 +28965,7 @@ button,
           thinStroke: 4.2
         });
 
-        if (islandBoost) appendIslandVisibilityDots(group, projection, displayTarget, 2.15);
+        // Keep silhouettes literal: do not add artificial island visibility dots.
 
         silhouetteLoading.style.display = "none";
       } catch (_) {
@@ -27610,6 +29011,7 @@ button,
     }
 
     function cityLocationTargetsForStage(c, stage) {
+      if (stage === "capitalPosition") stage = "capital";
       if (!c || !["capital", "largestCity"].includes(stage)) return [];
       try {
         const facts = getCityFacts(c);
@@ -27631,7 +29033,10 @@ button,
     function interactiveUsesCityLocation(stage, c) {
       if (!window.d3 || !window.topojson) return false;
       if (!countryStageIsAvailable(c, "cityMap")) return false;
-      const targets = cityLocationTargetsForStage(c, stage);
+      if (stage === "capital") return false;
+      if (stage === "capitalPosition") return cityLocationTargetsForStage(c, "capital").length > 0;
+      const locationStage = stage === "capitalPosition" ? "capital" : stage;
+      const targets = cityLocationTargetsForStage(c, locationStage);
       if (!targets.length) return false;
       if (interactiveCityMode === "names") return false;
       if (interactiveCityMode === "locations") return true;
@@ -27903,23 +29308,26 @@ button,
       const target = state.targets[state.targetIndex];
       state.target = target || null;
       const total = state.targets.length;
-      if (state.stage === "capital" && total > 1 && target) {
-        stageLabel.textContent = `CAPITAL LOCATION · ${state.targetIndex + 1} OF ${total}`;
-        promptQuestion.textContent = `Tap ${target.name}.`;
+      const capitalLocation = state.stage === "capital" || state.stage === "capitalPosition";
+      stageLabel.classList.toggle("capital-target-label", capitalLocation);
+      if (capitalLocation && total > 1 && target) {
+        stageLabel.textContent = `CAPITAL POSITION · ${state.targetIndex + 1} OF ${total}`;
+        setCapitalTargetPrompt(promptQuestion, `Tap ${target.name}.`, false);
         cityMapEl.setAttribute("aria-label", `Tap ${target.name}, capital ${state.targetIndex + 1} of ${total}, in ${c.name}`);
       } else {
-        stageLabel.textContent = state.stage === "capital" ? "CAPITAL LOCATION" : "LARGEST CITY LOCATION";
-        promptQuestion.textContent = state.stage === "capital"
+        stageLabel.textContent = capitalLocation ? "CAPITAL POSITION" : "LARGEST CITY LOCATION";
+        setCapitalTargetPrompt(promptQuestion, capitalLocation
           ? "Tap where the capital is."
-          : "Tap where the largest city is.";
-        cityMapEl.setAttribute("aria-label", state.stage === "capital"
+          : "Tap where the largest city is.", capitalLocation);
+        cityMapEl.setAttribute("aria-label", capitalLocation
           ? `Tap the location of the capital of ${c.name}`
           : `Tap the location of the largest city in ${c.name}`);
       }
     }
 
     async function renderInteractiveCityLocationPrompt(stage, c, token) {
-      const targets = cityLocationTargetsForStage(c, stage);
+      const locationStage = stage === "capitalPosition" ? "capital" : stage;
+      const targets = cityLocationTargetsForStage(c, locationStage);
       if (!targets.length) return false;
 
       interactiveAnswer.classList.remove("hidden");
@@ -28226,7 +29634,7 @@ button,
 
         if (
           currentCountry()?.code !== c.code ||
-          currentStage !== "cityMap" ||
+          !["cityMap", "capitalPosition"].includes(currentStage) ||
           phase !== "prompt"
         ) return;
 
@@ -28236,7 +29644,7 @@ button,
         cityMapLegend.classList.add("hidden");
         cityMapLoading.style.display = "none";
       } catch (_) {
-        if (currentCountry()?.code !== c.code || currentStage !== "cityMap") return;
+        if (currentCountry()?.code !== c.code || !["cityMap", "capitalPosition"].includes(currentStage)) return;
         cityMapLoading.textContent = "Map unavailable";
         markCurrentStageUnavailable("The city map didn’t load, so this challenge won’t count.");
       }
@@ -28278,6 +29686,30 @@ button,
         .attr("y", p[1] - 7 + indexOffset * 13)
         .attr("text-anchor", labelOnLeft ? "end" : "start")
         .text(label);
+    }
+
+    async function renderCapitalPositionReveal(c) {
+      setAnswerLoading(true);
+      cityMapLoading.style.display = "grid";
+      try {
+        const [state, facts] = await Promise.all([ensureCityMapBase(c), getCityFacts(c)]);
+        if (currentCountry()?.code !== c.code || currentStage !== "capitalPosition" || phase !== "revealed") return;
+        const svg = state.svg;
+        const surface = state.surface || svg;
+        surface.attr?.("transform", null);
+        svg.selectAll(".city-marker, .city-label").remove();
+        clearLocationQuizMarks(surface);
+        facts.capitals.forEach((cap, i) => addCityMarker(surface, state.projection, cap, "capital", `${cap.name} · capital`, i));
+        cityMapLegend.classList.add("hidden");
+        cityMapLoading.style.display = "none";
+        setAnswerLoading(false);
+      } catch (_) {
+        if (currentCountry()?.code !== c.code || currentStage !== "capitalPosition" || phase !== "revealed") return;
+        cityMapLoading.textContent = "Capital map unavailable";
+        cityMapLoading.style.display = "grid";
+        setAnswerLoading(false);
+        markCurrentStageUnavailable("The capital-position map didn’t load, so this challenge won’t count.");
+      }
     }
 
     async function renderCityMapReveal(c) {
@@ -29432,7 +30864,7 @@ button,
         const features = topojson.feature(world, world.objects.countries).features;
         const target = mapFeatureForCountry(c, features);
         if (!target) return;
-        const displayTarget = mainTerritoryGeometry(c, target);
+        const displayTarget = studySilhouetteGeometry(c, target);
         const projection = silhouetteProjectionForTarget(displayTarget, [[8, 7], [312, 173]]);
         const path = d3.geoPath(projection);
         const svg = d3.select(svgEl);
@@ -29443,7 +30875,7 @@ button,
           normalStroke: islandBoost ? 2.1 : .85,
           thinStroke: 4
         });
-        if (islandBoost) appendIslandVisibilityDots(group, projection, displayTarget, 1.7);
+        // Keep silhouettes literal: do not add artificial island visibility dots.
       } catch (_) {}
     }
 
@@ -29559,6 +30991,7 @@ button,
         detectiveAnswer.textContent = c.name;
         detectiveResultPoints.textContent = solved ? `+${round.points || 0} points` : "0 points";
         detectiveNextBtn.textContent = index + 1 >= sessionCountryTotal() ? "See results →" : "Next case →";
+        ensureProgressionActionVisible(detectiveNextBtn, detectiveOverlay?.querySelector(".detective-panel"));
       } else {
         detectiveInput.disabled = false;
         detectiveGuessBtn.disabled = false;
@@ -30062,9 +31495,10 @@ button,
     }
 
     function chooseDetectiveSuggestion() {
+      if (detectiveSuggestions.classList.contains("hidden")) return false;
       const options = [...detectiveSuggestions.querySelectorAll(".detective-suggestion")];
       let choiceIndex = detectiveSuggestionIndex;
-      if (choiceIndex < 0 && options.length === 1) choiceIndex = 0;
+      if (choiceIndex < 0 && options.length) choiceIndex = 0;
       const button = options[choiceIndex];
       if (!button) return false;
       detectiveInput.value = button.dataset.detectiveSuggestion || button.textContent || "";
@@ -30114,10 +31548,41 @@ button,
        --------------------------------------------------------- */
     const rapidOverlay = document.getElementById("rapidOverlay");
     const rapidPanel = rapidOverlay?.querySelector(".rapid-panel");
+
+    // Keep newly revealed primary actions inside the visible viewport. This is
+    // deliberately a scroll-to-nearest helper rather than a fixed footer: the
+    // action stays in its semantic place, but the player never has to discover
+    // that a Next/Continue/Submit button appeared below the fold.
+    function ensureProgressionActionVisible(button, scroller = null) {
+      if (!button || button.classList?.contains("hidden")) return;
+      const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+      window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
+        if (!button.isConnected || button.classList?.contains("hidden")) return;
+        const rect = button.getBoundingClientRect();
+        const vv = window.visualViewport;
+        const viewportTop = vv ? vv.offsetTop : 0;
+        const viewportBottom = viewportTop + (vv ? vv.height : window.innerHeight);
+        const margin = 18;
+        if (rect.top < viewportTop + margin || rect.bottom > viewportBottom - margin) {
+          try {
+            button.scrollIntoView({
+              block: "nearest",
+              inline: "nearest",
+              behavior: reduced ? "auto" : "smooth"
+            });
+          } catch (_) {
+            scroller?.scrollTo?.({ top: Math.max(0, button.offsetTop - margin), behavior: reduced ? "auto" : "smooth" });
+          }
+        }
+      }));
+    }
     const rapidMenuBtn = document.getElementById("rapidMenuBtn");
     const rapidRoundStatus = document.getElementById("rapidRoundStatus");
+    const rapidTitle = document.getElementById("rapidTitle");
     const rapidScore = document.getElementById("rapidScore");
     const rapidStreak = document.getElementById("rapidStreak");
+    const rapidSprintTimer = document.getElementById("rapidSprintTimer");
+    const rapidSprintFeedback = document.getElementById("rapidSprintFeedback");
     const rapidQuestionCard = document.getElementById("rapidQuestionCard");
     const rapidKicker = document.getElementById("rapidKicker");
     const rapidQuestion = document.getElementById("rapidQuestion");
@@ -30143,12 +31608,15 @@ button,
     let rapidSuggestionIndex = -1;
     let rapidRenderToken = 0;
     let rapidLocationState = null;
+    let sprintTimerInterval = null;
+    let sprintAdvanceTimer = null;
+    let sprintFeedbackTimer = null;
 
     const RAPID_TYPES = {
       flagCountry: { stage: "country", kicker: "FLAG → PLACE", prompt: "Which place is this?", cue: "flag", target: "country" },
       silhouetteCountry: { stage: "country", kicker: "SILHOUETTE → PLACE", prompt: "Which place has this outline?", cue: "silhouette", target: "country" },
-      countryCapital: { stage: "capital", kicker: "PLACE → CAPITAL", prompt: "What is a capital of this place?", cue: "country", target: "capital" },
-      countryCapitalLocation: { stage: "capital", kicker: "PLACE → CAPITAL LOCATION", prompt: "Tap where the capital is.", cue: "countryLocation", target: "capitalLocation" },
+      countryCapital: { stage: "capital", kicker: "PLACE → CAPITAL NAME", prompt: "What is a capital of this place?", cue: "country", target: "capital" },
+      countryCapitalLocation: { stage: "capitalPosition", kicker: "PLACE → CAPITAL POSITION", prompt: "Tap where the capital is.", cue: "countryLocation", target: "capitalLocation" },
       capitalCountry: { stage: "country", kicker: "CAPITAL → PLACE", prompt: "Which place has this capital?", cue: "capital", target: "country" },
       countryCurrency: { stage: "currency", kicker: "PLACE → CURRENCY", prompt: "Name a currency used by this place.", cue: "country", target: "currency" },
       countryLargest: { stage: "largestCity", kicker: "PLACE → LARGEST CITY", prompt: "What is this place’s largest city?", cue: "country", target: "largestCity" },
@@ -30156,10 +31624,176 @@ button,
       countryFlag: { stage: "flag", kicker: "PLACE → FLAG", prompt: "Which flag belongs to this place?", cue: "country", target: "flagChoice" },
       countrySilhouette: { stage: "silhouette", kicker: "PLACE → SILHOUETTE", prompt: "Which silhouette belongs to this place?", cue: "country", target: "silhouetteChoice" },
       silhouetteFlag: { stage: "flag", kicker: "SILHOUETTE → FLAG", prompt: "Which flag belongs to this silhouette?", cue: "silhouette", target: "flagChoice" },
-      flagCapital: { stage: "capital", kicker: "FLAG → CAPITAL", prompt: "What is a capital of this place?", cue: "flag", target: "capital" }
+      flagCapital: { stage: "capital", kicker: "FLAG → CAPITAL NAME", prompt: "What is a capital of this place?", cue: "flag", target: "capital" }
     };
 
     const DAILY_RAPID_TYPES = ["flagCountry", "countryCapital", "capitalCountry", "countryCurrency", "countryLargest"];
+    // Sprint intentionally leaves currency out of the default fast-recall pool.
+    // Currency names are often too country-revealing (e.g. "X dollar") to make
+    // a consistently useful timed question. It can be reintroduced later as an
+    // opt-in if Sprint gets its own challenge settings.
+    const SPRINT_RAPID_TYPES = new Set(["flagCountry", "silhouetteCountry", "countryCapital", "capitalCountry", "countryFlag", "countrySilhouette", "silhouetteFlag", "flagCapital"]);
+
+
+    function isSprintSession() {
+      return !!(studySession?.interaction === "rapid" && studySession?.sprint?.enabled);
+    }
+
+    function sprintRemainingMs() {
+      if (!isSprintSession()) return 0;
+      const sprint = studySession.sprint;
+      let remaining = Math.max(0, Number(sprint.remainingMs) || 0);
+      if (sprint.runningStartedAt) remaining -= Math.max(0, Date.now() - Number(sprint.runningStartedAt));
+      return Math.max(0, remaining);
+    }
+
+    function renderSprintTimer() {
+      if (!rapidSprintTimer) return;
+      const active = isSprintSession() && studySession?.active !== false;
+      rapidSprintTimer.classList.toggle("hidden", !active);
+      rapidOverlay?.classList.toggle("sprint-active", isSprintSession());
+      if (!active) return;
+      const ms = sprintRemainingMs();
+      const sec = Math.max(0, Math.ceil(ms / 1000));
+      rapidSprintTimer.textContent = `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2,"0")}`;
+      rapidSprintTimer.classList.toggle("urgent", sec <= 10);
+    }
+
+    function hideSprintAnswerFeedback() {
+      if (sprintFeedbackTimer) { window.clearTimeout(sprintFeedbackTimer); sprintFeedbackTimer = null; }
+      if (rapidSprintFeedback) {
+        rapidSprintFeedback.classList.add("hidden");
+        rapidSprintFeedback.classList.remove("correct", "wrong");
+        rapidSprintFeedback.textContent = "";
+        rapidSprintFeedback.style.removeProperty("top");
+        rapidQuestionCard?.style.removeProperty("--sprint-feedback-top");
+      }
+      rapidQuestionCard?.classList.remove("sprint-answer-correct", "sprint-answer-wrong");
+    }
+
+    function sprintFeedbackAnswerLabel(answerLabel) {
+      // Visual-choice Rapid Fire labels include a redundant suffix such as
+      // “Gabon · flag”. Sprint's question already says what visual is being
+      // identified, so keep the transient feedback to the useful answer only.
+      return String(answerLabel || "")
+        .replace(/\s*·\s*(?:flag|silhouette)\s*$/i, "")
+        .trim();
+    }
+
+    function updateSprintVisualSizing() {
+      if (!rapidQuestionCard || !isSprintSession()) return;
+      const viewportH = Math.max(480, Number(window.visualViewport?.height) || window.innerHeight || 760);
+      const viewportW = Math.max(320, Number(window.visualViewport?.width) || window.innerWidth || 390);
+      const phone = viewportW <= 520;
+
+      const clampPx = (min, value, max) => Math.round(Math.max(min, Math.min(max, value)));
+
+      // A single visual clue should be prominent but never dominate the page.
+      const mainVisual = clampPx(phone ? 150 : 180, viewportH * (phone ? .245 : .255), phone ? 230 : 300);
+
+      // Visual-choice questions should keep the primary clue noticeably larger
+      // than each answer tile. Size the answer rows first, then make a visual
+      // clue roughly 35% taller when the viewport has room for it.
+      const choiceRow = clampPx(phone ? 88 : 108, viewportH * (phone ? .135 : .145), phone ? 132 : 180);
+      const choiceCue = clampPx(
+        phone ? 135 : 160,
+        Math.max(viewportH * (phone ? .19 : .18), choiceRow * 1.35),
+        phone ? 200 : 245
+      );
+      const textCue = clampPx(phone ? 78 : 88, viewportH * .095, phone ? 108 : 125);
+
+      rapidQuestionCard.style.setProperty("--sprint-main-visual-h", `${mainVisual}px`);
+      rapidQuestionCard.style.setProperty("--sprint-choice-cue-h", `${choiceCue}px`);
+      rapidQuestionCard.style.setProperty("--sprint-text-cue-h", `${textCue}px`);
+      rapidQuestionCard.style.setProperty("--sprint-choice-row-h", `${choiceRow}px`);
+    }
+
+    function positionSprintFeedbackOverCue() {
+      if (!rapidSprintFeedback || !rapidQuestionCard) return;
+      const cardRect = rapidQuestionCard.getBoundingClientRect();
+      if (!cardRect.height) return;
+
+      // Anchor the feedback exactly over the centre of the clue panel the player
+      // was just looking at. A custom property is used because older Sprint CSS
+      // contains !important inset rules that would otherwise beat inline top.
+      const cueRect = rapidCue?.getBoundingClientRect?.();
+      let centre = cardRect.height / 2;
+      if (cueRect && cueRect.width > 4 && cueRect.height > 4) {
+        centre = cueRect.top - cardRect.top + cueRect.height / 2;
+      }
+
+      const halfFeedback = Math.max(34, (rapidSprintFeedback.offsetHeight || 68) / 2);
+      const top = Math.max(halfFeedback + 8, Math.min(cardRect.height - halfFeedback - 8, centre));
+      rapidQuestionCard.style.setProperty("--sprint-feedback-top", `${Math.round(top)}px`);
+    }
+
+    function showSprintAnswerFeedback(correct, answerLabel, revealed = false) {
+      if (!isSprintSession() || !rapidSprintFeedback) return;
+      if (sprintFeedbackTimer) window.clearTimeout(sprintFeedbackTimer);
+      const answer = sprintFeedbackAnswerLabel(answerLabel);
+      rapidSprintFeedback.classList.remove("hidden", "correct", "wrong");
+      rapidSprintFeedback.classList.add(correct && !revealed ? "correct" : "wrong");
+      rapidSprintFeedback.textContent = revealed
+        ? `Give up
+Answer: ${answer}`
+        : correct
+          ? `✓ Correct${answer ? `
+${answer}` : ""}`
+          : `✕ Incorrect
+Try again`;
+      positionSprintFeedbackOverCue();
+      const duration = revealed ? 880 : (correct ? 680 : 520);
+      sprintFeedbackTimer = window.setTimeout(hideSprintAnswerFeedback, duration);
+    }
+
+    function pauseSprintTimer() {
+      if (!isSprintSession()) return;
+      const sprint = studySession.sprint;
+      sprint.remainingMs = sprintRemainingMs();
+      sprint.runningStartedAt = null;
+      if (sprintTimerInterval) { window.clearInterval(sprintTimerInterval); sprintTimerInterval = null; }
+      if (sprintAdvanceTimer) { window.clearTimeout(sprintAdvanceTimer); sprintAdvanceTimer = null; }
+      hideSprintAnswerFeedback();
+      renderSprintTimer();
+      saveStudySession();
+    }
+
+    function finishSprintSession() {
+      if (!isSprintSession() || studySession?.sprint?.ended) return;
+      const sprint = studySession.sprint;
+      sprint.remainingMs = 0;
+      sprint.runningStartedAt = null;
+      sprint.ended = true;
+      rapidRenderToken += 1;
+      document.activeElement?.blur?.();
+      if (sprintTimerInterval) { window.clearInterval(sprintTimerInterval); sprintTimerInterval = null; }
+      if (sprintAdvanceTimer) { window.clearTimeout(sprintAdvanceTimer); sprintAdvanceTimer = null; }
+      hideSprintAnswerFeedback();
+      renderSprintTimer();
+      showRapidComplete();
+    }
+
+    function suspendSprintClockForRender() {
+      if (!isSprintSession() || studySession?.active === false || studySession?.sprint?.ended) return;
+      const sprint = studySession.sprint;
+      sprint.remainingMs = sprintRemainingMs();
+      sprint.runningStartedAt = null;
+      if (sprintTimerInterval) { window.clearInterval(sprintTimerInterval); sprintTimerInterval = null; }
+      renderSprintTimer();
+    }
+
+    function resumeSprintTimer() {
+      if (!isSprintSession() || studySession?.active === false || studySession?.sprint?.ended) return;
+      if (sprintRemainingMs() <= 0) { finishSprintSession(); return; }
+      const sprint = studySession.sprint;
+      if (!sprint.runningStartedAt) sprint.runningStartedAt = Date.now();
+      if (sprintTimerInterval) window.clearInterval(sprintTimerInterval);
+      sprintTimerInterval = window.setInterval(() => {
+        renderSprintTimer();
+        if (sprintRemainingMs() <= 0) finishSprintSession();
+      }, 120);
+      renderSprintTimer();
+    }
 
     function rapidDefaultState() {
       return { correct: 0, assisted: 0, total: 0, streak: 0, bestStreak: 0, round: null, recentTypes: [] };
@@ -30245,14 +31879,16 @@ button,
       const mapLibrariesAvailable = !!(window.d3 && window.topojson);
       const silhouetteAvailable = mapLibrariesAvailable && countryStageIsAvailable(c, "silhouette");
       const cityLocationAvailable = mapLibrariesAvailable && countryStageIsAvailable(c, "cityMap");
+      const sprint = studySession?.sprint?.enabled === true;
       return Object.keys(RAPID_TYPES).filter(type => {
         const spec = RAPID_TYPES[type];
-        if (!rapidConfig.enabled[spec.stage]) return false;
+        if (sprint && !SPRINT_RAPID_TYPES.has(type)) return false;
+        if (!sprint && !rapidConfig.enabled[spec.stage]) return false;
         if (rapidTypeIsObviousNameGiveaway(type, c)) return false;
         if (quizFlagAssetsState === "unavailable" && (spec.cue === "flag" || spec.target === "flagChoice")) return false;
         if (!silhouetteAvailable && (spec.cue === "silhouette" || spec.target === "silhouetteChoice")) return false;
         if (["countryCapital", "capitalCountry", "flagCapital"].includes(type)) return capitals.length > 0;
-        if (type === "countryCapitalLocation") return cityLocationAvailable && cityLocationTargetsForStage(c, "capital").length > 0;
+        if (type === "countryCapitalLocation") return cityLocationAvailable && rapidConfig.enabled.capitalPosition && cityLocationTargetsForStage(c, "capital").length > 0;
         if (type === "countryCurrency") return currencies.length > 0;
         if (type === "countryLargest") return rapidLargestCityIsDistinct(c);
         if (type === "countryLargestLocation") return rapidLargestCityIsDistinct(c) && cityLocationAvailable && !!cityLocationTargetForStage(c, "largestCity");
@@ -30330,6 +31966,7 @@ button,
       round.hintTarget = null;
       round.hintsUsed = 0;
       round.usedSuggestion = false;
+      round.misses = 0;
       round.eliminatedCodes = [];
       round.revealed = false;
       delete round.userAnswer;
@@ -30337,6 +31974,7 @@ button,
       delete round.answerLabel;
       delete round.resultMeta;
       delete round.locationTargetIndex;
+      delete round.locationPendingNextIndex;
       delete round.locationHintedIndices;
       delete round.locationGuessGeo;
       delete round.locationResults;
@@ -30362,6 +32000,7 @@ button,
         hintCount: 0,
         hintTarget: null,
         hintsUsed: 0,
+        misses: 0,
         eliminatedCodes: [],
         revealed: false,
         at: Date.now()
@@ -30378,7 +32017,18 @@ button,
         const restored = round.optionCodes.map(code => countries.find(country => country.code === code)).filter(Boolean);
         if (restored.some(country => country.code === c.code) && restored.length >= 2) return restored;
       }
-      const generated = interactiveVisualCountries(c, stage);
+      let generated;
+      if (isSprintSession()) {
+        const pool = countrySetIndices(studySession.sprint.set)
+          .map(i => countries[i])
+          .filter(Boolean)
+          .filter(other => other.code !== c.code)
+          .filter(other => stage !== "silhouette" || countryStageIsAvailable(other, "silhouette"));
+        const picked = interactiveShuffle(pool).slice(0, 3);
+        generated = interactiveShuffle([c, ...picked]);
+      } else {
+        generated = interactiveVisualCountries(c, stage);
+      }
       round.optionCodes = generated.map(country => country.code);
       saveStudySession();
       return generated;
@@ -30655,7 +32305,8 @@ button,
         rapidQuestion.textContent = `Tap ${target.name} (${index + 1} of ${targets.length}).`;
         map.svgEl?.setAttribute?.("aria-label", `Place your guess for ${target.name}, capital ${index + 1} of ${targets.length}, in ${c.name}`);
       } else {
-        rapidQuestion.textContent = rapidPromptForCountry(round.type, c) || "Tap the city location.";
+        const asksForCapital = RAPID_TYPES[round.type]?.target === "capitalLocation";
+        setCapitalTargetPrompt(rapidQuestion, rapidPromptForCountry(round.type, c) || "Tap the city location.", asksForCapital);
       }
     }
 
@@ -30676,8 +32327,11 @@ button,
       drawTentativeLocationGuess(map.surface || map.svg, map.projection, map.tentativeGuessGeo, map.zoom?.transform?.k || 1);
       if (map.lockBtn) {
         map.lockBtn.disabled = false;
+        map.lockBtn.textContent = "Submit guess";
         map.lockBtn.classList.remove("hidden");
+        ensureProgressionActionVisible(map.lockBtn, rapidPanel);
       }
+      map.continueBtn?.classList.add("hidden");
     }
 
     function rapidLockLocationGuess() {
@@ -30694,6 +32348,7 @@ button,
       map.locked = true;
       clearTentativeLocationGuess(map.surface || map.svg);
       if (map.lockBtn) { map.lockBtn.disabled = true; map.lockBtn.classList.add("hidden"); }
+      map.continueBtn?.classList.add("hidden");
 
       const targets = map.targets || rapidLocationTargets(round, c);
       const index = Math.max(0, Number(round.locationTargetIndex) || 0);
@@ -30717,19 +32372,14 @@ button,
       rapidFeedback.className = `rapid-feedback ${metrics.correct ? "correct" : "wrong"}`;
 
       if (index + 1 < targets.length) {
-        round.locationTargetIndex = index + 1;
         round.locationGuessGeo = null;
+        round.locationPendingNextIndex = index + 1;
         saveStudySession();
-        window.setTimeout(() => {
-          if (ensureRapidState()?.round !== round || round.status !== "active" || rapidLocationState !== map) return;
-          map.locked = false;
-          map.tentativeGuessGeo = null;
-          rapidFeedback.textContent = "";
-          rapidFeedback.className = "rapid-feedback";
-          rapidUpdateLocationPrompt(round, c, map);
-          rapidUpdateHintButton(round, c);
-          map.zoom?.reset?.();
-        }, 900);
+        if (map.continueBtn) {
+          map.continueBtn.textContent = "Next capital →";
+          map.continueBtn.classList.remove("hidden");
+          ensureProgressionActionVisible(map.continueBtn, rapidPanel);
+        }
         return;
       }
 
@@ -30743,6 +32393,34 @@ button,
       const overallCorrect = completed.length === targets.length && completed.every(item => item.correct);
       rapidFinishQuestion(overallCorrect, targets.map(item => item.name).join(" · "), rapidLocationMeta(round));
       rapidResultKicker.textContent = overallCorrect ? locationAccuracyLabel(averageScore) : "Not quite";
+    }
+
+    function rapidContinueLocationQuestion() {
+      const state = ensureRapidState();
+      const round = state?.round;
+      const c = currentCountry();
+      const map = rapidLocationState;
+      if (!round || !c || !map || round.status !== "active" || !map.locked || map.round !== round) return;
+      const targets = map.targets || rapidLocationTargets(round, c);
+      const currentIndex = Math.max(0, Number(round.locationTargetIndex) || 0);
+      const pendingIndex = Number(round.locationPendingNextIndex);
+      const nextIndex = Number.isInteger(pendingIndex) && pendingIndex > currentIndex ? pendingIndex : currentIndex + 1;
+      if (nextIndex >= targets.length) return;
+
+      round.locationTargetIndex = nextIndex;
+      delete round.locationPendingNextIndex;
+      round.locationGuessGeo = null;
+      map.locked = false;
+      map.tentativeGuessGeo = null;
+      map.lockBtn?.classList.add("hidden");
+      if (map.lockBtn) map.lockBtn.disabled = true;
+      map.continueBtn?.classList.add("hidden");
+      rapidFeedback.textContent = "";
+      rapidFeedback.className = "rapid-feedback";
+      rapidUpdateLocationPrompt(round, c, map);
+      rapidUpdateHintButton(round, c);
+      map.zoom?.reset?.();
+      saveStudySession();
     }
 
     async function rapidRenderCue(round, c, token) {
@@ -30773,9 +32451,14 @@ button,
         lockBtn.type = "button";
         lockBtn.className = "city-location-lock hidden";
         lockBtn.disabled = true;
-        lockBtn.textContent = "Lock in guess";
+        lockBtn.textContent = "Submit guess";
         lockBtn.addEventListener("click", event => { event.stopPropagation(); rapidLockLocationGuess(); });
-        wrap.append(svgEl, lockBtn);
+        const continueBtn = document.createElement("button");
+        continueBtn.type = "button";
+        continueBtn.className = "city-location-lock city-location-continue hidden";
+        continueBtn.textContent = "Next capital →";
+        continueBtn.addEventListener("click", event => { event.stopPropagation(); rapidContinueLocationQuestion(); });
+        wrap.append(svgEl, lockBtn, continueBtn);
         rapidCue.append(country, wrap);
         try {
           const rendered = await renderStandaloneLocationMap(svgEl, c);
@@ -30786,7 +32469,7 @@ button,
           const ui = makeLocationZoomUi(wrap);
           const map = {
             ...rendered, svgEl, targets, target, targetIndex: Number(round.locationTargetIndex) || 0,
-            round, locked: round.status !== "active", tentativeGuessGeo: null, lockBtn, zoom: null
+            round, locked: round.status !== "active" || Number.isInteger(Number(round.locationPendingNextIndex)), tentativeGuessGeo: null, lockBtn, continueBtn, zoom: null
           };
           rapidLocationState = map;
           map.zoom = attachLocationZoom(svgEl, rendered.surface || rendered.svg, ui);
@@ -30803,6 +32486,20 @@ button,
             });
           }
           rescaleLocationQuizMarks(rendered.surface || rendered.svg, map.zoom?.transform?.k || 1);
+          const pendingIndex = Number(round.locationPendingNextIndex);
+          if (round.status === "active" && Number.isInteger(pendingIndex) && pendingIndex > (Number(round.locationTargetIndex) || 0)) {
+            const prior = results[Number(round.locationTargetIndex) || 0];
+            map.locked = true;
+            lockBtn.classList.add("hidden");
+            lockBtn.disabled = true;
+            continueBtn.textContent = "Next capital →";
+            continueBtn.classList.remove("hidden");
+            if (prior) {
+              rapidFeedback.textContent = `${locationAccuracyLabel(prior.score)} · ${prior.score}/100 · ${formatLocationDistance(prior.distanceKm)}`;
+              rapidFeedback.className = `rapid-feedback ${prior.correct ? "correct" : "wrong"}`;
+            }
+            ensureProgressionActionVisible(continueBtn, rapidPanel);
+          }
         } catch (_) {
           wrap.textContent = "Map unavailable";
         }
@@ -30845,11 +32542,24 @@ button,
 
     async function rapidCandidateTexts(round) {
       const target = RAPID_TYPES[round.type]?.target;
-      if (target === "country") return enabledGeographyEntities().map(c => c.name).sort((a,b) => a.localeCompare(b));
-      if (target === "capital") return interactiveCandidateTexts("capital");
-      if (target === "currency") return interactiveCandidateTexts("currency");
+      const sprintCountries = isSprintSession()
+        ? countrySetIndices(studySession.sprint.set).map(i => countries[i]).filter(Boolean)
+        : null;
+      if (target === "country") {
+        const pool = sprintCountries || enabledGeographyEntities();
+        return pool.map(c => c.name).sort((a,b) => a.localeCompare(b));
+      }
+      if (target === "capital") {
+        if (sprintCountries) return [...new Set(sprintCountries.flatMap(rapidCapitalTargets).filter(Boolean))].sort((a,b) => a.localeCompare(b));
+        return interactiveCandidateTexts("capital");
+      }
+      if (target === "currency") {
+        if (sprintCountries) return [...new Set(sprintCountries.flatMap(rapidCurrencyTargets).filter(Boolean))].sort((a,b) => a.localeCompare(b));
+        return interactiveCandidateTexts("currency");
+      }
       if (target === "largestCity") {
-        return [...new Set(countries.map(rapidLargestCity).filter(Boolean))].sort((a,b) => a.localeCompare(b));
+        const pool = sprintCountries || countries;
+        return [...new Set(pool.map(rapidLargestCity).filter(Boolean))].sort((a,b) => a.localeCompare(b));
       }
       return [];
     }
@@ -30932,9 +32642,10 @@ button,
     }
 
     function rapidAcceptSuggestion(submit = false) {
+      if (rapidSuggestions.classList.contains("hidden")) return false;
       const options = [...rapidSuggestions.querySelectorAll(".rapid-suggestion")];
       let choiceIndex = rapidSuggestionIndex;
-      if (choiceIndex < 0 && options.length === 1) choiceIndex = 0;
+      if (choiceIndex < 0 && options.length) choiceIndex = 0;
       const button = options[choiceIndex];
       if (!button) return false;
       return rapidUseSuggestion(button.dataset.rapidSuggestion || button.textContent || "", submit);
@@ -30950,6 +32661,28 @@ button,
       return "";
     }
 
+    function rapidSprintWrongAttempt(round, detail = "Not quite — try again.") {
+      const state = ensureRapidState();
+      if (!isSprintSession() || !state || !round || state.round !== round || round.status !== "active") return;
+      round.misses = Math.max(0, Number(round.misses) || 0) + 1;
+      state.streak = 0;
+      rapidStreak.textContent = "0 clean streak";
+      rapidFeedback.textContent = detail;
+      rapidFeedback.className = "rapid-feedback wrong";
+      rapidQuestionCard.classList.remove("sprint-answer-correct");
+      rapidQuestionCard.classList.add("sprint-answer-wrong");
+      hapticFeedback("wrong");
+      showSprintAnswerFeedback(false, "", false);
+      saveStudySession();
+      window.setTimeout(() => {
+        if (!isSprintSession() || !rapidOverlay?.classList.contains("open") || ensureRapidState()?.round !== round || round.status !== "active") return;
+        if (!rapidTextPanel.classList.contains("hidden")) {
+          rapidInput?.select?.();
+          rapidInput?.focus?.({ preventScroll:true });
+        }
+      }, 570);
+    }
+
     function rapidFinishQuestion(correct, label = null, meta = null) {
       const state = ensureRapidState();
       const round = state?.round;
@@ -30960,20 +32693,24 @@ button,
       round.answerLabel = label || rapidAnswerLabel(round, c);
       round.resultMeta = meta || "";
       state.total += 1;
+      const misses = Math.max(0, Number(round.misses) || 0);
       const assisted = !!correct && (Math.max(0, Number(round.hintsUsed) || 0) > 0 || round.usedSuggestion === true);
+      const clean = !!correct && !assisted && misses === 0;
       if (correct) {
         state.correct += 1;
-        if (assisted) {
-          state.assisted += 1;
-          state.streak = 0;
-        } else {
+        if (assisted) state.assisted += 1;
+        if (clean) {
           state.streak += 1;
           state.bestStreak = Math.max(state.bestStreak, state.streak);
+        } else {
+          state.streak = 0;
         }
       } else {
         state.streak = 0;
       }
-      rapidRecordFact(c, RAPID_TYPES[round.type].stage, correct, assisted);
+      // A Sprint solve after one or more wrong tries is still a correct answer,
+      // but it is not clean mastery evidence.
+      rapidRecordFact(c, RAPID_TYPES[round.type].stage, correct, assisted || misses > 0);
       saveStudySession();
       document.activeElement?.blur?.();
       hapticFeedback(round.revealed ? "tap" : (correct ? "correct" : "wrong"));
@@ -30986,7 +32723,7 @@ button,
       const basePerformanceMeta = round.resultMeta || (round.revealed
         ? "Answer revealed"
         : correct
-          ? (assisted ? "With help" : (state.streak > 1 ? `${state.streak} clean in a row` : "First try"))
+          ? (misses > 0 ? `Solved in ${misses + 1} tries` : (assisted ? "With help" : (state.streak > 1 ? `${state.streak} clean in a row` : "First try")))
           : "We’ll revisit this one");
       const performanceMeta = meta && assisted && !round.revealed ? `${basePerformanceMeta} · With help` : basePerformanceMeta;
       rapidResultMeta.textContent = [relationshipMeta, attemptMeta, performanceMeta].filter(Boolean).join(" · ");
@@ -31002,8 +32739,27 @@ button,
       rapidHintBtn?.classList.add("hidden");
       rapidRevealBtn.classList.add("hidden");
       rapidNextBtn.textContent = index + 1 >= sessionCountryTotal() ? "See results →" : "Next question →";
-      rapidScore.textContent = `${state.correct}/${state.total} correct`;
+      rapidScore.textContent = isSprintSession() ? `${state.correct} correct · ${state.total} attempted` : `${state.correct}/${state.total} correct`;
       rapidStreak.textContent = `${state.streak} clean streak`;
+      if (isSprintSession()) {
+        // Sprint already gives immediate feedback in the centered question-card
+        // bubble and then auto-advances. Keep the persistent Rapid Fire result
+        // card hidden here so the answer is not displayed twice.
+        rapidResult.classList.add("hidden");
+        rapidNextBtn.classList.add("hidden");
+        rapidQuestionCard.classList.remove("sprint-answer-correct", "sprint-answer-wrong");
+        rapidQuestionCard.classList.add(correct && !round.revealed ? "sprint-answer-correct" : "sprint-answer-wrong");
+        showSprintAnswerFeedback(correct, round.answerLabel, round.revealed);
+        if (sprintAdvanceTimer) window.clearTimeout(sprintAdvanceTimer);
+        const sprintAdvanceDelay = round.revealed ? 980 : 840;
+        sprintAdvanceTimer = window.setTimeout(() => {
+          sprintAdvanceTimer = null;
+          if (isSprintSession() && studySession?.active !== false && sprintRemainingMs() > 0) advanceRapidQuestion();
+        }, sprintAdvanceDelay);
+      } else {
+        rapidNextBtn.classList.remove("hidden");
+        ensureProgressionActionVisible(rapidNextBtn, rapidPanel);
+      }
     }
 
     async function rapidSubmitText() {
@@ -31014,6 +32770,7 @@ button,
       const typed = rapidInput.value.trim();
       if (!typed) return;
       if (rapidTextMatches(round, c, typed)) {
+        delete round.userAnswer;
         rapidFeedback.textContent = "Correct";
         rapidFeedback.className = "rapid-feedback correct";
         rapidFinishQuestion(true);
@@ -31021,6 +32778,10 @@ button,
       }
       const roleCorrection = rapidRoleCorrection(round, c, typed);
       if (roleCorrection) {
+        if (isSprintSession()) {
+          rapidSprintWrongAttempt(round, roleCorrection);
+          return;
+        }
         rapidFeedback.textContent = roleCorrection;
         rapidFeedback.className = "rapid-feedback near";
         rapidInput.select();
@@ -31049,6 +32810,11 @@ button,
       }
       const confusedWith = countryForAnswerValue(stage, typed);
       if (confusedWith && confusedWith.code !== c.code) recordCountryConfusion(c.code, confusedWith.code, stage || "country");
+      if (isSprintSession()) {
+        round.lastWrongAnswer = typed;
+        rapidSprintWrongAttempt(round);
+        return;
+      }
       round.userAnswer = typed;
       rapidFeedback.textContent = `Not quite.`;
       rapidFeedback.className = "rapid-feedback wrong";
@@ -31061,8 +32827,18 @@ button,
       const c = currentCountry();
       if (!round || !c || round.status !== "active") return;
       const correct = optionCountry.code === c.code;
+      if (!correct) {
+        recordCountryConfusion(c.code, optionCountry.code, RAPID_TYPES[round.type]?.stage || "country");
+        button.classList.add("wrong");
+        if (isSprintSession()) {
+          round.eliminatedCodes = [...new Set([...(round.eliminatedCodes || []), optionCountry.code])];
+          button.disabled = true;
+          button.setAttribute("aria-label", "Incorrect option");
+          rapidSprintWrongAttempt(round);
+          return;
+        }
+      }
       round.choiceCode = optionCountry.code;
-      if (!correct) recordCountryConfusion(c.code, optionCountry.code, RAPID_TYPES[round.type]?.stage || "country");
       button.classList.add(correct ? "correct" : "wrong");
       rapidFinishQuestion(correct);
       rapidChoiceGrid.querySelectorAll(".rapid-choice").forEach(choice => {
@@ -31070,10 +32846,15 @@ button,
       });
     }
 
-    function rapidSkipUnavailableCurrent(message = "The selected Rapid Fire challenges aren’t available for this place, so it’s being skipped.") {
+    function rapidSkipUnavailableCurrent(message = null) {
       const state = ensureRapidState();
       const code = currentCountry()?.code || null;
       if (!state || !code) return;
+      const sprintRun = isSprintSession();
+      if (!message) message = sprintRun
+        ? "That question isn’t available right now, so Sprint is skipping it."
+        : "The selected Mixed Practice challenges aren’t available for this place, so it’s being skipped.";
+      if (sprintRun) suspendSprintClockForRender();
       state.round = null;
       rapidFeedback.textContent = message;
       rapidFeedback.className = "rapid-feedback near";
@@ -31089,8 +32870,15 @@ button,
         state.round = null;
         saveStudySession();
         saveState();
-        rapidRenderQuestion();
-      }, 850);
+        const renderTask = rapidRenderQuestion();
+        if (sprintRun) {
+          Promise.resolve(renderTask).finally(() => {
+            if (isSprintSession() && rapidOverlay?.classList.contains("open") && studySession?.active !== false && sprintRemainingMs() > 0) {
+              resumeSprintTimer();
+            }
+          });
+        }
+      }, sprintRun ? 180 : 850);
     }
 
     function rapidFallbackTypeForUnavailableSilhouette(typeName) {
@@ -31114,12 +32902,12 @@ button,
       // it rather than silently asking a different kind of question.
       const fallbackType = alternatives[0] || available.find(type => type !== round.type) || available[0] || null;
       if (!fallbackType) {
-        rapidSkipUnavailableCurrent("Flags didn’t load and no other selected Rapid Fire challenge is available for this place. Skipping it.");
+        rapidSkipUnavailableCurrent("Flags didn’t load and no other selected Mixed Practice challenge is available for this place. Skipping it.");
         return;
       }
       rapidResetRoundForType(round, c, fallbackType);
       saveStudySession();
-      rapidRenderQuestion();
+      return rapidRenderQuestion();
     }
 
     function rapidKickerForCountry(typeName, c) {
@@ -31128,7 +32916,13 @@ button,
     }
 
     function rapidPromptForCountry(typeName, c) {
-      const prompt = RAPID_TYPES[typeName]?.prompt || "What is the answer?";
+      const spec = RAPID_TYPES[typeName];
+      let prompt = spec?.prompt || "What is the answer?";
+      if (spec?.target === "capital") {
+        prompt = hasMultipleCapitals(c) ? "Name a capital city." : "Name the capital city.";
+      } else if (spec?.target === "capitalLocation") {
+        prompt = "Tap where the capital is.";
+      }
       if (!c?.isTerritory && !c?.isAdditionalPlace) return prompt;
       return prompt
         .replace(/country’s/g, "territory’s")
@@ -31160,22 +32954,38 @@ button,
         return;
       }
       const type = RAPID_TYPES[round.type];
+      rapidQuestionCard.classList.toggle("sprint-visual-choice", isSprintSession() && ["flagChoice", "silhouetteChoice"].includes(type.target));
+      rapidQuestionCard.classList.toggle("sprint-visual-cue", isSprintSession() && ["flag", "silhouette"].includes(type.cue));
+      if (isSprintSession()) updateSprintVisualSizing();
       const token = ++rapidRenderToken;
       rapidLocationState = null;
 
       rapidComplete.classList.add("hidden");
       rapidQuestionCard.classList.remove("hidden");
+      rapidQuestionCard.classList.remove("sprint-answer-correct", "sprint-answer-wrong");
       rapidResult.classList.add("hidden");
       rapidResult.classList.remove("correct", "wrong");
-      rapidHintBtn?.classList.remove("hidden");
-      if (rapidHintBtn) rapidHintBtn.disabled = true;
-      rapidRevealBtn.classList.remove("hidden");
+      if (isSprintSession()) {
+        rapidHintBtn?.classList.add("hidden");
+        rapidRevealBtn.classList.remove("hidden");
+        rapidRevealBtn.textContent = "Give up →";
+      } else {
+        rapidHintBtn?.classList.remove("hidden");
+        if (rapidHintBtn) rapidHintBtn.disabled = true;
+        rapidRevealBtn.classList.remove("hidden");
+        rapidRevealBtn.textContent = "Reveal answer";
+      }
       rapidFeedback.textContent = "";
       rapidFeedback.className = "rapid-feedback";
+      const asksForCapital = ["capital", "capitalLocation"].includes(type.target);
       rapidKicker.textContent = rapidKickerForCountry(round.type, c);
-      rapidQuestion.textContent = rapidPromptForCountry(round.type, c);
-      rapidRoundStatus.textContent = `Question ${Math.min(index + 1, sessionCountryTotal())} of ${sessionCountryTotal()}`;
-      rapidScore.textContent = `${state.correct}/${state.total} correct`;
+      rapidKicker.classList.toggle("capital-target-label", asksForCapital);
+      setCapitalTargetPrompt(rapidQuestion, rapidPromptForCountry(round.type, c), asksForCapital);
+      rapidRoundStatus.textContent = isSprintSession()
+        ? `${countrySetDisplayName(studySession.sprint.set)} · Question ${round?.status === "answered" ? Math.max(1, state.total) : state.total + 1}`
+        : `Question ${Math.min(index + 1, sessionCountryTotal())} of ${sessionCountryTotal()}`;
+      rapidScore.textContent = isSprintSession() ? `${state.correct} correct · ${state.total} attempted` : `${state.correct}/${state.total} correct`;
+      renderSprintTimer();
       rapidStreak.textContent = `${state.streak} clean streak`;
       rapidInput.value = "";
       rapidSuggestions.classList.add("hidden");
@@ -31187,8 +32997,7 @@ button,
         const flagsReady = await checkQuizFlagAssetsAvailable();
         if (token !== rapidRenderToken) return;
         if (!flagsReady && round.status === "active") {
-          rapidRecoverFromFlagFailure(round, c);
-          return;
+          return rapidRecoverFromFlagFailure(round, c);
         }
       }
 
@@ -31202,13 +33011,12 @@ button,
           return spec?.cue !== "silhouette" && spec?.target !== "silhouetteChoice";
         });
         if (!fallbackType) {
-          rapidSkipUnavailableCurrent("Silhouette maps didn’t load and no other selected Rapid Fire challenge is available for this place. Skipping it.");
+          rapidSkipUnavailableCurrent("Silhouette maps didn’t load and no other selected Mixed Practice challenge is available for this place. Skipping it.");
           return;
         }
         rapidResetRoundForType(round, c, fallbackType);
         saveStudySession();
-        rapidRenderQuestion();
-        return;
+        return rapidRenderQuestion();
       }
 
       // Location questions should never strand a Rapid Fire round if detailed
@@ -31216,8 +33024,7 @@ button,
       if (["capitalLocation", "largestCityLocation"].includes(type.target) && !rapidLocationState && round.status === "active") {
         rapidResetRoundForType(round, c, type.target === "capitalLocation" ? "countryCapital" : "countryLargest");
         saveStudySession();
-        rapidRenderQuestion();
-        return;
+        return rapidRenderQuestion();
       }
 
       if (round.status === "answered") {
@@ -31233,18 +33040,32 @@ button,
         const relationshipMeta = rapidCityRelationshipMeta(round, c);
         const attemptMeta = rapidAttemptMeta(round);
         const assisted = round.correct && (Math.max(0, Number(round.hintsUsed) || 0) > 0 || round.usedSuggestion === true);
+        const misses = Math.max(0, Number(round.misses) || 0);
+        const solvedMeta = misses > 0 ? `Solved in ${misses + 1} tries` : (assisted ? "With help" : "First try");
         let performanceMeta = round.resultMeta || (round.revealed
           ? (["capitalLocation", "largestCityLocation"].includes(type.target) && rapidLocationMeta(round)
               ? rapidLocationMeta(round)
               : "Answer revealed")
           : ["capitalLocation", "largestCityLocation"].includes(type.target)
-            ? (rapidLocationMeta(round) || (round.correct ? (assisted ? "With help" : "First try") : "We’ll revisit this one"))
-            : (round.correct ? (assisted ? "With help" : "First try") : "We’ll revisit this one"));
+            ? (rapidLocationMeta(round) || (round.correct ? solvedMeta : "We’ll revisit this one"))
+            : (round.correct ? solvedMeta : "We’ll revisit this one"));
         if (round.resultMeta && assisted && !round.revealed) performanceMeta = `${performanceMeta} · With help`;
         rapidResultMeta.textContent = [relationshipMeta, attemptMeta, performanceMeta].filter(Boolean).join(" · ");
         rapidResult.classList.remove("hidden", "correct", "wrong", "revealed");
         rapidResult.classList.add(round.revealed ? "revealed" : (round.correct ? "correct" : "wrong"));
         rapidNextBtn.textContent = index + 1 >= sessionCountryTotal() ? "See results →" : "Next question →";
+        if (isSprintSession()) {
+          rapidNextBtn.classList.add("hidden");
+          rapidQuestionCard.classList.add(round.correct && !round.revealed ? "sprint-answer-correct" : "sprint-answer-wrong");
+          showSprintAnswerFeedback(round.correct, round.answerLabel || rapidAnswerLabel(round, c), round.revealed);
+          if (!sprintAdvanceTimer && sprintRemainingMs() > 0) {
+            const sprintAdvanceDelay = round.revealed ? 980 : 840;
+            sprintAdvanceTimer = window.setTimeout(() => { sprintAdvanceTimer = null; advanceRapidQuestion(); }, sprintAdvanceDelay);
+          }
+        } else {
+          rapidNextBtn.classList.remove("hidden");
+          ensureProgressionActionVisible(rapidNextBtn, rapidPanel);
+        }
         return;
       }
 
@@ -31274,13 +33095,12 @@ button,
               return spec?.cue !== "silhouette" && spec?.target !== "silhouetteChoice";
             });
             if (!fallbackType) {
-              rapidSkipUnavailableCurrent("Silhouette maps didn’t load and no other selected Rapid Fire challenge is available for this place. Skipping it.");
+              rapidSkipUnavailableCurrent("Silhouette maps didn’t load and no other selected Mixed Practice challenge is available for this place. Skipping it.");
               return;
             }
             rapidResetRoundForType(round, c, fallbackType);
             saveStudySession();
-            rapidRenderQuestion();
-            return;
+            return rapidRenderQuestion();
           }
         }
         rapidApplyEliminations(round);
@@ -31289,12 +33109,12 @@ button,
         rapidTextPanel.classList.remove("hidden");
         rapidInput.placeholder = type.target === "country"
           ? (c.isTerritory ? "Type the territory…" : c.isAdditionalPlace ? "Type the place…" : "Type the country…")
-          : type.target === "capital" ? "Type a capital…"
+          : type.target === "capital" ? "Type the capital city…"
           : type.target === "currency" ? "Type the currency…"
           : "Type the city…";
         window.setTimeout(() => { if (rapidOverlay.classList.contains("open")) rapidInput.focus(); }, 40);
       }
-      rapidUpdateHintButton(round, c);
+      if (!isSprintSession()) rapidUpdateHintButton(round, c);
     }
 
     function rapidRevealAnswer() {
@@ -31335,17 +33155,33 @@ button,
     function advanceRapidQuestion() {
       const state = ensureRapidState();
       if (!state?.round || state.round.status !== "answered") return;
-      if (index + 1 >= sessionCountryTotal()) {
-        showRapidComplete();
-        return;
+      const sprintRun = isSprintSession();
+      if (sprintRun) {
+        if (sprintRemainingMs() <= 0) { finishSprintSession(); return; }
+        // Keep the clock running while the player thinks and sees feedback, but
+        // do not charge them for a flag/silhouette waiting to load or render.
+        suspendSprintClockForRender();
+        index = (index + 1) % Math.max(1, sessionCountryTotal());
+      } else {
+        if (index + 1 >= sessionCountryTotal()) {
+          showRapidComplete();
+          return;
+        }
+        index += 1;
       }
-      index += 1;
       state.round = null;
       saveStudySession();
       saveState();
       const next = currentCountry();
       if (next) loadCountryFacts(next).catch(() => {});
-      rapidRenderQuestion();
+      const renderTask = rapidRenderQuestion();
+      if (sprintRun) {
+        Promise.resolve(renderTask).finally(() => {
+          if (isSprintSession() && rapidOverlay?.classList.contains("open") && studySession?.active !== false && sprintRemainingMs() > 0) {
+            resumeSprintTimer();
+          }
+        });
+      }
     }
 
     function showRapidComplete() {
@@ -31359,19 +33195,23 @@ button,
       saveState();
       rapidQuestionCard.classList.add("hidden");
       rapidComplete.classList.remove("hidden");
-      rapidRoundStatus.textContent = "Session complete";
-      rapidScore.textContent = `${state.correct}/${state.total} correct`;
+      const sprint = isSprintSession();
+      rapidRoundStatus.textContent = sprint ? "Time!" : "Session complete";
+      rapidScore.textContent = sprint ? `${state.correct} correct · ${state.total} attempted` : `${state.correct}/${state.total} correct`;
       rapidStreak.textContent = `best ${state.bestStreak} clean streak`;
       const accuracy = state.total ? Math.round(state.correct / state.total * 100) : 0;
-      rapidCompleteScore.textContent = `${accuracy}%`;
+      rapidCompleteScore.textContent = sprint ? `${state.correct}` : `${accuracy}%`;
       const helped = Math.min(state.correct, Math.max(0, Number(state.assisted) || 0));
       const helpText = helped ? ` · ${helped} with help` : "";
-      rapidCompleteMeta.textContent = `${state.correct} of ${state.total} questions correct${helpText} · best clean streak ${state.bestStreak}`;
+      rapidCompleteMeta.textContent = sprint
+        ? `${state.correct} correct · ${state.total} attempted · ${accuracy}% accuracy · best streak ${state.bestStreak}`
+        : `${state.correct} of ${state.total} questions correct${helpText} · best clean streak ${state.bestStreak}`;
       const daily = !!studySession?.dailyChallenge?.key;
       const eyebrow = rapidComplete.querySelector(".rapid-complete-eyebrow");
       const title = rapidComplete.querySelector(".rapid-complete-title");
-      if (eyebrow) eyebrow.textContent = daily ? "Daily GeoDen" : "Rapid Fire";
-      if (title) title.textContent = daily ? "Today’s challenge complete" : "Session complete";
+      if (eyebrow) eyebrow.textContent = sprint ? "Sprint" : daily ? "Daily GeoDen" : "Mixed Practice";
+      if (title) title.textContent = sprint ? "Time’s up" : daily ? "Today’s challenge complete" : "Session complete";
+      rapidSprintTimer?.classList.add("hidden");
     }
 
     function openRapidMode(resume = true) {
@@ -31379,17 +33219,35 @@ button,
       matchingOverlay?.classList.remove("open");
       detectiveOverlay?.classList.remove("open");
       rapidOverlay.classList.add("open");
+      const sprint = isSprintSession();
+      rapidOverlay.classList.toggle("sprint-active", sprint);
+      const eyebrow = rapidOverlay.querySelector(".rapid-eyebrow");
+      if (eyebrow) eyebrow.textContent = sprint ? "Sprint" : "Mixed Practice";
+      if (rapidTitle) rapidTitle.textContent = sprint ? `${countrySetDisplayName(studySession.sprint.set)} sprint` : "Mixed questions";
       if (studySession.active === false) showRapidComplete();
-      else rapidRenderQuestion();
+      else {
+        if (sprint) suspendSprintClockForRender();
+        const renderTask = rapidRenderQuestion();
+        if (sprint) {
+          Promise.resolve(renderTask).finally(() => {
+            if (isSprintSession() && rapidOverlay?.classList.contains("open") && studySession?.active !== false && sprintRemainingMs() > 0) {
+              resumeSprintTimer();
+            }
+          });
+        }
+      }
     }
 
     function closeRapidToMenu() {
+      if (isSprintSession()) pauseSprintTimer();
       rapidOverlay.classList.remove("open");
       openStartOverlay(true);
     }
 
     function rapidBackToMenu() {
+      if (isSprintSession()) pauseSprintTimer();
       rapidOverlay.classList.remove("open");
+      rapidOverlay.classList.remove("sprint-active");
       openStartOverlay(false);
     }
 
@@ -31596,6 +33454,17 @@ button,
       });
 
       if (interactiveCityModeSettings) interactiveCityModeSettings.classList.toggle("hidden", mode !== "interactive");
+      if (flashFlowSettings) flashFlowSettings.classList.toggle("hidden", mode !== "standard");
+      flashOrderPicker?.querySelectorAll("[data-flash-order]").forEach(button => {
+        const active = button.dataset.flashOrder === flashFlowPrefs.order;
+        button.classList.toggle("active", active);
+        button.setAttribute("aria-pressed", active ? "true" : "false");
+      });
+      flashMixPicker?.querySelectorAll("[data-flash-flow]").forEach(button => {
+        const active = button.dataset.flashFlow === flashFlowPrefs.flow;
+        button.classList.toggle("active", active);
+        button.setAttribute("aria-pressed", active ? "true" : "false");
+      });
       interactiveCityModePicker?.querySelectorAll("[data-interactive-city-mode]").forEach(button => {
         const active = button.dataset.interactiveCityMode === interactiveCityMode;
         button.classList.toggle("active", active);
@@ -31607,13 +33476,13 @@ button,
       if (setLabel) setLabel.textContent = detectiveMode ? "Clue preset" : "Challenge set";
       const sectionLabel = document.getElementById("tuneSectionLabel");
       const orderHelp = document.querySelector(".tune-order-help");
-      if (sectionLabel) sectionLabel.textContent = detectiveMode ? "Clues & order" : rapidMode ? "Rapid Fire challenges" : "Challenges & order";
+      if (sectionLabel) sectionLabel.textContent = detectiveMode ? "Clues & order" : rapidMode ? "Mixed Practice challenges" : "Challenges & order";
       if (orderHelp) orderHelp.textContent = detectiveMode
         ? "Earlier clues appear first."
         : mode === "matching"
           ? "Top challenge is the row reference; match the rest."
           : rapidMode
-            ? "Rapid Fire mixes these enabled challenge types automatically. These settings are separate from Standard Quiz."
+            ? "Mixed Practice mixes these enabled challenge types automatically. These settings are separate from Country Deep Dive."
             : "Use ↑ ↓ to reorder.";
       if (tuneShuffleBtn) tuneShuffleBtn.classList.toggle("hidden", rapidMode);
     }
@@ -31735,9 +33604,9 @@ button,
       const modeLabel = settingsModeAtOpen === "matching"
         ? "Matching"
         : settingsModeAtOpen === "interactive"
-          ? "Quiz · Standard"
+          ? "Quiz · Country Deep Dive"
           : settingsModeAtOpen === "rapid"
-            ? "Quiz · Rapid Fire"
+            ? "Quiz · Mixed Practice"
             : settingsModeAtOpen === "detective"
               ? "Detective"
               : "Flash card";
@@ -31879,7 +33748,7 @@ button,
 
       if (settingsModeAtOpen === "rapid" && ![...RAPID_CHALLENGE_STAGES].some(key => proposed[key])) {
         input.checked = true;
-        settingsWarning.textContent = "Keep at least one Rapid Fire challenge switched on.";
+        settingsWarning.textContent = "Keep at least one Mixed Practice challenge switched on.";
         return;
       }
 
@@ -31915,6 +33784,24 @@ button,
       interactiveChoiceCount = count;
       saveInteractiveChoiceCount();
       renderTunePresetUI();
+    });
+
+    flashOrderPicker?.addEventListener("click", event => {
+      const button = event.target.closest("[data-flash-order]");
+      if (!button) return;
+      flashFlowPrefs.order = button.dataset.flashOrder === "random" ? "random" : "fixed";
+      saveFlashFlowPrefs();
+      renderSettingsRows();
+      updateStartMenuSummary();
+    });
+
+    flashMixPicker?.addEventListener("click", event => {
+      const button = event.target.closest("[data-flash-flow]");
+      if (!button) return;
+      flashFlowPrefs.flow = button.dataset.flashFlow === "mixed" ? "mixed" : "country";
+      saveFlashFlowPrefs();
+      renderSettingsRows();
+      updateStartMenuSummary();
     });
 
     interactiveCityModePicker?.addEventListener("click", event => {
@@ -32042,6 +33929,7 @@ button,
       if (!button) return;
       startOverlay.dataset.modeArmed = "true";
       setMenuPlayMode(button.dataset.playMode);
+      if (button.dataset.playMode === "sprint") { openSprintSetup(); return; }
       showHomeSessionSetup({ scroll: true });
     });
 
@@ -32146,8 +34034,11 @@ button,
 
       if (menuPlayMode === "chain") {
         startOverlay.classList.remove("open");
-        openChainFill();
-        window.setTimeout(() => { if (chainFillOverlay?.classList.contains("open")) startChainGame(); }, 0);
+        const resumeExisting = hasResumableChain();
+        openChainFill(resumeExisting);
+        if (!resumeExisting) {
+          window.setTimeout(() => { if (chainFillOverlay?.classList.contains("open")) startChainGame(); }, 0);
+        }
         return;
       }
       if (menuPlayMode === "ranking") {
@@ -32174,12 +34065,12 @@ button,
       }
 
       if (menuPlayMode === "interactive" && interactiveStagesFromSettings().length < 1) {
-        playModeNote.textContent = "Standard Quiz needs at least one enabled challenge.";
+        playModeNote.textContent = "Country Deep Dive needs at least one enabled challenge.";
         clearNewSessionConfirmation();
         return;
       }
       if (menuPlayMode === "rapid" && enabledChallengeKeysForMode("rapid").length < 1) {
-        playModeNote.textContent = "Rapid Fire needs at least one enabled challenge.";
+        playModeNote.textContent = "Mixed Practice needs at least one enabled challenge.";
         clearNewSessionConfirmation();
         return;
       }
@@ -32545,7 +34436,7 @@ button,
     const GEODEN_TRANSFER_KEYS = [
       PROGRESS_KEY, COUNTRY_ORDER_KEY, CONFIG_KEY, RAPID_CONFIG_KEY, CURRENT_STAGE_KEY, PHASE_KEY,
       REVEALED_KEY, CAPITAL_HINTS_KEY, REVIEW_COUNTRY_KEY, SMART_REVIEW_KEY,
-      ATTEMPT_KEY, NAV_HISTORY_KEY, STUDY_SESSION_KEY, PLAY_MODE_KEY, QUIZ_STYLE_KEY,
+      ATTEMPT_KEY, NAV_HISTORY_KEY, STUDY_SESSION_KEY, PLAY_MODE_KEY, QUIZ_STYLE_KEY, LAST_RESUMABLE_MODE_KEY,
       COUNTRY_POOL_KEY, COUNTRY_SET_KEY, CUSTOM_COUNTRY_SET_KEY,
       MATCHING_CONFIG_KEY, DETECTIVE_CONFIG_KEY, INTERACTIVE_CHOICE_COUNT_KEY, INTERACTIVE_CITY_MODE_KEY,
       DAILY_PROGRESS_KEY, SESSION_CHOICE_KEY, POLISH_PREFS_KEY, GEO_PROFILE_KEY, TERRITORY_PREF_KEY,
@@ -32719,7 +34610,7 @@ button,
     countrySearchInput.addEventListener("keydown", event => {
       if (event.key !== "Enter") return;
       const options = [...countrySearchResults.querySelectorAll("[data-country-code]")];
-      if (options.length !== 1) return;
+      if (!options.length) return;
       event.preventDefault();
       openCountryProfile(options[0].dataset.countryCode);
     });
@@ -33015,7 +34906,6 @@ button,
     let chainAnswerMode = ["country", "capital", "both"].includes(specialGamePrefs.chainAnswerMode) ? specialGamePrefs.chainAnswerMode : "country";
     let chainRuleMode = ["open", "fortified"].includes(specialGamePrefs.chainRuleMode) ? specialGamePrefs.chainRuleMode : "open";
     let chainAutocompleteEnabled = specialGamePrefs.chainAutocompleteEnabled !== false;
-    let chainState = null;
     let chainTimerId = null;
     let chainBuildToken = 0;
     let chainSpellingSuggestion = null;
@@ -33384,6 +35274,17 @@ button,
       const finalPair = unresolved > 0 && unresolved <= 2;
       const svg = d3.select(chainWorldMap);
 
+      // Keep country/marker strokes visually stable without vector-effect.
+      // This is intentionally done with a few root variables rather than
+      // repainting every path during a pan/zoom frame.
+      chainWorldMap.style.setProperty("--chain-context-stroke", `${.55 / k}px`);
+      chainWorldMap.style.setProperty("--chain-country-stroke", `${.7 / k}px`);
+      chainWorldMap.style.setProperty("--chain-weakened-stroke", `${1.25 / k}px`);
+      chainWorldMap.style.setProperty("--chain-active-stroke", `${1.35 / k}px`);
+      chainWorldMap.style.setProperty("--chain-filled-stroke", `${1.05 / k}px`);
+      chainWorldMap.style.setProperty("--chain-marker-stroke", `${2 / k}px`);
+      chainWorldMap.style.setProperty("--chain-halo-stroke", `${1.6 / k}px`);
+
       svg.selectAll(".chain-marker").each(function() {
         const code = this.getAttribute("data-chain-code");
         const status = chainStatusClass(code, availability);
@@ -33481,6 +35382,7 @@ button,
       if (chainGiveUpBtn) chainGiveUpBtn.disabled = !!chainState.finishedAt || availability.available.size === 0;
       refreshChainMarkerEmphasis(availability);
       if (chainGuessInput) {
+        chainGuessInput.classList.toggle("capital-answer-target", chainState.answerMode === "capital");
         chainGuessInput.placeholder = chainState.answerMode === "capital"
           ? "Capital of an available place…"
           : chainState.answerMode === "both"
@@ -33898,9 +35800,10 @@ button,
     }
 
     function chooseChainSuggestion() {
-      const options = [...(chainSuggestions?.querySelectorAll(".chain-suggestion") || [])];
+      if (!chainSuggestions || chainSuggestions.classList.contains("hidden")) return false;
+      const options = [...chainSuggestions.querySelectorAll(".chain-suggestion")];
       let choiceIndex = chainSuggestionIndex;
-      if (choiceIndex < 0 && options.length === 1) choiceIndex = 0;
+      if (choiceIndex < 0 && options.length) choiceIndex = 0;
       const button = options[choiceIndex];
       if (!button) return false;
       chainGuessInput.value = button.dataset.chainSuggestion || button.textContent || "";
@@ -34237,23 +36140,43 @@ button,
       clearChainSuggestions();
     }
 
-    function openChainFill() {
-      resetChainToSetup();
+    function openChainFill(resume = true) {
       syncTerritoryPreferenceControls?.();
+      noteResumableMode("chain");
       setSpecialOptionActive(chainSetOptions, "data-chain-set", chainSet);
       setSpecialOptionActive(chainAnswerOptions, "data-chain-answer", chainAnswerMode);
       setSpecialOptionActive(chainRuleOptions, "data-chain-rule", chainRuleMode);
       updateChainSetupHelp();
       chainFillOverlay?.classList.add("open");
+
+      if (resume && hasResumableChain()) {
+        chainFillSetup.classList.add("hidden");
+        chainFillLoading.classList.add("hidden");
+        chainFillPlay.classList.remove("hidden");
+        updateChainMapStates();
+        if (chainState.finishedAt) {
+          chainFinish.classList.remove("hidden");
+          chainGuessInput.disabled = true;
+          chainGuessBtn.disabled = true;
+        } else {
+          chainFinish.classList.add("hidden");
+          chainGuessInput.disabled = false;
+          updateChainGuessButtonState();
+          startChainTimer();
+        }
+      } else {
+        resetChainToSetup();
+      }
       window.setTimeout(() => chainFillCloseBtn?.focus({preventScroll:true}),20);
     }
 
     function closeChainFill() {
       chainBuildToken += 1;
       stopChainTimer();
-      destroyChainZoom();
+      // Menu is a pause. Keep the board and D3 transform alive so Resume returns
+      // to the exact Map Crawl instead of the older standard/detective session.
       chainFillOverlay?.classList.remove("open");
-      if (menuPlayMode === "chain") openStartOverlay(!!studySession && studySession.active !== false, true);
+      if (menuPlayMode === "chain") openStartOverlay(true, true);
     }
 
     chainSetOptions?.addEventListener("click", event => {
@@ -34369,7 +36292,6 @@ button,
     let mapHuntPromptMode = ["country", "flag", "capital"].includes(specialGamePrefs.mapHuntPromptMode)
       ? specialGamePrefs.mapHuntPromptMode
       : "country";
-    let mapHuntState = null;
     let mapHuntBuildToken = 0;
     let mapHuntAdvanceTimer = null;
     let mapHuntWrongFeedbackTimer = null;
@@ -34800,17 +36722,21 @@ button,
       window.setTimeout(() => (struggled.length ? mapHuntRevisionBtn : mapHuntReplayBtn)?.focus?.({ preventScroll:true }), 0);
     }
 
-    function mapHuntMarkerMetrics(transform = mapHuntState?.zoomTransform) {
-      const k = Math.max(1, Number(transform?.k) || 1);
+    function measureMapHuntViewportScale() {
       const baseWidth = Math.max(1, Number(mapHuntState?.mapWidth) || 1000);
       const baseHeight = Math.max(1, Number(mapHuntState?.mapHeight) || 555);
       const bounds = mapHuntMap?.getBoundingClientRect?.();
-      const markerRenderedWidth = Math.max(1, Number(bounds?.width) || mapHuntMap?.clientWidth || baseWidth);
-      const markerRenderedHeight = Math.max(1, Number(bounds?.height) || mapHuntMap?.clientHeight || baseHeight);
-      // preserveAspectRatio="xMidYMid meet" is constrained by the smaller axis.
-      // Using width alone makes markers/strokes too small in short landscape
-      // layouts, exactly where mobile browser viewport changes are most common.
-      const viewportScale = Math.max(.22, Math.min(markerRenderedWidth / baseWidth, markerRenderedHeight / baseHeight));
+      const renderedWidth = Math.max(1, Number(bounds?.width) || mapHuntMap?.clientWidth || baseWidth);
+      const renderedHeight = Math.max(1, Number(bounds?.height) || mapHuntMap?.clientHeight || baseHeight);
+      return Math.max(.22, Math.min(renderedWidth / baseWidth, renderedHeight / baseHeight));
+    }
+
+    function mapHuntMarkerMetrics(transform = mapHuntState?.zoomTransform) {
+      const k = Math.max(1, Number(transform?.k) || 1);
+      // Reading getBoundingClientRect on every D3 zoom frame forces synchronous
+      // layout and was a major source of Map Hunt's slow/jittery feel. Measure
+      // only on build/resize and reuse the cached screen scale while panning.
+      const viewportScale = Math.max(.22, Number(mapHuntState?.viewportScale) || measureMapHuntViewportScale());
       const mobile = window.matchMedia?.("(max-width: 520px)")?.matches;
       const zoomSteps = Math.max(0, Math.log2(k));
       // Small at overview; steadily becomes a useful target as the map zooms.
@@ -34874,6 +36800,7 @@ button,
       mapHuntResizeRaf = window.requestAnimationFrame(() => {
         mapHuntResizeRaf = null;
         if (!mapHuntState?.svg || !mapHuntOverlay?.classList.contains("open")) return;
+        mapHuntState.viewportScale = measureMapHuntViewportScale();
         updateMapHuntMarkerScale(mapHuntState.zoomTransform || d3.zoomIdentity);
       });
     }
@@ -34961,7 +36888,7 @@ button,
       const padX = mobile ? 58 : 42;
       const padY = mobile ? 44 : 34;
       let k = Math.min((width - padX * 2) / spanX, (height - padY * 2) / spanY);
-      k = Math.max(1, Math.min(64, k));
+      k = Math.max(1, Math.min(12, k));
       const cx = (x0 + x1) / 2;
       const cy = (y0 + y1) / 2;
       return d3.zoomIdentity.translate(width / 2 - k * cx, height / 2 - k * cy).scale(k);
@@ -34977,18 +36904,23 @@ button,
 
     function attachMapHuntZoom(svg, layer, width, height) {
       if (!window.d3 || !mapHuntState) return;
-      // Keep the geography itself untransformed. On Samsung/Android, deeply
-      // transformed SVG paths that are repeatedly recoloured can corrupt into
-      // bars/blocks. Zoom the root viewBox instead; visually it is identical but
-      // keeps each country path in a stable coordinate system.
+      // Use the exact interaction model that is stable in Map Crawl: a fixed
+      // root viewBox with D3 transforming one geography layer. This avoids the
+      // slow/jittery viewBox rewriting that also triggered Samsung paint bands.
       layer.attr("transform", null);
       const zoom = d3.zoom()
+        .scaleExtent([1, 12])
         .extent([[0, 0], [width, height]])
-        .scaleExtent([1, 64])
-        .translateExtent([[-width * 1.4, -height * 1.4], [width * 2.4, height * 2.4]])
-        .on("zoom", event => {
+        .translateExtent([[0, 0], [width, height]])
+        .filter(event => {
+          if (event.type === "dblclick") return false;
+          if (event.type === "mousedown") return event.button === 0;
+          return true;
+        })
+        .on("zoom.maphunt", event => {
+          if (!mapHuntState) return;
           mapHuntState.zoomTransform = event.transform;
-          applyMapHuntViewTransform(event.transform);
+          layer.attr("transform", event.transform.toString());
           updateMapHuntMarkerScale(event.transform);
         });
       mapHuntState.zoom = zoom;
@@ -34998,6 +36930,7 @@ button,
       mapHuntState.mapHeight = height;
       mapHuntState.zoomTransform = d3.zoomIdentity;
       svg.attr("viewBox", `0 0 ${width} ${height}`);
+      mapHuntState.viewportScale = measureMapHuntViewportScale();
       svg.call(zoom).on("dblclick.zoom", null);
       updateMapHuntMarkerScale(d3.zoomIdentity);
     }
@@ -35236,6 +37169,7 @@ button,
 
     function openMapHunt() {
       syncTerritoryPreferenceControls?.();
+      noteResumableMode("maphunt");
       updateMapHuntSetupHelp();
       const canResume = !!(mapHuntState?.svg && mapHuntMap?.childNodes?.length);
       if (canResume) {
@@ -35300,6 +37234,8 @@ button,
     mapHuntZoomResetBtn?.addEventListener("click", event => { event.stopPropagation(); resetMapHuntZoom(); });
     window.addEventListener("resize", refreshMapHuntViewportMetrics, { passive:true });
     window.visualViewport?.addEventListener("resize", refreshMapHuntViewportMetrics, { passive:true });
+    window.addEventListener("resize", () => { if (isSprintSession()) updateSprintVisualSizing(); }, { passive:true });
+    window.visualViewport?.addEventListener("resize", () => { if (isSprintSession()) updateSprintVisualSizing(); }, { passive:true });
     updateMapHuntSetupHelp();
 
     /* ---------- Ranking ---------- */
@@ -35937,10 +37873,124 @@ function rankingTargetValues() {
 
     window.addEventListener("keydown", event => {
       if (event.key !== "Escape") return;
+      if (sprintOverlay?.classList.contains("open")) { event.preventDefault(); event.stopImmediatePropagation(); closeSprintSetup(); return; }
       if (rankingOverlay?.classList.contains("open")) { event.preventDefault(); event.stopImmediatePropagation(); closeRanking(); return; }
       if (mapHuntOverlay?.classList.contains("open")) { event.preventDefault(); event.stopImmediatePropagation(); closeMapHunt(); return; }
       if (chainFillOverlay?.classList.contains("open")) { event.preventDefault(); event.stopImmediatePropagation(); closeChainFill(); }
     }, true);
+
+
+    /* ---------- v0.52 Sprint ---------- */
+    const sprintOverlay = document.getElementById("sprintOverlay");
+    const sprintCloseBtn = document.getElementById("sprintCloseBtn");
+    const sprintStartBtn = document.getElementById("sprintStartBtn");
+    const sprintSetOptions = document.getElementById("sprintSetOptions");
+    let sprintSet = (() => {
+      try {
+        const saved = localStorage.getItem(SPRINT_SET_KEY);
+        return ["world","europe","africa","asia","northAmerica","southAmerica","oceania","caribbean"].includes(saved) ? saved : "world";
+      } catch (_) { return "world"; }
+    })();
+
+    function syncSprintSetup() {
+      sprintSetOptions?.querySelectorAll("[data-sprint-set]").forEach(button => {
+        const active = button.dataset.sprintSet === sprintSet;
+        button.classList.toggle("active", active);
+        button.setAttribute("aria-pressed", active ? "true" : "false");
+      });
+    }
+
+    function openSprintSetup() {
+      startOverlay?.classList.remove("open");
+      rapidOverlay?.classList.remove("open");
+      sprintOverlay?.classList.add("open");
+      if (sprintStartBtn) { delete sprintStartBtn.dataset.confirmReplace; sprintStartBtn.textContent = "Start Sprint →"; }
+      syncSprintSetup();
+      window.setTimeout(() => sprintStartBtn?.focus({preventScroll:true}), 20);
+    }
+
+    function closeSprintSetup() {
+      sprintOverlay?.classList.remove("open");
+      openStartOverlay(!!studySession && studySession.active !== false, false);
+    }
+
+    function sprintEligibleIndices(setKey) {
+      return countrySetIndices(setKey).filter(countryIndex => {
+        const c = countries[countryIndex];
+        if (!c) return false;
+        // These are the fixed Sprint facts; visual assets can gracefully fall back
+        // at question render time, so a country only needs a name and one capital/currency
+        // relationship to remain useful.
+        return !!c.name;
+      });
+    }
+
+    function buildSprintCountryOrder(base) {
+      const result = [];
+      let previous = null;
+      while (result.length < countries.length && base.length) {
+        let batch = shuffleIndices(base);
+        if (previous != null && batch.length > 1 && batch[0] === previous) batch.push(batch.shift());
+        for (const item of batch) {
+          result.push(item);
+          previous = item;
+          if (result.length >= countries.length) break;
+        }
+      }
+      return result;
+    }
+
+    function startSprintGame() {
+      if (hasActiveStudyRun() && !isSprintSession() && sprintStartBtn?.dataset.confirmReplace !== "true") {
+        sprintStartBtn.dataset.confirmReplace = "true";
+        sprintStartBtn.textContent = "Replace current session →";
+        return;
+      }
+      if (sprintStartBtn) {
+        delete sprintStartBtn.dataset.confirmReplace;
+        sprintStartBtn.textContent = "Start Sprint →";
+      }
+      const base = sprintEligibleIndices(sprintSet);
+      if (!base.length) return;
+      // Sprint can surface a silhouette immediately; start the quality atlas in
+      // parallel so the first detailed outline is less likely to wait on it.
+      loadHighDetailSilhouetteWorld().catch(() => {});
+      // Build the ordinary session shell, then switch the interaction to Rapid's
+      // proven question renderer. Sprint supplies its own fixed question pool.
+      startStudySession("unlimited", null, "standard", "random", sprintSet);
+      if (!studySession) return;
+      studySession.interaction = "rapid";
+      studySession.rapid = rapidDefaultState();
+      studySession.sprint = {
+        enabled:true, set:sprintSet, durationMs:60000, remainingMs:60000,
+        runningStartedAt:null, ended:false
+      };
+      countryOrder = buildSprintCountryOrder(base);
+      studySession.poolCount = countryOrder.length;
+      studySession.countrySet = sprintSet;
+      studySession.mode = "unlimited";
+      index = 0;
+      localStorage.setItem(COUNTRY_ORDER_KEY, JSON.stringify(countryOrder));
+      noteResumableMode("study");
+      saveStudySession();
+      saveState();
+      sprintOverlay?.classList.remove("open");
+      startOverlay?.classList.remove("open");
+      menuPlayMode = "sprint";
+      openRapidMode(false);
+    }
+
+    sprintSetOptions?.addEventListener("click", event => {
+      const button = event.target.closest("[data-sprint-set]");
+      if (!button) return;
+      sprintSet = button.dataset.sprintSet;
+      if (sprintStartBtn) { delete sprintStartBtn.dataset.confirmReplace; sprintStartBtn.textContent = "Start Sprint →"; }
+      try { localStorage.setItem(SPRINT_SET_KEY, sprintSet); } catch (_) {}
+      syncSprintSetup();
+    });
+    sprintStartBtn?.addEventListener("click", startSprintGame);
+    sprintCloseBtn?.addEventListener("click", closeSprintSetup);
+    sprintOverlay?.addEventListener("click", event => { if (event.target === sprintOverlay) closeSprintSetup(); });
 
     renderGeoDenBuildMeta();
     const geoDenDataAudit = runGeoDenDataAudit();
@@ -35981,7 +38031,7 @@ function rankingTargetValues() {
     // compact Resume action instead of dropping the learner into mid-session.
     if (studySession?.active !== false) {
       if (["matching", "detective", "rapid", "interactive"].includes(studySession?.interaction)) {
-        menuPlayMode = studySession.interaction;
+        menuPlayMode = studySession?.interaction === "rapid" && studySession?.sprint?.enabled ? "sprint" : studySession.interaction;
       } else {
         menuPlayMode = "standard";
       }
