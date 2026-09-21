@@ -14179,6 +14179,26 @@ button,
     #mapHuntMap path[data-map-hunt-code],
     #mapHuntMap circle[data-map-hunt-code],
     #mapHuntMap circle[data-map-hunt-halo] { pointer-events:none !important; }
+
+    .map-hunt-tap-flash {
+      position:absolute; z-index:7; pointer-events:none;
+      transform:translate(-50%,-100%);
+      max-width:min(220px,70%); padding:0;
+      border:0; border-radius:0; background:transparent; box-shadow:none;
+      color:#343937; text-align:center;
+      font-size:clamp(.68rem,2.45vw,.82rem); line-height:1.06;
+      opacity:1; transition:opacity 110ms ease;
+      text-shadow:
+        -1px -1px 0 rgba(248,245,238,.98), 1px -1px 0 rgba(248,245,238,.98),
+        -1px 1px 0 rgba(248,245,238,.98), 1px 1px 0 rgba(248,245,238,.98),
+        0 1px 4px rgba(25,22,16,.22);
+    }
+    .map-hunt-tap-flash-name { display:block; font-weight:900; letter-spacing:-.015em; }
+    .map-hunt-tap-flash-capital { display:block; margin-top:2px; font-size:.88em; font-weight:620; opacity:.9; }
+    .map-hunt-tap-flash.correct { color:inherit; }
+    .map-hunt-tap-flash.wrong,
+    .map-hunt-tap-flash.reveal { color:#8f342e; }
+    .map-hunt-tap-flash.hidden { display:none !important; }
   </style>
 
 </head>
@@ -15438,6 +15458,8 @@ button,
             <img class="map-hunt-prompt-flag hidden" id="mapHuntPromptFlag" alt="Flag clue" />
           </div>
           <svg class="map-hunt-map" id="mapHuntMap" role="img" aria-label="Clickable geography map"></svg>
+          <div class="map-hunt-tap-flash hidden" id="mapHuntRevealHint" aria-hidden="true"></div>
+          <div class="map-hunt-tap-flash hidden" id="mapHuntTapFlash" aria-hidden="true"></div>
           <div class="map-hunt-zoom-controls" aria-label="Map zoom controls">
             <button class="map-hunt-zoom-button" id="mapHuntZoomOutBtn" type="button" aria-label="Zoom out">−</button>
             <button class="map-hunt-zoom-button" id="mapHuntZoomInBtn" type="button" aria-label="Zoom in">+</button>
@@ -15536,7 +15558,7 @@ button,
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
 
   <script>
-    const GEODEN_VERSION = "0.54.8";
+    const GEODEN_VERSION = "0.54.15";
     // Input policy: autocomplete/typeahead is ordinary entry and remains unassisted.
     // Only an actual spelling correction (or an explicit hint/reveal) counts as help.
     const GEODEN_BUILD_DATE = "2026-09-21";
@@ -15945,7 +15967,7 @@ button,
     };
     const FLASH_BASIC_STAGES = ["flag", "country", "globe", "capital"];
     const INTERACTIVE_BASIC_STAGES = ["flag", "country", "globe", "capital"];
-    const MATCHING_BASIC_FIELDS = ["country", "flag", "silhouette", "capital", "currency", "neighbours", "population"];
+    const MATCHING_BASIC_FIELDS = ["country", "flag", "silhouette", "capital", "languages", "neighbours", "population"];
 
     const DEFAULT_CONFIG = {
       order: [...ALL_STAGES],
@@ -19475,15 +19497,17 @@ button,
             if (typeof saved.enabled[field] === "boolean") enabled[field] = saved.enabled[field];
           }
 
-          // v0.50.11 expands the untouched Matching recommended preset with
-          // Silhouette, Neighbours and Population. Migrate only the exact old
-          // default (including its original order) so custom setups remain
-          // completely untouched.
-          const previousMatchingRecommended = new Set(["country", "flag", "capital", "currency"]);
+          // Keep untouched Matching recommended presets aligned with the
+          // current recommendation while preserving every custom setup. Older
+          // defaults used Currency; the current default uses Languages instead.
+          const legacyMatchingRecommendedPresets = [
+            new Set(["country", "flag", "capital", "currency"]),
+            new Set(["country", "flag", "silhouette", "capital", "currency", "neighbours", "population"])
+          ];
           const previousOrderMatches = saved.order.length === MATCHING_ALL_FIELDS.length &&
             saved.order.every((field, index) => field === MATCHING_ALL_FIELDS[index]);
-          const previousEnabledMatches = MATCHING_ALL_FIELDS.every(field =>
-            !!saved.enabled[field] === previousMatchingRecommended.has(field)
+          const previousEnabledMatches = legacyMatchingRecommendedPresets.some(preset =>
+            MATCHING_ALL_FIELDS.every(field => !!saved.enabled[field] === preset.has(field))
           );
           if (previousOrderMatches && previousEnabledMatches) {
             for (const field of MATCHING_ALL_FIELDS) enabled[field] = MATCHING_BASIC_FIELDS.includes(field);
@@ -35491,7 +35515,7 @@ Try again`;
     }
 
     // Keep the two full-map games on one interaction model. Both can zoom from
-    // the whole-world overview (1×) to 32×, and both treat the fitted playable
+    // the whole-world overview (1×) to 64×, and both treat the fitted playable
     // area as their Home/Reset view.
     const BIG_MAP_MAX_ZOOM = 64;
     const BIG_MAP_ZOOM_STEP = 1.6;
@@ -35842,7 +35866,9 @@ Try again`;
       for (const item of selectedFeatures) {
         if (!item.safe) continue;
         try {
-          const bounds = pathMeasure.bounds(item.feature);
+          const c = countryByCode(item.code);
+          const fitTarget = c ? mainTerritoryGeometry(c, item.feature) : item.feature;
+          const bounds = pathMeasure.bounds(fitTarget);
           if (bounds?.flat?.().every(Number.isFinite)) featureBounds.set(item.code, bounds);
         } catch (_) {}
       }
@@ -36707,6 +36733,8 @@ Try again`;
     const mapHuntPromptFlag = document.getElementById("mapHuntPromptFlag");
     const mapHuntCanvas = document.getElementById("mapHuntCanvas");
     const mapHuntMap = document.getElementById("mapHuntMap");
+    const mapHuntRevealHint = document.getElementById("mapHuntRevealHint");
+    const mapHuntTapFlash = document.getElementById("mapHuntTapFlash");
     const mapHuntZoomOutBtn = document.getElementById("mapHuntZoomOutBtn");
     const mapHuntZoomInBtn = document.getElementById("mapHuntZoomInBtn");
     const mapHuntZoomResetBtn = document.getElementById("mapHuntZoomResetBtn");
@@ -36730,6 +36758,7 @@ Try again`;
     let mapHuntRevealInterval = null;
     let mapHuntResizeRaf = null;
     let mapHuntCanvasDrawRaf = 0;
+    let mapHuntTapFlashTimer = null;
 
     function mapHuntShuffle(items) {
       const copy = [...items];
@@ -36890,32 +36919,143 @@ Try again`;
       return mapHuntState?.labelPoints?.get(code) || null;
     }
 
-    function showMapHuntTapLabel(code, kind = "wrong") {
-      if (!code || !mapHuntState?.layer || !window.d3) return;
-      const c = countryByCode(code);
-      const point = mapHuntLabelPoint(code);
-      if (!c || !point) return;
-      let group = mapHuntState.layer.select("g.map-hunt-temp-labels");
-      if (group.empty()) group = mapHuntState.layer.append("g").attr("class", "map-hunt-temp-labels");
-      group.selectAll("*").remove();
-      const label = group.append("text")
-        .attr("class", `map-hunt-temp-label ${kind === "correct" ? "correct" : "wrong"}`)
-        .attr("x", point.x)
-        .attr("y", point.y);
-      if (mapHuntPromptMode === "capital") {
-        label.append("tspan")
-          .attr("x", point.x)
-          .attr("dy", "-.18em")
-          .text(c.name);
-        label.append("tspan")
-          .attr("x", point.x)
-          .attr("dy", "1.12em")
-          .style("font-size", ".82em")
-          .text(`Capital: ${mapHuntCapitalDisplay(c)}`);
-      } else {
-        label.text(c.name);
+    function clearMapHuntTapLabel() {
+      if (mapHuntTapFlashTimer) {
+        window.clearTimeout(mapHuntTapFlashTimer);
+        mapHuntTapFlashTimer = null;
       }
-      updateMapHuntMarkerScale(mapHuntState.zoomTransform || d3.zoomIdentity);
+      if (!mapHuntTapFlash) return;
+      mapHuntTapFlash.classList.add("hidden");
+      mapHuntTapFlash.classList.remove("correct", "wrong", "reveal");
+      mapHuntTapFlash.replaceChildren();
+      mapHuntTapFlash.style.removeProperty("color");
+      delete mapHuntTapFlash.dataset.persist;
+      delete mapHuntTapFlash.dataset.code;
+      delete mapHuntTapFlash.dataset.kind;
+    }
+
+    function mapHuntScreenPointForCode(code) {
+      if (!code || !mapHuntMap || !window.d3) return null;
+      const point = mapHuntLabelPoint(code);
+      if (!point || !Number.isFinite(point.x) || !Number.isFinite(point.y)) return null;
+
+      // Use the exact same D3 transform that paints the Canvas map.  The old
+      // getScreenCTM() route could report a stale/odd matrix on Safari/Samsung
+      // once the transparent SVG interaction layer was resized, which is how a
+      // Vatican/San Marino label could jump hundreds of kilometres away.
+      const t = mapHuntState?.zoomTransform || d3.zoomIdentity;
+      const transformed = t.apply([point.x, point.y]);
+      const rect = mapHuntMap.getBoundingClientRect();
+      const baseWidth = Math.max(1, Number(mapHuntState?.mapWidth) || rect.width || 1);
+      const baseHeight = Math.max(1, Number(mapHuntState?.mapHeight) || rect.height || 1);
+      const scaleX = rect.width / baseWidth;
+      const scaleY = rect.height / baseHeight;
+      const x = rect.left + transformed[0] * scaleX;
+      const y = rect.top + transformed[1] * scaleY;
+      return Number.isFinite(x) && Number.isFinite(y) ? { x, y } : null;
+    }
+
+    function mapHuntTapLabelColor(code, kind = "wrong") {
+      if (kind === "correct") {
+        const resultClass = mapHuntResultClass(code);
+        if (resultClass === "try-1") return "#2f7d4d";
+        if (resultClass === "try-2") return "#d6b63b";
+        if (resultClass === "try-3") return "#dc8434";
+        if (resultClass === "revealed") return "#8f342e";
+        return "#2f7d4d";
+      }
+      return "#8f342e";
+    }
+
+    function positionMapHuntLabelElement(el) {
+      if (!el || el.classList.contains("hidden")) return;
+      const code = el.dataset.code || "";
+      if (!code) return;
+      const screenPoint = mapHuntScreenPointForCode(code);
+      if (!screenPoint) return;
+      const wrap = mapHuntMap?.closest?.(".map-hunt-map-wrap") || mapHuntMap?.parentElement;
+      const wrapRect = wrap?.getBoundingClientRect?.() || mapHuntMap?.getBoundingClientRect?.();
+      if (!wrapRect) return;
+      let left = screenPoint.x - wrapRect.left;
+      // Keep the feedback just above the actual geography, but close enough that
+      // it still reads as attached to the country rather than floating above it.
+      let top = screenPoint.y - wrapRect.top - 10;
+      const sidePad = Math.min(54, Math.max(28, wrapRect.width * .075));
+      const topPad = 24;
+      left = Math.max(sidePad, Math.min(wrapRect.width - sidePad, left));
+      top = Math.max(topPad, Math.min(wrapRect.height - 14, top));
+      el.style.left = `${left}px`;
+      el.style.top = `${top}px`;
+    }
+
+    function positionMapHuntTapLabel() {
+      positionMapHuntLabelElement(mapHuntRevealHint);
+      positionMapHuntLabelElement(mapHuntTapFlash);
+    }
+
+    function clearMapHuntRevealHint() {
+      if (!mapHuntRevealHint) return;
+      mapHuntRevealHint.classList.add("hidden");
+      mapHuntRevealHint.classList.remove("correct", "wrong", "reveal");
+      mapHuntRevealHint.replaceChildren();
+      mapHuntRevealHint.style.removeProperty("color");
+      delete mapHuntRevealHint.dataset.code;
+      delete mapHuntRevealHint.dataset.kind;
+    }
+
+    function showMapHuntRevealHint(code) {
+      if (!code || !mapHuntState || !mapHuntRevealHint || !mapHuntMap || !window.d3) return;
+      const c = countryByCode(code);
+      if (!c || !mapHuntScreenPointForCode(code)) return;
+      const name = document.createElement("span");
+      name.className = "map-hunt-tap-flash-name";
+      name.textContent = c.name;
+      const children = [name];
+      if (mapHuntPromptMode === "capital") {
+        const capital = document.createElement("span");
+        capital.className = "map-hunt-tap-flash-capital";
+        capital.textContent = mapHuntCapitalDisplay(c);
+        children.push(capital);
+      }
+      mapHuntRevealHint.replaceChildren(...children);
+      mapHuntRevealHint.dataset.code = code;
+      mapHuntRevealHint.dataset.kind = "reveal";
+      mapHuntRevealHint.style.color = mapHuntTapLabelColor(code, "reveal");
+      mapHuntRevealHint.classList.remove("hidden", "correct", "wrong");
+      mapHuntRevealHint.classList.add("reveal");
+      positionMapHuntLabelElement(mapHuntRevealHint);
+    }
+
+    function showMapHuntTapLabel(code, kind = "wrong", options = {}) {
+      if (!code || !mapHuntState || !mapHuntTapFlash || !mapHuntMap || !window.d3) return;
+      const c = countryByCode(code);
+      if (!c || !mapHuntScreenPointForCode(code)) return;
+      if (mapHuntTapFlashTimer) window.clearTimeout(mapHuntTapFlashTimer);
+
+      const name = document.createElement("span");
+      name.className = "map-hunt-tap-flash-name";
+      name.textContent = c.name;
+      const children = [name];
+      if (mapHuntPromptMode === "capital") {
+        const capital = document.createElement("span");
+        capital.className = "map-hunt-tap-flash-capital";
+        capital.textContent = mapHuntCapitalDisplay(c);
+        children.push(capital);
+      }
+      mapHuntTapFlash.replaceChildren(...children);
+      mapHuntTapFlash.dataset.code = code;
+      mapHuntTapFlash.dataset.kind = kind;
+      mapHuntTapFlash.style.color = mapHuntTapLabelColor(code, kind);
+      mapHuntTapFlash.classList.remove("hidden", "correct", "wrong", "reveal");
+      mapHuntTapFlash.classList.add(kind === "correct" ? "correct" : kind === "reveal" ? "reveal" : "wrong");
+      positionMapHuntTapLabel();
+
+      delete mapHuntTapFlash.dataset.persist;
+      const duration = Number(options.duration) || (kind === "correct" ? 920 : 1050);
+      mapHuntTapFlashTimer = window.setTimeout(() => {
+        mapHuntTapFlashTimer = null;
+        mapHuntTapFlash?.classList.add("hidden");
+      }, duration);
     }
 
     function updateMapHuntResultLabels() {
@@ -36927,6 +37067,7 @@ Try again`;
     }
 
     function clearMapHuntWrongFeedback() {
+      clearMapHuntTapLabel();
       if (mapHuntWrongFeedbackTimer) {
         window.clearTimeout(mapHuntWrongFeedbackTimer);
         mapHuntWrongFeedbackTimer = null;
@@ -36973,6 +37114,7 @@ Try again`;
         mapHuntRevealInterval = null;
       }
       if (mapHuntState) { mapHuntState.revealFlashCode = ""; mapHuntState.revealFlashDim = false; }
+      clearMapHuntRevealHint();
       if (!mapHuntMap || !window.d3) return;
       const svg = d3.select(mapHuntMap);
       svg.selectAll(".reveal-flash, .reveal-dim").classed("reveal-flash reveal-dim", false);
@@ -36984,8 +37126,6 @@ Try again`;
     function flashMapHuntTargetReveal(code) {
       if (!code || !mapHuntMap || !window.d3 || !mapHuntState) return;
       clearMapHuntRevealFlash();
-      const point = mapHuntLabelPoint(code);
-      const c = countryByCode(code);
       const svg = d3.select(mapHuntMap);
       const target = svg.selectAll(`[data-map-hunt-code="${code}"]`);
       target.classed("reveal-flash", true);
@@ -36993,16 +37133,7 @@ Try again`;
       mapHuntState.revealFlashDim = false;
       target.each(function() { try { void this.getBoundingClientRect(); } catch (_) {} });
       svg.selectAll(`[data-map-hunt-halo="${code}"]`).classed("reveal-flash", true);
-      if (c && point && mapHuntState.layer) {
-        let group = mapHuntState.layer.select("g.map-hunt-reveal-labels");
-        if (group.empty()) group = mapHuntState.layer.append("g").attr("class", "map-hunt-reveal-labels");
-        group.append("text")
-          .attr("class", "map-hunt-reveal-label")
-          .attr("x", point.x)
-          .attr("y", point.y)
-          .text(c.name);
-        updateMapHuntMarkerScale(mapHuntState.zoomTransform || d3.zoomIdentity);
-      }
+      showMapHuntRevealHint(code);
       // Persistent teaching state. Use a simple JS phase toggle instead of a
       // CSS SVG animation: Samsung/Android can corrupt heavily transformed SVG
       // paths when non-scaling strokes and infinite animations are combined.
@@ -37030,6 +37161,7 @@ Try again`;
         if (!mapHuntState) return;
         clearMapHuntWrongFeedback();
         clearMapHuntRevealFlash();
+        clearMapHuntTapLabel();
         mapHuntState.cursor += 1;
         mapHuntState.misses = 0;
         mapHuntState.awaitingRevealClick = false;
@@ -37105,7 +37237,8 @@ Try again`;
       showMapHuntWrongFeedback(code);
 
       if (mapHuntState.awaitingRevealClick) {
-        flashMapHuntTargetReveal(target.code);
+        // Keep the target flashing, but do not overwrite the normal feedback
+        // label for the country the learner just tapped.
         mapHuntFeedback.textContent = "Not that one · find the revealed place.";
         mapHuntFeedback.className = "map-hunt-feedback near";
         if (mapHuntRoundMeta) mapHuntRoundMeta.textContent = "Tap the revealed place";
@@ -37212,8 +37345,8 @@ Try again`;
       // The broad touch allowance is used only by nearest-marker hit testing;
       // it is no longer an overlapping SVG circle sitting above countries.
       const hitPx = mobile
-        ? Math.min(15.5, 9.5 + zoomSteps * .9)
-        : Math.min(12.5, 8.0 + zoomSteps * .7);
+        ? Math.min(27, 21 + zoomSteps * 1.0)
+        : Math.min(22, 17 + zoomSteps * .8);
       const haloPx = visiblePx + (mobile ? 4.0 : 3.2);
       return { k, viewportScale, mobile, visiblePx, hitPx, haloPx };
     }
@@ -37269,6 +37402,7 @@ Try again`;
         mapHuntState.viewportScale = measureMapHuntViewportScale();
         updateMapHuntMarkerScale(mapHuntState.zoomTransform || d3.zoomIdentity);
         requestMapHuntCanvasDraw();
+        positionMapHuntTapLabel();
       });
     }
 
@@ -37414,12 +37548,29 @@ Try again`;
         const dx = x - point.x;
         const dy = y - point.y;
         const screenDist = Math.hypot(dx, dy) * metrics.k * metrics.viewportScale;
-        if (!nearest || screenDist < nearest.distance) nearest = { code, distance:screenDist };
+        const candidate = { code, distance:screenDist };
+        if (!nearest || screenDist < nearest.distance) nearest = candidate;
       }
 
-      // Resolve the country from geographic containment instead of relying on
-      // invisible SVG path paint. This makes the entire country interior tappable
-      // on browsers that only hit-test transparent SVG strokes/borders.
+      // Give isolated microstate dots a generous touch target. Only tighten the
+      // radius when another dot's centre is close enough for the two hit zones to
+      // overlap; within a cluster, nearest-dot geometry keeps selection precise.
+      let markerHitPx = metrics.hitPx;
+      if (nearest) {
+        const nearestPoint = markerPoints.get(nearest.code);
+        let nearestNeighbourPx = Infinity;
+        if (nearestPoint) {
+          for (const [otherCode, otherPoint] of markerPoints) {
+            if (otherCode === nearest.code || !mapHuntEligibleCode(otherCode) || !otherPoint) continue;
+            const centreDist = Math.hypot(nearestPoint.x - otherPoint.x, nearestPoint.y - otherPoint.y) * metrics.k * metrics.viewportScale;
+            if (centreDist < nearestNeighbourPx) nearestNeighbourPx = centreDist;
+          }
+        }
+        if (Number.isFinite(nearestNeighbourPx) && nearestNeighbourPx < metrics.hitPx * 2.15) {
+          markerHitPx = Math.max(metrics.visiblePx + 3, nearestNeighbourPx * .46);
+        }
+      }
+
       let targetCode = "";
       const geo = mapHuntState.projection?.invert?.([x, y]);
       if (geo?.every?.(Number.isFinite)) {
@@ -37435,14 +37586,11 @@ Try again`;
         }
       }
 
-      // A genuine microstate marker gets priority only when the tap is actually
-      // on/very near its visible dot; otherwise the containing country wins.
-      if (targetCode) {
-        if (nearest && nearest.distance <= metrics.visiblePx + 2.5) handleMapHuntGuess(nearest.code);
-        else handleMapHuntGuess(targetCode);
+      if (nearest && nearest.distance <= markerHitPx) {
+        handleMapHuntGuess(nearest.code);
         return;
       }
-      if (nearest && nearest.distance <= metrics.hitPx) handleMapHuntGuess(nearest.code);
+      if (targetCode) handleMapHuntGuess(targetCode);
     }
 
     function applyMapHuntViewTransform(transform) {
@@ -37461,9 +37609,7 @@ Try again`;
       const width = Number(mapHuntState.mapWidth) || 1000;
       const height = Number(mapHuntState.mapHeight) || 555;
       const sourceCodes = Array.from(codes || []);
-      const fitCodes = mapHuntState.setKey === "europe"
-        ? sourceCodes.filter(code => code !== "RU")
-        : bigMapAutoFitCodes(mapHuntState.setKey, sourceCodes);
+      const fitCodes = bigMapAutoFitCodes(mapHuntState.setKey, sourceCodes);
       return bigMapFitTransform(
         width,
         height,
@@ -37511,6 +37657,7 @@ Try again`;
           layer.attr("transform", event.transform.toString());
           updateMapHuntMarkerScale(event.transform);
           requestMapHuntCanvasDraw();
+          positionMapHuntTapLabel();
           updateMapHuntZoomButtons();
         });
       mapHuntState.zoom = zoom;
@@ -37537,9 +37684,14 @@ Try again`;
     }
 
     async function renderMapHuntMap() {
-      const world = await loadSilhouetteWorld();
+      // Render Map Hunt with the detailed atlas, but calculate Home/Reset bounds
+      // from the same normal world-map geometry used by Map Crawl. Detailed
+      // country geometry can contain distant overseas pieces, which otherwise
+      // makes a regional fit (especially Europe) look almost like a world view.
+      const [world, fitWorld] = await Promise.all([loadSilhouetteWorld(), loadWorld()]);
       if (!mapHuntState || !window.d3 || !window.topojson) throw new Error("Map unavailable");
       const features = topojson.feature(world, world.objects.countries).features;
+      const fitFeatures = topojson.feature(fitWorld, fitWorld.objects.countries).features;
       const selectedFeatures = mapHuntState.allCodes.map(code => {
         const c = countryByCode(code);
         const feature = mapFeatureForCountry(c, features, includeMajorTerritories);
@@ -37614,15 +37766,17 @@ Try again`;
             if (Number.isFinite(centroid?.[0]) && Number.isFinite(centroid?.[1])) {
               mapHuntState.labelPoints.set(code, { x:centroid[0], y:centroid[1] });
             }
-            const bounds = path.bounds(feature);
+            // Home/Reset crop uses the same source geometry as Map Crawl.
+            const c = countryByCode(code);
+            const fitFeature = c ? mapFeatureForCountry(c, fitFeatures, true) : null;
+            const fitTarget = fitFeature && c ? mainTerritoryGeometry(c, fitFeature) : fitFeature;
+            const bounds = fitTarget ? path.bounds(fitTarget) : path.bounds(feature);
             if (bounds?.flat?.().every(Number.isFinite)) mapHuntState.featureBounds.set(code, bounds);
           } catch (_) {}
         }
         return { feature, code, safe };
       });
-      const provisionalFitCodes = mapHuntState.setKey === "europe"
-        ? mapHuntState.roundCodes.filter(code => code !== "RU")
-        : bigMapAutoFitCodes(mapHuntState.setKey, mapHuntState.roundCodes);
+      const provisionalFitCodes = bigMapAutoFitCodes(mapHuntState.setKey, mapHuntState.roundCodes);
       const provisionalHome = bigMapFitTransform(width, height, provisionalFitCodes, mapHuntState.featureBounds, allProjectedPoints) || d3.zoomIdentity;
       // width/height are now CSS-pixel logical dimensions, so the fitted zoom
       // scale already represents the on-screen size of each country.
@@ -37738,6 +37892,17 @@ Try again`;
       mapHuntOverlay?.classList.toggle("playing", !!playing);
     }
 
+    function settleMapHuntInitialHomeView(state, token) {
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+          if (token !== mapHuntBuildToken || mapHuntState !== state || !mapHuntOverlay?.classList.contains("open") || mapHuntState?.finished) return;
+          mapHuntState.viewportScale = measureMapHuntViewportScale();
+          fitMapHuntToActiveArea({ animate:false });
+          requestMapHuntCanvasDraw();
+        });
+      });
+    }
+
     async function startMapHuntGame() {
       const token = ++mapHuntBuildToken;
       setMapHuntPlayLayout(true);
@@ -37766,6 +37931,7 @@ Try again`;
         mapHuntLoading?.classList.add("hidden");
         mapHuntPlay?.classList.remove("hidden");
         renderMapHuntPrompt();
+        settleMapHuntInitialHomeView(state, token);
       } catch (err) {
         if (token !== mapHuntBuildToken || !mapHuntOverlay?.classList.contains("open")) return;
         mapHuntState = null;
