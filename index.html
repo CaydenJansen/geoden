@@ -15558,7 +15558,7 @@ button,
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
 
   <script>
-    const GEODEN_VERSION = "0.54.15";
+    const GEODEN_VERSION = "0.54.16";
     // Input policy: autocomplete/typeahead is ordinary entry and remains unassisted.
     // Only an actual spelling correction (or an explicit hint/reveal) counts as help.
     const GEODEN_BUILD_DATE = "2026-09-21";
@@ -31901,6 +31901,10 @@ button,
       return !!(studySession?.interaction === "rapid" && studySession?.sprint?.enabled);
     }
 
+    function isDailyChallengeSession() {
+      return !!(studySession?.interaction === "rapid" && studySession?.dailyChallenge?.key);
+    }
+
     function sprintRemainingMs() {
       if (!isSprintSession()) return 0;
       const sprint = studySession.sprint;
@@ -32231,6 +32235,7 @@ Try again`;
       round.misses = 0;
       round.eliminatedCodes = [];
       round.revealed = false;
+      round.fullHintReveal = false;
       delete round.userAnswer;
       delete round.choiceCode;
       delete round.answerLabel;
@@ -32265,6 +32270,7 @@ Try again`;
         misses: 0,
         eliminatedCodes: [],
         revealed: false,
+        fullHintReveal: false,
         at: Date.now()
       };
       if (type === "capitalCountry") round.cueValue = rapidCapitalCueForRound(c);
@@ -32461,7 +32467,9 @@ Try again`;
       const total = countLetters(answer);
       const count = Math.max(0, Number(round.hintCount) || 0);
       if (!answer || !total || count >= total) {
-        rapidHintBtn.textContent = count >= total && total ? "Full hint shown" : "Hint unavailable";
+        rapidHintBtn.textContent = round.fullHintReveal && isDailyChallengeSession()
+          ? "Answer revealed"
+          : (count >= total && total ? "Full hint shown" : "Hint unavailable");
         rapidHintBtn.disabled = true;
       } else if (count > 0) {
         rapidHintBtn.textContent = "Hint · another letter";
@@ -32518,10 +32526,29 @@ Try again`;
       const next = Math.min(total, Math.max(0, Number(round.hintCount) || 0) + 1);
       round.hintCount = next;
       round.hintsUsed = Math.max(0, Number(round.hintsUsed) || 0) + 1;
-      rapidFeedback.textContent = next >= total
-        ? `Hint · ${answer}`
-        : `Hint · starts with ${capitalPrefix(answer, next)}…`;
-      rapidFeedback.className = "rapid-feedback near";
+      if (next >= total && isDailyChallengeSession()) {
+        // In Daily GeoDen, revealing every letter is a give-up, not an assisted
+        // solve. Keep the question active so the learner still types the fully
+        // revealed answer themselves for reinforcement before moving on.
+        round.fullHintReveal = true;
+        round.revealed = true;
+        rapidFeedback.textContent = `Revealed · ${answer} · type it below to continue.`;
+        rapidFeedback.className = "rapid-feedback near";
+        rapidRevealBtn?.classList.add("hidden");
+        rapidSuggestions?.replaceChildren();
+        rapidSuggestions?.classList.add("hidden");
+        rapidSuggestionIndex = -1;
+        window.setTimeout(() => {
+          if (ensureRapidState()?.round === round && round.status === "active" && rapidOverlay?.classList.contains("open")) {
+            rapidInput?.focus?.({ preventScroll:true });
+          }
+        }, 0);
+      } else {
+        rapidFeedback.textContent = next >= total
+          ? `Hint · ${answer}`
+          : `Hint · starts with ${capitalPrefix(answer, next)}…`;
+        rapidFeedback.className = "rapid-feedback near";
+      }
       rapidUpdateHintButton(round, c);
       saveStudySession();
     }
@@ -32843,6 +32870,12 @@ Try again`;
       const state = ensureRapidState();
       const round = state?.round;
       if (!round || round.status !== "active" || rapidTextPanel.classList.contains("hidden")) return;
+      if (round.fullHintReveal && isDailyChallengeSession()) {
+        rapidSuggestions.replaceChildren();
+        rapidSuggestions.classList.add("hidden");
+        rapidSuggestionIndex = -1;
+        return;
+      }
       const query = interactiveLooseNormalize(rapidInput.value);
       rapidSuggestions.replaceChildren();
       rapidSuggestionIndex = -1;
@@ -32890,6 +32923,7 @@ Try again`;
       const state = ensureRapidState();
       const round = state?.round;
       if (!round || round.status !== "active" || !value) return false;
+      if (round.fullHintReveal && isDailyChallengeSession()) return false;
       rapidInput.value = value;
       rapidSuggestions.classList.add("hidden");
       rapidSuggestionIndex = -1;
@@ -33029,9 +33063,26 @@ Try again`;
       if (!typed) return;
       if (rapidTextMatches(round, c, typed)) {
         delete round.userAnswer;
-        rapidFeedback.textContent = "Correct";
-        rapidFeedback.className = "rapid-feedback correct";
-        rapidFinishQuestion(true);
+        if (round.fullHintReveal && isDailyChallengeSession()) {
+          rapidFeedback.textContent = "Entered";
+          rapidFeedback.className = "rapid-feedback near";
+          rapidFinishQuestion(false, rapidAnswerLabel(round, c), "Full answer revealed by hints · entered for practice");
+        } else {
+          rapidFeedback.textContent = "Correct";
+          rapidFeedback.className = "rapid-feedback correct";
+          rapidFinishQuestion(true);
+        }
+        return;
+      }
+      if (round.fullHintReveal && isDailyChallengeSession()) {
+        // Once the Daily answer has been completely revealed, it has already
+        // been scored as a give-up. A typo here should not create a second miss
+        // or skip the typing practice; simply keep the learner on the question.
+        rapidFeedback.textContent = "Type the revealed answer to continue.";
+        rapidFeedback.className = "rapid-feedback wrong";
+        hapticFeedback?.("wrong");
+        rapidInput.select();
+        rapidInput.focus({ preventScroll:true });
         return;
       }
       const roleCorrection = rapidRoleCorrection(round, c, typed);
@@ -33371,6 +33422,14 @@ Try again`;
           : type.target === "currency" ? "Type the currency…"
           : "Type the city…";
         window.setTimeout(() => { if (rapidOverlay.classList.contains("open")) rapidInput.focus(); }, 40);
+      }
+      if (round.fullHintReveal && isDailyChallengeSession() && round.status === "active") {
+        const answer = rapidHintTarget(round, c) || rapidAnswerLabel(round, c);
+        rapidFeedback.textContent = `Revealed · ${answer} · type it below to continue.`;
+        rapidFeedback.className = "rapid-feedback near";
+        rapidRevealBtn?.classList.add("hidden");
+        rapidSuggestions?.replaceChildren();
+        rapidSuggestions?.classList.add("hidden");
       }
       if (!isSprintSession()) rapidUpdateHintButton(round, c);
     }
