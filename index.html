@@ -12579,13 +12579,13 @@ button,
   <style id="maphunt-ranking-v0491">
     /* v0.49.3 — Map Hunt persistent reveal guidance + strict Ranking values. */
     .map-hunt-country.try-1 { fill:#2f7d4d; }
-    .map-hunt-country.try-2 { fill:#69a34f; }
-    .map-hunt-country.try-3 { fill:#a7b94b; }
+    .map-hunt-country.try-2 { fill:#78a84f; }
+    .map-hunt-country.try-3 { fill:#d6b63b; }
     .map-hunt-country.try-4 { fill:#d6b63b; }
     .map-hunt-country.revealed { fill:#d6b63b; stroke:#8a641d; stroke-width:1.35; stroke-dasharray:2.5 1.8; }
     .map-hunt-marker.try-1 { fill:#2f7d4d; }
-    .map-hunt-marker.try-2 { fill:#69a34f; }
-    .map-hunt-marker.try-3 { fill:#a7b94b; }
+    .map-hunt-marker.try-2 { fill:#78a84f; }
+    .map-hunt-marker.try-3 { fill:#d6b63b; }
     .map-hunt-marker.try-4 { fill:#d6b63b; }
     .map-hunt-marker.revealed { fill:#d6b63b; stroke:#8a641d; stroke-width:2.6; stroke-dasharray:2.5 1.8; }
 
@@ -14139,6 +14139,24 @@ button,
       .map-hunt-zoom-button { width:36px; height:36px; min-height:36px; }
       .map-hunt-progress-track { margin-top:4px; }
       .map-hunt-feedback { margin-top:3px; font-size:.65rem; }
+
+      /* Completion changes the amount of vertical space available. Give the map
+         an explicit compact height and rebuild its Canvas at that size so the
+         finished map is never CSS-squashed/stretched. */
+      .map-hunt-overlay.playing.map-hunt-complete #mapHuntPlay {
+        overflow-y:auto !important;
+        overscroll-behavior:contain;
+      }
+      .map-hunt-overlay.playing.map-hunt-complete .map-hunt-map-wrap {
+        flex:0 0 clamp(250px,42vh,390px) !important;
+        height:clamp(250px,42vh,390px) !important;
+        min-height:250px !important;
+      }
+      .map-hunt-overlay.playing.map-hunt-complete .map-hunt-map-canvas,
+      .map-hunt-overlay.playing.map-hunt-complete .map-hunt-map {
+        width:100% !important;
+        height:100% !important;
+      }
     }
   </style>
 
@@ -14199,6 +14217,34 @@ button,
     .map-hunt-tap-flash.wrong,
     .map-hunt-tap-flash.reveal { color:#8f342e; }
     .map-hunt-tap-flash.hidden { display:none !important; }
+  </style>
+
+
+  <style id="mobile-action-visibility-v05417">
+    /* v0.54.18 — essential actions must remain visible on short phone and
+       keyboard-height visual viewports. The big map yields vertical room before
+       Hint / Give up / submit controls are pushed below the fold. */
+    @media (max-width:520px) {
+      .chain-overlay.playing .chain-map-wrap {
+        height:clamp(145px, calc(var(--geoden-visual-height, 100dvh) - 220px), 260px) !important;
+        aspect-ratio:auto !important;
+      }
+      .geoden-keyboard-open .chain-overlay.playing .chain-map-wrap {
+        height:clamp(130px, calc(var(--geoden-visual-height, 100dvh) - 215px), 210px) !important;
+      }
+
+      /* Detective is a scrollable case, but its actual answer controls must be
+         able to fit inside the current visual viewport when the keyboard is up. */
+      .detective-overlay.open {
+        height:var(--geoden-visual-height, 100dvh) !important;
+        max-height:var(--geoden-visual-height, 100dvh) !important;
+      }
+      .detective-overlay.open .detective-panel {
+        max-height:calc(var(--geoden-visual-height, 100dvh) - 12px) !important;
+        scroll-padding-bottom:18px;
+      }
+      .detective-guess-card { scroll-margin-block:12px !important; }
+    }
   </style>
 
 </head>
@@ -15558,7 +15604,7 @@ button,
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
 
   <script>
-    const GEODEN_VERSION = "0.54.16";
+    const GEODEN_VERSION = "0.54.17";
     // Input policy: autocomplete/typeahead is ordinary entry and remains unassisted.
     // Only an actual spelling correction (or an explicit hint/reveal) counts as help.
     const GEODEN_BUILD_DATE = "2026-09-21";
@@ -25186,6 +25232,7 @@ button,
       // Tiny island states / territories where the land itself can disappear at overview scale.
       "SG","BH","MV","NR","TV","KI","MH","FM","PW","TO","WS",
       "AG","DM","GD","KN","LC","VC","BB","AI","BM","KY","MS","TC","VG","VI",
+      "CV","KM","SC","ST",
       "AW","CW","BQ","SX","BL","MF","FO"
     ]);
 
@@ -31347,6 +31394,24 @@ button,
       openStartOverlay(true);
     }
 
+    function keepDetectiveAnswerControlsVisible(lastClue = null) {
+      const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+      const mobile = window.matchMedia?.("(max-width: 520px)")?.matches;
+      const behavior = reduced ? "auto" : "smooth";
+      window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
+        if (!detectiveOverlay?.classList.contains("open")) return;
+        if (mobile) {
+          // Progressive Detective can build a tall clue stack. On phones the
+          // action is more important than leaving the newest clue pinned to the
+          // bottom edge: keep the input + Guess action reachable after every miss.
+          detectiveGuessCard?.scrollIntoView?.({ block:"nearest", inline:"nearest", behavior });
+          ensureProgressionActionVisible(detectiveGuessBtn, detectiveOverlay?.querySelector(".detective-panel"));
+        } else {
+          lastClue?.scrollIntoView?.({ block:"nearest", inline:"nearest", behavior });
+        }
+      }));
+    }
+
     function detectiveRevealAnotherClue() {
       const state = ensureDetectiveState();
       const round = state?.round;
@@ -31358,7 +31423,7 @@ button,
       hapticFeedback("tap");
       detectiveRenderRound();
       const lastCard = detectiveClues.lastElementChild;
-      lastCard?.scrollIntoView?.({ block: "nearest", behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ? "auto" : "smooth" });
+      keepDetectiveAnswerControlsVisible(lastCard);
     }
 
     function detectiveCountryMatchesGuess(c, value) {
@@ -31644,7 +31709,7 @@ button,
       saveStudySession();
       detectiveRenderRound();
       const lastCard = detectiveClues.lastElementChild;
-      lastCard?.scrollIntoView?.({ block:"nearest", behavior:window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ? "auto" : "smooth" });
+      keepDetectiveAnswerControlsVisible(lastCard);
     }
 
     function giveUpDetectiveRound() {
@@ -37018,8 +37083,8 @@ Try again`;
       if (kind === "correct") {
         const resultClass = mapHuntResultClass(code);
         if (resultClass === "try-1") return "#2f7d4d";
-        if (resultClass === "try-2") return "#d6b63b";
-        if (resultClass === "try-3") return "#dc8434";
+        if (resultClass === "try-2") return "#78a84f";
+        if (resultClass === "try-3") return "#d6b63b";
         if (resultClass === "revealed") return "#8f342e";
         return "#2f7d4d";
       }
@@ -37263,6 +37328,11 @@ Try again`;
       const target = mapHuntCurrentCountry();
       if (!target) return;
 
+      // Countries already completed in this round are inert context. Tapping a
+      // green/yellow completed place should behave like tapping ocean: it never
+      // spends a guess or creates a new confusion record.
+      if (mapHuntState.results.has(code) && code !== target.code) return;
+
       if (code === target.code) {
         clearMapHuntWrongFeedback();
         clearMapHuntRevealFlash();
@@ -37353,6 +37423,7 @@ Try again`;
       if (!mapHuntState) return;
       mapHuntState.finished = true;
       mapHuntState.locked = true;
+      mapHuntOverlay?.classList.add("map-hunt-complete");
       const struggled = mapHuntStruggledCodes();
       if (mapHuntRoundTitle) mapHuntRoundTitle.textContent = mapHuntState.revision ? "Revision complete" : "Map complete";
       if (mapHuntRoundMeta) mapHuntRoundMeta.textContent = `${mapHuntState.roundCodes.length} places covered`;
@@ -37377,6 +37448,14 @@ Try again`;
           : "Revise struggled places →";
       }
       mapHuntFinish?.classList.remove("hidden");
+      // The finish panel changes the map container height on phones. Rebuild the
+      // Canvas at the new CSS size instead of stretching the old bitmap.
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+          if (!mapHuntState?.finished || !mapHuntOverlay?.classList.contains("open")) return;
+          renderMapHuntMap().catch(err => console.warn("GeoDen Map Hunt finish resize", err));
+        });
+      });
       window.setTimeout(() => (struggled.length ? mapHuntRevisionBtn : mapHuntReplayBtn)?.focus?.({ preventScroll:true }), 0);
     }
 
@@ -37473,8 +37552,8 @@ Try again`;
       if (mapHuntState?.wrongFeedbackCode === code) return { fill:"#9fa5a2", stroke:"#f7f4ed", line:1.35 };
       if (base === "inactive") return { fill:"#d9d8d2", stroke:"#f3efe6", line:.72, alpha:.42 };
       if (base === "try-1") return { fill:"#2f7d4d", stroke:"#ffffff", line:1.0 };
-      if (base === "try-2") return { fill:"#d6b63b", stroke:"#ffffff", line:1.0 };
-      if (base === "try-3") return { fill:"#dc8434", stroke:"#ffffff", line:1.0 };
+      if (base === "try-2") return { fill:"#78a84f", stroke:"#ffffff", line:1.0 };
+      if (base === "try-3") return { fill:"#d6b63b", stroke:"#ffffff", line:1.0 };
       if (base === "revealed") return { fill:"#8f342e", stroke:"#ffffff", line:1.7 };
       return { fill:"#c9cbc6", stroke:"#f3efe6", line:.72 };
     }
@@ -37485,8 +37564,8 @@ Try again`;
       if (mapHuntState?.wrongFeedbackCode === code) return "#626866";
       if (base === "inactive") return "#aaa9a3";
       if (base === "try-1") return "#2f7d4d";
-      if (base === "try-2") return "#d6b63b";
-      if (base === "try-3") return "#dc8434";
+      if (base === "try-2") return "#78a84f";
+      if (base === "try-3") return "#d6b63b";
       if (base === "revealed") return "#8f342e";
       return "#777b79";
     }
@@ -37964,6 +38043,7 @@ Try again`;
 
     async function startMapHuntGame() {
       const token = ++mapHuntBuildToken;
+      mapHuntOverlay?.classList.remove("map-hunt-complete");
       setMapHuntPlayLayout(true);
       clearMapHuntWrongFeedback();
       clearMapHuntRevealFlash();
@@ -38003,42 +38083,50 @@ Try again`;
       }
     }
 
-    function startMapHuntRevision() {
+    async function startMapHuntRevision() {
       if (!mapHuntState) return;
-      setMapHuntPlayLayout(true);
-      clearMapHuntWrongFeedback();
+      const previousState = mapHuntState;
       const struggled = mapHuntStruggledCodes();
       if (!struggled.length) return;
-      const allCodes = [...mapHuntState.allCodes];
-      const oldSvg = mapHuntState.svg;
-      const oldZoom = mapHuntState.zoom;
-      const oldLayer = mapHuntState.layer;
-      const oldProjection = mapHuntState.projection;
-      const oldTransform = mapHuntState.zoomTransform;
-      const oldLabelPoints = mapHuntState.labelPoints;
-      const oldMarkerPoints = mapHuntState.markerPoints;
-      const oldFeatureBounds = mapHuntState.featureBounds;
-      const oldMapWidth = mapHuntState.mapWidth;
-      const oldMapHeight = mapHuntState.mapHeight;
-      mapHuntState = makeMapHuntState(allCodes, struggled, true);
-      mapHuntState.svg = oldSvg;
-      mapHuntState.zoom = oldZoom;
-      mapHuntState.layer = oldLayer;
-      mapHuntState.projection = oldProjection;
-      mapHuntState.zoomTransform = oldTransform;
-      mapHuntState.labelPoints = oldLabelPoints || new Map();
-      mapHuntState.markerPoints = oldMarkerPoints || new Map();
-      mapHuntState.featureBounds = oldFeatureBounds || new Map();
-      mapHuntState.mapWidth = oldMapWidth || 1000;
-      mapHuntState.mapHeight = oldMapHeight || 555;
+      const allCodes = [...previousState.allCodes];
+      const token = ++mapHuntBuildToken;
+
+      mapHuntOverlay?.classList.remove("map-hunt-complete");
+      setMapHuntPlayLayout(true);
+      clearMapHuntWrongFeedback();
+      clearMapHuntRevealFlash();
+      clearMapHuntTapLabel();
       mapHuntFinish?.classList.add("hidden");
-      updateMapHuntMapStates();
-      renderMapHuntPrompt();
-      resetMapHuntZoom();
+
+      // Build a genuinely fresh revision board. Reusing only the old SVG/zoom
+      // state left the completed Canvas bitmap onscreen, which made Revision
+      // look as though it had immediately finished.
+      const state = makeMapHuntState(allCodes, struggled, true);
+      mapHuntState = state;
+      noteResumableMode("maphunt");
+      if (mapHuntRoundTitle) mapHuntRoundTitle.textContent = `Revision · 1 of ${struggled.length}`;
+      if (mapHuntRoundMeta) mapHuntRoundMeta.textContent = "3 guesses left";
+      if (mapHuntFeedback) {
+        mapHuntFeedback.textContent = "Preparing revision…";
+        mapHuntFeedback.className = "map-hunt-feedback";
+      }
+      try {
+        await renderMapHuntMap();
+        if (token !== mapHuntBuildToken || mapHuntState !== state) return;
+        renderMapHuntPrompt();
+        settleMapHuntInitialHomeView(state, token);
+      } catch (err) {
+        console.warn("GeoDen Map Hunt revision", err);
+        mapHuntState = previousState;
+        mapHuntOverlay?.classList.add("map-hunt-complete");
+        mapHuntFinish?.classList.remove("hidden");
+        updateMapHuntMapStates();
+      }
     }
 
     function resetMapHuntToSetup(focusSetup = false) {
       mapHuntBuildToken += 1;
+      mapHuntOverlay?.classList.remove("map-hunt-complete");
       setMapHuntPlayLayout(false);
       clearMapHuntWrongFeedback();
       clearMapHuntRevealFlash();
