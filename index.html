@@ -15604,7 +15604,7 @@ button,
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
 
   <script>
-    const GEODEN_VERSION = "0.54.17";
+    const GEODEN_VERSION = "0.54.19";
     // Input policy: autocomplete/typeahead is ordinary entry and remains unassisted.
     // Only an actual spelling correction (or an explicit hint/reveal) counts as help.
     const GEODEN_BUILD_DATE = "2026-09-21";
@@ -37278,14 +37278,15 @@ Try again`;
       requestMapHuntCanvasDraw();
     }
 
-    function mapHuntScheduleNext(delay = 650) {
+    /* v0.54.19 — prompt progression is independent of result-feedback dwell. */
+    function mapHuntScheduleNext(delay = 100) {
       if (mapHuntAdvanceTimer) window.clearTimeout(mapHuntAdvanceTimer);
       mapHuntAdvanceTimer = window.setTimeout(() => {
         mapHuntAdvanceTimer = null;
         if (!mapHuntState) return;
-        clearMapHuntWrongFeedback();
-        clearMapHuntRevealFlash();
-        clearMapHuntTapLabel();
+        // Do not clear the result label here.  The next prompt can appear while
+        // the previous country's colour/name feedback continues to linger for
+        // its own timer, which keeps Map Hunt fast without losing reinforcement.
         mapHuntState.cursor += 1;
         mapHuntState.misses = 0;
         mapHuntState.awaitingRevealClick = false;
@@ -37357,7 +37358,7 @@ Try again`;
             : tries === 1 ? "First try" : `${tries} tries`;
         }
         hapticFeedback?.("success");
-        mapHuntScheduleNext(revealed ? 980 : 860);
+        mapHuntScheduleNext(100);
         return;
       }
 
