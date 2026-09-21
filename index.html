@@ -12151,6 +12151,8 @@ button,
       fill:#343937;
       font-weight:850;
     }
+    .map-hunt-temp-label.correct { fill:#187443; }
+    .map-hunt-temp-label.wrong { fill:#8f342e; }
     .map-hunt-zoom-controls {
       position:absolute;
       right:9px;
@@ -15534,7 +15536,7 @@ button,
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
 
   <script>
-    const GEODEN_VERSION = "0.54.4";
+    const GEODEN_VERSION = "0.54.8";
     // Input policy: autocomplete/typeahead is ordinary entry and remains unassisted.
     // Only an actual spelling correction (or an explicit hint/reveal) counts as help.
     const GEODEN_BUILD_DATE = "2026-09-21";
@@ -36404,8 +36406,7 @@ Try again`;
       updateChainHintButton();
       if (!chainState.finishedAt) {
         if (completedNow) {
-          const ready = chainAvailability().available.size;
-          chainFeedback.textContent = `${spellingFixed ? `Spelling fixed to ${spellingFixed}. ` : ""}${c.name} filled. ${ready === 1 ? "1 place is ready." : `${ready} places are ready.`}`;
+          chainFeedback.textContent = `${spellingFixed ? `Spelling fixed to ${spellingFixed}. ` : ""}${c.name} filled.`;
         } else {
           const progressText = part.country
             ? `${c.name}: place name added. Enter a capital to finish it.`
@@ -36889,6 +36890,34 @@ Try again`;
       return mapHuntState?.labelPoints?.get(code) || null;
     }
 
+    function showMapHuntTapLabel(code, kind = "wrong") {
+      if (!code || !mapHuntState?.layer || !window.d3) return;
+      const c = countryByCode(code);
+      const point = mapHuntLabelPoint(code);
+      if (!c || !point) return;
+      let group = mapHuntState.layer.select("g.map-hunt-temp-labels");
+      if (group.empty()) group = mapHuntState.layer.append("g").attr("class", "map-hunt-temp-labels");
+      group.selectAll("*").remove();
+      const label = group.append("text")
+        .attr("class", `map-hunt-temp-label ${kind === "correct" ? "correct" : "wrong"}`)
+        .attr("x", point.x)
+        .attr("y", point.y);
+      if (mapHuntPromptMode === "capital") {
+        label.append("tspan")
+          .attr("x", point.x)
+          .attr("dy", "-.18em")
+          .text(c.name);
+        label.append("tspan")
+          .attr("x", point.x)
+          .attr("dy", "1.12em")
+          .style("font-size", ".82em")
+          .text(`Capital: ${mapHuntCapitalDisplay(c)}`);
+      } else {
+        label.text(c.name);
+      }
+      updateMapHuntMarkerScale(mapHuntState.zoomTransform || d3.zoomIdentity);
+    }
+
     function updateMapHuntResultLabels() {
       // Correct answers are communicated by the country/marker colour only.
       // Keep the map uncluttered; only temporary wrong/reveal labels are shown.
@@ -36914,8 +36943,6 @@ Try again`;
     function showMapHuntWrongFeedback(code) {
       if (!code || !mapHuntMap || !window.d3) return;
       clearMapHuntWrongFeedback();
-      const c = countryByCode(code);
-      const point = mapHuntLabelPoint(code);
       const svg = d3.select(mapHuntMap);
       const clicked = svg.selectAll(`[data-map-hunt-code="${code}"]`);
       clicked.classed("wrong-tap", false);
@@ -36923,16 +36950,7 @@ Try again`;
       clicked.classed("wrong-tap", true);
       if (mapHuntState) mapHuntState.wrongFeedbackCode = code;
       pulseMapHuntMarker(code);
-      if (c && point && mapHuntState?.layer) {
-        let group = mapHuntState.layer.select("g.map-hunt-temp-labels");
-        if (group.empty()) group = mapHuntState.layer.append("g").attr("class", "map-hunt-temp-labels");
-        group.append("text")
-          .attr("class", "map-hunt-temp-label")
-          .attr("x", point.x)
-          .attr("y", point.y)
-          .text(c.name);
-        updateMapHuntMarkerScale(mapHuntState.zoomTransform || d3.zoomIdentity);
-      }
+      showMapHuntTapLabel(code, "wrong");
       requestMapHuntCanvasDraw();
       mapHuntWrongFeedbackTimer = window.setTimeout(() => {
         mapHuntWrongFeedbackTimer = null;
@@ -37065,6 +37083,7 @@ Try again`;
         mapHuntState.awaitingRevealClick = false;
         mapHuntState.locked = true;
         updateMapHuntMapStates([target.code]);
+        showMapHuntTapLabel(target.code, "correct");
         mapHuntFeedback.textContent = revealed
           ? "Found it after the reveal."
           : tries === 1
@@ -37077,7 +37096,7 @@ Try again`;
             : tries === 1 ? "First try" : `${tries} tries`;
         }
         hapticFeedback?.("success");
-        mapHuntScheduleNext(revealed ? 820 : (tries === 1 ? 560 : 720));
+        mapHuntScheduleNext(revealed ? 980 : 860);
         return;
       }
 
@@ -37441,10 +37460,14 @@ Try again`;
       if (!mapHuntState || !window.d3) return d3.zoomIdentity;
       const width = Number(mapHuntState.mapWidth) || 1000;
       const height = Number(mapHuntState.mapHeight) || 555;
+      const sourceCodes = Array.from(codes || []);
+      const fitCodes = mapHuntState.setKey === "europe"
+        ? sourceCodes.filter(code => code !== "RU")
+        : bigMapAutoFitCodes(mapHuntState.setKey, sourceCodes);
       return bigMapFitTransform(
         width,
         height,
-        bigMapAutoFitCodes(mapHuntState.setKey, codes),
+        fitCodes,
         mapHuntState.featureBounds || new Map(),
         mapHuntState.markerPoints || new Map()
       ) || d3.zoomIdentity;
@@ -37597,7 +37620,10 @@ Try again`;
         }
         return { feature, code, safe };
       });
-      const provisionalHome = bigMapFitTransform(width, height, mapHuntState.roundCodes, mapHuntState.featureBounds, allProjectedPoints) || d3.zoomIdentity;
+      const provisionalFitCodes = mapHuntState.setKey === "europe"
+        ? mapHuntState.roundCodes.filter(code => code !== "RU")
+        : bigMapAutoFitCodes(mapHuntState.setKey, mapHuntState.roundCodes);
+      const provisionalHome = bigMapFitTransform(width, height, provisionalFitCodes, mapHuntState.featureBounds, allProjectedPoints) || d3.zoomIdentity;
       // width/height are now CSS-pixel logical dimensions, so the fitted zoom
       // scale already represents the on-screen size of each country.
       const homeScreenScale = Math.max(.05, Number(provisionalHome.k) || 1);
