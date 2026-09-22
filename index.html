@@ -4898,6 +4898,10 @@
     }
 
     .interactive-choice:active { transform: scale(.985); }
+    /* Disabled means view-only/answered here, not visually unavailable. Keep
+       solved historical choices legible so the correct flag is obvious. */
+    .interactive-choice:disabled { opacity: 1; cursor: default; }
+    .interactive-choice.eliminated:disabled { opacity: .24; }
     .interactive-choice.correct {
       border-color: var(--correct);
       background: rgba(47,125,77,.11);
@@ -15620,7 +15624,7 @@ button,
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
 
   <script>
-    const GEODEN_VERSION = "0.56.20";
+    const GEODEN_VERSION = "0.56.24";
     // v0.56.18 — private-beta problem reporting with diagnostic state, recent actions, errors, copy/download/share.
     // v0.56.17 — tester-facing automatic failure reporting with screenshot/copy instructions.
     // v0.56.16 — behavioral map race/microstate regressions; 80-test milestone reached.
@@ -16846,6 +16850,7 @@ button,
     let interactiveGlobeWorldFeaturesPromise = null;
     let interactiveGlobeRenderToken = 0;
     let interactiveGlobeLocked = false;
+    let interactiveGlobeLastWrongGeo = null;
     let interactiveCityLocationState = null;
     let interactiveCityLocationLocked = false;
 
@@ -20012,6 +20017,22 @@ button,
         stages = stages.filter(stage => !countryStageHasObviousNameAnswer(c, stage));
       }
 
+      // Capital Position for a multi-capital country inherently needs the city
+      // names to distinguish the targets. If the learner placed that stage before
+      // Capital Name, quietly move it just after Capital Name for that country so
+      // the position question cannot spoil a later name challenge or become
+      // ambiguous. Single-capital position questions can remain anywhere because
+      // their prompt can stay identity-free.
+      if (c && hasMultipleCapitals(c)) {
+        const positionIndex = stages.indexOf("capitalPosition");
+        const capitalIndex = stages.indexOf("capital");
+        if (positionIndex >= 0 && capitalIndex > positionIndex) {
+          stages.splice(positionIndex, 1);
+          const newCapitalIndex = stages.indexOf("capital");
+          stages.splice(newCapitalIndex + 1, 0, "capitalPosition");
+        }
+      }
+
       if (
         c &&
         config.enabled.capital &&
@@ -20216,6 +20237,7 @@ button,
         hintCounts: { country: 0, capital: 0, largestCity: 0 },
         interactiveAssisted: {},
         interactiveHintKinds: {},
+        interactiveVisual: {},
         results: {},
         startedAt: Date.now()
       };
@@ -20447,6 +20469,143 @@ button,
       };
     }
 
+    function geoDenDiagnosticReplaySummary(replay) {
+      if (!replay || typeof replay !== "object") return null;
+      const inputValue = String(replay.inputValue || "");
+      const summary = {
+        stage: replay.stage || null,
+        phase: replay.phase || null,
+        type: replay.type || null,
+        stageLabelText: geoDenDiagnosticTrimText(replay.stageLabelText || "", 160),
+        promptText: geoDenDiagnosticTrimText(replay.promptText || "", 320),
+        promptHidden: !!replay.promptHidden,
+        promptNoteText: geoDenDiagnosticTrimText(replay.promptNoteText || "", 320),
+        feedbackText: geoDenDiagnosticTrimText(replay.feedbackText || "", 400),
+        feedbackTone: replay.feedbackTone || null,
+        // Preserve debugging shape without copying the learner's raw typed answer.
+        input: {
+          hasValue: inputValue.length > 0,
+          length: inputValue.length,
+          tone: replay.inputTone || null
+        }
+      };
+
+      if (replay.collection && typeof replay.collection === "object") {
+        const collection = replay.collection;
+        summary.collection = {
+          mode: collection.mode || null,
+          targets: Array.isArray(collection.targets) ? [...collection.targets] : [],
+          found: Array.isArray(collection.found) ? [...collection.found] : [],
+          hints: Array.isArray(collection.hints) ? clonePlain(collection.hints) : [],
+          revealedMissing: Array.isArray(collection.revealedMissing) ? [...collection.revealedMissing] : [],
+          showSilhouettes: !!collection.showSilhouettes
+        };
+      }
+
+      if (replay.city && typeof replay.city === "object") {
+        const city = replay.city;
+        summary.city = {
+          countryCode: city.countryCode || null,
+          stage: city.stage || replay.stage || null,
+          targets: Array.isArray(city.targets) ? city.targets.map(target => ({
+            name: target?.name || "",
+            lat: Number.isFinite(Number(target?.lat)) ? Number(target.lat) : null,
+            lng: Number.isFinite(Number(target?.lng)) ? Number(target.lng) : null
+          })) : [],
+          targetIndex: Number(city.targetIndex) || 0,
+          results: Array.isArray(city.results) ? city.results.map(result => ({
+            name: result?.name || "",
+            score: Number.isFinite(Number(result?.score)) ? Number(result.score) : null,
+            distanceKm: Number.isFinite(Number(result?.distanceKm)) ? Number(result.distanceKm) : null,
+            correct: typeof result?.correct === "boolean" ? result.correct : null,
+            guessGeo: Array.isArray(result?.guessGeo) ? result.guessGeo.slice(0, 2).map(Number) : null
+          })) : [],
+          hintedIndices: Array.isArray(city.hintedIndices) ? [...city.hintedIndices] : [],
+          locked: !!city.locked,
+          finalized: !!city.finalized,
+          giveUp: !!city.giveUp,
+          tentativeGuessGeo: Array.isArray(city.tentativeGuessGeo) ? city.tentativeGuessGeo.slice(0, 2).map(Number) : null,
+          averageScore: Number.isFinite(Number(city.averageScore)) ? Number(city.averageScore) : null,
+          averageDistanceKm: Number.isFinite(Number(city.averageDistanceKm)) ? Number(city.averageDistanceKm) : null
+        };
+      }
+
+      if (replay.globe && typeof replay.globe === "object") {
+        const globe = replay.globe;
+        summary.globe = {
+          completed: !!globe.completed,
+          hintKind: globe.hintKind || null,
+          lastWrongGeo: Array.isArray(globe.lastWrongGeo) ? globe.lastWrongGeo.slice(0, 2).map(Number) : null,
+          result: globe.result ? {
+            correct: typeof globe.result.correct === "boolean" ? globe.result.correct : null,
+            assisted: !!globe.result.assisted,
+            hadMiss: !!globe.result.hadMiss,
+            unavailable: !!globe.result.unavailable
+          } : null
+        };
+      }
+      return summary;
+    }
+
+    function geoDenDiagnosticVisualSummary(visual, stage) {
+      if (!visual || typeof visual !== "object" || !stage) return null;
+      const state = visual[stage];
+      if (!state || typeof state !== "object") return null;
+      return {
+        options: Array.isArray(state.options) ? [...state.options] : [],
+        wrongCodes: Array.isArray(state.wrongCodes) ? [...state.wrongCodes] : [],
+        eliminatedCodes: Array.isArray(state.eliminatedCodes) ? [...state.eliminatedCodes] : [],
+        completed: !!state.completed,
+        giveUp: !!state.giveUp,
+        correctCode: state.correctCode || null
+      };
+    }
+
+    function geoDenDiagnosticResultSummary(result) {
+      if (!result || typeof result !== "object") return null;
+      return {
+        correct: typeof result.correct === "boolean" ? result.correct : null,
+        assisted: !!result.assisted,
+        hadMiss: !!result.hadMiss,
+        unavailable: !!result.unavailable,
+        locationScore: Number.isFinite(Number(result.locationScore)) ? Number(result.locationScore) : null,
+        locationDistanceKm: Number.isFinite(Number(result.locationDistanceKm)) ? Number(result.locationDistanceKm) : null
+      };
+    }
+
+    function geoDenDiagnosticNavigationSnapshotSummary(snapshot) {
+      if (!snapshot || typeof snapshot !== "object") return null;
+      const stage = snapshot.currentStage || null;
+      return {
+        index: Number.isInteger(snapshot.index) ? snapshot.index : null,
+        reviewCountryCode: snapshot.reviewCountryCode || null,
+        countryCode: snapshot.countryCode || snapshot.attemptView?.code || null,
+        stage,
+        phase: snapshot.phase || null,
+        revealed: Array.isArray(snapshot.attemptView?.revealed) ? [...snapshot.attemptView.revealed] : [],
+        result: geoDenDiagnosticResultSummary(snapshot.attemptView?.result),
+        visual: geoDenDiagnosticVisualSummary(snapshot.attemptView?.interactiveVisual, stage),
+        replay: geoDenDiagnosticReplaySummary(snapshot.attemptView?.interactiveReplay)
+      };
+    }
+
+    function geoDenDiagnosticLiveGameplaySummary(state) {
+      if (!state || typeof state !== "object") return null;
+      const stage = state.currentStage || null;
+      const stateAttempt = state.attempt || null;
+      return {
+        index: Number.isInteger(state.index) ? state.index : null,
+        reviewCountryCode: state.reviewCountryCode || null,
+        countryCode: stateAttempt?.code || null,
+        stage,
+        phase: state.phase || null,
+        revealed: Array.isArray(stateAttempt?.revealed) ? [...stateAttempt.revealed] : [],
+        result: geoDenDiagnosticResultSummary(stateAttempt?.results?.[stage]),
+        visual: geoDenDiagnosticVisualSummary(stateAttempt?.interactiveVisual, stage),
+        replay: geoDenDiagnosticReplaySummary(stateAttempt?.interactiveReplay)
+      };
+    }
+
     function geoDenDiagnosticCurrentState() {
       let total = null;
       try { total = sessionCountryTotal(); } catch (_) {}
@@ -20523,6 +20682,8 @@ button,
           capital:Number(attempt.hintCounts?.capital) || 0,
           largestCity:Number(attempt.hintCounts?.largestCity) || 0
         },
+        currentVisual:geoDenDiagnosticVisualSummary(attempt.interactiveVisual, currentStage),
+        currentReplay:geoDenDiagnosticReplaySummary(attempt.interactiveReplay),
         results:Object.fromEntries(Object.entries(attempt.results || {}).map(([stage,result]) => [stage, {
           correct:typeof result?.correct === "boolean" ? result.correct : null,
           assisted:!!result?.assisted,
@@ -20533,6 +20694,12 @@ button,
         }]))
       } : null;
 
+      const historyItems = Array.isArray(navigationHistory) ? navigationHistory : [];
+      const historyCursor = Number.isInteger(navigationCursor) ? navigationCursor : -1;
+      const currentHistory = historyCursor >= 0 ? historyItems[historyCursor] : null;
+      const previousHistory = historyCursor > 0 ? historyItems[historyCursor - 1] : null;
+      const nextHistory = historyCursor >= 0 && historyCursor + 1 < historyItems.length ? historyItems[historyCursor + 1] : null;
+
       return {
         context:geoDenDiagnosticContext(),
         lastGameplayContext:clonePlain(geoDenDiagnosticLastGameplayContext),
@@ -20540,8 +20707,12 @@ button,
         attempt:attemptSummary,
         navigation:{
           cursor:Number(navigationCursor),
-          historyLength:Array.isArray(navigationHistory) ? navigationHistory.length : 0,
-          browsingHistory:(() => { try { return !!isBrowsingHistory(); } catch (_) { return false; } })()
+          historyLength:historyItems.length,
+          browsingHistory:(() => { try { return !!isBrowsingHistory(); } catch (_) { return false; } })(),
+          previousEntry:geoDenDiagnosticNavigationSnapshotSummary(previousHistory),
+          currentEntry:geoDenDiagnosticNavigationSnapshotSummary(currentHistory),
+          nextEntry:geoDenDiagnosticNavigationSnapshotSummary(nextHistory),
+          liveState:geoDenDiagnosticLiveGameplaySummary(liveGameplayState)
         },
         sprint,
         mapCrawl,
@@ -20565,7 +20736,7 @@ button,
 
     function geoDenBuildBugReportSnapshot() {
       return {
-        reportSchema:1,
+        reportSchema:2,
         app:{ name:"GeoDen", version:GEODEN_VERSION, buildDate:GEODEN_BUILD_DATE },
         capturedAt:new Date().toISOString(),
         selfTest:geoDenDiagnosticSelfTestSummary(),
@@ -20595,6 +20766,8 @@ button,
         `Country/place: ${context.country ? `${context.country.name} (${context.country.code})` : "none"}`,
         `Stage: ${context.stage || "none"}`,
         `Phase: ${context.phase || "none"}`,
+        `Quiz history: ${state.navigation?.browsingHistory ? `viewing ${Number(state.navigation.cursor) + 1}/${state.navigation.historyLength || "?"}` : `live (${state.navigation?.historyLength || 0} history entries)`}`,
+        `History replay: ${state.navigation?.currentEntry?.replay?.type || state.attempt?.currentReplay?.type || "none"}${state.navigation?.currentEntry ? ` · ${state.navigation.currentEntry.countryCode || "?"} · ${state.navigation.currentEntry.stage || "?"} · ${state.navigation.currentEntry.phase || "?"}` : ""}`,
         `Self-test: ${selfTest.status === "pass" ? `${selfTest.passed}/${selfTest.total} passed` : selfTest.status === "fail" ? `${selfTest.failed} failed of ${selfTest.total}` : "not run"}`,
         `Online: ${report?.device?.online === false ? "no" : "yes"}`,
         `Viewport: ${report?.device?.viewport?.width || "?"} × ${report?.device?.viewport?.height || "?"}`,
@@ -20750,8 +20923,153 @@ button,
       return countryOrder.join(",");
     }
 
+    function interactiveReplayTone(el) {
+      if (!el?.classList) return "";
+      for (const tone of ["correct", "wrong", "near", "hint"]) {
+        if (el.classList.contains(tone)) return tone;
+      }
+      return "";
+    }
+
+    function interactiveCollectionRuntimeState(stage = currentStage) {
+      if (stage === "languages") return interactiveLanguageState;
+      if (stage === "neighbours") return interactiveNeighbourState;
+      if (stage === "capital") return interactiveCapitalState;
+      if (stage === "currency") return interactiveCurrencyState;
+      return null;
+    }
+
+    function serializeInteractiveCollectionState(state) {
+      if (!state) return null;
+      return {
+        mode: state.mode || null,
+        targets: Array.isArray(state.targets) ? [...state.targets] : [],
+        found: [...(state.found || [])],
+        hints: [...(state.hints || new Map()).entries()],
+        revealedMissing: [...(state.revealedMissing || [])],
+        showSilhouettes: !!state.showSilhouettes
+      };
+    }
+
+    function restoreInteractiveCollectionState(replay, fallbackTargets = [], fallbackMode = null) {
+      const raw = replay?.collection || null;
+      const targets = Array.isArray(raw?.targets) && raw.targets.length ? [...raw.targets] : [...fallbackTargets];
+      return {
+        mode: raw?.mode || fallbackMode || null,
+        targets,
+        normalizedTargets: new Map(targets.map(name => [interactiveLooseNormalize(name), name])),
+        found: new Set(Array.isArray(raw?.found) ? raw.found : []),
+        hints: new Map(Array.isArray(raw?.hints) ? raw.hints : []),
+        revealedMissing: new Set(Array.isArray(raw?.revealedMissing) ? raw.revealedMissing : []),
+        showSilhouettes: !!raw?.showSilhouettes
+      };
+    }
+
+    function captureInteractiveReplayState(stage = currentStage) {
+      if (!isInteractiveGameplay() || !stage) return null;
+      const replay = {
+        stage,
+        phase,
+        type: "text",
+        stageLabelText: stageLabel?.textContent || "",
+        promptText: promptQuestion?.textContent || "",
+        promptHidden: !!promptQuestion?.classList?.contains("hidden"),
+        promptNoteText: promptNote?.textContent || "",
+        inputValue: interactiveInput?.value || "",
+        inputTone: interactiveReplayTone(interactiveInput),
+        feedbackText: interactiveFeedback?.textContent || "",
+        feedbackTone: interactiveReplayTone(interactiveFeedback)
+      };
+
+      const collectionState = interactiveCollectionRuntimeState(stage);
+      if (collectionState) {
+        replay.type = "collection";
+        replay.collection = serializeInteractiveCollectionState(collectionState);
+        return replay;
+      }
+
+      if (interactiveCityLocationState && ["capital", "capitalPosition", "largestCity"].includes(stage)) {
+        const state = interactiveCityLocationState;
+        replay.type = "cityLocation";
+        replay.city = {
+          countryCode: state.countryCode || null,
+          stage: state.stage || stage,
+          targets: (state.targets || []).map(target => ({
+            name: target?.name || "",
+            lat: Number(target?.lat),
+            lng: Number(target?.lng)
+          })),
+          targetIndex: Number(state.targetIndex) || 0,
+          results: clonePlain(state.results || []),
+          hintedIndices: [...(state.hintedIndices || [])],
+          locked: !!state.locked,
+          finalized: !!state.finalized,
+          giveUp: !!state.giveUp,
+          tentativeGuessGeo: clonePlain(state.tentativeGuessGeo),
+          averageScore: Number.isFinite(Number(state.averageScore)) ? Number(state.averageScore) : null,
+          averageDistanceKm: Number.isFinite(Number(state.averageDistanceKm)) ? Number(state.averageDistanceKm) : null
+        };
+        replay.feedbackText = interactiveCityFeedback?.textContent || replay.feedbackText;
+        replay.feedbackTone = interactiveReplayTone(interactiveCityFeedback) || replay.feedbackTone;
+        return replay;
+      }
+
+      if (stage === "globe") {
+        replay.type = "globe";
+        replay.globe = {
+          completed: phase === "revealed" || !!interactiveGlobeLocked,
+          hintKind: attempt?.interactiveHintKinds?.globe || null,
+          lastWrongGeo: clonePlain(interactiveGlobeLastWrongGeo),
+          result: clonePlain(attempt?.results?.globe || null)
+        };
+        replay.feedbackText = interactiveGlobeFeedback?.textContent || replay.feedbackText;
+        replay.feedbackTone = interactiveReplayTone(interactiveGlobeFeedback) || replay.feedbackTone;
+        return replay;
+      }
+
+      if (["flag", "silhouette"].includes(stage)) replay.type = "visual";
+      return replay;
+    }
+
+    function interactiveReplayForStage(stage = currentStage) {
+      const replay = attempt?.interactiveReplay;
+      return replay && replay.stage === stage ? replay : null;
+    }
+
+    function applyInteractiveReplayFeedback(el, text, tone) {
+      if (!el) return;
+      el.textContent = text || "";
+      el.classList.remove("correct", "wrong", "near", "hint");
+      if (tone) el.classList.add(tone);
+    }
+
+    function applyInteractiveReplayInput(replay, { viewOnly = false } = {}) {
+      if (!interactiveInput || !replay) return;
+      interactiveInput.value = replay.inputValue || "";
+      interactiveInput.classList.remove("correct", "wrong");
+      if (replay.inputTone === "correct" || replay.inputTone === "wrong") interactiveInput.classList.add(replay.inputTone);
+      if (viewOnly) {
+        interactiveInput.disabled = true;
+        interactiveSubmitBtn.disabled = true;
+        interactiveSuggestions.classList.add("hidden");
+        interactiveHelpRow.classList.add("hidden");
+      }
+    }
+
+    function applyInteractivePromptReplay(replay) {
+      if (!replay) return;
+      applyInteractiveReplayInput(replay, { viewOnly:isBrowsingHistory() });
+      applyInteractiveReplayFeedback(interactiveFeedback, replay.feedbackText, replay.feedbackTone);
+      if (isBrowsingHistory()) {
+        interactiveHelpRow.classList.add("hidden");
+        interactiveSubmitBtn.disabled = true;
+        interactiveInput.disabled = true;
+      }
+    }
+
     function compactAttemptView() {
       const c = currentCountry();
+      const currentResult = attempt?.results?.[currentStage];
       return {
         code: c?.code || attempt?.code || null,
         revealed: Array.isArray(attempt?.revealed) ? [...attempt.revealed] : [],
@@ -20759,7 +21077,12 @@ button,
           country: Number(attempt?.hintCounts?.country) || 0,
           capital: Number(attempt?.hintCounts?.capital) || 0,
           largestCity: Number(attempt?.hintCounts?.largestCity) || 0
-        }
+        },
+        // Interactive visual questions need their exact option set/result kept in
+        // history. Otherwise Back would silently generate a different question.
+        interactiveVisual: clonePlain(attempt?.interactiveVisual || {}),
+        interactiveReplay: clonePlain(captureInteractiveReplayState(currentStage) || attempt?.interactiveReplay || null),
+        result: currentResult ? clonePlain(currentResult) : null
       };
     }
 
@@ -20834,12 +21157,25 @@ button,
       return navigationHistory.length > 0 && navigationCursor < navigationHistory.length - 1;
     }
 
+    function navigationSameScreen(a, b) {
+      return !!a && !!b &&
+        a.index === b.index &&
+        (a.reviewCountryCode || null) === (b.reviewCountryCode || null) &&
+        a.currentStage === b.currentStage &&
+        a.phase === b.phase;
+    }
+
     function pushNavigationSnapshot() {
       if (isLookupMode() || isBrowsingHistory()) return;
 
       const snapshot = captureNavigationSnapshot();
       const last = navigationHistory[navigationHistory.length - 1];
-      if (!last || navigationFingerprint(last) !== navigationFingerprint(snapshot)) {
+      // Hints, retries and async option preparation update the current screen;
+      // they are not separate navigation destinations. Keep one faithful
+      // snapshot per screen instead of creating a Back step for each mutation.
+      if (navigationSameScreen(last, snapshot)) {
+        navigationHistory[navigationHistory.length - 1] = snapshot;
+      } else if (!last || navigationFingerprint(last) !== navigationFingerprint(snapshot)) {
         navigationHistory.push(snapshot);
         if (navigationHistory.length > 5000) navigationHistory.shift();
       } else {
@@ -20851,12 +21187,15 @@ button,
     }
 
     function captureFullGameplayState() {
+      const attemptCopy = clonePlain(attempt);
+      const replay = captureInteractiveReplayState(currentStage);
+      if (attemptCopy && replay) attemptCopy.interactiveReplay = clonePlain(replay);
       return {
         index,
         reviewCountryCode: reviewCountryCode || null,
         currentStage,
         phase,
-        attempt: clonePlain(attempt)
+        attempt: attemptCopy
       };
     }
 
@@ -20877,6 +21216,7 @@ button,
       reviewCountryCode = snapshot.reviewCountryCode || null;
       currentStage = snapshot.currentStage;
       phase = snapshot.phase;
+      const historicalResult = snapshot.attemptView?.result;
       attempt = {
         code: snapshot.attemptView?.code || snapshot.countryCode || null,
         revealed: Array.isArray(snapshot.attemptView?.revealed)
@@ -20887,7 +21227,11 @@ button,
           capital: Number(snapshot.attemptView?.hintCounts?.capital) || 0,
           largestCity: Number(snapshot.attemptView?.hintCounts?.largestCity) || 0
         },
-        results: {},
+        interactiveAssisted: {},
+        interactiveHintKinds: {},
+        interactiveVisual: clonePlain(snapshot.attemptView?.interactiveVisual || {}),
+        interactiveReplay: clonePlain(snapshot.attemptView?.interactiveReplay || null),
+        results: historicalResult ? { [snapshot.currentStage]: clonePlain(historicalResult) } : {},
         startedAt: Date.now()
       };
       answerLoading = false;
@@ -22047,6 +22391,7 @@ button,
       interactiveGlobeFeedback.classList.remove("correct", "wrong");
       interactiveGlobeFeedback.textContent = "";
       interactiveGlobeLocked = false;
+      interactiveGlobeLastWrongGeo = null;
       interactiveGlobeRenderToken += 1;
       // Cancel any in-flight canonical-map render/zoom before the next screen
       // reuses the same SVG. This prevents a previous country from remaining
@@ -22139,15 +22484,16 @@ button,
               ? `Card ${number} of ${total}`
               : `Place ${number} of ${total}`;
 
+      const identityFreeFlagQuiz = isInteractiveGameplay() && currentStage === "flag";
       if (isLookupMode() || hasRevealed("flag")) {
-        if (isLookupMode() || hasRevealed("country")) setFlag(headerFlag, c);
+        if (!identityFreeFlagQuiz && (isLookupMode() || hasRevealed("country"))) setFlag(headerFlag, c);
         else setQuizFlag(headerFlag, c, "Flag clue", () => handleCountryFlagCueUnavailable(c));
         headerFlagWrap.classList.add("visible");
       } else {
         headerFlagWrap.classList.remove("visible");
       }
 
-      if (isLookupMode() || hasRevealed("country")) {
+      if (!identityFreeFlagQuiz && (isLookupMode() || hasRevealed("country"))) {
         headerCountry.textContent = c.name;
         headerCountry.classList.add("visible");
       } else {
@@ -24690,13 +25036,16 @@ button,
       interactiveSubmitBtn.disabled = false;
 
       const targets = interactiveCapitalTargets(c);
-      interactiveCapitalState = {
-        targets,
-        normalizedTargets: new Map(targets.map(name => [interactiveLooseNormalize(name), name])),
-        found: new Set(),
-        hints: new Map(),
-        revealedMissing: new Set()
-      };
+      const replay = interactiveReplayForStage("capital");
+      interactiveCapitalState = replay?.type === "collection"
+        ? restoreInteractiveCollectionState(replay, targets)
+        : {
+            targets,
+            normalizedTargets: new Map(targets.map(name => [interactiveLooseNormalize(name), name])),
+            found: new Set(),
+            hints: new Map(),
+            revealedMissing: new Set()
+          };
 
       stageLabel.textContent = "CAPITALS";
       setCapitalTargetPrompt(promptQuestion, `Name all ${targets.length} capital cities, one at a time.`, true);
@@ -24704,6 +25053,7 @@ button,
       renderInteractiveCapitalProgress();
       interactiveCandidateTexts("capital").catch(() => {});
       updateInteractiveHelpControls();
+      applyInteractivePromptReplay(replay);
 
       window.setTimeout(() => {
         if (token === interactiveRenderToken && phase === "prompt") interactiveInput.focus();
@@ -24720,13 +25070,16 @@ button,
       interactiveSubmitBtn.disabled = false;
 
       const targets = interactiveCurrencyTargets(c);
-      interactiveCurrencyState = {
-        targets,
-        normalizedTargets: new Map(targets.map(name => [interactiveLooseNormalize(name), name])),
-        found: new Set(),
-        hints: new Map(),
-        revealedMissing: new Set()
-      };
+      const replay = interactiveReplayForStage("currency");
+      interactiveCurrencyState = replay?.type === "collection"
+        ? restoreInteractiveCollectionState(replay, targets)
+        : {
+            targets,
+            normalizedTargets: new Map(targets.map(name => [interactiveLooseNormalize(name), name])),
+            found: new Set(),
+            hints: new Map(),
+            revealedMissing: new Set()
+          };
 
       stageLabel.textContent = "CURRENCIES";
       promptQuestion.textContent = `Name all ${targets.length} currencies, one at a time.`;
@@ -24734,6 +25087,7 @@ button,
       renderInteractiveCurrencyProgress();
       interactiveCandidateTexts("currency").catch(() => {});
       updateInteractiveHelpControls();
+      applyInteractivePromptReplay(replay);
 
       window.setTimeout(() => {
         if (token === interactiveRenderToken && phase === "prompt") interactiveInput.focus();
@@ -24750,6 +25104,24 @@ button,
       interactiveSubmitBtn.disabled = true;
       interactiveFeedback.textContent = "Loading…";
 
+      const savedReplay = interactiveReplayForStage("neighbours");
+      if (savedReplay?.type === "collection" && savedReplay.collection?.targets?.length) {
+        interactiveNeighbourState = restoreInteractiveCollectionState(savedReplay, savedReplay.collection.targets, savedReplay.collection.mode);
+        if (interactiveNeighbourState.mode === "nearest") {
+          stageLabel.textContent = "NEAREST COUNTRIES";
+          promptQuestion.textContent = `No land borders — name the ${interactiveNeighbourState.targets.length} nearest countries.`;
+        } else {
+          stageLabel.textContent = "NEIGHBOURING COUNTRIES";
+          promptQuestion.textContent = `Name all ${interactiveNeighbourState.targets.length} countries that share a land border.`;
+        }
+        interactiveSubmitBtn.disabled = false;
+        renderInteractiveNeighbourProgress();
+        updateInteractiveHelpControls();
+        applyInteractivePromptReplay(savedReplay);
+        if (isBrowsingHistory()) interactiveNeighbourProgress.querySelectorAll("button").forEach(button => { button.disabled = true; });
+        return;
+      }
+
       try {
         const result = await neighbourStudySetFor(c);
         if (
@@ -24759,15 +25131,18 @@ button,
           currentCountry()?.code !== c.code
         ) return;
 
-        interactiveNeighbourState = {
-          mode: result.mode,
-          targets: [...result.names],
-          normalizedTargets: new Map(result.names.map(name => [interactiveLooseNormalize(name), name])),
-          found: new Set(),
-          hints: new Map(),
-          revealedMissing: new Set(),
-          showSilhouettes: false
-        };
+        const replay = interactiveReplayForStage("neighbours");
+        interactiveNeighbourState = replay?.type === "collection"
+          ? restoreInteractiveCollectionState(replay, result.names, result.mode)
+          : {
+              mode: result.mode,
+              targets: [...result.names],
+              normalizedTargets: new Map(result.names.map(name => [interactiveLooseNormalize(name), name])),
+              found: new Set(),
+              hints: new Map(),
+              revealedMissing: new Set(),
+              showSilhouettes: false
+            };
 
         if (result.mode === "nearest") {
           stageLabel.textContent = "NEAREST COUNTRIES";
@@ -24782,6 +25157,8 @@ button,
         renderInteractiveNeighbourProgress();
         interactiveCandidateTexts("neighbours").catch(() => {});
         updateInteractiveHelpControls();
+        applyInteractivePromptReplay(replay);
+        if (isBrowsingHistory()) interactiveNeighbourProgress.querySelectorAll("button").forEach(button => { button.disabled = true; });
 
         window.setTimeout(() => {
           if (token === interactiveRenderToken && phase === "prompt") interactiveInput.focus();
@@ -24830,13 +25207,16 @@ button,
         return;
       }
 
-      interactiveLanguageState = {
-        targets,
-        normalizedTargets: new Map(targets.map(name => [interactiveLooseNormalize(name), name])),
-        found: new Set(),
-        hints: new Map(),
-        revealedMissing: new Set()
-      };
+      const replay = interactiveReplayForStage("languages");
+      interactiveLanguageState = replay?.type === "collection"
+        ? restoreInteractiveCollectionState(replay, targets)
+        : {
+            targets,
+            normalizedTargets: new Map(targets.map(name => [interactiveLooseNormalize(name), name])),
+            found: new Set(),
+            hints: new Map(),
+            revealedMissing: new Set()
+          };
 
       stageLabel.textContent = "LANGUAGES";
       promptQuestion.textContent = targets.length === 1
@@ -24847,6 +25227,7 @@ button,
       renderInteractiveLanguageProgress();
       interactiveCandidateTexts("languages").catch(() => {});
       updateInteractiveHelpControls();
+      applyInteractivePromptReplay(replay);
 
       window.setTimeout(() => {
         if (token === interactiveRenderToken && phase === "prompt") interactiveInput.focus();
@@ -25128,14 +25509,18 @@ button,
       hapticFeedback(correct ? "correct" : "wrong");
     }
 
-    function completeInteractiveStage(delay = 520) {
+    function completeInteractiveStage(delay = 520, autoAdvance = true) {
       if (isBrowsingHistory()) return;
       const completedCode = currentCountry()?.code || null;
       const completedStage = currentStage;
       phase = "revealed";
       markRevealed(currentStage);
       saveState();
+      // Record the solved/revealed screen before auto-advancing. Back should
+      // return to an answer the learner can actually review, not the old prompt.
+      pushNavigationSnapshot();
       interactiveHelpRow.classList.add("hidden");
+      if (!autoAdvance) return;
       window.setTimeout(() => {
         if (
           !isInteractiveGameplay() ||
@@ -25170,10 +25555,17 @@ button,
         interactiveHintBtn.textContent = continentShown ? "Continent shown" : "Hint · continent";
         interactiveHintBtn.disabled = continentShown;
       } else if (cityLocation) {
+        const protectCapitalName = currentStage === "capitalPosition" && interactiveShouldPreserveCapitalIdentity(currentStage, currentCountry());
         const nameAlreadyShown = currentStage === "capital" && (interactiveCityLocationState?.targets?.length || 0) > 1;
         const hintedCurrent = interactiveCityLocationState?.hintedIndices?.has(interactiveCityLocationState.targetIndex);
-        interactiveHintBtn.textContent = nameAlreadyShown ? "City name already shown" : hintedCurrent ? "City name shown" : "Hint · city name";
-        interactiveHintBtn.disabled = nameAlreadyShown || !!hintedCurrent;
+        interactiveHintBtn.textContent = protectCapitalName
+          ? "Capital name hidden until its name challenge"
+          : nameAlreadyShown
+            ? "City name already shown"
+            : hintedCurrent
+              ? "City name shown"
+              : "Hint · city name";
+        interactiveHintBtn.disabled = protectCapitalName || nameAlreadyShown || !!hintedCurrent;
       } else if (visualChoice) {
         const c = currentCountry();
         const remainingWrong = [...interactiveChoiceGrid.querySelectorAll(".interactive-choice")].filter(button =>
@@ -25219,8 +25611,9 @@ button,
         return;
       }
 
-      if (interactiveCityLocationState && ["capital", "largestCity"].includes(currentStage)) {
+      if (interactiveCityLocationState && ["capital", "capitalPosition", "largestCity"].includes(currentStage)) {
         const state = interactiveCityLocationState;
+        if (currentStage === "capitalPosition" && interactiveShouldPreserveCapitalIdentity(currentStage, currentCountry())) return;
         if (!state.target || (currentStage === "capital" && state.targets.length > 1) || state.hintedIndices?.has(state.targetIndex)) return;
         markInteractiveAssisted();
         state.hintedIndices?.add(state.targetIndex);
@@ -25242,6 +25635,10 @@ button,
         }
         markInteractiveAssisted();
         const chosen = wrong[randomInt(wrong.length)];
+        const state = interactiveVisualStageState(currentStage, true);
+        state.eliminatedCodes = [...new Set([...(state.eliminatedCodes || []), chosen.dataset.countryCode])];
+        saveAttempt();
+        pushNavigationSnapshot();
         chosen.disabled = true;
         chosen.classList.add("eliminated");
         chosen.setAttribute("aria-label", "Eliminated option");
@@ -25330,17 +25727,21 @@ button,
         const feature = (activeGlobeFeatures || []).find(f => String(f.id || "").padStart(3, "0") === activeGlobeTargetNumeric) || null;
         if (c) paintInteractiveGlobeTap({ feature }, true, c);
         registerInteractiveResult(false);
-        interactiveGlobeFeedback.textContent = `Answer · ${c?.name || ""}`;
+        const preserveIdentity = interactiveShouldPreserveCountryIdentity("globe", c);
+        interactiveGlobeFeedback.textContent = preserveIdentity
+          ? "Correct location highlighted."
+          : `Answer · ${c?.name || ""}`;
         interactiveGlobeFeedback.classList.remove("hidden", "correct");
         interactiveGlobeFeedback.classList.add("wrong");
         completeInteractiveStage(1250);
         return;
       }
 
-      if (interactiveCityLocationState && ["capital", "largestCity"].includes(currentStage)) {
+      if (interactiveCityLocationState && ["capital", "capitalPosition", "largestCity"].includes(currentStage)) {
         const state = interactiveCityLocationState;
         state.locked = true;
         state.finalized = true;
+        state.giveUp = true;
         state.targetIndex = Math.max(0, state.targets.length - 1);
         interactiveCityLocationLocked = true;
         clearTentativeLocationGuess(state.surface);
@@ -25351,7 +25752,10 @@ button,
         }));
         rescaleLocationQuizMarks(state.surface, state.zoom?.transform?.k || 1);
         registerInteractiveResult(false);
-        interactiveCityFeedback.textContent = `Answer · ${state.targets.map(item => item.name).join(" · ")}`;
+        const protectCapitalName = currentStage === "capitalPosition" && interactiveShouldPreserveCapitalIdentity(currentStage, currentCountry());
+        interactiveCityFeedback.textContent = protectCapitalName
+          ? "Correct location highlighted."
+          : `Answer · ${state.targets.map(item => item.name).join(" · ")}`;
         interactiveCityFeedback.classList.remove("hidden", "correct", "hint");
         interactiveCityFeedback.classList.add("wrong", "with-action");
         interactiveHelpRow.classList.add("hidden");
@@ -25362,13 +25766,17 @@ button,
 
       if (["flag", "silhouette"].includes(currentStage)) {
         const c = currentCountry();
-        interactiveChoiceGrid.classList.add("reveal-labels");
+        const preserveIdentity = interactiveShouldPreserveCountryIdentity(currentStage, c);
+        updateInteractiveVisualStageState(currentStage, {
+          completed:true, giveUp:true, correctCode:c?.code || null
+        });
+        interactiveChoiceGrid.classList.toggle("reveal-labels", currentStage !== "flag" && !preserveIdentity);
         interactiveChoiceGrid.querySelectorAll(".interactive-choice").forEach(choice => {
           choice.disabled = true;
           if (choice.dataset.countryCode === c?.code) choice.classList.add("correct");
         });
         registerInteractiveResult(false);
-        interactiveFeedback.textContent = `Answer: ${c?.name || ""}`;
+        interactiveFeedback.textContent = interactiveVisualCompletionFeedback(currentStage, c, { giveUp:true, preserveIdentity });
         interactiveFeedback.classList.remove("correct", "wrong", "near", "hint");
         interactiveFeedback.classList.add("wrong");
         completeInteractiveStage(1250);
@@ -25679,16 +26087,18 @@ button,
     }
 
     async function renderInteractiveVisualChoice(button, country, stage, onUnavailable = null) {
+      if (stage === "flag") {
+        // Flag Quiz is intentionally identity-free: no hidden/revealable country
+        // label is added to the choice at all.
+        const img = document.createElement("img");
+        setQuizFlag(img, country, "Flag option", onUnavailable);
+        button.append(img);
+        return true;
+      }
+
       const label = document.createElement("span");
       label.className = "interactive-choice-label";
       label.textContent = country.name;
-
-      if (stage === "flag") {
-        const img = document.createElement("img");
-        setQuizFlag(img, country, "Flag option", onUnavailable);
-        button.append(img, label);
-        return true;
-      }
 
       if (stage === "silhouette") {
         const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -25701,6 +26111,9 @@ button,
     }
 
     function shouldPreserveCountryIdentityForOrder(stage, stages, countryAlreadyRevealed = false) {
+      // Hard Quiz rule: the Flag challenge is only about recognising the flag.
+      // It never reveals the target country name itself, regardless of ordering.
+      if (stage === "flag") return true;
       if (countryAlreadyRevealed || !Array.isArray(stages)) return false;
       const stageIndex = stages.indexOf(stage);
       const countryIndex = stages.indexOf("country");
@@ -25710,6 +26123,69 @@ button,
     function interactiveShouldPreserveCountryIdentity(stage = currentStage, c = currentCountry()) {
       if (!isInteractiveGameplay() || !c) return false;
       return shouldPreserveCountryIdentityForOrder(stage, activeStagesForCountry(c), hasRevealed("country"));
+    }
+
+    function shouldPreserveCapitalIdentityForOrder(stage, stages, capitalAlreadyRevealed = false) {
+      if (capitalAlreadyRevealed || !Array.isArray(stages)) return false;
+      const stageIndex = stages.indexOf(stage);
+      const capitalIndex = stages.indexOf("capital");
+      return stageIndex >= 0 && capitalIndex > stageIndex;
+    }
+
+    function interactiveShouldPreserveCapitalIdentity(stage = currentStage, c = currentCountry()) {
+      if (!isInteractiveGameplay() || !c) return false;
+      return shouldPreserveCapitalIdentityForOrder(stage, activeStagesForCountry(c), hasRevealed("capital"));
+    }
+
+    function interactiveVisualStageState(stage = currentStage, create = false) {
+      ensureAttemptForCurrent();
+      if (!attempt) return null;
+      if (!attempt.interactiveVisual || typeof attempt.interactiveVisual !== "object") attempt.interactiveVisual = {};
+      if (!attempt.interactiveVisual[stage] && create) {
+        attempt.interactiveVisual[stage] = {
+          options: [], wrongCodes: [], eliminatedCodes: [], completed: false, giveUp: false, correctCode: null
+        };
+      }
+      return attempt.interactiveVisual[stage] || null;
+    }
+
+    function interactiveVisualOptionsFor(c, stage, count = interactiveChoiceCount) {
+      const state = interactiveVisualStageState(stage, true);
+      const saved = Array.isArray(state?.options)
+        ? state.options.map(code => countries.find(item => item.code === code)).filter(Boolean)
+        : [];
+      if (saved.length >= 2 && saved.some(item => item.code === c.code)) return saved;
+
+      const options = interactiveVisualCountries(c, stage, count);
+      state.options = options.map(item => item.code);
+      state.wrongCodes = [];
+      state.eliminatedCodes = [];
+      state.completed = false;
+      state.giveUp = false;
+      state.correctCode = c.code;
+      saveAttempt();
+      pushNavigationSnapshot();
+      return options;
+    }
+
+    function updateInteractiveVisualStageState(stage, patch = {}) {
+      const state = interactiveVisualStageState(stage, true);
+      Object.assign(state, patch);
+      saveAttempt();
+      if (!isBrowsingHistory()) pushNavigationSnapshot();
+      return state;
+    }
+
+    function interactiveVisualWrongFeedback(stage, optionCountry) {
+      return stage === "flag"
+        ? "Not that flag — choose again."
+        : `That was ${optionCountry?.name || "that option"} — choose again.`;
+    }
+
+    function interactiveVisualCompletionFeedback(stage, c, { giveUp = false, preserveIdentity = false } = {}) {
+      if (stage === "flag") return giveUp ? "Correct flag highlighted." : "Correct";
+      if (giveUp) return preserveIdentity ? "Correct silhouette highlighted." : `Answer: ${c?.name || ""}`;
+      return preserveIdentity ? "Correct" : `Correct · ${c?.name || ""}`;
     }
 
     async function handleInteractiveVisualChoice(button, optionCountry) {
@@ -25724,9 +26200,14 @@ button,
       if (!correct) {
         interactiveHadMiss = true;
         recordCountryConfusion(c.code, optionCountry.code, currentStage);
-        button.classList.add("wrong", "show-label");
+        const state = interactiveVisualStageState(currentStage, true);
+        state.wrongCodes = [...new Set([...(state.wrongCodes || []), optionCountry.code])];
+        saveAttempt();
+        pushNavigationSnapshot();
+        button.classList.add("wrong");
+        if (currentStage !== "flag") button.classList.add("show-label");
         button.disabled = true;
-        interactiveFeedback.textContent = `That was ${optionCountry.name} — choose again.`;
+        interactiveFeedback.textContent = interactiveVisualWrongFeedback(currentStage, optionCountry);
         interactiveFeedback.classList.remove("correct", "wrong", "near", "hint");
         interactiveFeedback.classList.add("wrong");
         updateInteractiveHelpControls();
@@ -25734,10 +26215,13 @@ button,
       }
 
       const preserveIdentity = interactiveShouldPreserveCountryIdentity(currentStage, c);
+      updateInteractiveVisualStageState(currentStage, {
+        completed:true, giveUp:false, correctCode:c.code
+      });
       button.classList.add("correct");
-      interactiveChoiceGrid.classList.toggle("reveal-labels", !preserveIdentity);
+      interactiveChoiceGrid.classList.toggle("reveal-labels", currentStage !== "flag" && !preserveIdentity);
       interactiveChoiceGrid.querySelectorAll(".interactive-choice").forEach(choice => choice.disabled = true);
-      interactiveFeedback.textContent = preserveIdentity ? "Correct" : `Correct · ${c.name}`;
+      interactiveFeedback.textContent = interactiveVisualCompletionFeedback(currentStage, c, { preserveIdentity });
       interactiveFeedback.classList.remove("correct", "wrong", "near", "hint");
       interactiveFeedback.classList.add("correct");
       completeInteractiveStage(920);
@@ -26005,6 +26489,7 @@ button,
 
       if (!correct) {
         interactiveHadMiss = true;
+        interactiveGlobeLastWrongGeo = clonePlain(hit.geo || null);
         paintInteractiveGlobeTap(hit, false, c);
         const tappedCountry = hit.numeric
           ? countries.find(country => String(country.numeric || "").padStart(3, "0") === hit.numeric)
@@ -26022,7 +26507,8 @@ button,
 
       interactiveGlobeLocked = true;
       paintInteractiveGlobeTap(hit, true, c);
-      interactiveGlobeFeedback.textContent = `Correct · ${c.name}`;
+      const preserveIdentity = interactiveShouldPreserveCountryIdentity("globe", c);
+      interactiveGlobeFeedback.textContent = preserveIdentity ? "Correct location" : `Correct · ${c.name}`;
       interactiveGlobeFeedback.classList.remove("hidden", "wrong");
       interactiveGlobeFeedback.classList.add("correct");
       completeInteractiveStage(820);
@@ -26033,11 +26519,16 @@ button,
       interactiveTextPanel.classList.add("hidden");
       interactiveChoiceGrid.classList.add("hidden");
       interactiveFeedback.textContent = "";
+      const replay = interactiveReplayForStage("globe");
       interactiveGlobeLocked = false;
+      interactiveGlobeLastWrongGeo = clonePlain(replay?.globe?.lastWrongGeo || null);
       updateInteractiveHelpControls();
 
       globeWrap.classList.remove("hidden");
-      promptQuestion.textContent = `Tap ${c.name} on the world map.`;
+      const preserveIdentity = interactiveShouldPreserveCountryIdentity("globe", c);
+      promptQuestion.textContent = preserveIdentity
+        ? "Tap this place on the world map."
+        : `Tap ${c.name} on the world map.`;
       if (attempt?.interactiveHintKinds?.globe === "continent") {
         interactiveGlobeFeedback.textContent = `Hint · ${detectiveContinent(c)}`;
         interactiveGlobeFeedback.classList.remove("hidden", "correct", "wrong");
@@ -26051,6 +26542,15 @@ button,
         phase !== "prompt" ||
         currentCountry()?.code !== c.code
       ) return;
+
+      if (replay?.globe?.lastWrongGeo && phase === "prompt") {
+        paintInteractiveGlobeTap({ geo:replay.globe.lastWrongGeo, numeric:null }, false, c);
+      }
+      if (replay) {
+        applyInteractiveReplayFeedback(interactiveGlobeFeedback, replay.feedbackText, replay.feedbackTone);
+        interactiveGlobeFeedback.classList.toggle("hidden", !replay.feedbackText);
+        if (isBrowsingHistory()) interactiveHelpRow.classList.add("hidden");
+      }
 
       if (!activeGlobeProjection) {
         ensureAttemptForCurrent();
@@ -26073,6 +26573,7 @@ button,
       interactiveAnswer.classList.remove("hidden");
       interactiveFeedback.textContent = "";
       ensureAttemptForCurrent();
+      const replay = interactiveReplayForStage(stage);
       const savedInteractiveResult = attempt?.results?.[stage] || null;
       interactiveHadMiss = !!savedInteractiveResult?.hadMiss || savedInteractiveResult?.correct === false;
       interactiveStageAssisted = !!savedInteractiveResult?.assisted || !!attempt?.interactiveAssisted?.[stage];
@@ -26154,7 +26655,8 @@ button,
           }
         }
 
-        const options = interactiveVisualCountries(c, stage, interactiveChoiceCount);
+        const options = interactiveVisualOptionsFor(c, stage, interactiveChoiceCount);
+        const visualState = interactiveVisualStageState(stage, true);
         interactiveChoiceGrid.dataset.choiceCount = String(options.length);
 
         const handleFlagUnavailable = () => {
@@ -26183,7 +26685,14 @@ button,
           button.className = "interactive-choice";
           button.dataset.countryCode = optionCountry.code;
           button.setAttribute("aria-label", `${stage === "flag" ? "Flag" : "Silhouette"} option ${optionIndex + 1}`);
-          button.addEventListener("click", () => handleInteractiveVisualChoice(button, optionCountry));
+          if (!isBrowsingHistory()) button.addEventListener("click", () => handleInteractiveVisualChoice(button, optionCountry));
+          if ((visualState?.wrongCodes || []).includes(optionCountry.code)) {
+            button.classList.add("wrong");
+            if (stage !== "flag") button.classList.add("show-label");
+          }
+          if ((visualState?.eliminatedCodes || []).includes(optionCountry.code)) button.classList.add("eliminated");
+          if (visualState?.completed && optionCountry.code === c.code) button.classList.add("correct");
+          if (isBrowsingHistory() || visualState?.completed || button.classList.contains("eliminated") || button.classList.contains("wrong")) button.disabled = true;
           interactiveChoiceGrid.appendChild(button);
           const visualReady = await renderInteractiveVisualChoice(button, optionCountry, stage, handleFlagUnavailable);
           if (stage === "silhouette" && !visualReady) {
@@ -26200,7 +26709,24 @@ button,
             return;
           }
         }
-        updateInteractiveHelpControls();
+        if (isBrowsingHistory()) {
+          interactiveHelpRow.classList.add("hidden");
+          interactiveChoiceGrid.querySelectorAll(".interactive-choice").forEach(choice => { choice.disabled = true; });
+          if (replay?.feedbackText) {
+            applyInteractiveReplayFeedback(interactiveFeedback, replay.feedbackText, replay.feedbackTone);
+          } else if (visualState?.completed) {
+            const preserveIdentity = interactiveShouldPreserveCountryIdentity(stage, c);
+            interactiveChoiceGrid.classList.toggle("reveal-labels", stage !== "flag" && !preserveIdentity);
+            interactiveFeedback.textContent = interactiveVisualCompletionFeedback(stage, c, {
+              giveUp:!!visualState.giveUp, preserveIdentity
+            });
+          } else {
+            interactiveFeedback.textContent = "Previous question · view only";
+          }
+        } else {
+          updateInteractiveHelpControls();
+          if (replay) applyInteractivePromptReplay(replay);
+        }
         return;
       }
 
@@ -26211,6 +26737,7 @@ button,
         : `Type the ${String(STAGE_META[stage]?.name || "answer").toLowerCase()}…`;
       interactiveSubmitBtn.disabled = false;
       updateInteractiveHelpControls();
+      if (replay) applyInteractivePromptReplay(replay);
 
       // Preload candidate strings so typeahead feels immediate.
       interactiveCandidateTexts(stage).catch(() => {});
@@ -26266,6 +26793,201 @@ button,
       } catch (_) {}
 
       return "Where are the capital and largest city?";
+    }
+
+    function renderHistoricalInteractiveTextReplay(stage, c, replay) {
+      if (!replay) return false;
+      genericStage.classList.add("interactive-mode");
+      stageLabel.textContent = replay.stageLabelText || STAGE_META[stage]?.name || "QUIZ";
+      promptQuestion.textContent = replay.promptText || STAGE_META[stage]?.prompt || "";
+      promptQuestion.classList.toggle("hidden", !!replay.promptHidden);
+      promptNote.textContent = replay.promptNoteText || "";
+      promptNote.classList.toggle("hidden", !replay.promptNoteText);
+      interactiveAnswer.classList.remove("hidden");
+      interactiveTextPanel.classList.remove("hidden");
+      interactiveChoiceGrid.classList.add("hidden");
+      interactiveNeighbourProgress.classList.add("hidden");
+      interactiveSuggestions.classList.add("hidden");
+      interactiveHelpRow.classList.add("hidden");
+      applyInteractiveReplayInput(replay, { viewOnly:true });
+      applyInteractiveReplayFeedback(interactiveFeedback, replay.feedbackText, replay.feedbackTone);
+      return true;
+    }
+
+    function renderHistoricalInteractiveCollectionReplay(stage, c, replay) {
+      if (!replay?.collection) return false;
+      genericStage.classList.add("interactive-mode");
+      stageLabel.textContent = replay.stageLabelText || STAGE_META[stage]?.name || "QUIZ";
+      promptQuestion.textContent = replay.promptText || STAGE_META[stage]?.prompt || "";
+      promptQuestion.classList.toggle("hidden", !!replay.promptHidden);
+      promptNote.textContent = replay.promptNoteText || "";
+      promptNote.classList.toggle("hidden", !replay.promptNoteText);
+      interactiveAnswer.classList.remove("hidden");
+      interactiveTextPanel.classList.remove("hidden");
+      interactiveChoiceGrid.classList.add("hidden");
+      interactiveSuggestions.classList.add("hidden");
+      interactiveHelpRow.classList.add("hidden");
+
+      const restored = restoreInteractiveCollectionState(replay);
+      if (stage === "languages") {
+        interactiveLanguageState = restored;
+        renderInteractiveLanguageProgress();
+      } else if (stage === "neighbours") {
+        interactiveNeighbourState = restored;
+        renderInteractiveNeighbourProgress();
+      } else if (stage === "capital") {
+        interactiveCapitalState = restored;
+        renderInteractiveCapitalProgress();
+      } else if (stage === "currency") {
+        interactiveCurrencyState = restored;
+        renderInteractiveCurrencyProgress();
+      } else {
+        return false;
+      }
+
+      applyInteractiveReplayInput(replay, { viewOnly:true });
+      applyInteractiveReplayFeedback(interactiveFeedback, replay.feedbackText, replay.feedbackTone);
+      interactiveNeighbourProgress.querySelectorAll("button").forEach(button => { button.disabled = true; });
+      return true;
+    }
+
+    function renderHistoricalInteractiveGlobeReplay(stage, c, replay) {
+      if (!replay?.globe) return false;
+      genericStage.classList.add("interactive-mode", "globe-layout");
+      stageLabel.textContent = replay.stageLabelText || STAGE_META[stage]?.name || "WORLD MAP";
+      promptQuestion.textContent = replay.promptText || STAGE_META[stage]?.prompt || "";
+      promptQuestion.classList.toggle("hidden", !!replay.promptHidden);
+      promptNote.textContent = replay.promptNoteText || "";
+      promptNote.classList.toggle("hidden", !replay.promptNoteText);
+      interactiveAnswer.classList.remove("hidden");
+      interactiveTextPanel.classList.add("hidden");
+      interactiveChoiceGrid.classList.add("hidden");
+      interactiveHelpRow.classList.add("hidden");
+      globeWrap.classList.remove("hidden");
+      interactiveGlobeLocked = true;
+      applyInteractiveReplayFeedback(interactiveGlobeFeedback, replay.feedbackText, replay.feedbackTone);
+      interactiveGlobeFeedback.classList.remove("hidden");
+
+      const code = c?.code || null;
+      const token = ++interactiveGlobeRenderToken;
+      renderGlobe(c).then(() => {
+        if (token !== interactiveGlobeRenderToken || !isBrowsingHistory() || currentStage !== stage || currentCountry()?.code !== code) return;
+        if (!replay.globe.completed) return;
+        const feature = (activeGlobeFeatures || []).find(f => String(f.id || "").padStart(3, "0") === activeGlobeTargetNumeric) || null;
+        if (feature) paintInteractiveGlobeTap({ feature }, true, c);
+      }).catch(() => {});
+      return true;
+    }
+
+    function renderHistoricalInteractiveCityReplay(stage, c, replay) {
+      const city = replay?.city;
+      if (!city || !Array.isArray(city.targets) || !city.targets.length) return false;
+      genericStage.classList.add("interactive-mode", "city-map-layout", "interactive-city-location");
+      stageLabel.textContent = replay.stageLabelText || STAGE_META[stage]?.name || "CITY LOCATION";
+      promptQuestion.textContent = replay.promptText || STAGE_META[stage]?.prompt || "";
+      promptQuestion.classList.toggle("hidden", !!replay.promptHidden);
+      promptNote.textContent = replay.promptNoteText || "";
+      promptNote.classList.toggle("hidden", !replay.promptNoteText);
+      interactiveAnswer.classList.remove("hidden");
+      interactiveTextPanel.classList.add("hidden");
+      interactiveChoiceGrid.classList.add("hidden");
+      interactiveHelpRow.classList.add("hidden");
+      cityMapWrap.classList.remove("hidden");
+      cityMapLegend.classList.add("hidden");
+      cityMapLockBtn.classList.add("hidden");
+      cityMapContinueBtn?.classList.add("hidden");
+      interactiveCityLocationLocked = true;
+      interactiveCityFeedback.classList.remove("hidden");
+      applyInteractiveReplayFeedback(interactiveCityFeedback, replay.feedbackText, replay.feedbackTone);
+
+      const code = c?.code || null;
+      const token = ++interactiveRenderToken;
+      ensureCityMapBase(c).then(mapState => {
+        if (token !== interactiveRenderToken || !isBrowsingHistory() || currentStage !== stage || currentCountry()?.code !== code) return;
+        const surface = mapState.surface || mapState.svg;
+        mapState.svg.selectAll(".city-marker, .city-label").remove();
+        clearLocationQuizMarks(surface);
+        const targets = city.targets.map(target => ({
+          name: target.name || "",
+          lat: Number(target.lat),
+          lng: Number(target.lng)
+        })).filter(target => Number.isFinite(target.lat) && Number.isFinite(target.lng));
+        const results = Array.isArray(city.results) ? city.results : [];
+        targets.forEach((target, i) => {
+          const result = results[i] || null;
+          drawLocationQuizResult(surface, mapState.projection, target, result?.guessGeo || null, {
+            clear:false, label:targets.length > 1 ? i + 1 : null
+          });
+        });
+        interactiveCityLocationState = {
+          countryCode:code, stage, targets, targetIndex:Number(city.targetIndex) || 0,
+          target:targets[Math.max(0, Number(city.targetIndex) || 0)] || targets[0],
+          projection:mapState.projection, geometry:mapState.geometry, svg:mapState.svg, surface,
+          tentativeGuessGeo:null, results:clonePlain(results), hintedIndices:new Set(city.hintedIndices || []),
+          locked:true, finalized:!!city.finalized, giveUp:!!city.giveUp, zoom:null
+        };
+        cityMapLoading.style.display = "none";
+      }).catch(() => {});
+      return true;
+    }
+
+    function renderHistoricalInteractiveReplay(stage, c) {
+      const replay = interactiveReplayForStage(stage);
+      if (["flag", "silhouette"].includes(stage)) return renderHistoricalInteractiveVisual(stage, c, replay);
+      if (!replay) return false;
+      if (replay.type === "collection") return renderHistoricalInteractiveCollectionReplay(stage, c, replay);
+      if (replay.type === "cityLocation") return renderHistoricalInteractiveCityReplay(stage, c, replay);
+      if (replay.type === "globe") return renderHistoricalInteractiveGlobeReplay(stage, c, replay);
+      return renderHistoricalInteractiveTextReplay(stage, c, replay);
+    }
+
+    function renderHistoricalInteractiveVisual(stage, c, replay = interactiveReplayForStage(stage)) {
+      const state = interactiveVisualStageState(stage, false);
+      if (!state || !Array.isArray(state.options) || !state.options.length) return false;
+
+      genericStage.classList.add("interactive-mode");
+      stageLabel.textContent = replay?.stageLabelText || STAGE_META[stage].name;
+      promptQuestion.textContent = replay?.promptText || STAGE_META[stage].prompt || "";
+      promptQuestion.classList.toggle("hidden", !!replay?.promptHidden);
+      promptNote.textContent = replay?.promptNoteText || "";
+      promptNote.classList.toggle("hidden", !replay?.promptNoteText);
+      interactiveAnswer.classList.remove("hidden");
+      interactiveTextPanel.classList.add("hidden");
+      interactiveChoiceGrid.classList.remove("hidden");
+      const preserveIdentity = interactiveShouldPreserveCountryIdentity(stage, c);
+      interactiveChoiceGrid.classList.toggle("reveal-labels", stage !== "flag" && !preserveIdentity);
+      interactiveHelpRow.classList.add("hidden");
+      interactiveChoiceGrid.replaceChildren();
+      interactiveChoiceGrid.dataset.choiceCount = String(state.options.length);
+
+      state.options.forEach((code, optionIndex) => {
+        const optionCountry = countries.find(item => item.code === code);
+        if (!optionCountry) return;
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "interactive-choice";
+        button.dataset.countryCode = optionCountry.code;
+        button.disabled = true;
+        button.setAttribute("aria-label", `${stage === "flag" ? "Flag" : "Silhouette"} option ${optionIndex + 1}`);
+        if ((state.wrongCodes || []).includes(code)) {
+          button.classList.add("wrong");
+          if (stage !== "flag") button.classList.add("show-label");
+        }
+        if ((state.eliminatedCodes || []).includes(code)) button.classList.add("eliminated");
+        if (code === (state.correctCode || c.code)) button.classList.add("correct");
+        interactiveChoiceGrid.appendChild(button);
+        renderInteractiveVisualChoice(button, optionCountry, stage).catch(() => {});
+      });
+
+      const fallbackFeedback = interactiveVisualCompletionFeedback(stage, c, {
+        giveUp:!!state.giveUp, preserveIdentity
+      });
+      applyInteractiveReplayFeedback(
+        interactiveFeedback,
+        replay?.feedbackText || fallbackFeedback,
+        replay?.feedbackTone || (state.giveUp ? "wrong" : "correct")
+      );
+      return true;
     }
 
     function renderPrompt(stage, c) {
@@ -27875,8 +28597,16 @@ button,
         genericStage.classList.add("city-map-layout");
       }
 
-      if (phase === "prompt") renderPrompt(currentStage, c);
-      else renderReveal(currentStage, c);
+      const renderedHistoricalInteractive =
+        isBrowsingHistory() &&
+        isInteractiveGameplay() &&
+        phase === "revealed" &&
+        renderHistoricalInteractiveReplay(currentStage, c);
+
+      if (!renderedHistoricalInteractive) {
+        if (phase === "prompt") renderPrompt(currentStage, c);
+        else renderReveal(currentStage, c);
+      }
 
       pushNavigationSnapshot();
       previousBtn.disabled = !canNavigateBack();
@@ -29229,19 +29959,27 @@ button,
       state.target = target || null;
       const total = state.targets.length;
       const capitalLocation = state.stage === "capital" || state.stage === "capitalPosition";
+      const protectCountryName = interactiveShouldPreserveCountryIdentity(state.stage, c);
+      const protectCapitalName = state.stage === "capitalPosition" && interactiveShouldPreserveCapitalIdentity(state.stage, c);
       stageLabel.classList.toggle("capital-target-label", capitalLocation);
       if (capitalLocation && total > 1 && target) {
         stageLabel.textContent = `CAPITAL POSITION · ${state.targetIndex + 1} OF ${total}`;
-        setCapitalTargetPrompt(promptQuestion, `Tap ${target.name}.`, false);
-        cityMapEl.setAttribute("aria-label", `Tap ${target.name}, capital ${state.targetIndex + 1} of ${total}, in ${c.name}`);
+        setCapitalTargetPrompt(promptQuestion, protectCapitalName
+          ? `Tap capital ${state.targetIndex + 1} of ${total}.`
+          : `Tap ${target.name}.`, false);
+        cityMapEl.setAttribute("aria-label", protectCapitalName
+          ? `Tap capital ${state.targetIndex + 1} of ${total}`
+          : protectCountryName
+            ? `Tap ${target.name}, capital ${state.targetIndex + 1} of ${total}`
+            : `Tap ${target.name}, capital ${state.targetIndex + 1} of ${total}, in ${c.name}`);
       } else {
         stageLabel.textContent = capitalLocation ? "CAPITAL POSITION" : "LARGEST CITY LOCATION";
         setCapitalTargetPrompt(promptQuestion, capitalLocation
           ? "Tap where the capital is."
           : "Tap where the largest city is.", capitalLocation);
         cityMapEl.setAttribute("aria-label", capitalLocation
-          ? `Tap the location of the capital of ${c.name}`
-          : `Tap the location of the largest city in ${c.name}`);
+          ? (protectCountryName ? "Tap the location of the capital" : `Tap the location of the capital of ${c.name}`)
+          : (protectCountryName ? "Tap the location of the largest city" : `Tap the location of the largest city in ${c.name}`));
       }
     }
 
@@ -29283,26 +30021,54 @@ button,
         mapState.svg.selectAll(".city-marker, .city-label").remove();
         clearLocationQuizMarks(surface);
 
+        const replay = interactiveReplayForStage(stage);
+        const savedCity = replay?.type === "cityLocation" ? replay.city : null;
+        const restoredIndex = savedCity ? Math.min(targets.length - 1, Math.max(0, Number(savedCity.targetIndex) || 0)) : 0;
         const state = {
           countryCode: c.code,
           stage,
           targets,
-          targetIndex: 0,
-          target: targets[0],
+          targetIndex: restoredIndex,
+          target: targets[restoredIndex],
           projection: mapState.projection,
           geometry: mapState.geometry,
           svg: mapState.svg,
           surface,
-          tentativeGuessGeo: null,
-          results: [],
-          hintedIndices: new Set(),
-          locked: false,
-          finalized: false,
+          tentativeGuessGeo: clonePlain(savedCity?.tentativeGuessGeo || null),
+          results: clonePlain(savedCity?.results || []),
+          hintedIndices: new Set(savedCity?.hintedIndices || []),
+          locked: !!savedCity?.locked,
+          finalized: !!savedCity?.finalized,
+          giveUp: !!savedCity?.giveUp,
           zoom: null
         };
         interactiveCityLocationState = state;
+        interactiveCityLocationLocked = !!state.locked;
         updateInteractiveCityLocationPrompt(state, c);
+        if (savedCity) {
+          state.results.forEach((result, i) => {
+            const target = targets[i];
+            if (target) drawLocationQuizResult(surface, state.projection, target, result?.guessGeo || null, {
+              clear:false, label:targets.length > 1 ? i + 1 : null
+            });
+          });
+          if (Array.isArray(state.tentativeGuessGeo) && !state.locked) {
+            drawTentativeLocationGuess(surface, state.projection, state.tentativeGuessGeo, 1);
+          }
+          applyInteractiveReplayFeedback(interactiveCityFeedback, replay.feedbackText, replay.feedbackTone);
+          interactiveCityFeedback.classList.toggle("hidden", !replay.feedbackText);
+          if (state.locked && !isBrowsingHistory()) {
+            interactiveCityFeedback.classList.add("with-action");
+            cityMapContinueBtn?.classList.remove("hidden");
+            if (cityMapContinueBtn) cityMapContinueBtn.textContent = state.targetIndex + 1 < state.targets.length ? "Next capital →" : "Continue →";
+          }
+          if (isBrowsingHistory()) {
+            cityMapLockBtn.classList.add("hidden");
+            cityMapContinueBtn?.classList.add("hidden");
+          }
+        }
         updateInteractiveHelpControls();
+        if (isBrowsingHistory()) interactiveHelpRow.classList.add("hidden");
         state.zoom = attachLocationZoom(cityMapEl, surface, {
           hint: cityMapZoomHint,
           controls: cityMapZoomControls,
@@ -29397,7 +30163,10 @@ button,
 
       const grade = locationAccuracyLabel(metrics.score);
       const distance = formatLocationDistance(metrics.distanceKm);
-      interactiveCityFeedback.textContent = `${grade} · ${metrics.score}/100 · ${distance} · ${state.target.name}`;
+      const protectCapitalName = state.stage === "capitalPosition" && interactiveShouldPreserveCapitalIdentity(state.stage, c);
+      interactiveCityFeedback.textContent = protectCapitalName
+        ? `${grade} · ${metrics.score}/100 · ${distance}`
+        : `${grade} · ${metrics.score}/100 · ${distance} · ${state.target.name}`;
       interactiveCityFeedback.classList.remove("hidden", "correct", "wrong", "hint");
       interactiveCityFeedback.classList.add(metrics.correct ? "correct" : "wrong");
 
@@ -39988,6 +40757,50 @@ function rankingTargetValues() {
           geoDenSelfTestAssert(!Object.prototype.hasOwnProperty.call(snapshot,'storage'),'Full storage must not be included');
           geoDenSelfTestAssert(!serialized.includes('profileName'),'Profile name data must not be included');
         }],
+        ['Diagnostics','History replay diagnostics preserve state but redact typed answer text', () => {
+          const replay={
+            stage:'capital', phase:'revealed', type:'text', stageLabelText:'CAPITAL', promptText:'Name the capital.',
+            inputValue:'Warsaw', inputTone:'correct', feedbackText:'Correct', feedbackTone:'correct'
+          };
+          const summary=geoDenDiagnosticReplaySummary(replay);
+          const serialized=JSON.stringify(summary);
+          geoDenSelfTestAssert(summary?.input?.hasValue && summary.input.length===6 && summary.input.tone==='correct');
+          geoDenSelfTestAssert(!serialized.includes('Warsaw'),'Diagnostic replay leaked raw typed answer text');
+          geoDenSelfTestAssert(serialized.includes('Correct'),'Diagnostic replay lost feedback state');
+        }],
+        ['Diagnostics','Problem snapshot includes current and adjacent Quiz history replay entries', () => {
+          const previousHistory=navigationHistory;
+          const previousCursor=navigationCursor;
+          const previousLive=liveGameplayState;
+          try {
+            navigationHistory=[
+              { index:0, countryCode:'PL', currentStage:'flag', phase:'revealed', attemptView:{
+                code:'PL', revealed:['flag'], result:{correct:true,assisted:false,hadMiss:false},
+                interactiveVisual:{flag:{options:['PL','ID','MC','AT'],wrongCodes:['ID'],eliminatedCodes:[],completed:true,giveUp:false,correctCode:'PL'}},
+                interactiveReplay:{stage:'flag',phase:'revealed',type:'visual',feedbackText:'Correct',feedbackTone:'correct'}
+              }},
+              { index:0, countryCode:'PL', currentStage:'capital', phase:'prompt', attemptView:{
+                code:'PL', revealed:['flag','country'], result:null,
+                interactiveReplay:{stage:'capital',phase:'prompt',type:'text',inputValue:'',feedbackText:''}
+              }}
+            ];
+            navigationCursor=0;
+            liveGameplayState={ index:0, reviewCountryCode:null, currentStage:'capital', phase:'prompt', attempt:{
+              code:'PL', revealed:['flag','country'], results:{}, interactiveReplay:{stage:'capital',phase:'prompt',type:'text',inputValue:'Warsaw'}
+            }};
+            const nav=geoDenDiagnosticCurrentState().navigation;
+            geoDenSelfTestEqual(nav.currentEntry.countryCode,'PL');
+            geoDenSelfTestEqual(nav.currentEntry.visual.options.join(','),'PL,ID,MC,AT');
+            geoDenSelfTestEqual(nav.currentEntry.replay.type,'visual');
+            geoDenSelfTestEqual(nav.nextEntry.stage,'capital');
+            geoDenSelfTestEqual(nav.liveState.replay.type,'text');
+            geoDenSelfTestAssert(!JSON.stringify(nav).includes('Warsaw'),'Navigation diagnostics leaked live typed answer text');
+          } finally {
+            navigationHistory=previousHistory;
+            navigationCursor=previousCursor;
+            liveGameplayState=previousLive;
+          }
+        }],
         ['Diagnostics','Copied problem report includes tester description and recent actions', () => {
           const snapshot={
             app:{version:GEODEN_VERSION,buildDate:GEODEN_BUILD_DATE}, capturedAt:'2026-09-22T00:00:00.000Z',
@@ -40016,8 +40829,127 @@ function rankingTargetValues() {
         ['Daily','Daily challenge contains only core countries', () => { const spec=dailyChallengeSpec('2026-09-22:v3'); spec.order.forEach(i => geoDenSelfTestAssert(!countries[i]?.isTerritory && !countries[i]?.isAdditionalPlace, `Non-core index ${i}`)); }],
 
         ['Quiz','Flag before Country Name preserves identity', () => geoDenSelfTestAssert(shouldPreserveCountryIdentityForOrder('flag',['flag','country','capital'],false))],
-        ['Quiz','Flag after Country Name may reveal identity', () => geoDenSelfTestAssert(!shouldPreserveCountryIdentityForOrder('flag',['country','flag','capital'],false))],
-        ['Quiz','Previously revealed Country Name may be shown', () => geoDenSelfTestAssert(!shouldPreserveCountryIdentityForOrder('flag',['flag','country'],true))],
+        ['Quiz','Flag after Country Name still keeps identity hidden', () => geoDenSelfTestAssert(shouldPreserveCountryIdentityForOrder('flag',['country','flag','capital'],false))],
+        ['Quiz','Flag never reveals identity even when Country Name was already revealed', () => geoDenSelfTestAssert(shouldPreserveCountryIdentityForOrder('flag',['flag','country'],true))],
+        ['Quiz','Flag feedback never contains a country name', () => {
+          const c=geoDenSelfTestCountry('PL');
+          const wrong=interactiveVisualWrongFeedback('flag',geoDenSelfTestCountry('ZA'));
+          const correct=interactiveVisualCompletionFeedback('flag',c);
+          const giveUp=interactiveVisualCompletionFeedback('flag',c,{giveUp:true});
+          geoDenSelfTestAssert(!wrong.includes('South Africa') && !correct.includes(c.name) && !giveUp.includes(c.name), 'Flag feedback leaked a country name');
+        }],
+        ['Quiz','Silhouette before Country Name keeps target identity hidden', () => {
+          geoDenSelfTestAssert(shouldPreserveCountryIdentityForOrder('silhouette',['flag','silhouette','country'],false));
+          const c=geoDenSelfTestCountry('PL');
+          geoDenSelfTestEqual(interactiveVisualCompletionFeedback('silhouette',c,{giveUp:true,preserveIdentity:true}), 'Correct silhouette highlighted.');
+        }],
+        ['Quiz','World Map before Country Name keeps target identity hidden', () => {
+          geoDenSelfTestAssert(shouldPreserveCountryIdentityForOrder('globe',['flag','globe','country'],false));
+        }],
+        ['Quiz','Capital Position before Capital Name protects the capital identity', () => {
+          geoDenSelfTestAssert(shouldPreserveCapitalIdentityForOrder('capitalPosition',['flag','capitalPosition','capital'],false));
+          geoDenSelfTestAssert(!shouldPreserveCapitalIdentityForOrder('capitalPosition',['flag','capital','capitalPosition'],false));
+        }],
+        ['Quiz','Flag visual history preserves its exact option order', () => {
+          const previousAttempt=attempt;
+          const previousStage=currentStage;
+          const previousPhase=phase;
+          try {
+            attempt={code:'PL',revealed:['flag'],hintCounts:{country:0,capital:0,largestCity:0},interactiveAssisted:{},interactiveHintKinds:{},interactiveVisual:{flag:{options:['PL','ZA','FO','CW'],wrongCodes:['ZA'],eliminatedCodes:['FO'],completed:true,giveUp:false,correctCode:'PL'}},results:{flag:{correct:true,assisted:true,hadMiss:true}},startedAt:1};
+            currentStage='flag'; phase='revealed';
+            const snap=captureNavigationSnapshot();
+            geoDenSelfTestEqual(JSON.stringify(snap.attemptView.interactiveVisual.flag.options),JSON.stringify(['PL','ZA','FO','CW']));
+            geoDenSelfTestEqual(snap.attemptView.interactiveVisual.flag.correctCode,'PL');
+          } finally { attempt=previousAttempt; currentStage=previousStage; phase=previousPhase; }
+        }],
+        ['Quiz','Completed Interactive stage records a revealed history screen', async () => geoDenSelfTestWithQuizHistoryState(() => {
+          currentStage='flag'; phase='prompt';
+          attempt.interactiveVisual={flag:{options:['FR','DE'],wrongCodes:[],eliminatedCodes:[],completed:true,giveUp:false,correctCode:currentCountry()?.code}};
+          navigationHistory=[captureNavigationSnapshot()]; navigationCursor=0;
+          completeInteractiveStage(60000, false);
+          const last=navigationHistory.at(-1);
+          geoDenSelfTestEqual(last.currentStage,'flag');
+          geoDenSelfTestEqual(last.phase,'revealed');
+          geoDenSelfTestAssert(Array.isArray(last.attemptView?.interactiveVisual?.flag?.options));
+        })],
+        ['Quiz','Collection history preserves found hinted and revealed-missing answers', async () => geoDenSelfTestWithQuizHistoryState(() => {
+          const previousState=interactiveLanguageState;
+          const previousText=interactiveFeedback.textContent;
+          const previousClass=interactiveFeedback.className;
+          try {
+            currentStage='languages'; phase='revealed';
+            interactiveLanguageState={
+              targets:['English','French','Spanish'],
+              normalizedTargets:new Map([['english','English'],['french','French'],['spanish','Spanish']]),
+              found:new Set(['English']), hints:new Map([['French',2]]), revealedMissing:new Set(['Spanish'])
+            };
+            interactiveFeedback.textContent='Missed: Spanish';
+            interactiveFeedback.classList.remove('correct','wrong','near','hint');
+            interactiveFeedback.classList.add('wrong');
+            const replay=captureNavigationSnapshot().attemptView.interactiveReplay;
+            geoDenSelfTestEqual(replay.type,'collection');
+            geoDenSelfTestEqual(JSON.stringify(replay.collection.found),JSON.stringify(['English']));
+            geoDenSelfTestEqual(JSON.stringify(replay.collection.hints),JSON.stringify([['French',2]]));
+            geoDenSelfTestEqual(JSON.stringify(replay.collection.revealedMissing),JSON.stringify(['Spanish']));
+            geoDenSelfTestEqual(replay.feedbackText,'Missed: Spanish');
+          } finally {
+            interactiveLanguageState=previousState;
+            interactiveFeedback.textContent=previousText;
+            interactiveFeedback.className=previousClass;
+          }
+        })],
+        ['Quiz','City-location history preserves the actual guess and score', async () => geoDenSelfTestWithQuizHistoryState(({country}) => {
+          const previousState=interactiveCityLocationState;
+          const previousText=interactiveCityFeedback.textContent;
+          const previousClass=interactiveCityFeedback.className;
+          try {
+            currentStage='largestCity'; phase='revealed';
+            interactiveCityLocationState={
+              countryCode:country.code, stage:'largestCity',
+              targets:[{name:'Test City',lat:10,lng:20}], targetIndex:0, target:{name:'Test City',lat:10,lng:20},
+              results:[{name:'Test City',score:73,distanceKm:84,correct:true,guessGeo:[19.5,10.25]}],
+              hintedIndices:new Set([0]), locked:true, finalized:true, giveUp:false, tentativeGuessGeo:null
+            };
+            interactiveCityFeedback.textContent='Good · 73/100 · 84 km · Test City';
+            interactiveCityFeedback.classList.remove('correct','wrong','near','hint');
+            interactiveCityFeedback.classList.add('correct');
+            const replay=captureNavigationSnapshot().attemptView.interactiveReplay;
+            geoDenSelfTestEqual(replay.type,'cityLocation');
+            geoDenSelfTestEqual(replay.city.results[0].score,73);
+            geoDenSelfTestEqual(JSON.stringify(replay.city.results[0].guessGeo),JSON.stringify([19.5,10.25]));
+            geoDenSelfTestEqual(JSON.stringify(replay.city.hintedIndices),JSON.stringify([0]));
+          } finally {
+            interactiveCityLocationState=previousState;
+            interactiveCityFeedback.textContent=previousText;
+            interactiveCityFeedback.className=previousClass;
+          }
+        })],
+        ['Quiz','Simple text history preserves the solved input and feedback', async () => geoDenSelfTestWithQuizHistoryState(() => {
+          const previousValue=interactiveInput.value;
+          const previousInputClass=interactiveInput.className;
+          const previousText=interactiveFeedback.textContent;
+          const previousFeedbackClass=interactiveFeedback.className;
+          try {
+            currentStage='capital'; phase='revealed';
+            interactiveInput.value='Paris';
+            interactiveInput.classList.remove('wrong');
+            interactiveInput.classList.add('correct');
+            interactiveFeedback.textContent='Correct · Paris';
+            interactiveFeedback.classList.remove('wrong','near','hint');
+            interactiveFeedback.classList.add('correct');
+            const replay=captureNavigationSnapshot().attemptView.interactiveReplay;
+            geoDenSelfTestEqual(replay.type,'text');
+            geoDenSelfTestEqual(replay.inputValue,'Paris');
+            geoDenSelfTestEqual(replay.inputTone,'correct');
+            geoDenSelfTestEqual(replay.feedbackText,'Correct · Paris');
+            geoDenSelfTestEqual(replay.feedbackTone,'correct');
+          } finally {
+            interactiveInput.value=previousValue;
+            interactiveInput.className=previousInputClass;
+            interactiveFeedback.textContent=previousText;
+            interactiveFeedback.className=previousFeedbackClass;
+          }
+        })],
         ['Quiz','Back/Forward history functions both exist', () => { geoDenSelfTestAssert(typeof goBack==='function'); geoDenSelfTestAssert(typeof goForwardInHistory==='function'); }],
         ['Quiz','Back then Forward restores exact live state', async () => geoDenSelfTestWithQuizHistoryState(({liveState}) => {
           const before = JSON.stringify(liveState);
