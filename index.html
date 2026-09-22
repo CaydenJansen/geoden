@@ -15604,7 +15604,7 @@ button,
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
 
   <script>
-    const GEODEN_VERSION = "0.54.19";
+    const GEODEN_VERSION = "0.54.20";
     // Input policy: autocomplete/typeahead is ordinary entry and remains unassisted.
     // Only an actual spelling correction (or an explicit hint/reveal) counts as help.
     const GEODEN_BUILD_DATE = "2026-09-21";
@@ -22292,6 +22292,7 @@ button,
         const features = topojson.feature(world, world.objects.countries).features;
         let target = mapFeatureForCountry(country, features);
         if (!target) return false;
+        target = await ultraDetailSilhouetteFeatureForCountry(country, target);
         target = studySilhouetteGeometry(country, target);
         // Match the internal SVG coordinate box to the card's *rendered* aspect
         // ratio. A fixed 180×110 viewBox inside a very wide Sprint tile causes
@@ -27976,6 +27977,93 @@ button,
       return highDetailSilhouetteWorldPromise;
     }
 
+
+    // v0.54.20 — Natural Earth's globally quantised TopoJSON can still turn
+    // genuinely tiny places into coarse polygons even at 10m. For silhouette
+    // study only, lazily load a compact OSM-derived GeoJSON atlas with roughly
+    // kilometre-level simplification. This is deliberately opt-in for small
+    // places/territories so ordinary silhouette questions stay fast.
+    let ultraDetailSilhouetteGeoJSON = null;
+    let ultraDetailSilhouettePromise = null;
+    const ULTRA_DETAIL_SILHOUETTE_CODES = new Set([
+      "AD","AG","AI","AS","AW","BB","BH","BM","BQ","BS","CC","CK","CW","CX","CY",
+      "DM","FJ","FK","FO","GD","GG","GI","GP","GU","IM","JE","KM","KN","KY","LC",
+      "LI","LU","MC","MF","MO","MP","MS","MT","MU","MV","NC","NF","NR","NU","PF",
+      "PM","PN","PR","PW","QA","RE","SC","SG","SH","SM","SX","TC","TK","TO","TT",
+      "TV","VA","VC","VG","VI","VU","WF","WS","CV","ST","FM","MH"
+    ]);
+
+    function silhouetteGeometryVertexCount(feature) {
+      const geometry = feature?.geometry;
+      if (!geometry) return 0;
+      const countRing = ring => Array.isArray(ring) ? ring.length : 0;
+      if (geometry.type === "Polygon") {
+        return (geometry.coordinates || []).reduce((sum, ring) => sum + countRing(ring), 0);
+      }
+      if (geometry.type === "MultiPolygon") {
+        return (geometry.coordinates || []).reduce((sum, polygon) =>
+          sum + (polygon || []).reduce((inner, ring) => inner + countRing(ring), 0), 0);
+      }
+      return 0;
+    }
+
+    function shouldTryUltraDetailSilhouette(c, target = null) {
+      if (!c) return false;
+      if (ULTRA_DETAIL_SILHOUETTE_CODES.has(c.code) || c.isTerritory || c.isAdditionalPlace) return true;
+      // Also rescue any unexpectedly crude small outline, regardless of code.
+      if (target && window.d3) {
+        try {
+          const bounds = d3.geoBounds(target);
+          const lonSpan = Math.abs(bounds[1][0] - bounds[0][0]);
+          const latSpan = Math.abs(bounds[1][1] - bounds[0][1]);
+          return Math.max(lonSpan, latSpan) < 5 && silhouetteGeometryVertexCount(target) < 70;
+        } catch (_) {}
+      }
+      return false;
+    }
+
+    async function loadUltraDetailSilhouetteGeoJSON() {
+      if (ultraDetailSilhouetteGeoJSON) return ultraDetailSilhouetteGeoJSON;
+      if (ultraDetailSilhouettePromise) return ultraDetailSilhouettePromise;
+      ultraDetailSilhouettePromise = import("https://cdn.jsdelivr.net/npm/@geo-maps/countries-land-1km@0.6.0/+esm")
+        .then(module => {
+          const candidates = [module?.default, module?.default?.default, module];
+          const data = candidates.find(item => item?.type === "FeatureCollection" && Array.isArray(item.features));
+          if (!data) throw new Error("Ultra-detail silhouette atlas unavailable");
+          ultraDetailSilhouetteGeoJSON = data;
+          return data;
+        })
+        .catch(() => {
+          ultraDetailSilhouettePromise = null;
+          return null;
+        });
+      return ultraDetailSilhouettePromise;
+    }
+
+    async function ultraDetailSilhouetteFeatureForCountry(c, fallbackFeature = null) {
+      if (!shouldTryUltraDetailSilhouette(c, fallbackFeature) || !window.d3) return fallbackFeature;
+      const collection = await loadUltraDetailSilhouetteGeoJSON();
+      const features = collection?.features;
+      if (!Array.isArray(features) || !features.length) return fallbackFeature;
+      const point = [Number(c.lon) || 0, Number(c.lat) || 0];
+      let candidates = [];
+      try { candidates = features.filter(feature => d3.geoContains(feature, point)); } catch (_) {}
+      if (!candidates.length) {
+        candidates = features.map(feature => {
+          try { return { feature, distance:d3.geoDistance(point, d3.geoCentroid(feature)) }; }
+          catch (_) { return null; }
+        }).filter(Boolean).sort((a,b) => a.distance - b.distance).slice(0, 1).map(item => item.feature);
+      }
+      const detailed = candidates[0] || null;
+      if (!detailed) return fallbackFeature;
+      // Never replace a better outline with a poorer one if the alternate data
+      // source happens to identify the wrong nearby polygon.
+      const fallbackCount = silhouetteGeometryVertexCount(fallbackFeature);
+      const detailedCount = silhouetteGeometryVertexCount(detailed);
+      if (fallbackFeature && fallbackCount >= 20 && detailedCount < fallbackCount * .9) return fallbackFeature;
+      return detailed;
+    }
+
     function globeZoomRatio(scale = activeGlobeCurrentScale) {
       const base = Math.max(1, Number(activeGlobeBaseScale) || 158);
       return Math.max(1, (Number(scale) || base) / base);
@@ -29252,6 +29340,7 @@ button,
         const features = topojson.feature(world, world.objects.countries).features;
         let target = mapFeatureForCountry(c, features);
         if (!target) throw new Error("Country shape not found");
+        target = await ultraDetailSilhouetteFeatureForCountry(c, target);
         const displayTarget = studySilhouetteGeometry(c, target);
 
         const svg = d3.select(silhouetteEl);
@@ -32092,16 +32181,46 @@ Try again`;
     function finishSprintSession() {
       if (!isSprintSession() || studySession?.sprint?.ended) return;
       const sprint = studySession.sprint;
+      const state = ensureRapidState();
+      const round = state?.round;
+      const c = currentCountry();
+      const activeRound = !!(round && c && round.status === "active");
+
       sprint.remainingMs = 0;
       sprint.runningStartedAt = null;
-      sprint.ended = true;
-      rapidRenderToken += 1;
-      document.activeElement?.blur?.();
       if (sprintTimerInterval) { window.clearInterval(sprintTimerInterval); sprintTimerInterval = null; }
       if (sprintAdvanceTimer) { window.clearTimeout(sprintAdvanceTimer); sprintAdvanceTimer = null; }
-      hideSprintAnswerFeedback();
+      document.activeElement?.blur?.();
+
+      // Time expiry should teach the final item instead of abruptly replacing it
+      // with the score screen. Count the displayed-but-unsolved question as a
+      // missed/revealed attempt, show its answer in the centre, then move to the
+      // results after a short reading beat.
+      if (activeRound) {
+        round.revealed = true;
+        rapidFinishQuestion(false, rapidAnswerLabel(round, c), "Time expired");
+        if (sprintFeedbackTimer) { window.clearTimeout(sprintFeedbackTimer); sprintFeedbackTimer = null; }
+        const answer = sprintFeedbackAnswerLabel(round.answerLabel || rapidAnswerLabel(round, c));
+        if (rapidSprintFeedback) {
+          rapidSprintFeedback.classList.remove("hidden", "correct", "wrong");
+          rapidSprintFeedback.classList.add("wrong");
+          rapidSprintFeedback.textContent = `Time’s up
+Answer: ${answer}`;
+          positionSprintFeedbackOverCue();
+        }
+      }
+
+      sprint.ended = true;
       renderSprintTimer();
-      showRapidComplete();
+      saveStudySession();
+      rapidRenderToken += 1;
+
+      const revealDelay = activeRound ? 1200 : 650;
+      sprintAdvanceTimer = window.setTimeout(() => {
+        sprintAdvanceTimer = null;
+        hideSprintAnswerFeedback();
+        showRapidComplete();
+      }, revealDelay);
     }
 
     function suspendSprintClockForRender() {
@@ -38859,6 +38978,7 @@ function rankingTargetValues() {
 
 
     /* ---------- v0.52 Sprint ---------- */
+    /* v0.54.20 — timeout reveals the current answer; tiny silhouettes can use an OSM detail atlas. */
     const sprintOverlay = document.getElementById("sprintOverlay");
     const sprintCloseBtn = document.getElementById("sprintCloseBtn");
     const sprintStartBtn = document.getElementById("sprintStartBtn");
