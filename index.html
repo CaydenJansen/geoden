@@ -3502,6 +3502,12 @@
       transition: border-color .14s ease, background .14s ease, transform .14s ease;
     }
 
+    .matching-slot:not(.correct) { cursor: pointer; }
+    .matching-slot:not(.correct):hover {
+      border-color: rgba(40,100,240,.46);
+      background: rgba(40,100,240,.035);
+    }
+
     .matching-slot::before {
       content: attr(data-field-label);
       position: absolute;
@@ -15624,7 +15630,8 @@ button,
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
 
   <script>
-    const GEODEN_VERSION = "0.56.26";
+    const GEODEN_VERSION = "0.56.32";
+    // v0.56.28 — blank-surface audit: guarded silhouettes/location maps and Matching visual preflight.
     // v0.56.18 — private-beta problem reporting with diagnostic state, recent actions, errors, copy/download/share.
     // v0.56.17 — tester-facing automatic failure reporting with screenshot/copy instructions.
     // v0.56.16 — behavioral map race/microstate regressions; 80-test milestone reached.
@@ -16839,6 +16846,7 @@ button,
     }
     const interactiveCandidateCache = new Map();
     let interactiveRenderToken = 0;
+    let interactiveAutoAdvanceTimer = null;
     let interactiveSuggestionIndex = -1;
     let interactiveHadMiss = false;
     let interactiveNeighbourState = null;
@@ -17005,7 +17013,7 @@ button,
       if (!shouldPromptForProfile() || !profileOnboardingOverlay) return;
       profileOnboardingInput.value = geoProfile.name || "";
       profileOnboardingOverlay.classList.add("open");
-      window.setTimeout(() => profileOnboardingInput?.focus(), 80);
+      geoDenFocusWhenOverlayOpen(profileOnboardingOverlay, profileOnboardingInput, 80);
     }
 
     function closeProfileOnboarding() {
@@ -18128,14 +18136,14 @@ button,
       customSetSearch.value = "";
       renderCustomCountrySetList();
       customSetOverlay.classList.add("open");
-      window.setTimeout(() => customSetSearch.focus({ preventScroll: true }), 0);
+      geoDenFocusWhenOverlayOpen(customSetOverlay, customSetSearch, 0);
     }
 
     function closeCustomCountrySet() {
       customSetOverlay.classList.remove("open");
       const target = customSetReturnFocus;
       customSetReturnFocus = null;
-      window.setTimeout(() => target?.focus?.({ preventScroll: true }), 0);
+      geoDenRestoreFocusWhenSafe(target, 0);
     }
 
     function saveCustomCountrySetFromDraft() {
@@ -18506,6 +18514,7 @@ button,
       }
 
       const sprintRun = studySession?.sprint?.enabled === true;
+      const sprintEnded = sprintHasEndedPendingResults(studySession);
       const mode = sprintRun ? "Sprint" : modeDisplayName(studySession.interaction);
       const strategy = sprintRun ? countrySetDisplayName(studySession.sprint.set || studySession.countrySet || "world") : countryPoolDisplayName(studySession.pool);
       const setName = countrySetDisplayName(studySession.countrySet || "world");
@@ -18517,12 +18526,16 @@ button,
             ? "Detective case"
             : "Mixed question";
 
-      if (activeSessionResumeTitle) activeSessionResumeTitle.textContent = sprintRun ? "Resume Sprint" : "Resume current session";
+      if (activeSessionResumeTitle) activeSessionResumeTitle.textContent = sprintEnded ? "View Sprint results" : sprintRun ? "Resume Sprint" : "Resume current session";
       if (activeSessionResumeMeta) activeSessionResumeMeta.textContent = sprintRun
-        ? `${strategy} · ${Math.ceil(Math.max(0, Number(studySession.sprint.remainingMs) || 0) / 1000)} sec left · ${Number(studySession.rapid?.correct) || 0} correct`
+        ? (sprintEnded
+            ? `${strategy} · Time up · ${Number(studySession.rapid?.correct) || 0} correct`
+            : `${strategy} · ${Math.ceil(Math.max(0, Number(studySession.sprint.remainingMs) || 0) / 1000)} sec left · ${Number(studySession.rapid?.correct) || 0} correct`)
         : `${mode} · ${strategy} · ${activeSessionProgressText()} · ${stageName} · ${setName}`;
-      if (activeSessionResumeAction) activeSessionResumeAction.textContent = "Resume →";
-      activeSessionResumeBtn?.setAttribute("aria-label", `Resume current session: ${mode}, ${strategy}, ${activeSessionProgressText()}, ${stageName}, ${setName}`);
+      if (activeSessionResumeAction) activeSessionResumeAction.textContent = sprintEnded ? "View results →" : "Resume →";
+      activeSessionResumeBtn?.setAttribute("aria-label", sprintEnded
+        ? `View Sprint results: ${strategy}, ${Number(studySession.rapid?.correct) || 0} correct`
+        : `Resume current session: ${mode}, ${strategy}, ${activeSessionProgressText()}, ${stageName}, ${setName}`);
     }
 
     function clearNewSessionConfirmation() {
@@ -18534,7 +18547,10 @@ button,
       if (!newSessionWarning) return;
       startConfirmBtn?.classList.add("hidden");
       newSessionWarning.classList.remove("hidden");
-      window.setTimeout(() => newSessionConfirmBtn?.focus(), 0);
+      window.setTimeout(() => {
+        if (!startOverlay.classList.contains("open") || newSessionWarning.classList.contains("hidden")) return;
+        newSessionConfirmBtn?.focus?.({ preventScroll:true });
+      }, 0);
     }
 
     function updateSessionLengthOptions() {
@@ -19126,7 +19142,10 @@ button,
       } else {
         menuPlayMode = studySession?.interaction === "interactive" ? "interactive" : "standard";
         render();
-        window.setTimeout(() => mainMenuBtn?.focus?.({ preventScroll: true }), 0);
+        window.setTimeout(() => {
+          if (startOverlay.classList.contains("open")) return;
+          mainMenuBtn?.focus?.({ preventScroll:true });
+        }, 0);
       }
     }
 
@@ -19157,11 +19176,15 @@ button,
       startOverlay.dataset.allowClose = allowClose ? "true" : "false";
       startOverlay.classList.add("open");
       if (shouldPromptForProfile()) {
-        window.setTimeout(openProfileOnboarding, 60);
+        window.setTimeout(() => {
+          if (!startOverlay.classList.contains("open") || !shouldPromptForProfile()) return;
+          openProfileOnboarding();
+        }, 60);
       } else {
         // A modal should own focus as soon as it opens. Prefer the resume action
         // when there is an active run; otherwise land on the first Home tool.
         window.setTimeout(() => {
+          if (!startOverlay.classList.contains("open")) return;
           const resume = activeSessionResumeBtn && !activeSessionResumeBtn.classList.contains("hidden")
             ? activeSessionResumeBtn
             : null;
@@ -20448,11 +20471,31 @@ button,
 
     function geoDenDiagnosticVisibleOverlays() {
       const ids = [
-        "startOverlay","settingsOverlay","appSettingsOverlay","searchOverlay","countryProfileOverlay","customSetOverlay",
+        "startOverlay","settingsOverlay","appSettingsOverlay","searchOverlay","countryProfileOverlay","profileOnboardingOverlay","customSetOverlay",
         "masteryOverlay","masteryMapOverlay","matchingOverlay","detectiveOverlay","rapidOverlay","chainFillOverlay",
         "mapHuntOverlay","rankingOverlay","sprintSetupOverlay","bugReportOverlay","selfTestOverlay"
       ];
       return ids.filter(id => geoDenDiagnosticOverlayOpen(id));
+    }
+
+    function geoDenFocusWhenOverlayOpen(overlay, target, delay = 0) {
+      window.setTimeout(() => {
+        if (!overlay?.classList?.contains?.("open")) return;
+        target?.focus?.({ preventScroll:true });
+      }, Math.max(0, Number(delay) || 0));
+    }
+
+    function geoDenRestoreFocusWhenSafe(target, delay = 0) {
+      window.setTimeout(() => {
+        if (!target?.isConnected || typeof target.focus !== "function") return;
+        const blockingOverlay = geoDenDiagnosticVisibleOverlays()
+          .map(id => document.getElementById(id))
+          .find(overlay => overlay && !overlay.contains(target));
+        if (blockingOverlay) return;
+        if (target.hidden || target.closest?.(".hidden,[hidden]")) return;
+        if (typeof target.getClientRects === "function" && target.getClientRects().length === 0) return;
+        target.focus({ preventScroll:true });
+      }, Math.max(0, Number(delay) || 0));
     }
 
     function geoDenDiagnosticSelfTestSummary() {
@@ -20856,7 +20899,7 @@ button,
       if (bugReportShareBtn) bugReportShareBtn.hidden = typeof navigator.share !== "function";
       bugReportOverlay.classList.add("open");
       geoDenDiagnosticLog("problem-report-opened", { recentActions:geoDenBugReportDraft.recentActions?.length || 0 });
-      window.setTimeout(() => bugReportDescription?.focus({ preventScroll:true }), 0);
+      geoDenFocusWhenOverlayOpen(bugReportOverlay, bugReportDescription, 0);
     }
 
     function closeGeoDenBugReport() {
@@ -20865,7 +20908,7 @@ button,
       geoDenDiagnosticLog("problem-report-closed");
       const returnFocus = geoDenBugReportReturnFocus;
       geoDenBugReportReturnFocus = null;
-      window.setTimeout(() => returnFocus?.focus?.({ preventScroll:true }), 0);
+      geoDenRestoreFocusWhenSafe(returnFocus, 0);
     }
 
     async function copyGeoDenBugReport() {
@@ -22069,6 +22112,59 @@ button,
         if (typeof onUnavailable === "function") onUnavailable();
       };
       img.src = getFlagUrl(c.code);
+    }
+
+    // The global flag probe proves the CDN is reachable, but a single country
+    // asset can still be missing or fail independently. Matching needs every
+    // visual card to be usable, so preflight the actual flags in that board.
+    // Successful checks are cached; failures are deliberately not cached so a
+    // transient CDN hiccup can recover on the next board.
+    const matchingFlagAssetSuccess = new Set();
+    const matchingFlagAssetInflight = new Map();
+
+    function flagCountryAssetAvailable(c, timeoutMs = 2600) {
+      const code = String(c?.code || "").toUpperCase();
+      if (!code) return Promise.resolve(false);
+      if (code === "XS") return Promise.resolve(true);
+      if (matchingFlagAssetSuccess.has(code)) return Promise.resolve(true);
+      if (matchingFlagAssetInflight.has(code)) return matchingFlagAssetInflight.get(code);
+
+      const promise = new Promise(resolve => {
+        const probe = new Image();
+        let triedPng = false;
+        let settled = false;
+        const finish = available => {
+          if (settled) return;
+          settled = true;
+          window.clearTimeout(timer);
+          probe.onload = null;
+          probe.onerror = null;
+          if (available) matchingFlagAssetSuccess.add(code);
+          resolve(!!available);
+        };
+        const timer = window.setTimeout(() => finish(false), Math.max(600, Number(timeoutMs) || 2600));
+        probe.onload = () => finish(true);
+        probe.onerror = () => {
+          if (!triedPng) {
+            triedPng = true;
+            probe.src = `https://flagcdn.com/w640/${code.toLowerCase()}.png`;
+            return;
+          }
+          finish(false);
+        };
+        probe.src = getFlagUrl(code);
+      }).finally(() => matchingFlagAssetInflight.delete(code));
+
+      matchingFlagAssetInflight.set(code, promise);
+      return promise;
+    }
+
+    async function matchingFlagFieldReady(roundCountries, resolver = flagCountryAssetAvailable) {
+      if (!Array.isArray(roundCountries) || !roundCountries.length) return false;
+      const results = await mapWithConcurrency(roundCountries, 6, async country => {
+        try { return !!(await resolver(country)); } catch (_) { return false; }
+      });
+      return results.every(Boolean);
     }
 
 
@@ -23359,18 +23455,108 @@ button,
       return target;
     }
 
+    function silhouettePathIsDrawable(path, target) {
+      if (typeof path !== "function" || !target) return false;
+      try {
+        const d = path(target);
+        if (typeof d !== "string" || d.length < 8 || /(?:NaN|Infinity)/.test(d)) return false;
+        const metrics = silhouettePathMetrics(path, target);
+        return Number.isFinite(metrics.width) && Number.isFinite(metrics.height) && metrics.width > .05 && metrics.height > .05;
+      } catch (_) {
+        return false;
+      }
+    }
+
+    async function resolveDrawableSilhouette(country, extent) {
+      if (!country || !window.d3 || !window.topojson) return null;
+      const worlds = [];
+      try {
+        if (shouldUseHighDetailSilhouette(country)) worlds.push(await loadHighDetailSilhouetteWorld());
+      } catch (_) {}
+      try {
+        const fallbackWorld = await loadSilhouetteWorld();
+        if (fallbackWorld && !worlds.includes(fallbackWorld)) worlds.push(fallbackWorld);
+      } catch (_) {}
+
+      for (const world of worlds) {
+        let features = null;
+        try { features = topojson.feature(world, world.objects.countries).features; } catch (_) { continue; }
+        const baseTarget = mapFeatureForCountry(country, features);
+        if (!baseTarget) continue;
+
+        const candidates = [];
+        try {
+          const detailed = await ultraDetailSilhouetteFeatureForCountry(country, baseTarget);
+          if (detailed) candidates.push(detailed);
+        } catch (_) {}
+        if (!candidates.includes(baseTarget)) candidates.push(baseTarget);
+
+        for (const candidate of candidates) {
+          const displayTarget = studySilhouetteGeometry(country, candidate);
+          if (!displayTarget) continue;
+          try {
+            const projection = silhouetteProjectionForTarget(displayTarget, extent);
+            const path = d3.geoPath(projection);
+            if (!silhouettePathIsDrawable(path, displayTarget)) continue;
+            return { target:displayTarget, projection, path };
+          } catch (_) {}
+        }
+      }
+      return null;
+    }
+
+    function renderUnavailableSvg(svgEl, label = "Visual unavailable") {
+      if (!svgEl) return false;
+      const width = Math.max(72, Number(svgEl.viewBox?.baseVal?.width) || 160);
+      const height = Math.max(48, Number(svgEl.viewBox?.baseVal?.height) || 100);
+      svgEl.setAttribute("viewBox", `0 0 ${width} ${height}`);
+      while (svgEl.firstChild) svgEl.removeChild(svgEl.firstChild);
+      const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      text.setAttribute("x", String(width / 2));
+      text.setAttribute("y", String(height / 2));
+      text.setAttribute("text-anchor", "middle");
+      text.setAttribute("dominant-baseline", "middle");
+      text.setAttribute("fill", "#777269");
+      text.setAttribute("font-size", String(Math.max(8, Math.min(14, height * .12))));
+      text.setAttribute("font-family", "system-ui, sans-serif");
+      text.setAttribute("font-weight", "750");
+      text.textContent = label;
+      svgEl.appendChild(text);
+      return false;
+    }
+
+    // Fast board/clue preflight: prefer the already-small canonical silhouette
+    // atlas, only falling back to the full resolver if that geometry is not
+    // drawable. This prevents a mode from building an impossible blank visual.
+    async function silhouetteCountryIsRenderable(country) {
+      if (!country || !window.d3 || !window.topojson || !countryStageIsAvailable(country, "silhouette")) return false;
+      try {
+        const world = await loadSilhouetteWorld();
+        const features = topojson.feature(world, world.objects.countries).features;
+        const baseTarget = mapFeatureForCountry(country, features);
+        if (baseTarget) {
+          const displayTarget = studySilhouetteGeometry(country, baseTarget);
+          const projection = silhouetteProjectionForTarget(displayTarget, [[4,4],[96,56]]);
+          const path = d3.geoPath(projection);
+          if (silhouettePathIsDrawable(path, displayTarget)) return true;
+        }
+      } catch (_) {}
+      try { return !!(await resolveDrawableSilhouette(country, [[4,4],[96,56]])); }
+      catch (_) { return false; }
+    }
+
+    async function matchingSilhouetteFieldReady(roundCountries, resolver = silhouetteCountryIsRenderable) {
+      if (!Array.isArray(roundCountries) || !roundCountries.length) return false;
+      const results = await mapWithConcurrency(roundCountries, 4, async country => {
+        try { return !!(await resolver(country)); } catch (_) { return false; }
+      });
+      return results.every(Boolean);
+    }
+
     async function renderMatchingSilhouette(svgEl, country) {
       if (!svgEl || !country || !window.d3 || !window.topojson) return false;
       if (!countryStageIsAvailable(country, "silhouette")) return false;
       try {
-        const world = shouldUseHighDetailSilhouette(country)
-          ? await loadHighDetailSilhouetteWorld()
-          : await loadSilhouetteWorld();
-        const features = topojson.feature(world, world.objects.countries).features;
-        let target = mapFeatureForCountry(country, features);
-        if (!target) return false;
-        target = await ultraDetailSilhouetteFeatureForCountry(country, target);
-        target = studySilhouetteGeometry(country, target);
         // Match the internal SVG coordinate box to the card's *rendered* aspect
         // ratio. A fixed 180×110 viewBox inside a very wide Sprint tile causes
         // large horizontal letterboxing, making even a correctly fitted country
@@ -23385,26 +23571,32 @@ button,
         svgEl.setAttribute("viewBox", `0 0 ${boxWidth} ${boxHeight}`);
         const padX = Math.max(4, boxWidth * .025);
         const padY = Math.max(3, boxHeight * .035);
-        const projection = silhouetteProjectionForTarget(target, [[padX, padY], [boxWidth - padX, boxHeight - padY]]);
-        const path = d3.geoPath(projection);
+        const resolved = await resolveDrawableSilhouette(country, [[padX, padY], [boxWidth - padX, boxHeight - padY]]);
+        if (!resolved) {
+          geoDenDiagnosticLog("silhouette-card-render-failed", { code:country.code, reason:"no-drawable-path" });
+          return renderUnavailableSvg(svgEl, "Silhouette unavailable");
+        }
+        const { target, path } = resolved;
         const svg = d3.select(svgEl);
         svg.selectAll("*").remove();
         const islandBoost = silhouetteNeedsIslandBoost(country, target);
-
         const highDetail = shouldUseHighDetailSilhouette(country);
         appendSilhouetteShape(svg, target, path, {
-          // Thick outline strokes can turn a narrow detailed microstate into a
-          // featureless blob. High-detail geometry gets a finer outline so its
-          // actual border remains visible in Sprint/Matching choice cards.
           thinThreshold: highDetail ? 4.25 : 7,
           normalStroke: islandBoost ? (highDetail ? .85 : 1.35) : (highDetail ? .32 : .55),
           thinStroke: highDetail ? 1.35 : 2.7
         });
 
-        // Keep silhouettes literal: do not add artificial island visibility dots.
-        return true;
-      } catch (_) {
-        return false;
+        // Never report success for a visually blank SVG. Rapid/Mixed Practice
+        // uses this boolean to fall back rather than strand the learner.
+        const visiblePath = [...svgEl.querySelectorAll("path")].some(node => {
+          const d = node.getAttribute("d") || "";
+          return d.length >= 8 && !/(?:NaN|Infinity)/.test(d);
+        });
+        return visiblePath;
+      } catch (error) {
+        geoDenDiagnosticLog("silhouette-card-render-failed", { code:country.code, reason:String(error?.message || error || "render-error").slice(0,180) });
+        return renderUnavailableSvg(svgEl, "Silhouette unavailable");
       }
     }
 
@@ -23530,10 +23722,22 @@ button,
       if (tone) matchingFeedback.classList.add(tone);
     }
 
-    async function startMatchingRound() {
-      const buildToken = ++matchingBuildToken;
-      let fields = matchingSelectedFields();
-      const boardNotices = [];
+    function showMatchingUnavailableDrawer(pageText = "Open Challenges to choose another field") {
+      matchingDrawerCards.replaceChildren();
+      matchingDrawerTitle.textContent = "No cards available";
+      matchingDrawerPage.textContent = pageText;
+      matchingDrawerPrevBtn.disabled = true;
+      matchingDrawerNextBtn.disabled = true;
+    }
+
+    function prepareMatchingBoardBuildUi() {
+      // A new build owns the screen immediately. Never leave the prior board
+      // resumable behind a cleared DOM if this build later fails or is cancelled.
+      clearMatchingLongPressTimer();
+      cancelMatchingRailMomentum();
+      matchingRailSwipeState = null;
+      matchingState = null;
+      matchingSelectedCardId = null;
       setMatchingFeedback();
       matchingNewRoundBtn.classList.add("hidden");
       matchingCheckBtn.classList.remove("hidden");
@@ -23542,13 +23746,23 @@ button,
       matchingVerifyBtn.disabled = true;
       matchingBoard.replaceChildren();
       matchingDrawerCards.replaceChildren();
+      matchingDrawerTitle.textContent = "Building board…";
+      matchingDrawerPage.textContent = "";
+      matchingDrawerPrevBtn.disabled = true;
+      matchingDrawerNextBtn.disabled = true;
       clearMatchingSelection();
+    }
+
+    async function startMatchingRound() {
+      const buildToken = ++matchingBuildToken;
+      let fields = matchingSelectedFields();
+      const boardNotices = [];
+      prepareMatchingBoardBuildUi();
 
       if (fields.length < 2) {
         matchingRoundStatus.textContent = "Matching needs more information types";
         setMatchingFeedback("Enable at least two Matching challenges (for example Place name + Flag).", "near");
-        matchingDrawerTitle.textContent = "No cards";
-        matchingDrawerPage.textContent = "Open Challenge settings";
+        showMatchingUnavailableDrawer("Open Challenges to enable at least two fields");
         return;
       }
 
@@ -23593,12 +23807,24 @@ button,
 
         if (fields.includes("silhouette")) {
           const unavailable = roundCountries.filter(country => !countryStageIsAvailable(country, "silhouette"));
-          if (unavailable.length) {
-            // Never silently remove places from a finite Matching session. Drop
-            // the unavailable challenge for this board instead; saved settings
-            // remain unchanged.
+          let drawable = unavailable.length === 0;
+          if (drawable) drawable = await matchingSilhouetteFieldReady(roundCountries);
+          if (buildToken !== matchingBuildToken || !matchingOverlay.classList.contains("open")) return;
+          if (!drawable) {
+            // Never build an impossible board where one of the draggable visual
+            // cards is just an empty rectangle. Drop this field for the current
+            // board only; the learner's saved Matching settings are unchanged.
             fields = fields.filter(field => field !== "silhouette");
-            boardNotices.push("Silhouettes skipped for this board");
+            boardNotices.push("Silhouettes skipped because one or more outlines could not be drawn");
+          }
+        }
+
+        if (fields.includes("flag")) {
+          const boardFlagsReady = await matchingFlagFieldReady(roundCountries);
+          if (buildToken !== matchingBuildToken || !matchingOverlay.classList.contains("open")) return;
+          if (!boardFlagsReady) {
+            fields = fields.filter(field => field !== "flag");
+            boardNotices.push("Flags skipped because one or more flag images could not be loaded");
           }
         }
 
@@ -23611,6 +23837,7 @@ button,
           matchingVerifyBtn.classList.add("hidden");
           matchingNewRoundBtn.textContent = "Back to home ✓";
           matchingNewRoundBtn.classList.remove("hidden");
+          showMatchingUnavailableDrawer("Session complete");
           ensureProgressionActionVisible(matchingNewRoundBtn, matchingOverlay?.querySelector(".matching-panel"));
           return;
         }
@@ -23620,6 +23847,8 @@ button,
           setMatchingFeedback("The selected challenges aren’t available for this board. Open Challenges to choose another field.", "near");
           matchingCheckBtn.classList.add("hidden");
           matchingVerifyBtn.classList.add("hidden");
+          showMatchingUnavailableDrawer();
+          geoDenFocusWhenOverlayOpen(matchingOverlay, matchingSettingsBtn, 0);
           return;
         }
 
@@ -23657,6 +23886,8 @@ button,
           setMatchingFeedback("These challenges don’t provide enough distinct information for this set. Choose another Matching challenge.", "near");
           matchingCheckBtn.classList.add("hidden");
           matchingVerifyBtn.classList.add("hidden");
+          showMatchingUnavailableDrawer("Open Challenges to choose a field with useful variation");
+          geoDenFocusWhenOverlayOpen(matchingOverlay, matchingSettingsBtn, 0);
           return;
         }
 
@@ -23696,6 +23927,8 @@ button,
           setMatchingFeedback("There isn’t a second usable field to match on this board. Enable another Matching challenge.", "near");
           matchingCheckBtn.classList.add("hidden");
           matchingVerifyBtn.classList.add("hidden");
+          showMatchingUnavailableDrawer("Open Challenges to enable another usable field");
+          geoDenFocusWhenOverlayOpen(matchingOverlay, matchingSettingsBtn, 0);
           return;
         }
 
@@ -23755,6 +23988,7 @@ button,
         matchingVerifyBtn.classList.add("hidden");
         matchingNewRoundBtn.textContent = "Try again →";
         matchingNewRoundBtn.classList.remove("hidden");
+        showMatchingUnavailableDrawer("Try again, or open Challenges to change fields");
       }
     }
 
@@ -23813,7 +24047,7 @@ button,
           slot.dataset.fieldLabel = MATCHING_FIELD_META[field].label;
           slot.setAttribute("role", "button");
           slot.tabIndex = 0;
-          slot.setAttribute("aria-label", `${MATCHING_FIELD_META[field].label} slot, row ${rowIndex + 1}`);
+          slot.setAttribute("aria-label", `${MATCHING_FIELD_META[field].label} slot, row ${rowIndex + 1}. Activate an empty slot to show ${MATCHING_FIELD_META[field].label} cards.`);
           slots.appendChild(slot);
         }
 
@@ -23927,6 +24161,26 @@ button,
       matchingDrawerPrevBtn.disabled = count <= 1;
       matchingDrawerNextBtn.disabled = count <= 1;
       updateMatchingCheckButton();
+    }
+
+    function matchingDrawerIndexForField(field, state = matchingState) {
+      if (!state || !Array.isArray(state.answerFields)) return -1;
+      return state.answerFields.indexOf(field);
+    }
+
+    function activateMatchingDrawerField(field, { state = matchingState, render = true } = {}) {
+      const indexForField = matchingDrawerIndexForField(field, state);
+      if (indexForField < 0) return false;
+      state.drawerIndex = indexForField;
+      if (state === matchingState && render) {
+        clearMatchingSelection();
+        renderMatchingDrawer();
+        const label = MATCHING_FIELD_META[field]?.label || field;
+        setMatchingFeedback(`Showing ${label} cards — choose one, then tap the matching slot.`, "near");
+        geoDenDiagnosticLog("matching-field-opened", { field });
+        requestAnimationFrame(() => matchingDrawerCards?.scrollIntoView?.({ block:"nearest", behavior:"smooth" }));
+      }
+      return true;
     }
 
     function changeMatchingDrawerPage(delta) {
@@ -24297,12 +24551,15 @@ button,
       } else if (autoStart || studySession?.interaction === "matching") {
         startMatchingRound();
       }
-      window.setTimeout(() => matchingCloseBtn?.focus?.({ preventScroll: true }), 20);
+      geoDenFocusWhenOverlayOpen(matchingOverlay, matchingCloseBtn, 20);
     }
 
     function closeMatchingToMenu() {
       if (hasActiveStudyRun()) noteResumableMode("study");
       matchingBuildToken += 1;
+      clearMatchingLongPressTimer();
+      cancelMatchingRailMomentum();
+      matchingRailSwipeState = null;
       matchingOverlay.classList.remove("open");
       clearMatchingSelection();
       openStartOverlay(true);
@@ -24742,6 +24999,7 @@ button,
       } catch (_) {}
 
       if (token !== interactiveRenderToken || currentStage == null || phase !== "prompt") return;
+      if (interactiveNormalize(interactiveInput.value) !== query) return;
 
       if (currentStage === "neighbours" && interactiveNeighbourState) {
         const found = new Set([...interactiveNeighbourState.found].map(interactiveNormalize));
@@ -25255,6 +25513,18 @@ button,
       }, 30);
     }
 
+    function interactiveSubmissionStillCurrent(expectedStage, expectedCode, expectedState = null) {
+      if (isBrowsingHistory() || !isInteractiveGameplay() || phase !== "prompt") return false;
+      if (document.hidden || geoDenDiagnosticVisibleOverlays().length) return false;
+      if (currentStage !== expectedStage || currentCountry()?.code !== expectedCode) return false;
+      if (!expectedState) return true;
+      if (expectedStage === "languages") return interactiveLanguageState === expectedState;
+      if (expectedStage === "neighbours") return interactiveNeighbourState === expectedState;
+      if (expectedStage === "capital") return interactiveCapitalState === expectedState;
+      if (expectedStage === "currency") return interactiveCurrencyState === expectedState;
+      return true;
+    }
+
     async function submitInteractiveNeighbourAnswer() {
       if (isBrowsingHistory()) return;
       if (
@@ -25348,6 +25618,8 @@ button,
       ) return;
 
       const state = interactiveLanguageState;
+      const expectedStage = "languages";
+      const expectedCode = currentCountry()?.code || null;
       const typed = interactiveLooseNormalize(interactiveInput.value);
       if (!typed) return;
 
@@ -25357,6 +25629,7 @@ button,
         try {
           knownExact = (await interactiveCandidateTexts("languages")).some(value => interactiveLooseNormalize(value) === typed);
         } catch (_) {}
+        if (!interactiveSubmissionStillCurrent(expectedStage, expectedCode, state)) return;
         if (!knownExact) {
           const corrected = interactiveCollectionNearTarget(state, interactiveInput.value);
           if (corrected) {
@@ -25411,7 +25684,7 @@ button,
       interactiveFeedback.classList.add("correct");
 
       window.setTimeout(() => {
-        if (phase === "prompt" && currentStage === "languages") {
+        if (interactiveSubmissionStillCurrent(expectedStage, expectedCode, state)) {
           interactiveInput.classList.remove("correct");
           interactiveInput.focus();
         }
@@ -25420,6 +25693,8 @@ button,
 
     async function submitInteractiveNamedCollectionAnswer(state, renderProgress, noun) {
       if (!state || phase !== "prompt") return;
+      const expectedStage = currentStage;
+      const expectedCode = currentCountry()?.code || null;
       const typed = interactiveLooseNormalize(interactiveInput.value);
       if (!typed) return;
 
@@ -25441,8 +25716,9 @@ button,
       if (!canonicalTarget) {
         let knownExact = false;
         try {
-          knownExact = (await interactiveCandidateTexts(currentStage)).some(value => interactiveLooseNormalize(value) === typed);
+          knownExact = (await interactiveCandidateTexts(expectedStage)).some(value => interactiveLooseNormalize(value) === typed);
         } catch (_) {}
+        if (!interactiveSubmissionStillCurrent(expectedStage, expectedCode, state)) return;
         if (!knownExact) {
           const corrected = interactiveCollectionNearTarget(state, interactiveInput.value);
           if (corrected) {
@@ -25485,7 +25761,7 @@ button,
       interactiveFeedback.textContent = `Correct · ${state.targets.length - state.found.size} to go`;
       interactiveFeedback.classList.add("correct");
       window.setTimeout(() => {
-        if (phase === "prompt") {
+        if (interactiveSubmissionStillCurrent(expectedStage, expectedCode, state)) {
           interactiveInput.classList.remove("correct");
           interactiveInput.focus();
         }
@@ -25541,8 +25817,14 @@ button,
       // return to an answer the learner can actually review, not the old prompt.
       pushNavigationSnapshot();
       interactiveHelpRow.classList.add("hidden");
+      if (interactiveAutoAdvanceTimer) {
+        window.clearTimeout(interactiveAutoAdvanceTimer);
+        interactiveAutoAdvanceTimer = null;
+      }
       if (!autoAdvance) return;
-      window.setTimeout(() => {
+
+      const tryAdvance = () => {
+        interactiveAutoAdvanceTimer = null;
         if (
           !isInteractiveGameplay() ||
           phase !== "revealed" ||
@@ -25550,8 +25832,16 @@ button,
           currentCountry()?.code !== completedCode ||
           isBrowsingHistory()
         ) return;
+        // Do not silently move the lesson forward while Home/Settings/a report is
+        // covering the question, or while the browser/app is in the background.
+        // Keep the solved screen pending and continue once it is foreground again.
+        if (document.hidden || geoDenDiagnosticVisibleOverlays().length) {
+          interactiveAutoAdvanceTimer = window.setTimeout(tryAdvance, 250);
+          return;
+        }
         advanceAfterReveal();
-      }, delay);
+      };
+      interactiveAutoAdvanceTimer = window.setTimeout(tryAdvance, delay);
     }
 
     function interactiveHelpSupported(stage = currentStage) {
@@ -25896,9 +26186,11 @@ button,
           if (!knownExact) {
             try {
               const candidateValues = await interactiveCandidateTexts(stage);
+              if (!interactiveSubmissionStillCurrent(stage, c.code)) return;
               knownExact = candidateValues.some(value => interactiveLooseNormalize(value) === interactiveLooseNormalize(interactiveInput.value));
             } catch (_) {}
           }
+          if (!interactiveSubmissionStillCurrent(stage, c.code)) return;
           if (!knownExact) {
             const correction = interactiveSpellingMatchForExpected(interactiveInput.value, expectedDatum.text, stage, c);
             if (correction) {
@@ -25934,7 +26226,7 @@ button,
           interactiveInput.select();
         }
       } finally {
-        if (phase === "prompt") interactiveSubmitBtn.disabled = false;
+        if (interactiveSubmissionStillCurrent(stage, c.code)) interactiveSubmitBtn.disabled = false;
       }
     }
 
@@ -26913,7 +27205,12 @@ button,
         if (!replay.globe.completed) return;
         const feature = (activeGlobeFeatures || []).find(f => String(f.id || "").padStart(3, "0") === activeGlobeTargetNumeric) || null;
         if (feature) paintInteractiveGlobeTap({ feature }, true, c);
-      }).catch(() => {});
+      }).catch(error => {
+        if (token !== interactiveGlobeRenderToken || !isBrowsingHistory() || currentStage !== stage || currentCountry()?.code !== code) return;
+        globeLoading.textContent = "Historical map unavailable";
+        globeLoading.style.display = "grid";
+        geoDenDiagnosticLog("quiz-history-map-replay-failed", { code, stage, reason:String(error?.message || error || "render-error").slice(0,180) });
+      });
       return true;
     }
 
@@ -26950,6 +27247,7 @@ button,
           lat: Number(target.lat),
           lng: Number(target.lng)
         })).filter(target => Number.isFinite(target.lat) && Number.isFinite(target.lng));
+        if (!targets.length) throw new Error("Historical city targets are not drawable");
         const results = Array.isArray(city.results) ? city.results : [];
         targets.forEach((target, i) => {
           const result = results[i] || null;
@@ -26965,7 +27263,12 @@ button,
           locked:true, finalized:!!city.finalized, giveUp:!!city.giveUp, zoom:null
         };
         cityMapLoading.style.display = "none";
-      }).catch(() => {});
+      }).catch(error => {
+        if (token !== interactiveRenderToken || !isBrowsingHistory() || currentStage !== stage || currentCountry()?.code !== code) return;
+        cityMapLoading.textContent = "Historical map unavailable";
+        cityMapLoading.style.display = "grid";
+        geoDenDiagnosticLog("quiz-history-city-replay-failed", { code, stage, reason:String(error?.message || error || "render-error").slice(0,180) });
+      });
       return true;
     }
 
@@ -28946,12 +29249,15 @@ button,
 
     function renderCountryProfileMapFallback(svg, message = "Map unavailable") {
       if (!svg) return;
-      svg.setAttribute("viewBox", "0 0 420 220");
+      const currentViewBox = svg.viewBox?.baseVal;
+      const width = Number(currentViewBox?.width) > 0 ? Number(currentViewBox.width) : 420;
+      const height = Number(currentViewBox?.height) > 0 ? Number(currentViewBox.height) : 220;
+      svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
       svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
       svg.replaceChildren();
       const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-      text.setAttribute("x", "210");
-      text.setAttribute("y", "110");
+      text.setAttribute("x", String(width / 2));
+      text.setAttribute("y", String(height / 2));
       text.setAttribute("text-anchor", "middle");
       text.setAttribute("dominant-baseline", "middle");
       text.setAttribute("fill", "#6d6961");
@@ -28963,6 +29269,10 @@ button,
 
     async function renderCountryProfileGlobe(c, token) {
       if (!countryProfileGlobe || !c) return;
+      countryProfileGlobe.setAttribute("viewBox", "0 0 420 240");
+      countryProfileGlobe.setAttribute("preserveAspectRatio", "xMidYMid meet");
+      countryProfileGlobe.setAttribute("aria-label", `${c.name} location map loading`);
+      renderCountryProfileMapFallback(countryProfileGlobe, "Loading map…");
       try {
         const state = await renderCanonicalStaticLocationMap(countryProfileGlobe, c, {
           width:420, height:240, padding:8,
@@ -28978,6 +29288,8 @@ button,
 
     async function renderCountryProfileCityMap(c, token) {
       if (!countryProfileCityMap || !c) return;
+      countryProfileCityMap.setAttribute("viewBox", "0 0 420 320");
+      countryProfileCityMap.setAttribute("preserveAspectRatio", "xMidYMid meet");
       if (!window.d3 || !window.topojson) {
         countryProfileCityMap.setAttribute("aria-label", `${c.name} city map unavailable`);
         renderCountryProfileMapFallback(countryProfileCityMap, "Map unavailable");
@@ -28985,14 +29297,13 @@ button,
         return;
       }
       if (!countryStageIsAvailable(c, "cityMap")) {
-        countryProfileCityMap.replaceChildren();
+        countryProfileCityMap.setAttribute("aria-label", `${c.name} city map unavailable`);
+        renderCountryProfileMapFallback(countryProfileCityMap, "Map unavailable");
         if (countryProfileCityNote) countryProfileCityNote.textContent = "Detailed territory outline not available for this map.";
         return;
       }
-      countryProfileCityMap.setAttribute("viewBox", "0 0 420 320");
-      countryProfileCityMap.setAttribute("preserveAspectRatio", "xMidYMid meet");
       countryProfileCityMap.setAttribute("aria-label", `${c.name} map showing capital and largest city`);
-      countryProfileCityMap.replaceChildren();
+      renderCountryProfileMapFallback(countryProfileCityMap, "Loading map…");
       if (countryProfileCityNote) countryProfileCityNote.textContent = "Loading city locations…";
       try {
         const rendered = await renderStandaloneLocationMap(countryProfileCityMap, c, {
@@ -29005,14 +29316,14 @@ button,
         const labels = [];
         for (const [i, capital] of capitals.entries()) {
           const point = rendered.projection([capital.lng, capital.lat]);
-          if (!point) continue;
+          if (!point?.every?.(Number.isFinite)) continue;
           surface.append("circle").attr("cx", point[0]).attr("cy", point[1]).attr("r", 6)
             .attr("fill", "#2864f0").attr("stroke", "white").attr("stroke-width", 2).attr("vector-effect", "non-scaling-stroke");
           labels.push(`${capitals.length > 1 ? `Capital ${i + 1}` : "Capital"}: ${capital.name}`);
         }
         if (largest) {
           const point = rendered.projection([largest.lng, largest.lat]);
-          if (point) {
+          if (point?.every?.(Number.isFinite)) {
             surface.append("circle").attr("cx", point[0]).attr("cy", point[1]).attr("r", 6)
               .attr("fill", "#e4ab42").attr("stroke", "white").attr("stroke-width", 2).attr("vector-effect", "non-scaling-stroke");
             labels.push(`Largest: ${largest.name}`);
@@ -29081,8 +29392,10 @@ button,
         updateCountryProfileFact("government", governmentTypeForCountry(c, facts));
       }).catch(() => {
         if (token !== countryProfileRenderToken || countryProfileCode !== c.code) return;
-        updateCountryProfileFact("population", "Not listed");
-        updateCountryProfileFact("area", "Not listed");
+        // A temporary network failure is not the same fact as “not listed”.
+        // Keep the profile honest about what happened instead of teaching absence.
+        updateCountryProfileFact("population", "Unavailable right now");
+        updateCountryProfileFact("area", "Unavailable right now");
         // Government has a bundled fallback for most core places, so a temporary
         // Wikidata/network failure should not erase information GeoDen already has.
         updateCountryProfileFact("government", governmentTypeForCountry(c, {}));
@@ -29094,7 +29407,7 @@ button,
         updateCountryProfileFact("neighbours", result?.names?.length ? `${prefix}${result.names.join(" · ")}` : "None");
       }).catch(() => {
         if (token !== countryProfileRenderToken || countryProfileCode !== c.code) return;
-        updateCountryProfileFact("neighbours", "Not listed");
+        updateCountryProfileFact("neighbours", "Unavailable right now");
       });
     }
 
@@ -29105,7 +29418,7 @@ button,
       searchOverlay.classList.remove("open");
       countryProfileOverlay.classList.add("open");
       renderCountryProfile(c);
-      window.setTimeout(() => countryProfileCloseBtn?.focus({ preventScroll: true }), 20);
+      geoDenFocusWhenOverlayOpen(countryProfileOverlay, countryProfileCloseBtn, 20);
     }
 
     function closeCountryProfile() {
@@ -29178,7 +29491,7 @@ button,
       searchOverlay.classList.add("open");
       countrySearchInput.value = "";
       renderCountrySearchResults();
-      window.setTimeout(() => countrySearchInput.focus(), 30);
+      geoDenFocusWhenOverlayOpen(searchOverlay, countrySearchInput, 30);
     }
 
     function closeCountrySearch() {
@@ -29615,34 +29928,18 @@ button,
       }
 
       try {
-        const world = shouldUseHighDetailSilhouette(c)
-          ? await loadHighDetailSilhouetteWorld()
-          : await loadSilhouetteWorld();
+        const resolved = await resolveDrawableSilhouette(c, [[7, 6], [353, 294]]);
         if (
           token !== silhouetteRenderToken ||
           currentStage !== "silhouette" ||
           !["prompt", "revealed"].includes(phase) ||
           currentCountry()?.code !== c.code
         ) return;
-
-        const features = topojson.feature(world, world.objects.countries).features;
-        let target = mapFeatureForCountry(c, features);
-        if (!target) throw new Error("Country shape not found");
-        target = await ultraDetailSilhouetteFeatureForCountry(c, target);
-        if (
-          token !== silhouetteRenderToken ||
-          currentStage !== "silhouette" ||
-          !["prompt", "revealed"].includes(phase) ||
-          currentCountry()?.code !== c.code
-        ) return;
-        const displayTarget = studySilhouetteGeometry(c, target);
+        if (!resolved) throw new Error("Country shape not drawable");
+        const { target:displayTarget, path } = resolved;
 
         const svg = d3.select(silhouetteEl);
         svg.selectAll("*").remove();
-
-        const projection = silhouetteProjectionForTarget(displayTarget, [[7, 6], [353, 294]]);
-
-        const path = d3.geoPath(projection);
 
         const islandBoost = silhouetteNeedsIslandBoost(c, displayTarget);
         const group = svg.append("g").attr("class", "silhouette-zoom");
@@ -29652,6 +29949,11 @@ button,
           normalStroke: islandBoost ? 2.15 : .85,
           thinStroke: 4.2
         });
+        const visiblePath = [...silhouetteEl.querySelectorAll("path")].some(node => {
+          const d = node.getAttribute("d") || "";
+          return d.length >= 8 && !/(?:NaN|Infinity)/.test(d);
+        });
+        if (!visiblePath) throw new Error("Silhouette rendered blank");
 
         // Keep silhouettes literal: do not add artificial island visibility dots.
 
@@ -30268,28 +30570,47 @@ button,
       if (state.finalized) completeInteractiveStage(0);
     }
 
+    async function resolveDrawableLocationGeometry(c, extent = [[14,12],[406,308]]) {
+      if (!c || !window.d3 || !window.topojson) return null;
+      const worlds = [];
+      try {
+        if (shouldUseHighDetailSilhouette(c)) worlds.push(await loadHighDetailSilhouetteWorld());
+      } catch (_) {}
+      try {
+        const fallback = await loadSilhouetteWorld();
+        if (fallback && !worlds.includes(fallback)) worlds.push(fallback);
+      } catch (_) {}
+
+      for (const world of worlds) {
+        let features = null;
+        try { features = topojson.feature(world, world.objects.countries).features; } catch (_) { continue; }
+        const target = mapFeatureForCountry(c, features);
+        if (!target) continue;
+        const geometry = mainTerritoryGeometry(c, normalizeSilhouetteWinding(target));
+        try {
+          const centre = d3.geoCentroid(geometry);
+          if (!centre?.every?.(Number.isFinite)) continue;
+          const projection = d3.geoMercator().rotate([-centre[0],0,0]).fitExtent(extent, geometry);
+          const path = d3.geoPath(projection);
+          if (!silhouettePathIsDrawable(path, geometry)) continue;
+          return { geometry, projection, path };
+        } catch (_) {}
+      }
+      return null;
+    }
+
     async function renderStandaloneLocationMap(svgEl, c, options = {}) {
       if (!svgEl || !c || !window.d3 || !window.topojson) throw new Error("Map unavailable");
       if (!countryStageIsAvailable(c, "cityMap")) throw new Error("Detailed map unavailable for this territory");
       const isCurrent = typeof options.isCurrent === "function" ? options.isCurrent : () => true;
-      const world = shouldUseHighDetailSilhouette(c)
-        ? await loadHighDetailSilhouetteWorld()
-        : await loadSilhouetteWorld();
+      const resolved = await resolveDrawableLocationGeometry(c, [[14,12],[406,308]]);
       if (!isCurrent()) return null;
-      const features = topojson.feature(world, world.objects.countries).features;
-      const target = mapFeatureForCountry(c, features);
-      if (!target) throw new Error("Country shape not found");
-      const geometry = mainTerritoryGeometry(c, target);
-      const centre = d3.geoCentroid(geometry);
-      const projection = d3.geoMercator()
-        .rotate([-centre[0], 0, 0])
-        .fitExtent([[14, 12], [406, 308]], geometry);
-      const path = d3.geoPath(projection);
-      if (!isCurrent()) return null;
+      if (!resolved) throw new Error("Country map geometry not drawable");
+      const { geometry, projection, path } = resolved;
       const svg = d3.select(svgEl);
       svg.selectAll("*").remove();
       const surface = svg.append("g").attr("class", "city-map-content");
-      surface.append("path")
+      const countryPath = surface.append("path")
         .attr("class", "city-map-country")
         .datum(geometry)
         .attr("d", path)
@@ -30297,6 +30618,8 @@ button,
         .attr("stroke", "rgba(23,23,23,.25)")
         .attr("stroke-width", .8)
         .attr("vector-effect", "non-scaling-stroke");
+      const d = countryPath.attr("d") || "";
+      if (d.length < 8 || /(?:NaN|Infinity)/.test(d)) throw new Error("Country map rendered blank");
       return { svg, surface, projection, geometry };
     }
 
@@ -30320,22 +30643,13 @@ button,
 
       cityMapLoading.style.display = "grid";
 
-      const world = await loadSilhouetteWorld();
-      const features = topojson.feature(world, world.objects.countries).features;
-      const target = mapFeatureForCountry(c, features);
-
-      if (!target) throw new Error("Country shape not found");
-      const displayTarget = mainTerritoryGeometry(c, target);
-      const centre = d3.geoCentroid(displayTarget);
-      const projection = d3.geoMercator()
-        .rotate([-centre[0], 0, 0])
-        .fitExtent([[14, 12], [406, 308]], displayTarget);
-
-      const path = d3.geoPath(projection);
+      const resolved = await resolveDrawableLocationGeometry(c, [[14,12],[406,308]]);
+      if (!resolved) throw new Error("Country map geometry not drawable");
+      const { geometry:displayTarget, projection, path } = resolved;
       svg.selectAll("*").remove();
       const surface = svg.append("g").attr("class", "city-map-content");
 
-      surface.append("path")
+      const countryPath = surface.append("path")
         .attr("class", "city-map-country")
         .datum(displayTarget)
         .attr("d", path)
@@ -30343,6 +30657,8 @@ button,
         .attr("stroke", "rgba(23,23,23,.25)")
         .attr("stroke-width", .8)
         .attr("vector-effect", "non-scaling-stroke");
+      const d = countryPath.attr("d") || "";
+      if (d.length < 8 || /(?:NaN|Infinity)/.test(d)) throw new Error("Country map rendered blank");
 
       activeCityMapCode = c.code;
       activeCityMapProjection = projection;
@@ -30385,7 +30701,7 @@ button,
 
     function addCityMarker(svg, projection, city, kind, label, indexOffset = 0) {
       const p = projection([city.lng, city.lat]);
-      if (!p) return;
+      if (!p?.every?.(Number.isFinite)) return false;
 
       const isCapital = kind === "capital";
       const cls = `city-marker ${kind}`;
@@ -30419,6 +30735,7 @@ button,
         .attr("y", p[1] - 7 + indexOffset * 13)
         .attr("text-anchor", labelOnLeft ? "end" : "start")
         .text(label);
+      return true;
     }
 
     async function renderCapitalPositionReveal(c) {
@@ -30432,7 +30749,9 @@ button,
         surface.attr?.("transform", null);
         svg.selectAll(".city-marker, .city-label").remove();
         clearLocationQuizMarks(surface);
-        facts.capitals.forEach((cap, i) => addCityMarker(surface, state.projection, cap, "capital", `${cap.name} · capital`, i));
+        const markerCount = facts.capitals.reduce((count, cap, i) =>
+          count + (addCityMarker(surface, state.projection, cap, "capital", `${cap.name} · capital`, i) ? 1 : 0), 0);
+        if (!markerCount) throw new Error("Capital markers could not be projected");
         cityMapLegend.classList.add("hidden");
         cityMapLoading.style.display = "none";
         setAnswerLoading(false);
@@ -30472,20 +30791,21 @@ button,
           cap => normalizeCityName(cap.name) === largestNorm
         );
 
+        let markerCount = 0;
         facts.capitals.forEach((cap, i) => {
           const isCombined = capitalMatchesLargest && normalizeCityName(cap.name) === largestNorm;
           const label = isCombined ? `${cap.name} · capital + largest` : `${cap.name} · capital`;
-          addCityMarker(surface, state.projection, cap, "capital", label, i);
+          if (addCityMarker(surface, state.projection, cap, "capital", label, i)) markerCount += 1;
         });
 
         if (!capitalMatchesLargest) {
-          addCityMarker(
+          if (addCityMarker(
             surface,
             state.projection,
             facts.largest,
             "largest",
             `${facts.largest.name} · largest`
-          );
+          )) markerCount += 1;
           cityMapLegend.classList.remove("hidden");
           cityMapLegend.style.visibility = "";
         } else {
@@ -30494,6 +30814,7 @@ button,
           cityMapLegend.classList.remove("hidden");
           cityMapLegend.style.visibility = "hidden";
         }
+        if (!markerCount) throw new Error("City markers could not be projected");
 
         cityMapLoading.style.display = "none";
         setAnswerLoading(false);
@@ -31448,7 +31769,9 @@ button,
 
       const largest = detectiveLargestCity(c);
       const capital = detectiveCapital(c);
-      const silhouetteAvailable = !!(window.d3 && window.topojson) && countryStageIsAvailable(c, "silhouette");
+      const silhouetteAvailable = detectiveConfig.enabled.silhouette && countryStageIsAvailable(c, "silhouette")
+        ? await detectiveWithTimeout(silhouetteCountryIsRenderable(c), 1700)
+        : false;
       if (silhouetteAvailable) clues.push({ key: "silhouette", label: "Outline", visual: "silhouette" });
       if (largest && !largestCityIsCapital(c)) {
         clues.push({ key: "largestCity", label: "Largest city", value: largest });
@@ -31488,47 +31811,37 @@ button,
     async function renderDetectiveGuessGlobe(c) {
       if (!detectiveGuessGlobe || !detectiveGuessGlobeCard || !c) return;
       const token = ++detectiveGuessGlobeRenderToken;
+      detectiveGuessGlobeCard.classList.remove("hidden");
+      detectiveGuessGlobe.setAttribute("viewBox", "0 0 420 210");
+      detectiveGuessGlobe.setAttribute("preserveAspectRatio", "xMidYMid meet");
+      detectiveGuessGlobe.setAttribute("aria-label", `${c.name} solved-location map loading`);
+      renderCountryProfileMapFallback(detectiveGuessGlobe, "Loading map…");
       if (!window.d3 || !window.topojson) {
-        detectiveGuessGlobeCard.classList.add("hidden");
+        detectiveGuessGlobe.setAttribute("aria-label", `${c.name} solved-location map unavailable`);
+        renderCountryProfileMapFallback(detectiveGuessGlobe, "Map unavailable");
+        geoDenDiagnosticLog("detective-result-map-render-failed", { code:c.code, reason:"map-tools-unavailable" });
         return;
       }
-      detectiveGuessGlobeCard.classList.remove("hidden");
       try {
         const state = await renderCanonicalStaticLocationMap(detectiveGuessGlobe, c, {
           width:420, height:210, padding:8,
           isCurrent:() => token === detectiveGuessGlobeRenderToken && currentCountry()?.code === c.code
         });
         if (!state || token !== detectiveGuessGlobeRenderToken || currentCountry()?.code !== c.code) return;
-      } catch (_) {
-        if (token === detectiveGuessGlobeRenderToken) detectiveGuessGlobeCard.classList.add("hidden");
+      } catch (error) {
+        if (token !== detectiveGuessGlobeRenderToken || currentCountry()?.code !== c.code) return;
+        detectiveGuessGlobe.setAttribute("aria-label", `${c.name} solved-location map unavailable`);
+        renderCountryProfileMapFallback(detectiveGuessGlobe, "Map unavailable");
+        geoDenDiagnosticLog("detective-result-map-render-failed", { code:c.code, reason:String(error?.message || error || "render-error").slice(0,180) });
       }
     }
 
     async function renderDetectiveSilhouette(svgEl, c) {
-      if (!svgEl) return;
+      if (!svgEl || !c) return false;
       svgEl.setAttribute("viewBox", "0 0 320 180");
-      svgEl.innerHTML = "";
-      if (!window.d3 || !window.topojson) return;
-      try {
-        const world = shouldUseHighDetailSilhouette(c)
-          ? await loadHighDetailSilhouetteWorld()
-          : await loadSilhouetteWorld();
-        const features = topojson.feature(world, world.objects.countries).features;
-        const target = mapFeatureForCountry(c, features);
-        if (!target) return;
-        const displayTarget = studySilhouetteGeometry(c, target);
-        const projection = silhouetteProjectionForTarget(displayTarget, [[8, 7], [312, 173]]);
-        const path = d3.geoPath(projection);
-        const svg = d3.select(svgEl);
-        const group = svg.append("g");
-        const islandBoost = silhouetteNeedsIslandBoost(c, displayTarget);
-        appendSilhouetteShape(group, displayTarget, path, {
-          thinThreshold: 11,
-          normalStroke: islandBoost ? 2.1 : .85,
-          thinStroke: 4
-        });
-        // Keep silhouettes literal: do not add artificial island visibility dots.
-      } catch (_) {}
+      const ready = await renderMatchingSilhouette(svgEl, c);
+      if (!ready) geoDenDiagnosticLog("detective-silhouette-render-failed", { code:c.code });
+      return ready;
     }
 
     function detectiveRenderClue(clue, index, c) {
@@ -31651,7 +31964,7 @@ button,
         detectiveUpdateSuggestions();
         const coarsePointer = window.matchMedia?.("(pointer: coarse)")?.matches;
         if (!coarsePointer && window.innerWidth > 720) {
-          window.setTimeout(() => detectiveInput.focus(), 30);
+          geoDenFocusWhenOverlayOpen(detectiveOverlay, detectiveInput, 30);
         }
       }
     }
@@ -31733,11 +32046,14 @@ button,
       detectiveOverlay.classList.add("open");
       if (resume) prepareDetectiveRound(false);
       else prepareDetectiveRound(true);
-      window.setTimeout(() => detectiveMenuBtn?.focus?.({ preventScroll: true }), 20);
+      geoDenFocusWhenOverlayOpen(detectiveOverlay, detectiveMenuBtn, 20);
     }
 
     function closeDetectiveToMenu() {
       if (hasActiveStudyRun()) noteResumableMode("study");
+      detectivePreparingToken += 1;
+      detectiveGuessGlobeRenderToken += 1;
+      detectiveSuggestions?.classList.add("hidden");
       detectiveOverlay.classList.remove("open");
       openStartOverlay(true);
     }
@@ -32419,6 +32735,10 @@ Try again`;
       positionSprintFeedbackOverCue();
       const duration = revealed ? 880 : (correct ? 680 : 520);
       sprintFeedbackTimer = window.setTimeout(hideSprintAnswerFeedback, duration);
+    }
+
+    function sprintHasEndedPendingResults(session = studySession) {
+      return !!(session?.interaction === "rapid" && session?.sprint?.enabled && session.sprint.ended);
     }
 
     function pauseSprintTimer() {
@@ -33332,7 +33652,8 @@ Answer: ${answer}`;
         return;
       }
       const values = await rapidCandidateTexts(round);
-      if (round !== ensureRapidState()?.round) return;
+      if (round !== ensureRapidState()?.round || round.status !== "active") return;
+      if (interactiveLooseNormalize(rapidInput.value) !== query) return;
       const matches = values
         .map(value => ({ value, norm: interactiveLooseNormalize(value) }))
         .filter(item => item.norm.includes(query))
@@ -33972,18 +34293,30 @@ Answer: ${answer}`;
       rapidSprintTimer?.classList.add("hidden");
     }
 
+    function invalidateRapidPausedRender() {
+      rapidRenderToken += 1;
+      rapidLocationState = null;
+      rapidSuggestions?.classList.add("hidden");
+    }
+
     function openRapidMode(resume = true) {
       if (studySession?.interaction !== "rapid") return;
       noteResumableMode("study");
       matchingOverlay?.classList.remove("open");
       detectiveOverlay?.classList.remove("open");
       rapidOverlay.classList.add("open");
-      window.setTimeout(() => rapidMenuBtn?.focus?.({ preventScroll: true }), 20);
+      geoDenFocusWhenOverlayOpen(rapidOverlay, rapidMenuBtn, 20);
       const sprint = isSprintSession();
       rapidOverlay.classList.toggle("sprint-active", sprint);
       const eyebrow = rapidOverlay.querySelector(".rapid-eyebrow");
       if (eyebrow) eyebrow.textContent = sprint ? "Sprint" : "Mixed Practice";
       if (rapidTitle) rapidTitle.textContent = sprint ? `${countrySetDisplayName(studySession.sprint.set)} sprint` : "Mixed questions";
+      if (sprintHasEndedPendingResults()) {
+        if (sprintAdvanceTimer) { window.clearTimeout(sprintAdvanceTimer); sprintAdvanceTimer = null; }
+        hideSprintAnswerFeedback();
+        showRapidComplete();
+        return;
+      }
       if (studySession.active === false) showRapidComplete();
       else {
         if (sprint) suspendSprintClockForRender();
@@ -34001,12 +34334,14 @@ Answer: ${answer}`;
     function closeRapidToMenu() {
       if (hasActiveStudyRun()) noteResumableMode("study");
       if (isSprintSession()) pauseSprintTimer();
+      invalidateRapidPausedRender();
       rapidOverlay.classList.remove("open");
       openStartOverlay(true);
     }
 
     function rapidBackToMenu() {
       if (isSprintSession()) pauseSprintTimer();
+      invalidateRapidPausedRender();
       rapidOverlay.classList.remove("open");
       rapidOverlay.classList.remove("sprint-active");
       openStartOverlay(false);
@@ -34397,14 +34732,14 @@ Answer: ${answer}`;
       }
 
       settingsOverlay.classList.add("open");
-      window.setTimeout(() => settingsCloseBtn?.focus({ preventScroll: true }), 0);
+      geoDenFocusWhenOverlayOpen(settingsOverlay, settingsCloseBtn, 0);
     }
 
     function openAppSettings() {
       updatePolishSettingsUI();
       renderProfileUI();
       appSettingsOverlay?.classList.add("open");
-      window.setTimeout(() => appSettingsCloseBtn?.focus({ preventScroll: true }), 0);
+      geoDenFocusWhenOverlayOpen(appSettingsOverlay, appSettingsCloseBtn, 0);
     }
 
     function closeAppSettings() {
@@ -34443,7 +34778,7 @@ Answer: ${answer}`;
       settingsConfigAtOpen = null;
       const returnFocus = settingsReturnFocus;
       settingsReturnFocus = null;
-      window.setTimeout(() => returnFocus?.focus?.({ preventScroll: true }), 0);
+      geoDenRestoreFocusWhenSafe(returnFocus, 0);
 
       // Rebuild Matching if its own fields/order changed.
       if (
@@ -34740,6 +35075,14 @@ Answer: ${answer}`;
       return geoDenWrappedWorldProjection(width, height, padding);
     }
 
+    function geoDenSvgPathDataIsDrawable(path, feature) {
+      if (typeof path !== "function" || !feature) return false;
+      try {
+        const d = path(feature);
+        return typeof d === "string" && d.length >= 8 && !/(?:NaN|Infinity)/.test(d);
+      } catch (_) { return false; }
+    }
+
     function canonicalWorldDrawableFeature(feature) {
       return geoFeatureSmallSide(feature);
     }
@@ -34782,9 +35125,14 @@ Answer: ${answer}`;
 
       const root = svg.append("g").attr("class", "canonical-world-layer");
       const drawableFeatures = (features || []).map(canonicalWorldDrawableFeature).filter(Boolean);
+      if (!drawableFeatures.some(feature => geoDenSvgPathDataIsDrawable(path, feature))) {
+        svg.selectAll("*").remove();
+        return null;
+      }
       const target = canonicalWorldTargetFeature(country, features || []);
       const targetCode = String(country.numeric || "").padStart(3, "0");
-      const markerPoint = projection([Number(country.lon) || 0, Number(country.lat) || 0]);
+      const rawMarkerPoint = projection([Number(country.lon) || 0, Number(country.lat) || 0]);
+      const markerPoint = rawMarkerPoint?.every?.(Number.isFinite) ? rawMarkerPoint : null;
       const needsMarker = canonicalWorldMapNeedsLocator(country, target, path, 1);
 
       for (const offset of geoDenWorldCopyOffsets(wrapPeriod)) {
@@ -34983,6 +35331,7 @@ Answer: ${answer}`;
         padding:Number(options.padding) || 8,
         highlight:true
       });
+      if (!state) throw new Error("World map rendered without drawable geography");
       if (svgEl) svgEl.setAttribute("aria-label", `World map showing ${country.name}'s location`);
       return state;
     }
@@ -35341,6 +35690,12 @@ Answer: ${answer}`;
         clearMatchingSlotDraft(slot, false);
         matchingFeedback.textContent = "";
         renderMatchingDrawer();
+        return;
+      }
+      // Empty board cells are also field shortcuts: tapping Capital, Population,
+      // etc. opens that drawer page instead of forcing the player to page around.
+      if (!slot.dataset.cardId && !slot.classList.contains("correct")) {
+        activateMatchingDrawerField(slot.dataset.field);
       }
     });
 
@@ -35355,6 +35710,8 @@ Answer: ${answer}`;
         clearMatchingSlotDraft(slot, false);
         matchingFeedback.textContent = "";
         renderMatchingDrawer();
+      } else if (!slot.dataset.cardId && !slot.classList.contains("correct")) {
+        activateMatchingDrawerField(slot.dataset.field);
       }
     });
 
@@ -35829,7 +36186,7 @@ Answer: ${answer}`;
     countryProfileBackBtn?.addEventListener("click", () => {
       closeCountryProfile();
       searchOverlay.classList.add("open");
-      window.setTimeout(() => countrySearchInput?.focus(), 20);
+      geoDenFocusWhenOverlayOpen(searchOverlay, countrySearchInput, 20);
     });
     countryProfileCloseBtn?.addEventListener("click", () => {
       closeCountryProfile();
@@ -35844,7 +36201,7 @@ Answer: ${answer}`;
       if (event.target !== countryProfileOverlay) return;
       closeCountryProfile();
       searchOverlay.classList.add("open");
-      window.setTimeout(() => countrySearchInput?.focus(), 20);
+      geoDenFocusWhenOverlayOpen(searchOverlay, countrySearchInput, 20);
     });
 
     bugReportMenuBtn?.addEventListener("click", openGeoDenBugReport);
@@ -36008,7 +36365,7 @@ Answer: ${answer}`;
         if (event.key === "Escape") {
           closeCountryProfile();
           searchOverlay.classList.add("open");
-          window.setTimeout(() => countrySearchInput?.focus(), 20);
+          geoDenFocusWhenOverlayOpen(searchOverlay, countrySearchInput, 20);
         }
         return;
       }
@@ -37937,7 +38294,7 @@ Answer: ${answer}`;
       if (chainGiveUpBtn) chainGiveUpBtn.disabled = true;
       clearChainSpellingHelp();
       hapticFeedback?.(trapped ? "warning" : "success");
-      window.setTimeout(() => chainPlayAgainBtn?.focus({ preventScroll: true }), 20);
+      geoDenFocusWhenOverlayOpen(chainFillOverlay, chainPlayAgainBtn, 20);
     }
 
     function setChainPlayLayout(playing) {
@@ -37954,7 +38311,7 @@ Answer: ${answer}`;
         chainFillSetup.classList.remove("hidden");
         updateChainSetupHelp();
         if (chainRuleHelp) chainRuleHelp.textContent = "The map tools didn’t load. Try again when you’re online or reload GeoDen.";
-        window.setTimeout(() => chainFillStartBtn?.focus({ preventScroll: true }), 0);
+        geoDenFocusWhenOverlayOpen(chainFillOverlay, chainFillStartBtn, 0);
         return;
       }
       stopChainTimer();
@@ -38041,7 +38398,7 @@ Answer: ${answer}`;
         chainFeedback.className = "chain-feedback";
         startChainTimer();
         const shouldAutofocus = window.matchMedia?.("(min-width: 521px) and (pointer: fine)")?.matches;
-        if (shouldAutofocus) window.setTimeout(() => chainGuessInput?.focus({ preventScroll:true }), 30);
+        if (shouldAutofocus) geoDenFocusWhenOverlayOpen(chainFillOverlay, chainGuessInput, 30);
       } catch (err) {
         if (token !== chainBuildToken || !chainFillOverlay?.classList.contains("open")) return;
         chainState = null;
@@ -38051,7 +38408,8 @@ Answer: ${answer}`;
         setChainPlayLayout(false);
         updateChainSetupHelp();
         if (chainRuleHelp) chainRuleHelp.textContent = "That map couldn’t be built. Try again, or choose another map when you’re online.";
-        window.setTimeout(() => chainFillStartBtn?.focus({ preventScroll: true }), 0);
+        geoDenFocusWhenOverlayOpen(chainFillOverlay, chainFillStartBtn, 0);
+        geoDenDiagnosticLog("map-crawl-build-failed", { reason:String(err?.message || err || "render-error").slice(0,180) });
         console.warn("GeoDen Map Crawl", err);
       }
     }
@@ -38108,7 +38466,7 @@ Answer: ${answer}`;
       } else {
         resetChainToSetup();
       }
-      window.setTimeout(() => chainFillCloseBtn?.focus({preventScroll:true}),20);
+      geoDenFocusWhenOverlayOpen(chainFillOverlay, chainFillCloseBtn, 20);
     }
 
     function closeChainFill() {
@@ -38820,7 +39178,7 @@ Answer: ${answer}`;
           renderMapHuntMap().catch(err => console.warn("GeoDen Map Hunt finish resize", err));
         });
       });
-      window.setTimeout(() => (struggled.length ? mapHuntRevisionBtn : mapHuntReplayBtn)?.focus?.({ preventScroll:true }), 0);
+      geoDenFocusWhenOverlayOpen(mapHuntOverlay, struggled.length ? mapHuntRevisionBtn : mapHuntReplayBtn, 0);
     }
 
     function measureMapHuntViewportScale() {
@@ -39509,6 +39867,7 @@ Answer: ${answer}`;
         mapHuntPlay?.classList.add("hidden");
         mapHuntSetup?.classList.remove("hidden");
         if (mapHuntPromptHelp) mapHuntPromptHelp.textContent = "That map couldn’t be built. Try again when you’re online.";
+        geoDenDiagnosticLog("map-hunt-build-failed", { reason:String(err?.message || err || "render-error").slice(0,180) });
         console.warn("GeoDen Map Hunt", err);
       }
     }
@@ -39546,11 +39905,18 @@ Answer: ${answer}`;
         renderMapHuntPrompt();
         settleMapHuntInitialHomeView(state, token);
       } catch (err) {
+        if (token !== mapHuntBuildToken) return;
         console.warn("GeoDen Map Hunt revision", err);
+        geoDenDiagnosticLog("map-hunt-revision-build-failed", { reason:String(err?.message || err || "render-error").slice(0,180) });
         mapHuntState = previousState;
         mapHuntOverlay?.classList.add("map-hunt-complete");
         mapHuntFinish?.classList.remove("hidden");
         updateMapHuntMapStates();
+        if (mapHuntFeedback) {
+          mapHuntFeedback.textContent = "Revision couldn’t be rebuilt. Your completed result has been restored.";
+          mapHuntFeedback.className = "map-hunt-feedback near";
+        }
+        geoDenFocusWhenOverlayOpen(mapHuntOverlay, mapHuntRevisionBtn?.classList.contains("hidden") ? mapHuntReplayBtn : mapHuntRevisionBtn, 0);
       }
     }
 
@@ -39569,7 +39935,7 @@ Answer: ${answer}`;
       mapHuntSetup?.classList.remove("hidden");
       mapHuntFinish?.classList.add("hidden");
       updateMapHuntSetupHelp();
-      if (focusSetup) window.setTimeout(() => mapHuntStartBtn?.focus({ preventScroll:true }), 0);
+      if (focusSetup) geoDenFocusWhenOverlayOpen(mapHuntOverlay, mapHuntStartBtn, 0);
     }
 
     function openMapHunt() {
@@ -39600,7 +39966,7 @@ Answer: ${answer}`;
         setMapHuntPlayLayout(false);
         mapHuntOverlay?.classList.add("open");
       }
-      window.setTimeout(() => mapHuntCloseBtn?.focus({ preventScroll:true }), 20);
+      geoDenFocusWhenOverlayOpen(mapHuntOverlay, mapHuntCloseBtn, 20);
     }
 
     function closeMapHunt() {
@@ -40036,7 +40402,7 @@ function rankingTargetValues() {
       rankingNewBtn.textContent = "Change setup";
       renderRankingList();
       hapticFeedback?.("success");
-      window.setTimeout(() => rankingRevealBtn?.focus({ preventScroll:true }), 0);
+      geoDenFocusWhenOverlayOpen(rankingOverlay, rankingRevealBtn, 0);
     }
 
     function rankingRowAssessment(item, index) {
@@ -40220,7 +40586,7 @@ function rankingTargetValues() {
         rankingPromptMeta.textContent = `${items.length} places · ${countrySetDisplayName(rankingSet)}${availabilityNote}${tieNote} · rank 1 is highest`;
         rankingLoading.classList.add("hidden"); rankingPlay.classList.remove("hidden");
         rankingRevealBtn.classList.remove("hidden"); renderRankingList();
-        window.setTimeout(() => rankingList?.querySelector("button:not([disabled])")?.focus?.({ preventScroll:true }), 0);
+        geoDenFocusWhenOverlayOpen(rankingOverlay, rankingList?.querySelector("button:not([disabled])"), 0);
       } catch (err) {
         if (token !== rankingBuildToken || !rankingOverlay?.classList.contains("open")) return;
         rankingState = null;
@@ -40237,7 +40603,8 @@ function rankingTargetValues() {
               ? "These places all have the same value. Try another metric or set."
               : "Couldn’t load enough values. Try again, or choose another metric when you’re online.";
         }
-        window.setTimeout(() => rankingStartBtn?.focus({ preventScroll: true }), 0);
+        geoDenFocusWhenOverlayOpen(rankingOverlay, rankingStartBtn, 0);
+        geoDenDiagnosticLog("ranking-build-failed", { reason:String(err?.message || err || "render-error").slice(0,180) });
         console.warn("GeoDen Ranking",err);
       }
     }
@@ -40246,7 +40613,7 @@ function rankingTargetValues() {
       rankingBuildToken += 1;
       rankingState=null;
       rankingLoading.classList.add("hidden"); rankingLoading.textContent="Loading values…"; rankingPlay.classList.add("hidden"); rankingSetup.classList.remove("hidden"); rankingFeedback.textContent=""; rankingVerifyBtn.disabled=false; rankingVerifyBtn.classList.remove("hidden"); rankingVerifyBtn.textContent="Check order"; rankingNewBtn.textContent="Change setup";
-      if (focusSetup) window.setTimeout(() => rankingStartBtn?.focus({ preventScroll:true }), 0);
+      if (focusSetup) geoDenFocusWhenOverlayOpen(rankingOverlay, rankingStartBtn, 0);
     }
     function openRanking() {
       resetRankingToSetup();
@@ -40256,7 +40623,7 @@ function rankingTargetValues() {
       setSpecialOptionActive(rankingSetOptions, "data-ranking-set", rankingSet);
       updateRankingSetupHelp();
       rankingOverlay?.classList.add("open");
-      window.setTimeout(()=>rankingCloseBtn?.focus({preventScroll:true}),20);
+      geoDenFocusWhenOverlayOpen(rankingOverlay, rankingCloseBtn, 20);
     }
     function closeRanking() {
       rankingBuildToken += 1; rankingOverlay?.classList.remove("open");
@@ -40310,7 +40677,7 @@ function rankingTargetValues() {
       sprintOverlay?.classList.add("open");
       if (sprintStartBtn) { delete sprintStartBtn.dataset.confirmReplace; sprintStartBtn.textContent = "Start Sprint →"; }
       syncSprintSetup();
-      window.setTimeout(() => sprintStartBtn?.focus({preventScroll:true}), 20);
+      geoDenFocusWhenOverlayOpen(sprintOverlay, sprintStartBtn, 20);
     }
 
     function closeSprintSetup() {
@@ -41125,6 +41492,147 @@ function rankingTargetValues() {
           geoDenSelfTestAssert(text.includes('Forward did not work.') && text.includes('nextBtn') && text.includes(`Version: ${GEODEN_VERSION}`));
         }],
 
+        ['Diagnostics','Drawable silhouette guard rejects blank path output', () => {
+          const target={type:'Feature',geometry:{type:'Polygon',coordinates:[[[0,0],[2,0],[2,1],[0,1],[0,0]]]},properties:{}};
+          const projection=d3.geoMercator().fitExtent([[2,2],[98,58]],target);
+          const path=d3.geoPath(projection);
+          geoDenSelfTestAssert(silhouettePathIsDrawable(path,target),'Valid silhouette was rejected');
+          const blank=() => null;
+          blank.bounds=() => [[0,0],[0,0]];
+          geoDenSelfTestAssert(!silhouettePathIsDrawable(blank,target),'Blank silhouette was accepted');
+        }],
+        ['Matching','Unavailable board clears stale drawer navigation', () => {
+          const prior={ title:matchingDrawerTitle.textContent, page:matchingDrawerPage.textContent, prev:matchingDrawerPrevBtn.disabled, next:matchingDrawerNextBtn.disabled, cards:[...matchingDrawerCards.childNodes] };
+          try {
+            const temp=document.createElement('div'); temp.textContent='stale card'; matchingDrawerCards.replaceChildren(temp);
+            matchingDrawerPrevBtn.disabled=false; matchingDrawerNextBtn.disabled=false;
+            showMatchingUnavailableDrawer('Open Challenges for another field');
+            geoDenSelfTestEqual(matchingDrawerTitle.textContent,'No cards available');
+            geoDenSelfTestEqual(matchingDrawerPage.textContent,'Open Challenges for another field');
+            geoDenSelfTestAssert(matchingDrawerPrevBtn.disabled && matchingDrawerNextBtn.disabled);
+            geoDenSelfTestEqual(matchingDrawerCards.childElementCount,0);
+          } finally {
+            matchingDrawerTitle.textContent=prior.title; matchingDrawerPage.textContent=prior.page; matchingDrawerPrevBtn.disabled=prior.prev; matchingDrawerNextBtn.disabled=prior.next; matchingDrawerCards.replaceChildren(...prior.cards);
+          }
+        }],
+        ['Diagnostics','Country Profile distinguishes temporary data failure from missing data', () => {
+          const source=renderCountryProfile.toString();
+          geoDenSelfTestAssert(source.includes('Unavailable right now'));
+          geoDenSelfTestAssert(!source.includes('updateCountryProfileFact("population", "Not listed")'));
+          geoDenSelfTestAssert(!source.includes('updateCountryProfileFact("neighbours", "Not listed")'));
+        }],
+        ['Maps','Map Hunt revision failure restores a visible explanation', () => {
+          const source=startMapHuntRevision.toString();
+          geoDenSelfTestAssert(source.includes('Revision couldn’t be rebuilt'));
+          geoDenSelfTestAssert(source.includes('map-hunt-revision-build-failed'));
+        }],
+
+        ['Matching','Empty slot can activate its matching field drawer', () => {
+          const state={answerFields:['capital','population','silhouette'],drawerIndex:0};
+          geoDenSelfTestAssert(activateMatchingDrawerField('population',{state,render:false}));
+          geoDenSelfTestEqual(state.drawerIndex,1);
+          geoDenSelfTestAssert(!activateMatchingDrawerField('language',{state,render:false}));
+          geoDenSelfTestEqual(state.drawerIndex,1);
+        }],
+        ['Diagnostics','Failed SVG visual renders a visible placeholder instead of blank space', () => {
+          const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+          svg.setAttribute('viewBox','0 0 160 100');
+          geoDenSelfTestAssert(renderUnavailableSvg(svg,'Silhouette unavailable') === false);
+          geoDenSelfTestAssert((svg.textContent || '').includes('Silhouette unavailable'));
+        }],
+        ['Matching','Silhouette field preflight rejects a board with one undrawable row', async () => {
+          const rows=[{code:'FR'},{code:'PL'},{code:'ZA'}];
+          const ready=await matchingSilhouetteFieldReady(rows, async country => country.code !== 'PL');
+          geoDenSelfTestAssert(!ready,'Undrawable silhouette row was accepted');
+          const allReady=await matchingSilhouetteFieldReady(rows, async () => true);
+          geoDenSelfTestAssert(allReady,'Drawable silhouette board was rejected');
+        }],
+        ['Matching','Flag field preflight rejects a board with one missing country asset', async () => {
+          const rows=[{code:'FR'},{code:'PL'},{code:'ZA'}];
+          const ready=await matchingFlagFieldReady(rows, async country => country.code !== 'PL');
+          geoDenSelfTestAssert(!ready,'Missing country flag was accepted');
+          const allReady=await matchingFlagFieldReady(rows, async () => true);
+          geoDenSelfTestAssert(allReady,'Drawable flag board was rejected');
+        }],
+        ['Maps','Canonical world renderer rejects a blank geography surface', () => {
+          const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+          const bad={type:'Feature',properties:{},geometry:{type:'Polygon',coordinates:[]}};
+          const result=renderCanonicalWorldMapSvg(svg,geoDenSelfTestCountry('FR'),[bad],{width:220,height:140});
+          geoDenSelfTestEqual(result,null);
+          geoDenSelfTestEqual(svg.childNodes.length,0);
+        }],
+        ['Maps','Country Profile maps use visible loading and unavailable placeholders', () => {
+          const globeSource=renderCountryProfileGlobe.toString();
+          const citySource=renderCountryProfileCityMap.toString();
+          geoDenSelfTestAssert(globeSource.includes('Loading map…') && globeSource.includes('renderCountryProfileMapFallback'));
+          geoDenSelfTestAssert(citySource.includes('Loading map…') && citySource.includes('Map unavailable'));
+        }],
+        ['Quiz','Historical map replay failures surface visibly instead of disappearing', () => {
+          const globeSource=renderHistoricalInteractiveGlobeReplay.toString();
+          const citySource=renderHistoricalInteractiveCityReplay.toString();
+          geoDenSelfTestAssert(globeSource.includes('Historical map unavailable') && globeSource.includes('quiz-history-map-replay-failed'));
+          geoDenSelfTestAssert(citySource.includes('Historical map unavailable') && citySource.includes('quiz-history-city-replay-failed'));
+        }],
+        ['Detective','Solved-location map failure stays visible as an unavailable map', () => {
+          const source=renderDetectiveGuessGlobe.toString();
+          geoDenSelfTestAssert(source.includes('renderCountryProfileMapFallback') && source.includes('Map unavailable'));
+          geoDenSelfTestAssert(source.includes('detective-result-map-render-failed'));
+        }],
+        ['Maps','City markers reject non-finite projected positions', () => {
+          const svg=d3.select(document.createElementNS('http://www.w3.org/2000/svg','svg'));
+          const city={name:'Test City',lat:1,lng:2};
+          geoDenSelfTestAssert(addCityMarker(svg,()=>[NaN,20],city,'capital','Test') === false);
+          geoDenSelfTestEqual(svg.selectAll('.city-marker').size(),0);
+          geoDenSelfTestAssert(addCityMarker(svg,()=>[40,30],city,'capital','Test') === true);
+          geoDenSelfTestEqual(svg.selectAll('.city-marker').size(),1);
+        }],
+        ['Maps','City and location maps use drawable-geometry guards', () => {
+          geoDenSelfTestAssert(renderStandaloneLocationMap.toString().includes('resolveDrawableLocationGeometry'));
+          geoDenSelfTestAssert(ensureCityMapBase.toString().includes('resolveDrawableLocationGeometry'));
+        }],
+        ['Diagnostics','Silhouette render failures cannot silently leave an empty SVG', () => {
+          geoDenSelfTestAssert(renderMatchingSilhouette.toString().includes('renderUnavailableSvg'));
+        }],
+        ['Detective','Silhouette clues require a drawable outline before entering the case', () => {
+          geoDenSelfTestAssert(buildDetectiveClues.toString().includes('silhouetteCountryIsRenderable'));
+        }],
+
+        ['State','Interactive async answers are context-guarded after awaits', () => {
+          const language=submitInteractiveLanguageAnswer.toString();
+          const collection=submitInteractiveNamedCollectionAnswer.toString();
+          const textAnswer=submitInteractiveTextAnswer.toString();
+          geoDenSelfTestAssert(language.includes('interactiveSubmissionStillCurrent(expectedStage, expectedCode, state)'));
+          geoDenSelfTestAssert(collection.includes('interactiveSubmissionStillCurrent(expectedStage, expectedCode, state)'));
+          geoDenSelfTestAssert(textAnswer.includes('interactiveSubmissionStillCurrent(stage, c.code)'));
+        }],
+        ['State','Autocomplete drops results from an obsolete input query', () => {
+          geoDenSelfTestAssert(updateInteractiveSuggestions.toString().includes('interactiveNormalize(interactiveInput.value) !== query'));
+          geoDenSelfTestAssert(rapidUpdateSuggestions.toString().includes('interactiveLooseNormalize(rapidInput.value) !== query'));
+        }],
+        ['Matching','Closing or rebuilding cancels pending Matching gestures', () => {
+          const build=prepareMatchingBoardBuildUi.toString();
+          const close=closeMatchingToMenu.toString();
+          for (const source of [build,close]) {
+            geoDenSelfTestAssert(source.includes('clearMatchingLongPressTimer()'));
+            geoDenSelfTestAssert(source.includes('cancelMatchingRailMomentum()'));
+            geoDenSelfTestAssert(source.includes('matchingRailSwipeState = null'));
+          }
+        }],
+        ['Accessibility','Delayed menu focus and onboarding are guarded against closed overlays', () => {
+          const start=openStartOverlay.toString();
+          geoDenSelfTestAssert(start.includes('!startOverlay.classList.contains("open")'));
+          geoDenSelfTestAssert(start.includes('shouldPromptForProfile()'));
+          geoDenSelfTestAssert(geoDenDiagnosticVisibleOverlays().includes('profileOnboardingOverlay') === profileOnboardingOverlay?.classList.contains('open'));
+          geoDenSelfTestAssert(typeof geoDenRestoreFocusWhenSafe === 'function');
+        }],
+
+        ['State','Interactive auto-advance pauses behind overlays and in the background', () => {
+          const source=completeInteractiveStage.toString();
+          geoDenSelfTestAssert(source.includes('document.hidden'));
+          geoDenSelfTestAssert(source.includes('geoDenDiagnosticVisibleOverlays().length'));
+          geoDenSelfTestAssert(source.includes('window.setTimeout(tryAdvance, 250)'));
+        }],
+
         ['Search','Burma matches Myanmar', () => geoDenSelfTestAssert(countryMatchesNaturalAnswer(geoDenSelfTestCountry('MM'),'Burma'))],
         ['Search','Ivory Coast matches Côte d’Ivoire', () => geoDenSelfTestAssert(countryMatchesNaturalAnswer(geoDenSelfTestCountry('CI'),'Ivory Coast'))],
         ['Search','Czech Republic matches Czechia', () => geoDenSelfTestAssert(countryMatchesNaturalAnswer(geoDenSelfTestCountry('CZ'),'Czech Republic'))],
@@ -41555,6 +42063,42 @@ function rankingTargetValues() {
             geoDenSelfTestRestoreStorage(storageSnapshot);
           }
         }],
+        ['Matching','Starting a rebuild discards stale board state immediately', () => {
+          const source=prepareMatchingBoardBuildUi.toString();
+          geoDenSelfTestAssert(source.includes('matchingState = null'),'Matching rebuild can preserve a stale board state');
+          geoDenSelfTestAssert(source.includes('matchingSelectedCardId = null'),'Matching rebuild can preserve a stale card selection');
+          geoDenSelfTestAssert(source.includes('Building board…'),'Matching rebuild no longer resets the drawer to a loading state');
+        }],
+        ['Sprint','Ended Sprint is recognised as pending results instead of resumable gameplay', () => {
+          const fixture=geoDenSelfTestSessionFixture({ interaction:'rapid', rapid:rapidDefaultState(), sprint:{enabled:true,set:'world',durationMs:60000,remainingMs:0,runningStartedAt:null,ended:true} });
+          geoDenSelfTestAssert(sprintHasEndedPendingResults(fixture),'Ended Sprint was not recognised');
+          fixture.sprint.ended=false;
+          geoDenSelfTestAssert(!sprintHasEndedPendingResults(fixture),'Running Sprint was mistaken for ended');
+          geoDenSelfTestAssert(openRapidMode.toString().includes('sprintHasEndedPendingResults'),'Rapid resume no longer routes ended Sprint to results');
+        }],
+        ['Harness','Closing Rapid invalidates in-flight visual rendering', () => {
+          const previousToken=rapidRenderToken;
+          const previousLocation=rapidLocationState;
+          try {
+            rapidLocationState={ stale:true };
+            invalidateRapidPausedRender();
+            geoDenSelfTestEqual(rapidRenderToken,previousToken+1);
+            geoDenSelfTestEqual(rapidLocationState,null);
+          } finally { rapidRenderToken=previousToken; rapidLocationState=previousLocation; }
+        }],
+        ['Accessibility','Delayed overlay focus never targets a closed dialog', async () => {
+          let focused=0;
+          const target={focus(){focused+=1;}};
+          const closed={classList:{contains(){return false;}}};
+          const opened={classList:{contains(){return true;}}};
+          geoDenFocusWhenOverlayOpen(closed,target,0);
+          await new Promise(resolve=>window.setTimeout(resolve,8));
+          geoDenSelfTestEqual(focused,0);
+          geoDenFocusWhenOverlayOpen(opened,target,0);
+          await new Promise(resolve=>window.setTimeout(resolve,8));
+          geoDenSelfTestEqual(focused,1);
+        }],
+
         ['Storage','Backup includes Flash Flow preference', () => geoDenSelfTestAssert(GEODEN_TRANSFER_KEYS.includes(FLASH_FLOW_PREFS_KEY))],
         ['Storage','Backup includes Sprint set preference', () => geoDenSelfTestAssert(GEODEN_TRANSFER_KEYS.includes(SPRINT_SET_KEY))],
         ['Storage','Backup includes resumable activity', () => geoDenSelfTestAssert(GEODEN_TRANSFER_KEYS.includes(RESUMABLE_ACTIVITY_KEY))],
