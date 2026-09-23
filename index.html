@@ -15624,7 +15624,7 @@ button,
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
 
   <script>
-    const GEODEN_VERSION = "0.56.24";
+    const GEODEN_VERSION = "0.56.26";
     // v0.56.18 — private-beta problem reporting with diagnostic state, recent actions, errors, copy/download/share.
     // v0.56.17 — tester-facing automatic failure reporting with screenshot/copy instructions.
     // v0.56.16 — behavioral map race/microstate regressions; 80-test milestone reached.
@@ -15633,7 +15633,7 @@ button,
     // v0.56.11 — behavioral Quiz-history regressions: exact Back/Forward restore and view-only historical prompts.
     // Input policy: autocomplete/typeahead is ordinary entry and remains unassisted.
     // Only an actual spelling correction (or an explicit hint/reveal) counts as help.
-    const GEODEN_BUILD_DATE = "2026-09-22";
+    const GEODEN_BUILD_DATE = "2026-09-23";
 
     // v0.56.6 — Storage can be unavailable in privacy-restricted browsers,
     // embedded previews or hardened WebViews. Keep GeoDen usable with an
@@ -20641,7 +20641,13 @@ button,
         trailBounces:Number(chainState.trailBounces) || 0,
         trailAdvances:Number(chainState.trailAdvances) || 0,
         filledCount:chainState.parts instanceof Map ? [...chainState.parts.values()].filter(part => part?.country || part?.capital).length : null,
-        rendererReady:!!chainState.rendererReady
+        rendererReady:!!chainState.rendererReady,
+        worldWrapPeriod:Number(chainState.canvasData?.worldWrapPeriod) || null,
+        zoom:chainState.zoomTransform ? {
+          k:Number(chainState.zoomTransform.k) || 1,
+          x:Number(chainState.zoomTransform.x) || 0,
+          y:Number(chainState.zoomTransform.y) || 0
+        } : null
       } : null;
 
       const matching = matchingState ? {
@@ -20661,7 +20667,13 @@ button,
         misses:Number(mapHuntState.misses) || 0,
         revision:!!mapHuntState.revision,
         finished:!!mapHuntState.finished,
-        rendererReady:!!mapHuntState.rendererReady
+        rendererReady:!!mapHuntState.rendererReady,
+        worldWrapPeriod:Number(mapHuntState.worldWrapPeriod) || null,
+        zoom:mapHuntState.zoomTransform ? {
+          k:Number(mapHuntState.zoomTransform.k) || 1,
+          x:Number(mapHuntState.zoomTransform.x) || 0,
+          y:Number(mapHuntState.zoomTransform.y) || 0
+        } : null
       } : null;
 
       const ranking = rankingState ? {
@@ -20714,6 +20726,14 @@ button,
           nextEntry:geoDenDiagnosticNavigationSnapshotSummary(nextHistory),
           liveState:geoDenDiagnosticLiveGameplaySummary(liveGameplayState)
         },
+        worldMap:activeGlobeProjection ? {
+          wrapPeriod:Number(activeStudyWorldMapWrapPeriod) || null,
+          zoom:activeStudyWorldMapTransform ? {
+            k:Number(activeStudyWorldMapTransform.k) || 1,
+            x:Number(activeStudyWorldMapTransform.x) || 0,
+            y:Number(activeStudyWorldMapTransform.y) || 0
+          } : null
+        } : null,
         sprint,
         mapCrawl,
         matching,
@@ -22405,6 +22425,7 @@ button,
       activeStudyWorldMapZoom = null;
       activeStudyWorldMapLayer = null;
       activeStudyWorldMapTransform = window.d3 ? d3.zoomIdentity : null;
+      activeStudyWorldMapWrapPeriod = null;
       if (interactiveCityLocationState?.zoom) destroyLocationZoom(interactiveCityLocationState.zoom);
       interactiveCityLocationState = null;
       interactiveCityLocationLocked = false;
@@ -26265,15 +26286,21 @@ button,
     function interactiveGlobeHitAt(point, c) {
       if (!point || !activeGlobeProjection || !window.d3) return null;
       const transform = activeStudyWorldMapTransform || d3.zoomIdentity;
-      const basePoint = transform?.invert ? transform.invert(point) : point;
-      const geo = activeGlobeProjection.invert(basePoint);
-      if (!geo || !geo.every(Number.isFinite)) return null;
+      const rawBasePoint = transform?.invert ? transform.invert(point) : point;
+      const basePoint = geoDenNormalizeWorldMapPoint(rawBasePoint, activeGlobeProjection, activeStudyWorldMapWrapPeriod);
+      const geoRaw = activeGlobeProjection.invert(basePoint);
+      if (!geoRaw || !geoRaw.every(Number.isFinite)) return null;
+      const geo = [((Number(geoRaw[0]) + 540) % 360) - 180, Number(geoRaw[1])];
 
       const features = interactiveGlobeWorldFeatures?.length
         ? interactiveGlobeWorldFeatures
         : (activeGlobeFeatures || []);
       const targetPointBase = activeGlobeProjection([Number(c.lon) || 0, Number(c.lat) || 0]);
-      const targetPoint = targetPointBase ? transform.apply(targetPointBase) : null;
+      let targetPoint = null;
+      if (targetPointBase) {
+        const copyOffset = geoDenWorldNearestCopyOffset(targetPointBase[0], rawBasePoint?.[0], activeStudyWorldMapWrapPeriod);
+        targetPoint = transform.apply([targetPointBase[0] + copyOffset, targetPointBase[1]]);
+      }
       const span = Number(activeGlobeTargetSpan);
       const tiny = !Number.isFinite(span) || span < 5;
       if (tiny && targetPoint) {
@@ -26281,18 +26308,18 @@ button,
         const tolerance = interactiveGlobeCssPixelsToViewUnits(tolerancePx);
         if (Math.hypot(point[0] - targetPoint[0], point[1] - targetPoint[1]) <= tolerance) {
           const target = features.find(f => String(f.id || "").padStart(3, "0") === activeGlobeTargetNumeric) || null;
-          return { feature:target, numeric:activeGlobeTargetNumeric, viaTolerance:true, geo };
+          return { feature:target, numeric:activeGlobeTargetNumeric, viaTolerance:true, geo, mapPoint:rawBasePoint };
         }
       }
 
       for (const candidate of features) {
         try {
           if (candidate && d3.geoContains(candidate, geo)) {
-            return { feature:candidate, numeric:String(candidate.id || "").padStart(3, "0"), viaTolerance:false, geo };
+            return { feature:candidate, numeric:String(candidate.id || "").padStart(3, "0"), viaTolerance:false, geo, mapPoint:rawBasePoint };
           }
         } catch (_) {}
       }
-      return { feature:null, numeric:null, viaTolerance:false, geo };
+      return { feature:null, numeric:null, viaTolerance:false, geo, mapPoint:rawBasePoint };
     }
 
     function geoFeatureSmallSide(feature) {
@@ -26414,15 +26441,19 @@ button,
       const svg = d3.select("#globe");
       const layer = svg.select("g.globe-interactive-feedback-layer");
       const path = d3.geoPath(activeGlobeProjection);
+      const referenceX = Number(hit?.mapPoint?.[0]);
 
-      // Wrong taps use a small screen-readable marker at the exact tap location.
-      // Filling the clicked atlas polygon can produce a huge complement fill for
-      // antimeridian / high-detail geometries, which made the whole globe look red.
+      // Wrong taps use a small screen-readable marker at the exact repeated-world
+      // copy the learner tapped, not on the base copy at the opposite edge.
       if (!correct) {
         const geo = Array.isArray(hit?.geo) && hit.geo.every(Number.isFinite) ? hit.geo : null;
         if (!geo) return;
-        const point = activeGlobeProjection(geo);
-        if (!point?.every(Number.isFinite)) return;
+        const pointBase = activeGlobeProjection(geo);
+        if (!pointBase?.every(Number.isFinite)) return;
+        const offset = Number.isFinite(referenceX)
+          ? geoDenWorldNearestCopyOffset(pointBase[0], referenceX, activeStudyWorldMapWrapPeriod)
+          : 0;
+        const point = [pointBase[0] + offset, pointBase[1]];
         layer.selectAll(".globe-feedback-point").remove();
         layer.append("circle")
           .attr("class", "globe-feedback-point")
@@ -26440,13 +26471,20 @@ button,
 
       // A correct answer may highlight the country, but never trust a polygon
       // large enough to plausibly be a winding/complement error. In that case,
-      // use a compact locator marker instead of repainting most of the sphere.
+      // use a compact locator marker instead of repainting most of the world.
       layer.selectAll("*").remove();
       const feature = hit?.feature || null;
       const safeFeature = feature && globeFeaturePaintIsSafe(path, feature);
+      const targetPointBase = activeGlobeProjection([Number(c?.lon) || 0, Number(c?.lat) || 0]);
+      const copyOffset = targetPointBase && Number.isFinite(referenceX)
+        ? geoDenWorldNearestCopyOffset(targetPointBase[0], referenceX, activeStudyWorldMapWrapPeriod)
+        : 0;
+      const feedbackCopy = layer.append("g")
+        .attr("class", "globe-feedback-world-copy")
+        .attr("transform", copyOffset ? `translate(${copyOffset},0)` : null);
 
       if (safeFeature) {
-        layer.append("path")
+        feedbackCopy.append("path")
           .attr("class", "globe-feedback-region")
           .datum(feature)
           .attr("d", path)
@@ -26458,7 +26496,7 @@ button,
           .attr("pointer-events", "none");
       }
 
-      appendGlobeFeedbackMarker(layer, activeGlobeProjection, c, {
+      appendGlobeFeedbackMarker(feedbackCopy, activeGlobeProjection, c, {
         className: "globe-feedback-marker",
         stroke: "#2f7d4d",
         fill: "rgba(47,125,77,.16)",
@@ -30897,7 +30935,7 @@ button,
         const profileByCode = new Map(profiles.map(profile => [profile.country.code, profile]));
         const width = 1000;
         const height = 520;
-        const projection = d3.geoNaturalEarth1().fitExtent([[12, 12], [width - 12, height - 12]], { type: "Sphere" });
+        const projection = geoDenWrappedWorldProjection(width, height, 12);
         const path = d3.geoPath(projection);
         const svg = d3.select(masteryWorldMap)
           .attr("viewBox", `0 0 ${width} ${height}`)
@@ -34579,11 +34617,105 @@ Answer: ${answer}`;
     }
     const CANONICAL_WORLD_MAP_WIDTH = 720;
     const CANONICAL_WORLD_MAP_HEIGHT = 420;
+    const GEODEN_WORLD_WRAP_COPY_MULTIPLIERS = Object.freeze([-1, 0, 1]);
+
+    // v0.56.25 — All GeoDen world maps use one cylindrical projection so the
+    // antimeridian is a seam, not a wall. Rendering the neighbouring world
+    // copies lets east/west panning continue naturally like a slippy map.
+    function geoDenWrappedWorldProjection(width, height, padding = 10) {
+      return d3.geoEquirectangular()
+        .fitExtent([[padding,padding],[width-padding,height-padding]], { type:"Sphere" });
+    }
+
+    function geoDenWorldWrapPeriod(projection) {
+      if (!projection) return null;
+      try {
+        const west = projection([-180, 0]);
+        const east = projection([180, 0]);
+        const period = Math.abs(Number(east?.[0]) - Number(west?.[0]));
+        return Number.isFinite(period) && period > 1 ? period : null;
+      } catch (_) { return null; }
+    }
+
+    function geoDenWrapValueNear(value, reference, period) {
+      value = Number(value); reference = Number(reference); period = Number(period);
+      if (![value, reference, period].every(Number.isFinite) || period <= 0) return value;
+      return value + Math.round((reference - value) / period) * period;
+    }
+
+    function geoDenWorldCopyOffsets(period) {
+      period = Number(period);
+      if (!Number.isFinite(period) || period <= 0) return [0];
+      return GEODEN_WORLD_WRAP_COPY_MULTIPLIERS.map(multiplier => multiplier * period);
+    }
+
+    function geoDenWorldNearestCopyOffset(baseX, referenceX, period) {
+      period = Number(period);
+      if (!Number.isFinite(period) || period <= 0) return 0;
+      return Math.round((Number(referenceX) - Number(baseX)) / period) * period;
+    }
+
+    function geoDenNormalizeWorldMapPoint(point, projection, period) {
+      if (!Array.isArray(point) || point.length < 2) return point;
+      const centre = projection?.([0, 0]);
+      const centreX = Number(centre?.[0]);
+      if (!Number.isFinite(centreX) || !Number.isFinite(Number(period)) || Number(period) <= 0) return point;
+      return [geoDenWrapValueNear(Number(point[0]), centreX, Number(period)), Number(point[1])];
+    }
+
+    function geoDenNormalizeWorldZoomTransform(transform, period) {
+      if (!transform || !window.d3) return transform;
+      const k = Math.max(.0001, Number(transform.k) || 1);
+      const screenPeriod = Math.max(.0001, Number(period) || 0) * k;
+      if (!Number.isFinite(screenPeriod) || screenPeriod <= .001) return transform;
+      const x = Number(transform.x) - Math.round(Number(transform.x) / screenPeriod) * screenPeriod;
+      return d3.zoomIdentity.translate(x, Number(transform.y) || 0).scale(k);
+    }
+
+
+    // v0.56.26 — Cache projected Canvas geography once rather than asking
+    // d3.geoPath to re-project hundreds of polygons on every drag frame.
+    function geoDenCanvasPathRecord(feature, pathMeasure) {
+      let pathString = "";
+      try { pathString = String(pathMeasure?.(feature) || ""); } catch (_) {}
+      let path2d = null;
+      if (pathString && typeof Path2D === "function") {
+        try { path2d = new Path2D(pathString); } catch (_) {}
+      }
+      return { feature, pathString, path2d };
+    }
+
+    function geoDenCompositeCanvasPath(records) {
+      const usable = Array.from(records || []).filter(record => record?.pathString);
+      if (!usable.length || typeof Path2D !== "function") return null;
+      try {
+        return new Path2D(usable.map(record => record.pathString).join(" "));
+      } catch (_) {
+        try {
+          const combined = new Path2D();
+          if (typeof combined.addPath !== "function") return null;
+          let count = 0;
+          for (const record of usable) {
+            if (!record.path2d) continue;
+            combined.addPath(record.path2d);
+            count += 1;
+          }
+          return count ? combined : null;
+        } catch (_) { return null; }
+      }
+    }
+
+    function geoDenCanvasDpr() {
+      const raw = Math.max(1, Number(window.devicePixelRatio) || 1);
+      const mobile = !!window.matchMedia?.("(max-width: 620px)")?.matches;
+      return Math.max(1, Math.min(mobile ? 1.5 : 2, raw));
+    }
     let canonicalWorldMapRawFeatures = null;
     let canonicalWorldMapRawPromise = null;
     let activeStudyWorldMapZoom = null;
     let activeStudyWorldMapLayer = null;
     let activeStudyWorldMapTransform = window.d3 ? d3.zoomIdentity : null;
+    let activeStudyWorldMapWrapPeriod = null;
     let activeStudyWorldMapSize = { width:CANONICAL_WORLD_MAP_WIDTH, height:CANONICAL_WORLD_MAP_HEIGHT };
     let canonicalStudyMapRenderToken = 0;
 
@@ -34605,8 +34737,7 @@ Answer: ${answer}`;
     }
 
     function canonicalWorldMapProjection(width = CANONICAL_WORLD_MAP_WIDTH, height = CANONICAL_WORLD_MAP_HEIGHT, padding = 10) {
-      return d3.geoNaturalEarth1()
-        .fitExtent([[padding,padding],[width-padding,height-padding]], { type:"Sphere" });
+      return geoDenWrappedWorldProjection(width, height, padding);
     }
 
     function canonicalWorldDrawableFeature(feature) {
@@ -34638,6 +34769,7 @@ Answer: ${answer}`;
       const height = Number(options.height) || CANONICAL_WORLD_MAP_HEIGHT;
       const projection = canonicalWorldMapProjection(width, height, Number(options.padding) || 10);
       const path = d3.geoPath(projection);
+      const wrapPeriod = geoDenWorldWrapPeriod(projection);
       const svg = d3.select(svgEl)
         .attr("viewBox", `0 0 ${width} ${height}`)
         .attr("preserveAspectRatio", "xMidYMid meet");
@@ -34650,56 +34782,60 @@ Answer: ${answer}`;
 
       const root = svg.append("g").attr("class", "canonical-world-layer");
       const drawableFeatures = (features || []).map(canonicalWorldDrawableFeature).filter(Boolean);
-      root.append("g").attr("class", "canonical-world-countries")
-        .selectAll("path")
-        .data(drawableFeatures)
-        .join("path")
-        .attr("d", path)
-        .attr("fill", options.landFill || "#c9cbc6")
-        .attr("stroke", options.borderStroke || "#f3efe6")
-        .attr("stroke-width", options.borderWidth || .72)
-        .attr("vector-effect", "non-scaling-stroke")
-        .attr("pointer-events", "none");
-
       const target = canonicalWorldTargetFeature(country, features || []);
       const targetCode = String(country.numeric || "").padStart(3, "0");
-      if (options.highlight && target) {
-        root.append("path")
-          .attr("class", "canonical-world-target")
-          .datum(target)
-          .attr("d", path)
-          .attr("fill", options.highlightFill || "#2864f0")
-          .attr("stroke", "#ffffff")
-          .attr("stroke-width", 1.35)
-          .attr("vector-effect", "non-scaling-stroke")
-          .attr("pointer-events", "none");
-      }
-
       const markerPoint = projection([Number(country.lon) || 0, Number(country.lat) || 0]);
-      // Carry forward the old globe's small-country safeguard. A country can
-      // technically exist in the atlas yet still be visually meaningless at
-      // world scale, so use a locator marker for anything under ~5 degrees as
-      // well as the established microstate/area heuristics. Keep the decision
-      // in one helper so production behavior is directly regression-testable.
       const needsMarker = canonicalWorldMapNeedsLocator(country, target, path, 1);
-      if (options.highlight && markerPoint && needsMarker) {
-        root.append("circle")
-          .attr("class", "canonical-world-target-marker-halo")
-          .attr("data-base-radius", 8)
-          .attr("cx", markerPoint[0]).attr("cy", markerPoint[1]).attr("r", 8)
-          .attr("fill", "rgba(40,100,240,.15)")
-          .attr("stroke", "#2864f0").attr("stroke-width", 1.6)
+
+      for (const offset of geoDenWorldCopyOffsets(wrapPeriod)) {
+        const copy = root.append("g")
+          .attr("class", `canonical-world-copy${Math.abs(offset) < .001 ? " canonical-world-copy-primary" : ""}`)
+          .attr("data-world-wrap-offset", offset)
+          .attr("transform", Math.abs(offset) < .001 ? null : `translate(${offset},0)`);
+
+        copy.append("g").attr("class", "canonical-world-countries")
+          .selectAll("path")
+          .data(drawableFeatures)
+          .join("path")
+          .attr("d", path)
+          .attr("fill", options.landFill || "#c9cbc6")
+          .attr("stroke", options.borderStroke || "#f3efe6")
+          .attr("stroke-width", options.borderWidth || .72)
           .attr("vector-effect", "non-scaling-stroke")
           .attr("pointer-events", "none");
-        root.append("circle")
-          .attr("class", "canonical-world-target-marker")
-          .attr("data-base-radius", 3)
-          .attr("cx", markerPoint[0]).attr("cy", markerPoint[1]).attr("r", 3)
-          .attr("fill", "#2864f0").attr("pointer-events", "none");
+
+        if (options.highlight && target) {
+          copy.append("path")
+            .attr("class", "canonical-world-target")
+            .datum(target)
+            .attr("d", path)
+            .attr("fill", options.highlightFill || "#2864f0")
+            .attr("stroke", "#ffffff")
+            .attr("stroke-width", 1.35)
+            .attr("vector-effect", "non-scaling-stroke")
+            .attr("pointer-events", "none");
+        }
+
+        if (options.highlight && markerPoint && needsMarker) {
+          copy.append("circle")
+            .attr("class", "canonical-world-target-marker-halo")
+            .attr("data-base-radius", 8)
+            .attr("cx", markerPoint[0]).attr("cy", markerPoint[1]).attr("r", 8)
+            .attr("fill", "rgba(40,100,240,.15)")
+            .attr("stroke", "#2864f0").attr("stroke-width", 1.6)
+            .attr("vector-effect", "non-scaling-stroke")
+            .attr("pointer-events", "none");
+          copy.append("circle")
+            .attr("class", "canonical-world-target-marker")
+            .attr("data-base-radius", 3)
+            .attr("cx", markerPoint[0]).attr("cy", markerPoint[1]).attr("r", 3)
+            .attr("fill", "#2864f0").attr("pointer-events", "none");
+        }
       }
 
+      // Feedback is positioned on the nearest repeated world copy at interaction time.
       root.append("g").attr("class", "globe-interactive-feedback-layer");
-      return { svg, root, projection, path, target, targetCode, features:drawableFeatures, width, height, markerPoint };
+      return { svg, root, projection, path, target, targetCode, features:drawableFeatures, width, height, markerPoint, wrapPeriod };
     }
 
     function updateCanonicalStudyMapZoomButtons() {
@@ -34715,7 +34851,8 @@ Answer: ${answer}`;
       const zoom = d3.zoom()
         .scaleExtent([1, 14])
         .extent([[0,0],[width,height]])
-        .translateExtent([[0,0],[width,height]])
+        // Keep north/south bounded, but east/west intentionally has no edge.
+        .translateExtent([[-1e9,0],[1e9,height]])
         .filter(event => {
           if (event.type === "dblclick") return false;
           if (event.type === "mousedown") return event.button === 0;
@@ -34725,12 +34862,16 @@ Answer: ${answer}`;
         // handling after the map has actually moved/zoomed; suppressing on
         // zoom start swallowed quick taps before any drag occurred.
         .on("zoom.studyworld", event => {
-          activeStudyWorldMapTransform = event.transform;
-          state.root.attr("transform", event.transform);
+          // Rebase horizontal translation by whole-world widths. The rendered
+          // copies are identical, so this jump is visually seamless and allows
+          // indefinite east/west panning without coordinates growing forever.
+          const wrapped = geoDenNormalizeWorldZoomTransform(event.transform, state.wrapPeriod);
+          activeStudyWorldMapTransform = wrapped;
+          state.root.attr("transform", wrapped);
           // Locator dots should remain screen-readable rather than ballooning
           // as the map is magnified. Their positions zoom with the geography,
           // while their radii shrink inversely to the current transform.
-          const k = Math.max(.001, Number(event.transform?.k) || 1);
+          const k = Math.max(.001, Number(wrapped?.k) || 1);
           state.root.selectAll("circle[data-base-radius]")
             .attr("r", function() {
               const base = Number(this.getAttribute("data-base-radius")) || 1;
@@ -34743,6 +34884,7 @@ Answer: ${answer}`;
       activeStudyWorldMapZoom = zoom;
       activeStudyWorldMapLayer = state.root;
       activeStudyWorldMapTransform = d3.zoomIdentity;
+      activeStudyWorldMapWrapPeriod = state.wrapPeriod || null;
       activeStudyWorldMapSize = { width, height };
       state.svg.call(zoom.transform, d3.zoomIdentity);
       updateCanonicalStudyMapZoomButtons();
@@ -36688,29 +36830,62 @@ Answer: ${answer}`;
       return list;
     }
 
-    function bigMapFitTransform(width, height, codes, featureBounds, markerPoints) {
+    function bigMapFitTransform(width, height, codes, featureBounds, markerPoints, worldWrapPeriod = null) {
       if (!window.d3) return null;
+      const period = Number(worldWrapPeriod);
+      const useWrap = Number.isFinite(period) && period > 1;
+      const codeList = Array.from(codes || []);
+      let anchorX = null;
+      if (useWrap) {
+        for (const code of codeList) {
+          const point = markerPoints?.get?.(code);
+          if (Number.isFinite(Number(point?.x))) { anchorX = Number(point.x); break; }
+          const bounds = featureBounds?.get?.(code);
+          const bx0 = Number(bounds?.[0]?.[0]);
+          const bx1 = Number(bounds?.[1]?.[0]);
+          if (Number.isFinite(bx0) && Number.isFinite(bx1)) { anchorX = (bx0 + bx1) / 2; break; }
+        }
+      }
+
       let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
       const includePoint = (x, y) => {
         if (!Number.isFinite(x) || !Number.isFinite(y)) return;
         x0 = Math.min(x0, x); y0 = Math.min(y0, y);
         x1 = Math.max(x1, x); y1 = Math.max(y1, y);
       };
-      for (const code of (codes || [])) {
+      const wrapX = (x, reference = anchorX) => useWrap && Number.isFinite(reference)
+        ? geoDenWrapValueNear(Number(x), Number(reference), period)
+        : Number(x);
+
+      for (const code of codeList) {
+        const point = markerPoints?.get?.(code);
+        let localRef = anchorX;
+        if (point && Number.isFinite(Number(point.x))) {
+          const px = wrapX(point.x, anchorX);
+          localRef = px;
+          includePoint(px, Number(point.y));
+        }
         const bounds = featureBounds?.get?.(code);
         if (bounds) {
-          includePoint(bounds[0]?.[0], bounds[0]?.[1]);
-          includePoint(bounds[1]?.[0], bounds[1]?.[1]);
+          const bx0Raw = Number(bounds[0]?.[0]);
+          const bx1Raw = Number(bounds[1]?.[0]);
+          const by0 = Number(bounds[0]?.[1]);
+          const by1 = Number(bounds[1]?.[1]);
+          const ref = Number.isFinite(localRef) ? localRef : anchorX;
+          let bx0 = wrapX(bx0Raw, ref);
+          let bx1 = wrapX(bx1Raw, ref);
+          if (useWrap && Number.isFinite(anchorX)) {
+            bx0 = geoDenWrapValueNear(bx0, anchorX, period);
+            bx1 = geoDenWrapValueNear(bx1, anchorX, period);
+          }
+          includePoint(bx0, by0);
+          includePoint(bx1, by1);
         }
-        const point = markerPoints?.get?.(code);
-        if (point) includePoint(point.x, point.y);
       }
       if (![x0, y0, x1, y1].every(Number.isFinite)) return d3.zoomIdentity;
       const spanX = Math.max(10, x1 - x0);
       const spanY = Math.max(10, y1 - y0);
       const mobile = window.matchMedia?.("(max-width: 520px)")?.matches;
-      // Same visual breathing room in both map games, but clamp it on narrow
-      // canvases so a phone still devotes most of its map to the playable area.
       const padX = Math.min(mobile ? 58 : 42, Math.max(18, width * .16));
       const padY = Math.min(mobile ? 44 : 34, Math.max(16, height * .16));
       const usableW = Math.max(40, width - padX * 2);
@@ -36796,7 +36971,7 @@ Answer: ${answer}`;
       const zoom = d3.zoom()
         .scaleExtent([1, BIG_MAP_MAX_ZOOM])
         .extent([[0, 0], [width, height]])
-        .translateExtent([[0, 0], [width, height]])
+        .translateExtent([[-1e9, 0], [1e9, height]])
         .filter(event => {
           if (event.type === "dblclick") return false;
           if (event.type === "mousedown") return event.button === 0;
@@ -36804,7 +36979,7 @@ Answer: ${answer}`;
         })
         .on("zoom.chain", event => {
           if (!chainState) return;
-          chainState.zoomTransform = event.transform;
+          chainState.zoomTransform = geoDenNormalizeWorldZoomTransform(event.transform, chainState.canvasData?.worldWrapPeriod);
           requestChainCanvasDraw();
           updateChainZoomButtons();
         });
@@ -36821,9 +36996,13 @@ Answer: ${answer}`;
 
     function fitChainToActiveArea({ animate = false } = {}) {
       if (!chainState?.zoom || !chainWorldMap || !window.d3 || !chainState?.canvasData) return;
-      const { width, height, featureBounds, markerPointMap } = chainState.canvasData;
+      const { width, height, featureBounds, markerPointMap, allProjectedPoints } = chainState.canvasData;
       const fitCodes = bigMapAutoFitCodes(chainState.setKey, chainState.codes);
-      const transform = bigMapFitTransform(width, height, fitCodes, featureBounds, markerPointMap) || d3.zoomIdentity;
+      const rawTransform = bigMapFitTransform(
+        width, height, fitCodes, featureBounds, allProjectedPoints || markerPointMap,
+        chainState.setKey === "world" ? null : chainState.canvasData?.worldWrapPeriod
+      ) || d3.zoomIdentity;
+      const transform = geoDenNormalizeWorldZoomTransform(rawTransform, chainState.canvasData?.worldWrapPeriod) || rawTransform;
       chainState.homeTransform = transform;
       const canvas = d3.select(chainWorldMap);
       const target = animate ? canvas.transition().duration(180) : canvas;
@@ -36877,7 +37056,7 @@ Answer: ${answer}`;
     function drawChainCanvas(availability = chainAvailability()) {
       const data = chainState?.canvasData;
       if (!data || !chainWorldMap?.getContext) return;
-      const { width, height, dpr, contextFeatures, selectedFeatures, markerPoints, pathCanvas } = data;
+      const { width, height, dpr, contextFeatures, contextPath2D, selectedFeatures, markerPoints, pathCanvas, worldWrapPeriod } = data;
       const ctx = chainWorldMap.getContext("2d", { alpha:false });
       if (!ctx) return;
       const t = chainState.zoomTransform || d3.zoomIdentity;
@@ -36886,7 +37065,26 @@ Answer: ${answer}`;
       const lateGame = unresolved > 0 && unresolved <= 5;
       const finalPair = unresolved > 0 && unresolved <= 2;
 
-      // Reset to device-pixel space and paint a clean ocean background every frame.
+      if (typeof Path2D === "function") {
+        const signature = selectedFeatures.map(item => item.safe ? chainStatusClass(item.code, availability) : "-").join("|");
+        if (data.groupedPathSignature !== signature) {
+          const buckets = new Map();
+          for (const item of selectedFeatures) {
+            if (!item.safe || !item.cachedPath?.pathString) continue;
+            const status = chainStatusClass(item.code, availability);
+            if (!buckets.has(status)) buckets.set(status, []);
+            buckets.get(status).push(item.cachedPath);
+          }
+          const groups = new Map();
+          for (const [status, records] of buckets) {
+            const path = geoDenCompositeCanvasPath(records);
+            if (path) groups.set(status, { path, style:chainCanvasStatusStyle(status) });
+          }
+          data.groupedPathSignature = signature;
+          data.groupedPaths = groups.size ? groups : null;
+        }
+      }
+
       ctx.setTransform(1,0,0,1,0,0);
       ctx.fillStyle = "#dce7e8";
       ctx.fillRect(0,0,chainWorldMap.width,chainWorldMap.height);
@@ -36897,55 +37095,84 @@ Answer: ${answer}`;
       ctx.lineJoin = "round";
       ctx.lineCap = "round";
 
-      if (chainState.setKey !== "world") {
+      const drawWorldCopy = offset => {
         ctx.save();
-        ctx.globalAlpha = .26;
-        ctx.fillStyle = "#b9bfbd";
-        ctx.strokeStyle = "#f3efe6";
-        ctx.lineWidth = .55 / k;
-        for (const feature of contextFeatures) {
+        if (offset) ctx.translate(offset, 0);
+
+        if (chainState.setKey !== "world") {
+          ctx.save();
+          ctx.globalAlpha = .26;
+          ctx.fillStyle = "#b9bfbd";
+          ctx.strokeStyle = "#f3efe6";
+          ctx.lineWidth = .55 / k;
+          if (contextPath2D) {
+            ctx.fill(contextPath2D);
+            ctx.stroke(contextPath2D);
+          } else {
+            for (const feature of contextFeatures) {
+              ctx.beginPath();
+              pathCanvas(feature);
+              ctx.fill();
+              ctx.stroke();
+            }
+          }
+          ctx.restore();
+        }
+
+        if (data.groupedPaths) {
+          for (const group of data.groupedPaths.values()) {
+            const style = group.style;
+            ctx.fillStyle = style.fill;
+            ctx.strokeStyle = style.stroke;
+            ctx.lineWidth = style.line / k;
+            ctx.fill(group.path);
+            ctx.stroke(group.path);
+          }
+        } else {
+          for (const item of selectedFeatures) {
+            if (!item.safe) continue;
+            const status = chainStatusClass(item.code, availability);
+            const style = chainCanvasStatusStyle(status);
+            ctx.fillStyle = style.fill;
+            ctx.strokeStyle = style.stroke;
+            ctx.lineWidth = style.line / k;
+            if (item.cachedPath?.path2d) {
+              ctx.fill(item.cachedPath.path2d);
+              ctx.stroke(item.cachedPath.path2d);
+            } else {
+              ctx.beginPath();
+              pathCanvas(item.feature);
+              ctx.fill();
+              ctx.stroke();
+            }
+          }
+        }
+
+        for (const point of markerPoints) {
+          const status = chainStatusClass(point.code, availability);
+          const screenRadius = status === "current" ? 7.2 : status === "filled" ? 4.8 : finalPair ? 10.5 : lateGame ? 8.2 : 6.2;
+          if (lateGame && status !== "filled") {
+            const haloRadius = (finalPair ? 10.5 : 8.2) + (finalPair ? 5.5 : 4.2);
+            ctx.beginPath();
+            ctx.arc(point.x, point.y, haloRadius / k, 0, Math.PI * 2);
+            ctx.strokeStyle = chainCanvasHaloStroke(status);
+            ctx.globalAlpha = .72;
+            ctx.lineWidth = 1.6 / k;
+            ctx.stroke();
+            ctx.globalAlpha = 1;
+          }
           ctx.beginPath();
-          pathCanvas(feature);
+          ctx.arc(point.x, point.y, screenRadius / k, 0, Math.PI * 2);
+          ctx.fillStyle = chainCanvasMarkerFill(status);
+          ctx.strokeStyle = "#f7f4ed";
+          ctx.lineWidth = 2 / k;
           ctx.fill();
           ctx.stroke();
         }
         ctx.restore();
-      }
+      };
 
-      for (const item of selectedFeatures) {
-        if (!item.safe) continue;
-        const status = chainStatusClass(item.code, availability);
-        const style = chainCanvasStatusStyle(status);
-        ctx.beginPath();
-        pathCanvas(item.feature);
-        ctx.fillStyle = style.fill;
-        ctx.strokeStyle = style.stroke;
-        ctx.lineWidth = style.line / k;
-        ctx.fill();
-        ctx.stroke();
-      }
-
-      for (const point of markerPoints) {
-        const status = chainStatusClass(point.code, availability);
-        const screenRadius = status === "current" ? 7.2 : status === "filled" ? 4.8 : finalPair ? 10.5 : lateGame ? 8.2 : 6.2;
-        if (lateGame && status !== "filled") {
-          const haloRadius = (finalPair ? 10.5 : 8.2) + (finalPair ? 5.5 : 4.2);
-          ctx.beginPath();
-          ctx.arc(point.x, point.y, haloRadius / k, 0, Math.PI * 2);
-          ctx.strokeStyle = chainCanvasHaloStroke(status);
-          ctx.globalAlpha = .72;
-          ctx.lineWidth = 1.6 / k;
-          ctx.stroke();
-          ctx.globalAlpha = 1;
-        }
-        ctx.beginPath();
-        ctx.arc(point.x, point.y, screenRadius / k, 0, Math.PI * 2);
-        ctx.fillStyle = chainCanvasMarkerFill(status);
-        ctx.strokeStyle = "#f7f4ed";
-        ctx.lineWidth = 2 / k;
-        ctx.fill();
-        ctx.stroke();
-      }
+      for (const offset of geoDenWorldCopyOffsets(worldWrapPeriod)) drawWorldCopy(offset);
       ctx.restore();
     }
 
@@ -37027,13 +37254,13 @@ Answer: ${answer}`;
         chainFillPlay.style.visibility = "";
       }
 
-      const dpr = Math.max(1, Math.min(2, Number(window.devicePixelRatio) || 1));
+      const dpr = geoDenCanvasDpr();
       chainWorldMap.width = Math.round(width * dpr);
       chainWorldMap.height = Math.round(height * dpr);
       chainWorldMap.style.aspectRatio = `${width} / ${height}`;
 
-      const projection = d3.geoNaturalEarth1()
-        .fitExtent([[8,8],[width-8,height-8]], { type:"Sphere" });
+      const projection = geoDenWrappedWorldProjection(width, height, 8);
+      const worldWrapPeriod = geoDenWorldWrapPeriod(projection);
       const pathMeasure = d3.geoPath(projection);
       const ctx = chainWorldMap.getContext("2d", { alpha:false });
       const pathCanvas = d3.geoPath(projection).context(ctx);
@@ -37041,7 +37268,8 @@ Answer: ${answer}`;
       const selectedFeatures = rawSelected.map(item => {
         const safe = globeFeaturePaintIsSafe(pathMeasure, item.feature, .45);
         if (safe) represented.add(item.code);
-        return { ...item, safe };
+        const cachedPath = safe ? geoDenCanvasPathRecord(item.feature, pathMeasure) : null;
+        return { ...item, safe, cachedPath };
       });
       const featureBounds = new Map();
       const projectedPoints = new Map();
@@ -37058,7 +37286,10 @@ Answer: ${answer}`;
           if (bounds?.flat?.().every(Number.isFinite)) featureBounds.set(item.code, bounds);
         } catch (_) {}
       }
-      const provisionalHome = bigMapFitTransform(width, height, chainState.codes, featureBounds, projectedPoints) || d3.zoomIdentity;
+      const provisionalHome = bigMapFitTransform(
+        width, height, chainState.codes, featureBounds, projectedPoints,
+        chainState.setKey === "world" ? null : worldWrapPeriod
+      ) || d3.zoomIdentity;
       const homeScale = Math.max(1, Number(provisionalHome.k) || 1);
       const tiny = new Set();
       for (const item of selectedFeatures) {
@@ -37075,14 +37306,22 @@ Answer: ${answer}`;
 
       destroyChainZoom();
       chainState.projection = projection;
+      const contextFeatures = features.filter(feature => globeFeaturePaintIsSafe(pathMeasure, feature, .45));
+      const contextPathRecords = contextFeatures.map(feature => geoDenCanvasPathRecord(feature, pathMeasure));
       chainState.canvasData = {
         width, height, dpr,
-        contextFeatures: features.filter(feature => globeFeaturePaintIsSafe(pathMeasure, feature, .45)),
+        contextFeatures,
+        contextPathRecords,
+        contextPath2D:geoDenCompositeCanvasPath(contextPathRecords),
         selectedFeatures,
         markerPoints,
         markerPointMap,
+        allProjectedPoints:projectedPoints,
         featureBounds,
-        pathCanvas
+        pathCanvas,
+        worldWrapPeriod,
+        groupedPathSignature:null,
+        groupedPaths:null
       };
       chainState.rendererReady = true;
       chainState.lastAvailability = chainAvailability();
@@ -38187,15 +38426,13 @@ Answer: ${answer}`;
       const point = mapHuntLabelPoint(code);
       if (!point || !Number.isFinite(point.x) || !Number.isFinite(point.y)) return null;
 
-      // Use the exact same D3 transform that paints the Canvas map.  The old
-      // getScreenCTM() route could report a stale/odd matrix on Safari/Samsung
-      // once the transparent SVG interaction layer was resized, which is how a
-      // Vatican/San Marino label could jump hundreds of kilometres away.
       const t = mapHuntState?.zoomTransform || d3.zoomIdentity;
-      const transformed = t.apply([point.x, point.y]);
       const rect = mapHuntMap.getBoundingClientRect();
       const baseWidth = Math.max(1, Number(mapHuntState?.mapWidth) || rect.width || 1);
       const baseHeight = Math.max(1, Number(mapHuntState?.mapHeight) || rect.height || 1);
+      const viewportCenterMap = t.invert([baseWidth / 2, baseHeight / 2]);
+      const offset = geoDenWorldNearestCopyOffset(point.x, viewportCenterMap?.[0], mapHuntState?.worldWrapPeriod);
+      const transformed = t.apply([point.x + offset, point.y]);
       const scaleX = rect.width / baseWidth;
       const scaleY = rect.height / baseHeight;
       const x = rect.left + transformed[0] * scaleX;
@@ -38709,13 +38946,38 @@ Answer: ${answer}`;
     function drawMapHuntCanvas() {
       const data = mapHuntState?.canvasData;
       if (!data || !mapHuntCanvas?.getContext) return;
-      const { width, height, dpr, contextFeatures, selectedFeatures, markerPoints, pathCanvas } = data;
+      const { width, height, dpr, contextFeatures, contextPath2D, selectedFeatures, markerPoints, pathCanvas, worldWrapPeriod } = data;
       const ctx = mapHuntCanvas.getContext("2d", { alpha:false });
       if (!ctx || !pathCanvas) return;
       const t = mapHuntState.zoomTransform || d3.zoomIdentity;
       const metrics = mapHuntMarkerMetrics(t);
       const { k, viewportScale, haloPx, visiblePx } = metrics;
       const screenToGeo = px => px / Math.max(.0001, k * viewportScale);
+
+      if (typeof Path2D === "function") {
+        const signature = selectedFeatures.map(item => {
+          if (!item.safe) return "-";
+          const style = mapHuntCanvasCountryStyle(item.code);
+          return `${style.fill}/${style.stroke}/${style.line}/${style.alpha ?? 1}`;
+        }).join("|");
+        if (data.groupedPathSignature !== signature) {
+          const buckets = new Map();
+          for (const item of selectedFeatures) {
+            if (!item.safe || !item.cachedPath?.pathString) continue;
+            const style = mapHuntCanvasCountryStyle(item.code);
+            const key = `${style.fill}/${style.stroke}/${style.line}/${style.alpha ?? 1}`;
+            if (!buckets.has(key)) buckets.set(key, { style, records:[] });
+            buckets.get(key).records.push(item.cachedPath);
+          }
+          const groups = new Map();
+          for (const [key, bucket] of buckets) {
+            const path = geoDenCompositeCanvasPath(bucket.records);
+            if (path) groups.set(key, { path, style:bucket.style });
+          }
+          data.groupedPathSignature = signature;
+          data.groupedPaths = groups.size ? groups : null;
+        }
+      }
 
       ctx.setTransform(1,0,0,1,0,0);
       ctx.fillStyle = "#dce7e8";
@@ -38727,67 +38989,98 @@ Answer: ${answer}`;
       ctx.lineJoin = "round";
       ctx.lineCap = "round";
 
-      if (mapHuntState.setKey !== "world") {
+      const drawWorldCopy = offset => {
         ctx.save();
-        ctx.globalAlpha = .26;
-        ctx.fillStyle = "#b9bfbd";
-        ctx.strokeStyle = "#f3efe6";
-        ctx.lineWidth = screenToGeo(.62);
-        for (const feature of contextFeatures) {
-          ctx.beginPath();
-          pathCanvas(feature);
-          ctx.fill();
-          ctx.stroke();
-        }
-        ctx.restore();
-      }
+        if (offset) ctx.translate(offset, 0);
 
-      for (const item of selectedFeatures) {
-        if (!item.safe || !item.code) continue;
-        const style = mapHuntCanvasCountryStyle(item.code);
-        ctx.save();
-        ctx.globalAlpha = style.alpha ?? 1;
-        ctx.beginPath();
-        pathCanvas(item.feature);
-        ctx.fillStyle = style.fill;
-        ctx.strokeStyle = style.stroke;
-        ctx.lineWidth = screenToGeo(style.line);
-        ctx.fill();
-        ctx.stroke();
-        ctx.restore();
-      }
-
-      if (mapHuntState?.revealFlashCode && mapHuntState.awaitingRevealClick) {
-        const point = mapHuntState.markerPoints?.get(mapHuntState.revealFlashCode);
-        if (point) {
+        if (mapHuntState.setKey !== "world") {
           ctx.save();
-          ctx.globalAlpha = mapHuntState.revealFlashDim ? .28 : .86;
+          ctx.globalAlpha = .26;
+          ctx.fillStyle = "#b9bfbd";
+          ctx.strokeStyle = "#f3efe6";
+          ctx.lineWidth = screenToGeo(.62);
+          if (contextPath2D) {
+            ctx.fill(contextPath2D);
+            ctx.stroke(contextPath2D);
+          } else {
+            for (const feature of contextFeatures) {
+              ctx.beginPath();
+              pathCanvas(feature);
+              ctx.fill();
+              ctx.stroke();
+            }
+          }
+          ctx.restore();
+        }
+
+        if (data.groupedPaths) {
+          for (const group of data.groupedPaths.values()) {
+            const style = group.style;
+            ctx.save();
+            ctx.globalAlpha = style.alpha ?? 1;
+            ctx.fillStyle = style.fill;
+            ctx.strokeStyle = style.stroke;
+            ctx.lineWidth = screenToGeo(style.line);
+            ctx.fill(group.path);
+            ctx.stroke(group.path);
+            ctx.restore();
+          }
+        } else {
+          for (const item of selectedFeatures) {
+            if (!item.safe || !item.code) continue;
+            const style = mapHuntCanvasCountryStyle(item.code);
+            ctx.save();
+            ctx.globalAlpha = style.alpha ?? 1;
+            ctx.fillStyle = style.fill;
+            ctx.strokeStyle = style.stroke;
+            ctx.lineWidth = screenToGeo(style.line);
+            if (item.cachedPath?.path2d) {
+              ctx.fill(item.cachedPath.path2d);
+              ctx.stroke(item.cachedPath.path2d);
+            } else {
+              ctx.beginPath();
+              pathCanvas(item.feature);
+              ctx.fill();
+              ctx.stroke();
+            }
+            ctx.restore();
+          }
+        }
+
+        if (mapHuntState?.revealFlashCode && mapHuntState.awaitingRevealClick) {
+          const point = mapHuntState.markerPoints?.get(mapHuntState.revealFlashCode);
+          if (point) {
+            ctx.save();
+            ctx.globalAlpha = mapHuntState.revealFlashDim ? .28 : .86;
+            ctx.beginPath();
+            ctx.arc(point.x, point.y, screenToGeo(haloPx), 0, Math.PI * 2);
+            ctx.strokeStyle = "#8f342e";
+            ctx.lineWidth = screenToGeo(2.2);
+            ctx.stroke();
+            ctx.restore();
+          }
+        }
+
+        for (const point of markerPoints) {
+          const code = point.country?.code;
+          if (!code || !Number.isFinite(point.x) || !Number.isFinite(point.y)) continue;
+          ctx.save();
+          if (mapHuntState?.revealFlashCode === code && mapHuntState?.awaitingRevealClick) {
+            ctx.globalAlpha = mapHuntState.revealFlashDim ? .42 : 1;
+          }
           ctx.beginPath();
-          ctx.arc(point.x, point.y, screenToGeo(haloPx), 0, Math.PI * 2);
-          ctx.strokeStyle = "#8f342e";
-          ctx.lineWidth = screenToGeo(2.2);
+          ctx.arc(point.x, point.y, screenToGeo(visiblePx), 0, Math.PI * 2);
+          ctx.fillStyle = mapHuntCanvasMarkerFill(code);
+          ctx.strokeStyle = "#f7f4ed";
+          ctx.lineWidth = screenToGeo(mapHuntResultClass(code) === "revealed" ? 3.0 : 2.0);
+          ctx.fill();
           ctx.stroke();
           ctx.restore();
         }
-      }
-
-      for (const point of markerPoints) {
-        const code = point.country?.code;
-        if (!code || !Number.isFinite(point.x) || !Number.isFinite(point.y)) continue;
-        ctx.save();
-        if (mapHuntState?.revealFlashCode === code && mapHuntState?.awaitingRevealClick) {
-          ctx.globalAlpha = mapHuntState.revealFlashDim ? .42 : 1;
-        }
-        ctx.beginPath();
-        ctx.arc(point.x, point.y, screenToGeo(visiblePx), 0, Math.PI * 2);
-        ctx.fillStyle = mapHuntCanvasMarkerFill(code);
-        ctx.strokeStyle = "#f7f4ed";
-        ctx.lineWidth = screenToGeo(mapHuntResultClass(code) === "revealed" ? 3.0 : 2.0);
-        ctx.fill();
-        ctx.stroke();
         ctx.restore();
-      }
+      };
 
+      for (const offset of geoDenWorldCopyOffsets(worldWrapPeriod)) drawWorldCopy(offset);
       ctx.restore();
     }
 
@@ -38804,30 +39097,31 @@ Answer: ${answer}`;
       const mapPoint = t.invert(pointer);
       const [x, y] = mapPoint;
       if (![x, y].every(Number.isFinite)) return;
+      const wrapPeriod = mapHuntState.worldWrapPeriod;
 
       const metrics = mapHuntMarkerMetrics(t);
       const markerPoints = mapHuntState.markerPoints || new Map();
       let nearest = null;
       for (const [code, point] of markerPoints) {
         if (!mapHuntEligibleCode(code) || !point) continue;
-        const dx = x - point.x;
+        const wrappedX = geoDenWrapValueNear(point.x, x, wrapPeriod);
+        const dx = x - wrappedX;
         const dy = y - point.y;
         const screenDist = Math.hypot(dx, dy) * metrics.k * metrics.viewportScale;
-        const candidate = { code, distance:screenDist };
+        const candidate = { code, distance:screenDist, wrappedX };
         if (!nearest || screenDist < nearest.distance) nearest = candidate;
       }
 
-      // Give isolated microstate dots a generous touch target. Only tighten the
-      // radius when another dot's centre is close enough for the two hit zones to
-      // overlap; within a cluster, nearest-dot geometry keeps selection precise.
       let markerHitPx = metrics.hitPx;
       if (nearest) {
         const nearestPoint = markerPoints.get(nearest.code);
         let nearestNeighbourPx = Infinity;
         if (nearestPoint) {
+          const nearestX = geoDenWrapValueNear(nearestPoint.x, x, wrapPeriod);
           for (const [otherCode, otherPoint] of markerPoints) {
             if (otherCode === nearest.code || !mapHuntEligibleCode(otherCode) || !otherPoint) continue;
-            const centreDist = Math.hypot(nearestPoint.x - otherPoint.x, nearestPoint.y - otherPoint.y) * metrics.k * metrics.viewportScale;
+            const otherX = geoDenWrapValueNear(otherPoint.x, nearestX, wrapPeriod);
+            const centreDist = Math.hypot(nearestX - otherX, nearestPoint.y - otherPoint.y) * metrics.k * metrics.viewportScale;
             if (centreDist < nearestNeighbourPx) nearestNeighbourPx = centreDist;
           }
         }
@@ -38837,8 +39131,10 @@ Answer: ${answer}`;
       }
 
       let targetCode = "";
-      const geo = mapHuntState.projection?.invert?.([x, y]);
+      const baseMapPoint = geoDenNormalizeWorldMapPoint([x, y], mapHuntState.projection, wrapPeriod);
+      const geo = mapHuntState.projection?.invert?.(baseMapPoint);
       if (geo?.every?.(Number.isFinite)) {
+        geo[0] = ((Number(geo[0]) + 540) % 360) - 180;
         const candidates = mapHuntState.canvasData?.selectedFeatures || [];
         for (const item of candidates) {
           if (!item?.safe || !item.code || !mapHuntEligibleCode(item.code)) continue;
@@ -38864,13 +39160,15 @@ Answer: ${answer}`;
       const height = Number(mapHuntState.mapHeight) || 555;
       const sourceCodes = Array.from(codes || []);
       const fitCodes = bigMapAutoFitCodes(mapHuntState.setKey, sourceCodes);
-      return bigMapFitTransform(
+      const raw = bigMapFitTransform(
         width,
         height,
         fitCodes,
         mapHuntState.featureBounds || new Map(),
-        mapHuntState.markerPoints || new Map()
+        mapHuntState.allProjectedPoints || mapHuntState.markerPoints || new Map(),
+        mapHuntState.setKey === "world" ? null : mapHuntState.worldWrapPeriod
       ) || d3.zoomIdentity;
+      return geoDenNormalizeWorldZoomTransform(raw, mapHuntState.worldWrapPeriod) || raw;
     }
 
     function updateMapHuntZoomButtons() {
@@ -38899,7 +39197,7 @@ Answer: ${answer}`;
       const zoom = d3.zoom()
         .scaleExtent([1, BIG_MAP_MAX_ZOOM])
         .extent([[0, 0], [width, height]])
-        .translateExtent([[0, 0], [width, height]])
+        .translateExtent([[-1e9, 0], [1e9, height]])
         .filter(event => {
           if (event.type === "dblclick") return false;
           if (event.type === "mousedown") return event.button === 0;
@@ -38907,9 +39205,10 @@ Answer: ${answer}`;
         })
         .on("zoom.maphunt", event => {
           if (!mapHuntState) return;
-          mapHuntState.zoomTransform = event.transform;
-          layer.attr("transform", event.transform.toString());
-          updateMapHuntMarkerScale(event.transform);
+          const wrapped = geoDenNormalizeWorldZoomTransform(event.transform, mapHuntState.worldWrapPeriod);
+          mapHuntState.zoomTransform = wrapped;
+          layer.attr("transform", wrapped.toString());
+          updateMapHuntMarkerScale(wrapped);
           requestMapHuntCanvasDraw();
           positionMapHuntTapLabel();
           updateMapHuntZoomButtons();
@@ -38972,8 +39271,8 @@ Answer: ${answer}`;
         mapHuntPlay.style.visibility = "";
         if (!loadingWasHidden) mapHuntLoading?.classList.remove("hidden");
       }
-      const projection = d3.geoNaturalEarth1()
-        .fitExtent([[12,12],[width-12,height-12]], { type:"Sphere" });
+      const projection = geoDenWrappedWorldProjection(width, height, 12);
+      const worldWrapPeriod = geoDenWorldWrapPeriod(projection);
       const path = d3.geoPath(projection);
       const svg = d3.select(mapHuntMap)
         .attr("viewBox", `0 0 ${width} ${height}`)
@@ -39026,7 +39325,8 @@ Answer: ${answer}`;
             if (bounds?.flat?.().every(Number.isFinite)) mapHuntState.featureBounds.set(code, bounds);
           } catch (_) {}
         }
-        return { feature, code, safe };
+        const cachedPath = safe ? geoDenCanvasPathRecord(feature, path) : null;
+        return { feature, code, safe, cachedPath };
       });
       const provisionalFitCodes = bigMapAutoFitCodes(mapHuntState.setKey, mapHuntState.roundCodes);
       const provisionalHome = bigMapFitTransform(width, height, provisionalFitCodes, mapHuntState.featureBounds, allProjectedPoints) || d3.zoomIdentity;
@@ -39055,6 +39355,7 @@ Answer: ${answer}`;
         return { country:c, x:point?.x ?? -20, y:point?.y ?? -20 };
       });
       mapHuntState.markerPoints = new Map(markerPoints.map(point => [point.country.code, { x:point.x, y:point.y }]));
+      mapHuntState.allProjectedPoints = allProjectedPoints;
       for (const point of markerPoints) {
         if (Number.isFinite(point.x) && Number.isFinite(point.y)) {
           mapHuntState.labelPoints.set(point.country.code, { x:point.x, y:point.y });
@@ -39083,7 +39384,7 @@ Answer: ${answer}`;
       layer.append("g").attr("class", "map-hunt-temp-labels");
       layer.append("g").attr("class", "map-hunt-reveal-labels");
 
-      const dpr = Math.max(1, Math.min(2, Number(window.devicePixelRatio) || 1));
+      const dpr = geoDenCanvasDpr();
       if (mapHuntCanvas) {
         mapHuntCanvas.width = Math.round(width * dpr);
         mapHuntCanvas.height = Math.round(height * dpr);
@@ -39091,12 +39392,20 @@ Answer: ${answer}`;
       }
 
       mapHuntState.projection = projection;
+      mapHuntState.worldWrapPeriod = worldWrapPeriod;
+      const canvasContextFeatures = features.filter(feature => globeFeaturePaintIsSafe(path, feature, .45));
+      const contextPathRecords = canvasContextFeatures.map(feature => geoDenCanvasPathRecord(feature, path));
       mapHuntState.canvasData = {
         width, height, dpr,
-        contextFeatures: features.filter(feature => globeFeaturePaintIsSafe(path, feature, .45)),
+        contextFeatures:canvasContextFeatures,
+        contextPathRecords,
+        contextPath2D:geoDenCompositeCanvasPath(contextPathRecords),
         selectedFeatures: preparedFeatures,
         markerPoints,
-        pathCanvas: d3.geoPath(projection).context(mapHuntCanvas?.getContext?.("2d", { alpha:false }) || null)
+        worldWrapPeriod,
+        pathCanvas: d3.geoPath(projection).context(mapHuntCanvas?.getContext?.("2d", { alpha:false }) || null),
+        groupedPathSignature:null,
+        groupedPaths:null
       };
       mapHuntState.rendererReady = true;
       attachMapHuntZoom(svg, layer, width, height);
@@ -39127,6 +39436,7 @@ Answer: ${answer}`;
         zoomTransform:null,
         labelPoints:new Map(),
         markerPoints:new Map(),
+        allProjectedPoints:new Map(),
         featureBounds:new Map(),
         canvasData:null,
         rendererReady:false,
@@ -39135,6 +39445,7 @@ Answer: ${answer}`;
         revealFlashDim:false,
         mapWidth:1,
         mapHeight:1,
+        worldWrapPeriod:null,
         homeTransform:null,
         needsRender:false
       };
@@ -40243,7 +40554,7 @@ function rankingTargetValues() {
     async function geoDenSelfTestWithCanonicalMapState(fn) {
       const previous = {
         lookupCountryCode, reviewCountryCode, currentStage, phase,
-        canonicalStudyMapRenderToken, activeStudyWorldMapTransform, activeGlobeProjection
+        canonicalStudyMapRenderToken, activeStudyWorldMapTransform, activeStudyWorldMapWrapPeriod, activeGlobeProjection
       };
       try {
         const country = geoDenSelfTestCountry('FR');
@@ -40261,6 +40572,7 @@ function rankingTargetValues() {
         phase = previous.phase;
         canonicalStudyMapRenderToken = previous.canonicalStudyMapRenderToken;
         activeStudyWorldMapTransform = previous.activeStudyWorldMapTransform;
+        activeStudyWorldMapWrapPeriod = previous.activeStudyWorldMapWrapPeriod;
         activeGlobeProjection = previous.activeGlobeProjection;
       }
     }
@@ -41271,11 +41583,49 @@ function rankingTargetValues() {
         ['Trail','Greece ↔ Cyprus route exists', () => geoDenSelfTestAssert(geoDenSelfTestRoutePresent('GR','CY'))],
         ['Trail','Italy ↔ Malta route exists', () => geoDenSelfTestAssert(geoDenSelfTestRoutePresent('IT','MT'))],
 
+        ['Maps','World projection has a constant horizontal wrap period', () => {
+          geoDenSelfTestAssert(!!window.d3, 'D3 map tools unavailable');
+          const projection=geoDenWrappedWorldProjection(720,420,10);
+          const period=geoDenWorldWrapPeriod(projection);
+          geoDenSelfTestAssert(Number.isFinite(period) && period > 500, `Invalid wrap period ${period}`);
+          const equator=Math.abs(projection([180,0])[0]-projection([-180,0])[0]);
+          const north=Math.abs(projection([180,60])[0]-projection([-180,60])[0]);
+          geoDenSelfTestAssert(Math.abs(equator-north) < .01, `Horizontal period changes with latitude: ${equator} vs ${north}`);
+        }],
+        ['Maps','Repeated horizontal pan rebases without changing the visible map', () => {
+          const period=700;
+          const original=d3.zoomIdentity.translate(5000,37).scale(3);
+          const wrapped=geoDenNormalizeWorldZoomTransform(original,period);
+          geoDenSelfTestEqual(wrapped.k,3);
+          geoDenSelfTestEqual(wrapped.y,37);
+          geoDenSelfTestAssert(Math.abs(wrapped.x) <= period*wrapped.k/2 + .001, `Pan did not rebase: ${wrapped.x}`);
+          const delta=original.apply([123,0])[0]-wrapped.apply([123,0])[0];
+          geoDenSelfTestAssert(Math.abs(delta/(period*wrapped.k)-Math.round(delta/(period*wrapped.k))) < 1e-9, 'Rebase was not an exact whole-world shift');
+        }],
+        ['Maps','Regional fitting treats the dateline as adjacent geography', () => {
+          const points=new Map([['FI',{x:695,y:200}],['WS',{x:5,y:210}]]);
+          const transform=bigMapFitTransform(700,400,['FI','WS'],new Map(),points,700);
+          geoDenSelfTestAssert((Number(transform?.k)||1) > 5, `Dateline cluster framed as a whole-world span (k=${transform?.k})`);
+        }],
+        ['Maps','Study Quiz Map Hunt and Map Crawl share world-wrap rendering', () => {
+          geoDenSelfTestAssert(canonicalWorldMapProjection.toString().includes('geoDenWrappedWorldProjection'));
+          geoDenSelfTestAssert(renderMapHuntMap.toString().includes('geoDenWrappedWorldProjection') && renderMapHuntMap.toString().includes('worldWrapPeriod'));
+          geoDenSelfTestAssert(renderChainMap.toString().includes('geoDenWrappedWorldProjection') && renderChainMap.toString().includes('worldWrapPeriod'));
+        }],
         ['Maps','Forced microstate uses locator marker logic', () => { const feature={id:'020'}; geoDenSelfTestAssert(canonicalWorldMapMarkerNeeded(geoDenSelfTestCountry('AD'), feature, geoDenSelfTestMarkerPath(), 1)); }],
         ['Maps','Ordinary large country is not forced to a locator marker', () => { const feature={id:'276'}; geoDenSelfTestAssert(!canonicalWorldMapMarkerNeeded(geoDenSelfTestCountry('DE'), feature, geoDenSelfTestMarkerPath(), 1)); }],
         ['Maps','Tiny-country CSS tap tolerance stays in screen pixels', geoDenSelfTestTinyMapCssTolerance],
         ['Maps','Prompt render becomes stale when reveal takes ownership', geoDenSelfTestPromptRevealRenderGuard],
         ['Maps','Stale failed map request cannot overwrite newer screen', geoDenSelfTestStaleFailedMapRequestCannotOverwrite],
+        ['Maps','Canvas renderer caches projected country geometry', () => {
+          geoDenSelfTestAssert(typeof geoDenCanvasPathRecord === 'function');
+          geoDenSelfTestAssert(typeof geoDenCompositeCanvasPath === 'function');
+        }],
+        ['Maps','Mobile canvas DPR is performance-capped', () => {
+          const dpr=geoDenCanvasDpr();
+          geoDenSelfTestAssert(Number.isFinite(dpr) && dpr >= 1 && dpr <= 2, `Unexpected DPR ${dpr}`);
+        }],
+
         ['Maps','No orthographic/3D renderer remains', () => geoDenSelfTestAssert(!geoDenSelfTestAppSource().includes('geoOrthographic('))],
         ['Maps','Study map uses canonical 2D renderer', () => geoDenSelfTestAssert(renderCanonicalStudyWorldMap.toString().includes('renderCanonicalWorldMapSvg'))],
         ['Maps','Map Hunt uses detailed visible atlas', () => geoDenSelfTestAssert(renderMapHuntMap.toString().includes('loadSilhouetteWorld'))],
