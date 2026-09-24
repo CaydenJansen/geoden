@@ -15149,13 +15149,30 @@ button,
         <div class="experience-settings-head">
           <div>
             <div class="experience-settings-title" id="bugReportSettingsTitle">Beta feedback</div>
-            <div class="experience-setting-desc">Capture the current GeoDen state and recent in-app actions so a problem is easier to reproduce.</div>
+            <div class="experience-setting-desc">Found a bug or have an idea? Help make GeoDen better.</div>
           </div>
         </div>
-        <button class="experience-action-button" id="bugReportSettingsBtn" type="button">Report a problem</button>
-        <p><a class="beta-link" href="mailto:caydenjansen2@gmail.com?subject=GeoDen%20beta%20feedback">Email caydenjansen2@gmail.com</a></p>
+        <div class="settings-support-actions">
+          <button class="settings-support-action" id="bugReportSettingsBtn" type="button">
+            <span class="settings-support-copy"><span class="settings-support-title">Report a problem</span><span class="settings-support-description">Describe what happened and choose which details to share.</span></span>
+            <span class="settings-support-arrow" aria-hidden="true">→</span>
+          </button>
+          <a class="settings-support-action" href="mailto:caydenjansen2@gmail.com?subject=GeoDen%20beta%20feedback">
+            <span class="settings-support-copy"><span class="settings-support-title">Email feedback</span><span class="settings-support-description">caydenjansen2@gmail.com</span></span>
+            <span class="settings-support-arrow" aria-hidden="true">↗</span>
+          </a>
+        </div>
+      </section>
+
+      <section class="experience-settings privacy-settings" aria-labelledby="privacySettingsTitle">
+        <div class="experience-settings-head">
+          <div class="experience-settings-title" id="privacySettingsTitle">Privacy &amp; data</div>
+        </div>
         <details id="privacyDetails">
-          <summary class="beta-link">Privacy &amp; data</summary>
+          <summary class="settings-support-action">
+            <span class="settings-support-copy"><span class="settings-support-title">How your data is used</span><span class="settings-support-description">Storage, backups and what you choose to share.</span></span>
+            <span class="privacy-chevron" aria-hidden="true"></span>
+          </summary>
           <div class="beta-privacy-copy">
             <p>GeoDen private beta · Updated 24 September 2026.</p>
             <p>Your optional name, study progress, answers used for review, preferences and cached facts are stored in this browser on this device. GeoDen has no account system, advertising or analytics. Clearing browser data removes these records. Export a backup in Settings before switching devices or browsers.</p>
@@ -15647,9 +15664,38 @@ button,
     }
     html body button { height:auto !important; }
     html body .menu-header-actions .menu-header-tool { width:48px !important; height:48px !important; }
-    html body .switch { display:inline-flex; align-items:center; justify-content:center; }
+    /* The 48px touch target must not stretch the visible switch track. */
+    html body .switch { display:inline-flex; align-items:center; justify-content:center; width:58px; height:48px; flex:0 0 58px; cursor:pointer; }
+    html body .switch-track { position:relative; inset:auto; display:block; flex:0 0 50px; width:50px; height:30px; }
+    html body .switch-track::after { width:24px; height:24px; top:3px; left:3px; }
+    html body .switch input:checked + .switch-track::after { transform:translateX(20px); }
+    html body .switch input:focus-visible + .switch-track { outline:3px solid var(--accent); outline-offset:3px; }
+    html body .switch:has(input:disabled) { cursor:not-allowed; }
+    html body .switch input:disabled + .switch-track { opacity:.45; }
     .beta-link { display:inline-flex; align-items:center; padding:6px 0; overflow-wrap:anywhere; max-width:100%; color:var(--accent-dark); }
     .beta-privacy-copy { font-size:.88rem; line-height:1.5; overflow-wrap:anywhere; }
+    #appSettingsOverlay .settings-support-actions { display:grid; gap:8px; }
+    #appSettingsOverlay .settings-support-action {
+      display:flex; align-items:center; justify-content:space-between; gap:14px;
+      width:100%; box-sizing:border-box; padding:13px 14px; margin:0;
+      border:1px solid var(--line); border-radius:14px; background:rgba(255,255,255,.42);
+      color:var(--text); font:inherit; text-align:left; text-decoration:none; cursor:pointer;
+    }
+    #appSettingsOverlay .settings-support-copy { display:grid; gap:4px; min-width:0; }
+    #appSettingsOverlay .settings-support-title { font-size:.88rem; font-weight:800; line-height:1.25; }
+    #appSettingsOverlay .settings-support-description { font-size:.75rem; font-weight:400; line-height:1.45; color:var(--muted); overflow-wrap:anywhere; }
+    #appSettingsOverlay .settings-support-arrow { flex:none; font-size:1.2rem; color:var(--muted); }
+    #appSettingsOverlay .settings-support-action:hover { background:rgba(23,23,23,.055); }
+    #appSettingsOverlay .settings-support-action:focus-visible { outline:3px solid var(--accent); outline-offset:3px; }
+    #appSettingsOverlay #privacyDetails { border:1px solid var(--line); border-radius:14px; background:rgba(255,255,255,.42); }
+    #appSettingsOverlay #privacyDetails > summary { border:0; background:transparent; list-style:none; }
+    #appSettingsOverlay #privacyDetails > summary::-webkit-details-marker { display:none; }
+    #appSettingsOverlay .privacy-chevron { width:8px; height:8px; flex:0 0 8px; border-right:2px solid var(--muted); border-bottom:2px solid var(--muted); transform:rotate(45deg); margin-right:3px; }
+    #appSettingsOverlay #privacyDetails[open] .privacy-chevron { transform:rotate(225deg); }
+    #appSettingsOverlay .beta-privacy-copy { margin:0 14px; padding:2px 0 8px; border-top:1px solid var(--line); font-size:.78rem; line-height:1.6; }
+    #appSettingsOverlay .beta-privacy-copy p { margin:12px 0; }
+    #appSettingsOverlay .beta-privacy-copy p:first-child { color:var(--muted); font-size:.7rem; }
+    #appSettingsOverlay .beta-privacy-copy a { color:var(--accent-dark); text-decoration:underline; text-underline-offset:2px; }
     html body .self-test-head > div { min-width:0; }
     html body .self-test-panel { min-width:0; overflow-wrap:anywhere; }
     html body .self-test-close { flex-shrink:0; }
@@ -15675,7 +15721,7 @@ button,
   <script src="assets/geography.js"></script>
 
   <script>
-    const GEODEN_VERSION = "0.56.37";
+    const GEODEN_VERSION = "0.56.39";
     // v0.56.28 — blank-surface audit: guarded silhouettes/location maps and Matching visual preflight.
     // v0.56.18 — private-beta problem reporting with diagnostic state, recent actions, errors, copy/download/share.
     // v0.56.17 — tester-facing automatic failure reporting with screenshot/copy instructions.
@@ -39599,11 +39645,9 @@ Answer: ${answer}`;
       const visiblePx = mobile
         ? Math.min(7.4, 2.25 + zoomSteps * 1.08)
         : Math.min(6.0, 2.05 + zoomSteps * .78);
-      // The broad touch allowance is used only by nearest-marker hit testing;
-      // it is no longer an overlapping SVG circle sitting above countries.
-      const hitPx = mobile
-        ? Math.min(27, 21 + zoomSteps * 1.0)
-        : Math.min(22, 17 + zoomSteps * .8);
+      // A small allowance outside the painted dot helps with ocean taps only.
+      // It must never steal the neighbouring country's land hit.
+      const hitPx = visiblePx + (mobile ? 2 : 1.5);
       const haloPx = visiblePx + (mobile ? 4.0 : 3.2);
       return { k, viewportScale, mobile, visiblePx, hitPx, haloPx };
     }
@@ -39867,24 +39911,6 @@ Answer: ${answer}`;
         if (!nearest || screenDist < nearest.distance) nearest = candidate;
       }
 
-      let markerHitPx = metrics.hitPx;
-      if (nearest) {
-        const nearestPoint = markerPoints.get(nearest.code);
-        let nearestNeighbourPx = Infinity;
-        if (nearestPoint) {
-          const nearestX = geoDenWrapValueNear(nearestPoint.x, x, wrapPeriod);
-          for (const [otherCode, otherPoint] of markerPoints) {
-            if (otherCode === nearest.code || !mapHuntEligibleCode(otherCode) || !otherPoint) continue;
-            const otherX = geoDenWrapValueNear(otherPoint.x, nearestX, wrapPeriod);
-            const centreDist = Math.hypot(nearestX - otherX, nearestPoint.y - otherPoint.y) * metrics.k * metrics.viewportScale;
-            if (centreDist < nearestNeighbourPx) nearestNeighbourPx = centreDist;
-          }
-        }
-        if (Number.isFinite(nearestNeighbourPx) && nearestNeighbourPx < metrics.hitPx * 2.15) {
-          markerHitPx = Math.max(metrics.visiblePx + 3, nearestNeighbourPx * .46);
-        }
-      }
-
       let targetCode = "";
       const baseMapPoint = geoDenNormalizeWorldMapPoint([x, y], mapHuntState.projection, wrapPeriod);
       const geo = mapHuntState.projection?.invert?.(baseMapPoint);
@@ -39902,11 +39928,17 @@ Answer: ${answer}`;
         }
       }
 
-      if (nearest && nearest.distance <= markerHitPx) {
+      // Only the painted dot (including its fine outline) overrides land.
+      // Halos and invisible touch padding are not country-selection targets.
+      if (nearest && nearest.distance <= metrics.visiblePx + .75) {
         handleMapHuntGuess(nearest.code);
         return;
       }
-      if (targetCode) handleMapHuntGuess(targetCode);
+      if (targetCode) {
+        handleMapHuntGuess(targetCode);
+        return;
+      }
+      if (nearest && nearest.distance <= metrics.hitPx) handleMapHuntGuess(nearest.code);
     }
 
     function mapHuntFitTransformForCodes(codes = mapHuntState?.roundCodes) {
