@@ -10370,13 +10370,14 @@ button,
 .country-profile-maps { margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .country-profile-map-card {
   min-width: 0;
+  overflow: hidden;
   padding: 10px;
   border: 1px solid rgba(23,23,23,.07);
   border-radius: 13px;
   background: rgba(255,255,255,.34);
 }
 .country-profile-map-title { color: var(--muted); font-size: .62rem; font-weight: 850; letter-spacing: .09em; text-transform: uppercase; }
-.country-profile-globe, .country-profile-city-map { display: block; width: 100%; height: 190px; margin-top: 4px; overflow: visible; }
+.country-profile-globe, .country-profile-city-map { display: block; width: 100%; height: 190px; margin-top: 4px; overflow: hidden; }
 .country-profile-map-note { min-height: 1.2em; margin-top: 3px; color: var(--muted); font-size: .66rem; line-height: 1.25; text-align: center; }
 .country-profile-actions { margin-top: 12px; display: grid; grid-template-columns: 1fr 1.4fr; gap: 8px; }
 .country-profile-secondary, .country-profile-primary { min-height: 44px; border-radius: 12px; font-size: .78rem; font-weight: 850; }
@@ -15657,6 +15658,23 @@ button,
   </div>
 
   <style id="betaAccessibility">
+    /* One Home content column: the panel alone owns the outer gutter. */
+    #startOverlay .start-panel {
+      grid-template-columns:minmax(0,1fr);
+      scrollbar-gutter:stable both-edges;
+    }
+    #startOverlay .start-panel > * {
+      box-sizing:border-box; width:100%; min-width:0; margin-inline:0;
+      grid-column:1 !important; grid-row:auto !important;
+    }
+    /* Today is a transparent wrapper, not an inset card. Its progress track
+       and nested Daily card must reach the same edges as the other sections. */
+    #startOverlay #dailyGoalCard { padding-inline:0 !important; }
+    #startOverlay :is(#dailyChallengeCard, #todayFocusCard, #activeSessionResumeBtn, #homeModeBrowser) {
+      box-sizing:border-box; width:100%; min-width:0; margin-inline:0;
+      padding-inline:14px !important; border-radius:16px;
+    }
+    #startOverlay #homeModeBrowser > .home-mode-browser-head { padding-inline:0; }
     /* Keep actual hit areas usable, including short phones and zoom controls. */
     html body button:not([hidden]), html body select, html body summary,
     html body .beta-link, html body .switch {
@@ -15721,7 +15739,7 @@ button,
   <script src="assets/geography.js"></script>
 
   <script>
-    const GEODEN_VERSION = "0.56.39";
+    const GEODEN_VERSION = "0.56.41";
     // v0.56.28 — blank-surface audit: guarded silhouettes/location maps and Matching visual preflight.
     // v0.56.18 — private-beta problem reporting with diagnostic state, recent actions, errors, copy/download/share.
     // v0.56.17 — tester-facing automatic failure reporting with screenshot/copy instructions.
