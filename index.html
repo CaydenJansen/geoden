@@ -6901,6 +6901,22 @@
     }
     #masteryWorldMap:active { cursor: grabbing; }
     #masteryWorldMap:focus-visible { outline:3px solid var(--accent); outline-offset:-3px; }
+    /* SVG focus must follow geography, not its scaled rectangular bounds. */
+    #masteryWorldMap [data-country-code] {
+      -webkit-tap-highlight-color:transparent;
+    }
+    #masteryWorldMap [data-country-code]:focus {
+      outline:none !important; box-shadow:none !important;
+    }
+    #masteryWorldMap .mastery-map-country.selected {
+      stroke:#2859a6; stroke-width:1.6;
+    }
+    #masteryWorldMap .mastery-map-marker.selected {
+      stroke:#2859a6; stroke-width:2;
+    }
+    #masteryWorldMap [data-country-code]:focus-visible {
+      stroke:#2864f0; stroke-width:2.5; stroke-dasharray:3 2;
+    }
     #masteryMapOverlay .mastery-map-zoom-controls {
       position:static; display:flex; justify-content:flex-end; width:100%; gap:6px;
     }
@@ -15672,6 +15688,30 @@ button,
   </div>
 
   <style id="betaAccessibility">
+    #settingsOverlay #flashFlowSettings .interactive-city-mode-picker {
+      grid-template-columns:repeat(2,minmax(0,1fr)); width:100%;
+    }
+    #settingsOverlay #flashFlowSettings .interactive-city-mode-button {
+      width:100%; padding:8px 10px; font-size:.8rem; line-height:1.2;
+    }
+    #settingsOverlay .flash-flow-option-group { align-content:start; }
+    #settingsOverlay #stageSettings { gap:5px; }
+    #settingsOverlay #stageSettings .setting-row {
+      grid-template-columns:minmax(0,1fr) auto auto;
+      min-height:58px; padding:4px 7px; gap:6px; border-radius:12px;
+    }
+    #settingsOverlay #stageSettings .setting-copy { grid-column:1; grid-row:1; }
+    #settingsOverlay #stageSettings .reorder-controls {
+      grid-column:2; grid-row:1; grid-template-columns:repeat(2,48px); gap:3px;
+    }
+    #settingsOverlay #stageSettings .reorder-controls:empty { display:none; }
+    #settingsOverlay #stageSettings .switch { grid-column:3; grid-row:1; }
+    #settingsOverlay #stageSettings .move-button { width:48px; height:48px; }
+    #settingsOverlay #stageSettings .setting-name { font-size:.82rem; line-height:1.2; }
+    #countryProfileGlobe, #countryProfileCityMap {
+      touch-action:none; cursor:grab; -webkit-tap-highlight-color:transparent;
+    }
+    #countryProfileGlobe:active, #countryProfileCityMap:active { cursor:grabbing; }
     /* One Home content column: the panel alone owns the outer gutter. */
     #startOverlay .start-panel {
       grid-template-columns:minmax(0,1fr);
@@ -15753,7 +15793,7 @@ button,
   <script src="assets/geography.js"></script>
 
   <script>
-    const GEODEN_VERSION = "0.56.42";
+    const GEODEN_VERSION = "0.56.43";
     // v0.56.28 — blank-surface audit: guarded silhouettes/location maps and Matching visual preflight.
     // v0.56.18 — private-beta problem reporting with diagnostic state, recent actions, errors, copy/download/share.
     // v0.56.17 — tester-facing automatic failure reporting with screenshot/copy instructions.
@@ -29614,8 +29654,51 @@ button,
       if (card) card.textContent = value || "Not listed";
     }
 
+    const countryProfileMapViews = new Map();
+
+    function clearCountryProfileMapZoom(svgEl) {
+      countryProfileMapViews.delete(svgEl);
+      if (window.d3) d3.select(svgEl).interrupt().on(".zoom", null).on(".profilemap", null);
+      svgEl?.removeAttribute("tabindex");
+    }
+
+    function attachCountryProfileMapZoom(svgEl, layer, width, height, wrapPeriod = null) {
+      clearCountryProfileMapZoom(svgEl);
+      const svg = d3.select(svgEl);
+      const view = { svg, layer, width, height, transform:d3.zoomIdentity };
+      countryProfileMapViews.set(svgEl, view);
+      const markers = layer.selectAll("circle").nodes().map(node => ({node, radius:Number(node.getAttribute("r")) || 0}));
+      const zoom = d3.zoom()
+        .scaleExtent([1, BIG_MAP_MAX_ZOOM])
+        .extent([[0,0],[width,height]])
+        .translateExtent(wrapPeriod ? [[-1e9,0],[1e9,height]] : [[0,0],[width,height]])
+        .filter(event => event.type !== "dblclick" && (event.type !== "mousedown" || event.button === 0))
+        .on("zoom.profilemap", event => {
+          if (countryProfileMapViews.get(svgEl) !== view) return;
+          view.transform = wrapPeriod ? geoDenNormalizeWorldZoomTransform(event.transform, wrapPeriod) : event.transform;
+          layer.attr("transform", view.transform.toString());
+          markers.forEach(({node,radius}) => node.setAttribute("r", radius / view.transform.k));
+        });
+      view.zoom = zoom;
+      svg.attr("tabindex", 0).attr("role", "group")
+        .attr("aria-keyshortcuts", "ArrowLeft ArrowRight ArrowUp ArrowDown + - Home")
+        .attr("aria-description", "Drag to pan. Pinch or scroll to zoom. Arrow keys pan, plus and minus zoom. Home or double-click resets this map.")
+        .property("__zoom", d3.zoomIdentity).call(zoom).on("dblclick.zoom", null)
+        .on("dblclick.profilemap", event => { event.preventDefault(); svg.call(zoom.transform, d3.zoomIdentity); })
+        .on("keydown.profilemap", event => {
+          const pan = {ArrowLeft:[40,0],ArrowRight:[-40,0],ArrowUp:[0,40],ArrowDown:[0,-40]}[event.key];
+          if (pan) { event.preventDefault(); svg.call(zoom.translateBy, pan[0]/view.transform.k, pan[1]/view.transform.k); }
+          else if (["+","=","-","Home"].includes(event.key)) {
+            event.preventDefault();
+            if (event.key === "Home") svg.call(zoom.transform, d3.zoomIdentity);
+            else svg.call(zoom.scaleBy, event.key === "-" ? 1/BIG_MAP_ZOOM_STEP : BIG_MAP_ZOOM_STEP);
+          }
+        });
+    }
+
     function renderCountryProfileMapFallback(svg, message = "Map unavailable") {
       if (!svg) return;
+      clearCountryProfileMapZoom(svg);
       const currentViewBox = svg.viewBox?.baseVal;
       const width = Number(currentViewBox?.width) > 0 ? Number(currentViewBox.width) : 420;
       const height = Number(currentViewBox?.height) > 0 ? Number(currentViewBox.height) : 220;
@@ -29646,6 +29729,7 @@ button,
           isCurrent:() => token === countryProfileRenderToken && countryProfileCode === c.code
         });
         if (!state || token !== countryProfileRenderToken || countryProfileCode !== c.code) return;
+        attachCountryProfileMapZoom(countryProfileGlobe, state.root, state.width, state.height, state.wrapPeriod);
       } catch (_) {
         if (token !== countryProfileRenderToken || countryProfileCode !== c.code) return;
         countryProfileGlobe.setAttribute("aria-label", `${c.name} location map unavailable`);
@@ -29697,6 +29781,7 @@ button,
           }
         }
         if (countryProfileCityNote) countryProfileCityNote.textContent = labels.join(" · ") || "City coordinates unavailable.";
+        attachCountryProfileMapZoom(countryProfileCityMap, surface, 420, 320);
       } catch (_) {
         if (token !== countryProfileRenderToken || countryProfileCode !== c.code) return;
         countryProfileCityMap.setAttribute("aria-label", `${c.name} city map unavailable`);
@@ -29708,6 +29793,8 @@ button,
     async function renderCountryProfile(c) {
       if (!c || !countryProfileFacts) return;
       const token = ++countryProfileRenderToken;
+      clearCountryProfileMapZoom(countryProfileGlobe);
+      clearCountryProfileMapZoom(countryProfileCityMap);
       setFlag(countryProfileFlag, c);
       countryProfileFlag.alt = `${c.name} flag`;
       countryProfileName.textContent = c.name;
@@ -29790,6 +29877,8 @@ button,
 
     function closeCountryProfile() {
       countryProfileRenderToken += 1;
+      clearCountryProfileMapZoom(countryProfileGlobe);
+      clearCountryProfileMapZoom(countryProfileCityMap);
       countryProfileOverlay?.classList.remove("open");
     }
 
@@ -35376,6 +35465,7 @@ Answer: ${answer}`;
       flashFlowPrefs.order = button.dataset.flashOrder === "random" ? "random" : "fixed";
       saveFlashFlowPrefs();
       renderSettingsRows();
+      renderTunePresetUI();
       updateStartMenuSummary();
     });
 
@@ -35385,6 +35475,7 @@ Answer: ${answer}`;
       flashFlowPrefs.flow = button.dataset.flashFlow === "mixed" ? "mixed" : "country";
       saveFlashFlowPrefs();
       renderSettingsRows();
+      renderTunePresetUI();
       updateStartMenuSummary();
     });
 
