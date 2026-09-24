@@ -6895,18 +6895,27 @@
       width: 100%;
       height: auto;
       max-height: 520px;
-      overflow: visible;
-      touch-action: manipulation;
+      overflow: hidden;
+      touch-action: none;
+      cursor: grab;
     }
+    #masteryWorldMap:active { cursor: grabbing; }
+    #masteryWorldMap:focus-visible { outline:3px solid var(--accent); outline-offset:-3px; }
+    #masteryMapOverlay .mastery-map-zoom-controls {
+      position:static; display:flex; justify-content:flex-end; width:100%; gap:6px;
+    }
+    #masteryMapOverlay .mastery-map-canvas-card { align-content:center; gap:8px; }
 
     .mastery-map-ocean {
       fill: #edf2f1;
+      vector-effect: non-scaling-stroke;
       stroke: rgba(23,23,23,.12);
       stroke-width: 1.2;
     }
 
     .mastery-map-graticule {
       fill: none;
+      vector-effect: non-scaling-stroke;
       stroke: rgba(23,23,23,.065);
       stroke-width: .65;
       pointer-events: none;
@@ -14702,7 +14711,7 @@ button,
       <div class="mastery-map-head">
         <div>
           <h2 class="mastery-map-title" id="masteryMapTitle">Progress map</h2>
-          <p class="mastery-map-subtitle">Tap a place to see your progress.</p>
+          <p class="mastery-map-subtitle" id="masteryMapHelp">Drag to pan · Pinch or scroll to zoom · Tap a place for progress.</p>
         </div>
         <button class="mastery-map-close" id="masteryMapCloseBtn" type="button">Close</button>
       </div>
@@ -14716,7 +14725,12 @@ button,
 
       <div class="mastery-map-layout">
         <div class="mastery-map-canvas-card">
-          <svg id="masteryWorldMap" viewBox="0 0 1000 520" role="img" aria-label="World map coloured by progress status"></svg>
+          <svg id="masteryWorldMap" viewBox="0 0 1000 520" role="group" tabindex="0" aria-label="Interactive progress map. Arrow keys pan, plus and minus zoom, Home resets." aria-describedby="masteryMapHelp"></svg>
+          <div class="map-hunt-zoom-controls mastery-map-zoom-controls" role="group" aria-label="Progress map zoom controls">
+            <button class="map-hunt-zoom-button" id="masteryMapZoomOutBtn" type="button" aria-label="Zoom out" disabled>−</button>
+            <button class="map-hunt-zoom-button" id="masteryMapZoomInBtn" type="button" aria-label="Zoom in" disabled>+</button>
+            <button class="map-hunt-zoom-button map-hunt-zoom-reset" id="masteryMapZoomResetBtn" type="button" aria-label="Reset map view" disabled>↺</button>
+          </div>
           <div class="mastery-map-loading" id="masteryMapLoading">Loading progress map…</div>
         </div>
 
@@ -15739,7 +15753,7 @@ button,
   <script src="assets/geography.js"></script>
 
   <script>
-    const GEODEN_VERSION = "0.56.41";
+    const GEODEN_VERSION = "0.56.42";
     // v0.56.28 — blank-surface audit: guarded silhouettes/location maps and Matching visual preflight.
     // v0.56.18 — private-beta problem reporting with diagnostic state, recent actions, errors, copy/download/share.
     // v0.56.17 — tester-facing automatic failure reporting with screenshot/copy instructions.
@@ -31206,6 +31220,85 @@ button,
     let masteryMapReturnFocus = null;
     let masteryMapReturnToMastery = false;
     let masteryMapRenderToken = 0;
+    let masteryMapView = null;
+    const masteryMapZoomOutBtn = document.getElementById("masteryMapZoomOutBtn");
+    const masteryMapZoomInBtn = document.getElementById("masteryMapZoomInBtn");
+    const masteryMapZoomResetBtn = document.getElementById("masteryMapZoomResetBtn");
+
+    function clearMasteryMapView() {
+      masteryMapView?.observer?.disconnect();
+      if (window.d3) d3.select(masteryWorldMap).interrupt().on(".zoom", null).on("keydown.progresszoom", null);
+      masteryMapView = null;
+      [masteryMapZoomOutBtn, masteryMapZoomInBtn, masteryMapZoomResetBtn].forEach(button => { button.disabled = true; });
+    }
+
+    function updateMasteryMapZoom() {
+      const view = masteryMapView;
+      if (!view) return;
+      const t = view.transform;
+      // Keep tiny-place dots small on screen even at deep zoom.
+      const screenScale = Math.max(.1, masteryWorldMap.getBoundingClientRect().width / view.width);
+      view.layer.selectAll(".mastery-map-marker").attr("r", 3.5 / (t.k * screenScale));
+      masteryMapZoomOutBtn.disabled = t.k <= 1.001;
+      masteryMapZoomInBtn.disabled = t.k >= BIG_MAP_MAX_ZOOM - .01;
+      masteryMapZoomResetBtn.disabled = Math.abs(t.k - 1) < .001 && Math.abs(t.x) < .1 && Math.abs(t.y) < .1;
+    }
+
+    function attachMasteryMapZoom(svg, layer, width, height, period) {
+      const view = { svg, layer, width, height, transform:d3.zoomIdentity, suppressClickUntil:0 };
+      masteryMapView = view;
+      let gestureStart = null;
+      const zoom = d3.zoom()
+        .scaleExtent([1, BIG_MAP_MAX_ZOOM])
+        .extent([[0, 0], [width, height]])
+        .translateExtent([[-1e9, 0], [1e9, height]])
+        .clickDistance(4)
+        .filter(event => event.type !== "dblclick" && (event.type !== "mousedown" || event.button === 0))
+        .on("start.progress", event => { gestureStart = event.transform; })
+        .on("zoom.progress", event => {
+          if (masteryMapView !== view) return;
+          view.transform = geoDenNormalizeWorldZoomTransform(event.transform, period);
+          layer.attr("transform", view.transform.toString());
+          updateMasteryMapZoom();
+        })
+        .on("end.progress", event => {
+          if (event.sourceEvent && gestureStart && (Math.abs(event.transform.k - gestureStart.k) > .001 || Math.hypot(event.transform.x - gestureStart.x, event.transform.y - gestureStart.y) > 4)) {
+            view.suppressClickUntil = Date.now() + 350;
+          }
+        });
+      view.zoom = zoom;
+      svg.property("__zoom", d3.zoomIdentity).call(zoom).on("dblclick.zoom", null)
+        .on("keydown.progresszoom", event => {
+          if (event.target !== masteryWorldMap) return;
+          const pan = { ArrowLeft:[80,0], ArrowRight:[-80,0], ArrowUp:[0,80], ArrowDown:[0,-80] }[event.key];
+          if (pan) {
+            event.preventDefault();
+            svg.interrupt().call(zoom.translateBy, pan[0] / view.transform.k, pan[1] / view.transform.k);
+          } else if (["+", "=", "-", "Home"].includes(event.key)) {
+            event.preventDefault();
+            changeMasteryMapZoom(event.key === "Home" ? null : event.key === "-" ? 1 / BIG_MAP_ZOOM_STEP : BIG_MAP_ZOOM_STEP);
+          }
+        });
+      if (window.ResizeObserver) {
+        view.observer = new ResizeObserver(() => { if (masteryMapView === view) updateMasteryMapZoom(); });
+        view.observer.observe(masteryWorldMap);
+      }
+      updateMasteryMapZoom();
+    }
+
+    function changeMasteryMapZoom(factor) {
+      const view = masteryMapView;
+      if (!view) return;
+      const selection = view.svg.interrupt();
+      if (factor == null) selection.call(view.zoom.transform, d3.zoomIdentity);
+      else selection.call(view.zoom.scaleBy, factor);
+    }
+    function handleMasteryMapTap(event, code) {
+      if (!event.defaultPrevented && Date.now() >= (masteryMapView?.suppressClickUntil || 0)) selectMasteryMapCountry(code);
+    }
+    masteryMapZoomOutBtn.addEventListener("click", () => changeMasteryMapZoom(1 / BIG_MAP_ZOOM_STEP));
+    masteryMapZoomInBtn.addEventListener("click", () => changeMasteryMapZoom(BIG_MAP_ZOOM_STEP));
+    masteryMapZoomResetBtn.addEventListener("click", () => changeMasteryMapZoom(null));
 
     function masteryMapStatusForMetrics(metrics = {}) {
       if (!metrics.studied) return "unseen";
@@ -31463,9 +31556,16 @@ button,
       masteryWorldMap.querySelectorAll(".selected").forEach(node => node.classList.remove("selected"));
       masteryWorldMap.querySelectorAll(`[data-country-code="${code}"]`).forEach(node => node.classList.add("selected"));
 
-      if (options.focusMapNode) {
-        const target = masteryWorldMap.querySelector(`[data-country-code="${code}"]`);
-        target?.focus?.({ preventScroll: true });
+      if (options.focusMapNode || options.revealOnMap) {
+        if (masteryMapView?.transform.k > 1) {
+          const view = masteryMapView;
+          const point = geoDenWrappedWorldProjection(view.width, view.height, 12)([profile.country.lon, profile.country.lat]);
+          if (point?.every(Number.isFinite)) view.svg.interrupt().call(view.zoom.translateTo, point[0], point[1]);
+        }
+        if (options.focusMapNode) {
+          const target = masteryWorldMap.querySelector(`.mastery-map-world-copy[data-world-offset="0"] [data-country-code="${code}"]`);
+          target?.focus?.({ preventScroll: true });
+        }
       }
     }
 
@@ -31591,6 +31691,7 @@ button,
 
     async function renderMasteryWorldMap(profiles) {
       const token = ++masteryMapRenderToken;
+      clearMasteryMapView();
       masteryMapLoading.classList.remove("hidden", "loading-error");
       masteryMapLoading.textContent = "Loading progress map…";
       masteryWorldMap.replaceChildren();
@@ -31626,13 +31727,21 @@ button,
         const svg = d3.select(masteryWorldMap)
           .attr("viewBox", `0 0 ${width} ${height}`)
           .attr("preserveAspectRatio", "xMidYMid meet");
+        const period = geoDenWorldWrapPeriod(projection);
+        svg.append("rect").attr("width", width).attr("height", height).attr("fill", "#edf2f1");
+        const layer = svg.append("g").attr("class", "mastery-map-geography");
+        const copies = layer.selectAll("g.mastery-map-world-copy")
+          .data(geoDenWorldCopyOffsets(period)).join("g")
+          .attr("class", "mastery-map-world-copy")
+          .attr("data-world-offset", offset => offset)
+          .attr("transform", offset => `translate(${offset},0)`);
 
-        svg.append("path")
+        copies.append("path")
           .datum({ type: "Sphere" })
           .attr("class", "mastery-map-ocean")
           .attr("d", path);
 
-        svg.append("path")
+        copies.append("path")
           .datum(d3.geoGraticule10())
           .attr("class", "mastery-map-graticule")
           .attr("d", path);
@@ -31643,7 +31752,7 @@ button,
         // teaches the two as separate places.
         const profileNumerics = new Set(profiles.map(profile => String(profile.country.numeric || "").padStart(3, "0")));
         const contextFeatures = features.filter(feature => !profileNumerics.has(String(feature.id || "").padStart(3, "0")));
-        svg.append("g")
+        copies.append("g")
           .selectAll("path")
           .data(contextFeatures)
           .join("path")
@@ -31656,7 +31765,7 @@ button,
         const representedCodes = new Set();
         const tinyCodes = new Set();
 
-        svg.append("g")
+        copies.append("g")
           .selectAll("path")
           .data(rendered)
           .join("path")
@@ -31674,7 +31783,7 @@ button,
               .attr("tabindex", 0)
               .attr("role", "button")
               .attr("aria-label", `${profile.country.name}: ${MASTERY_MAP_STATUS_META[profile.status].label}`)
-              .on("click", () => selectMasteryMapCountry(profile.country.code))
+              .on("click", event => handleMasteryMapTap(event, profile.country.code))
               .on("keydown", event => {
                 if (event.key === "Enter" || event.key === " ") {
                   event.preventDefault();
@@ -31688,7 +31797,7 @@ button,
         const markerProfiles = profiles.filter(profile =>
           !representedCodes.has(profile.country.code) || tinyCodes.has(profile.country.code)
         );
-        svg.append("g")
+        copies.append("g")
           .selectAll("circle")
           .data(markerProfiles)
           .join("circle")
@@ -31701,7 +31810,7 @@ button,
           .attr("tabindex", 0)
           .attr("role", "button")
           .attr("aria-label", profile => `${profile.country.name}: ${MASTERY_MAP_STATUS_META[profile.status].label}`)
-          .on("click", (_, profile) => selectMasteryMapCountry(profile.country.code))
+          .on("click", (event, profile) => handleMasteryMapTap(event, profile.country.code))
           .on("keydown", (event, profile) => {
             if (event.key === "Enter" || event.key === " ") {
               event.preventDefault();
@@ -31711,6 +31820,9 @@ button,
           .append("title")
           .text(profile => `${profile.country.name} · ${MASTERY_MAP_STATUS_META[profile.status].label}`);
 
+        // Wrapped copies remain tappable, without tripling keyboard tab stops.
+        copies.filter(offset => offset !== 0).selectAll("[tabindex]").attr("tabindex", -1);
+        attachMasteryMapZoom(svg, layer, width, height, period);
         masteryMapLoading.classList.add("hidden");
         applyMasteryMapFilter();
         if (masteryMapSelectedCode && profileByCode.has(masteryMapSelectedCode)) selectMasteryMapCountry(masteryMapSelectedCode);
@@ -31752,6 +31864,7 @@ button,
 
     function closeMasteryMap() {
       masteryMapRenderToken += 1;
+      clearMasteryMapView();
       masteryMapOverlay.classList.remove("open");
       if (masteryMapReturnToMastery) {
         renderMastery();
@@ -35925,7 +36038,7 @@ Answer: ${answer}`;
       if (!masteryMapCountrySelect.value) return;
       masteryMapFilter = "all";
       applyMasteryMapFilter();
-      selectMasteryMapCountry(masteryMapCountrySelect.value);
+      selectMasteryMapCountry(masteryMapCountrySelect.value, { revealOnMap:true });
     });
 
     searchStartBtn.addEventListener("click", () => {
