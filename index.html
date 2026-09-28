@@ -15827,7 +15827,7 @@ button,
   <script src="assets/geography.js"></script>
 
   <script>
-    const GEODEN_VERSION = "0.56.45";
+    const GEODEN_VERSION = "0.56.46";
     // v0.56.28 — blank-surface audit: guarded silhouettes/location maps and Matching visual preflight.
     // v0.56.18 — private-beta problem reporting with diagnostic state, recent actions, errors, copy/download/share.
     // v0.56.17 — tester-facing automatic failure reporting with screenshot/copy instructions.
@@ -17738,10 +17738,10 @@ button,
         id: `${Number(session.startedAt) || endedAt}-${endedAt}`,
         startedAt: Number(session.startedAt) || endedAt,
         endedAt,
-        interaction: session.interaction || "standard",
+        interaction: session.sprint?.enabled ? "sprint" : (session.interaction || "standard"),
         pool: session.pool || "random",
         countrySet: session.countrySet || "world",
-        countries: totalCountries,
+        countries: session.sprint?.enabled ? metrics.total : totalCountries,
         correct: metrics.correct,
         total: metrics.total,
         dailyKey: session.dailyChallenge?.key || null
@@ -18717,7 +18717,7 @@ button,
     }
 
     function sessionUnitLabel(mode = menuPlayMode, count = 2) {
-      const singular = mode === "rapid" ? "question" : mode === "detective" ? "case" : includeMajorTerritories ? "place" : "country";
+      const singular = ["rapid", "sprint"].includes(mode) ? "question" : mode === "detective" ? "case" : includeMajorTerritories ? "place" : "country";
       return count === 1 ? singular : singular === "country" ? "countries" : `${singular}s`;
     }
 
@@ -19108,6 +19108,7 @@ button,
         startConfirmBtn.disabled = true;
         startConfirmBtn.textContent = selectedCountryPool === "review"
           ? `Nothing to review in ${countrySetDisplayName()}`
+          : menuPlayMode === "rapid" ? "Choose compatible clues and answers in Challenges"
           : `No places available in ${countrySetDisplayName()}`;
         return;
       }
@@ -19802,9 +19803,9 @@ button,
           if (!poolCount) return;
         } else if (interaction === "rapid") {
           const primary = countryOrder.slice(0, poolCount)
-            .filter(countryIndex => rapidAvailableTypes(countries[countryIndex]).length > 0);
+            .filter(countryIndex => rapidAvailableTypes(countries[countryIndex], {daily: normalizedPool === "daily", sprint: false}).length > 0);
           const rest = countryOrder.slice(poolCount)
-            .filter(countryIndex => rapidAvailableTypes(countries[countryIndex]).length > 0);
+            .filter(countryIndex => rapidAvailableTypes(countries[countryIndex], {daily: normalizedPool === "daily", sprint: false}).length > 0);
           countryOrder = [...primary, ...rest];
           poolCount = primary.length;
           if (!poolCount) return;
@@ -19865,6 +19866,7 @@ button,
           const c = countries[countryIndex];
           if (!c) continue;
           let stages = config.order.filter(stage => config.enabled[stage] && stage !== "historyFacts" && countryStageIsAvailable(c, stage));
+          if (stages.includes("capital") && stages.includes("largestCity") && largestCityIsCapital(c)) stages = stages.filter(stage => stage !== "largestCity");
           stages = flashOrderForCountry(c, stages);
           if (!stages.length) continue;
 
@@ -20344,6 +20346,48 @@ button,
       return deck[Math.max(0, Number(index) || 0)] || null;
     }
 
+    function reconcileMixedFlashDeck() {
+      if (!isMixedFlashSession() || studySession.active === false) return;
+      const old = activeFlashDeckCard();
+      const prefix = studySession.flashDeck.slice(0,index);
+      const codes = [...new Set(studySession.flashDeck.slice(index).map(card=>card.countryCode))];
+      const done = new Set(prefix.map(card=>`${card.countryCode}|${card.targetStage}`));
+      const pending = [];
+      for (const code of codes) {
+        const c=countryByCode(code);
+        let stages=config.order.filter(stage=>config.enabled[stage] && stage!=="historyFacts" && countryStageIsAvailable(c,stage));
+        if(stages.includes("capital") && largestCityIsCapital(c)) stages=stages.filter(stage=>stage!=="largestCity");
+        stages.forEach((targetStage,i)=>{
+          if(done.has(`${code}|${targetStage}`))return;
+          const cueStage=stages.length>1?stages[(i+stages.length-1)%stages.length]:flashFallbackCue(c,targetStage);
+          if(cueStage)pending.push({countryCode:code,cueStage,targetStage});
+        });
+      }
+      studySession.flashDeck=[...prefix,...pending];
+      countryOrder=studySession.flashDeck.map(card=>countries.findIndex(c=>c.code===card.countryCode));
+      studySession.poolCount=countryOrder.length;
+      if(studySession.mode==="finite")studySession.limit=countryOrder.length;
+      for(const [code,targets] of Object.entries(studySession.mixedRevisionTargets||{})) {
+        studySession.mixedRevisionTargets[code]=targets.filter(stage=>config.enabled[stage]);
+        if(!studySession.mixedRevisionTargets[code].length)delete studySession.mixedRevisionTargets[code];
+      }
+      studySession.revisionQueue=(studySession.revisionQueue||[]).filter(code=>studySession.mixedRevisionTargets?.[code]?.length);
+      if (studySession.phase === "revision") {
+        reviewCountryCode = studySession.revisionQueue[0] || null;
+        if (!reviewCountryCode) studySession.active = false;
+      } else if (!pending.length && !enterSessionRevisionIfNeeded()) {
+        studySession.active = false;
+        reviewCountryCode = null;
+      }
+      const next=activeFlashDeckCard();
+      if(JSON.stringify(old)!==JSON.stringify(next)) {
+        attempt=next?freshAttempt(countryByCode(next.countryCode)):null;
+        currentStage=next?.cueStage||"country";phase="revealed";
+        if(next)markRevealed(currentStage);
+      }
+      localStorage.setItem(COUNTRY_ORDER_KEY,JSON.stringify(countryOrder));saveStudySession();saveAttempt();
+    }
+
     function factFocusForCountry(c) {
       if (!c || isLookupMode() || studySession?.pool !== "review" || !studySession?.factFocus) return [];
       const stages = studySession.factFocus[c.code];
@@ -20386,6 +20430,11 @@ button,
       if (stages[0] === "languages" && !quizLanguageClues(c).length && stages.length > 1) {
         stages = [...stages.slice(1), "languages"];
       }
+      // Shared facts are useful answers, but cannot identify one hidden place.
+      if (stages[0] === "currency" && stages.includes("country") && countries.some(other =>
+        other.code !== c.code && matchingCanonicalList(interactiveCurrencyTargets(other)) === matchingCanonicalList(interactiveCurrencyTargets(c)))) {
+        stages = ["country", ...stages.filter(stage => stage !== "country")];
+      }
 
       // Quiz-style play suppresses tautological name-derived answers by default.
       // This helper is also used while building a session, so a country with no
@@ -20394,7 +20443,7 @@ button,
       if (!polishPrefs?.allowGiveawayPrompts) {
         const countryPosition = stages.indexOf("country");
         stages = stages.filter((stage, position) => {
-          if (stage === "languages" && ((countryPosition >= 0 && countryPosition < position) || (position === 0 && polishPrefs.hideLanguageClueNames))) return true;
+          if (stage === "languages" && (position > 0 || stages.length === 1 || (position === 0 && polishPrefs.hideLanguageClueNames))) return true;
           return !countryStageHasObviousNameAnswer(c, stage);
         });
       }
@@ -20424,6 +20473,11 @@ button,
         stages = stages.filter(stage => stage !== "largestCity");
       }
 
+      if (stages.length === 1) {
+        const target = stages[0];
+        const cue = factReviewCueStage(c, [target], []);
+        return cue ? [cue, target] : [];
+      }
       return stages;
     }
 
@@ -20679,7 +20733,7 @@ button,
 
     function normalizeCurrentStage() {
       const active = activeStages();
-      if (!active.length) return;
+      if (!active.length) { currentStage = null; phase = "prompt"; return; }
 
       if (!active.includes(currentStage)) {
         currentStage = active[0];
@@ -20697,7 +20751,7 @@ button,
     function saveState() {
       if (isLookupMode()) return;
       localStorage.setItem(PROGRESS_KEY, String(index));
-      localStorage.setItem(CURRENT_STAGE_KEY, currentStage);
+      localStorage.setItem(CURRENT_STAGE_KEY, ALL_STAGES.includes(currentStage) ? currentStage : "country");
       localStorage.setItem(PHASE_KEY, phase);
 
       if (reviewCountryCode) localStorage.setItem(REVIEW_COUNTRY_KEY, reviewCountryCode);
@@ -22381,6 +22435,10 @@ button,
     }
 
     function checkQuizFlagAssetsAvailable() {
+      if (!window.GEODEN_BUNDLED_FLAGS?.US) {
+        quizFlagAssetsState = "unavailable";
+        return Promise.resolve(false);
+      }
       if (quizFlagAssetsState === "available") return Promise.resolve(true);
       if (quizFlagAssetsState === "unavailable") return Promise.resolve(false);
       if (quizFlagAssetsPromise) return quizFlagAssetsPromise;
@@ -22416,6 +22474,13 @@ button,
     }
 
     function setFlag(img, c, onUnavailable = null) {
+      if (!flagAssetExists(c?.code)) {
+        img.onload = img.onerror = null;
+        img.classList.add("flag-unavailable"); img.alt = "Flag unavailable";
+        img.src = flagFallbackDataUri(c);
+        if (onUnavailable) queueMicrotask(onUnavailable);
+        return;
+      }
       img.classList.remove("flag-unavailable");
       img.decoding = "async";
       img.alt = `Flag of ${c.name}`;
@@ -22448,7 +22513,18 @@ button,
       return `data:image/svg+xml,${encodeURIComponent(svg)}`;
     }
 
+    function flagAssetExists(code) {
+      return String(code || "").toUpperCase() === "XS" || !!window.GEODEN_BUNDLED_FLAGS?.[String(code || "").toUpperCase()];
+    }
+
     function setQuizFlag(img, c, altText = "Flag clue", onUnavailable = null) {
+      if (!flagAssetExists(c?.code)) {
+        img.classList.add("flag-unavailable"); img.alt = altText;
+        img.onload = null;
+        img.onerror = null; img.src = quizFlagFallbackDataUri();
+        if (onUnavailable) queueMicrotask(onUnavailable);
+        return;
+      }
       img.classList.remove("flag-unavailable");
       img.decoding = "async";
       img.alt = altText;
@@ -22484,7 +22560,7 @@ button,
 
     function flagCountryAssetAvailable(c, timeoutMs = 2600) {
       const code = String(c?.code || "").toUpperCase();
-      if (!code) return Promise.resolve(false);
+      if (!code || !flagAssetExists(code)) return Promise.resolve(false);
       if (code === "XS") return Promise.resolve(true);
       if (matchingFlagAssetSuccess.has(code)) return Promise.resolve(true);
       if (matchingFlagAssetInflight.has(code)) return matchingFlagAssetInflight.get(code);
@@ -22970,7 +23046,7 @@ button,
         headerFlagWrap.classList.remove("visible");
       }
 
-      if (!identityFreeFlagQuiz && (isLookupMode() || hasRevealed("country"))) {
+      if (isLookupMode() || hasRevealed("country")) {
         headerCountry.textContent = c.name;
         headerCountry.classList.add("visible");
       } else {
@@ -22981,6 +23057,7 @@ button,
 
     function renderQuizContext(c, cue) {
       const box = document.getElementById("quizContext");
+      box.querySelectorAll("svg").forEach(clearCountryProfileMapZoom);
       box.replaceChildren(); box.classList.add("hidden");
       if (!cue || cue === currentStage || ["country", "flag"].includes(cue)) return;
       const label = document.createElement("div"); label.className = "quiz-context-label";
@@ -23002,15 +23079,29 @@ button,
       else if (cue === "languages") appendQuizLanguageClue(content, c);
       else if (cue === "neighbours") {
         content.textContent = "Loading clue…";
-        neighbouringCountriesFor(c).then(result => { if (stillCurrent()) content.textContent = result.names.join(" · ") || "No land neighbours"; }).catch(unavailable);
+        neighbourStudySetFor(c).then(result => { if (stillCurrent()) content.textContent = `${result.mode === "nearest" ? "Nearest places · " : ""}${result.names.join(" · ")}`; }).catch(unavailable);
       } else {
         const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         svg.setAttribute("viewBox", "0 0 420 180"); svg.setAttribute("aria-label", `${STAGE_META[cue]?.name || "Map"} clue`);
         const loading = document.createElement("div"); loading.textContent = "Loading clue…"; content.append(loading, svg);
         const drawing = cue === "silhouette" ? renderMatchingSilhouette(svg, c)
-          : renderCanonicalStaticLocationMap(svg, c, {width:420,height:180,padding:8,isCurrent:stillCurrent});
+          : cue === "capitalPosition" ? renderQuizCapitalContext(svg, c, stillCurrent)
+          : renderCanonicalStaticLocationMap(svg, c, {width:420,height:180,padding:8,isCurrent:stillCurrent,interactive:true,hideIdentity:!hasRevealed("country")});
         Promise.resolve(drawing).then(ready => { if (!stillCurrent()) return; if (!ready) unavailable(); else loading.remove(); }).catch(unavailable);
       }
+    }
+
+    async function renderQuizCapitalContext(svg, c, isCurrent) {
+      svg.setAttribute("viewBox","0 0 420 320");
+      svg.style.overflow="hidden";
+      const state = await renderStandaloneLocationMap(svg, c, {isCurrent});
+      if (!state || !isCurrent()) return null;
+      const layer = state.surface || state.svg;
+      const protect = !hasRevealed("capital") && activeStagesForCountry(c).includes("capital");
+      getCityFacts(c).capitals.forEach((cap, i) => addCityMarker(layer, state.projection, cap, "capital", protect ? "Capital" : cap.name, i));
+      svg.setAttribute("aria-label", "Country outline with capital location markers");
+      attachLocationZoom(svg, layer);
+      return state;
     }
 
     function promptNoteFor(stage) {
@@ -23141,7 +23232,8 @@ button,
         .replace(/\s+/g, " ")
         .trim();
 
-      return LANGUAGE_SAMPLE_ALIASES[stripped] || stripped;
+      const alias = Object.keys(LANGUAGE_SAMPLE_ALIASES).find(key => key.toLowerCase() === stripped.toLowerCase());
+      return (alias && LANGUAGE_SAMPLE_ALIASES[alias]) || stripped;
     }
 
     function languageSamplesForCountry(c, details, limit = 3) {
@@ -25265,6 +25357,7 @@ button,
       if (actual === wanted) return true;
 
       if (stage === "country" && countryMatchesNaturalAnswer(c, typed)) return true;
+      if (stage === "currency" && (CURRENCY_CODES_BY_COUNTRY[c?.code] || []).some(code=>interactiveLooseNormalize(code)===actual)) return true;
 
       if (stage === "capital" && String(expected).includes("/")) {
         const parts = String(expected).split(/\s*\/\s*/).map(interactiveLooseNormalize);
@@ -25511,15 +25604,26 @@ button,
       if (interactiveSuggestions.classList.contains("hidden")) return false;
       const buttons = interactiveSuggestionButtons();
       let choiceIndex = interactiveSuggestionIndex;
-      // Enter should be fast: if the player has not moved the highlight,
-      // accept the top visible autocomplete result.
-      if (choiceIndex < 0 && buttons.length) choiceIndex = 0;
+      if (choiceIndex < 0) return false; // Enter submits typed text unless an option was explicitly selected.
       if (choiceIndex < 0 || !buttons[choiceIndex]) return false;
       interactiveInput.value = buttons[choiceIndex].dataset.value || buttons[choiceIndex].textContent || "";
       interactiveSuggestions.classList.add("hidden");
       resetInteractiveSuggestionSelection();
       interactiveInput.focus();
       return true;
+    }
+
+    function autocompleteQueryAlias(query, stage) {
+      if (["country", "neighbours"].includes(stage)) return interactiveLooseNormalize(countryForNaturalAnswer(query)?.name || "");
+      if (stage === "currency") return interactiveLooseNormalize(CURRENCY_NAMES[String(query).toUpperCase()] || "");
+      if (stage === "languages") return interactiveLooseNormalize(languageSampleKey(query));
+      return "";
+    }
+
+    function autocompleteMatchRank(value, query, alias) {
+      const normal = interactiveLooseNormalize(value);
+      if (normal === query || (alias && normal === alias)) return 0;
+      return normal.startsWith(query) ? 1 : normal.includes(query) ? 2 : 99;
     }
 
     async function updateInteractiveSuggestions() {
@@ -25568,10 +25672,10 @@ button,
         candidates = candidates.filter(value => !found.has(interactiveNormalize(value)));
       }
 
+      const queryAlias = autocompleteQueryAlias(query, currentStage);
       const matches = candidates
         .map(value => {
-          const normal = interactiveLooseNormalize(value);
-          const rank = normal === query ? 0 : normal.startsWith(query) ? 1 : normal.includes(query) ? 2 : 99;
+          const rank = autocompleteMatchRank(value, query, queryAlias);
           return { value, rank };
         })
         .filter(item => item.rank < 99)
@@ -26166,7 +26270,7 @@ button,
       const typed = interactiveLooseNormalize(interactiveInput.value);
       if (!typed) return;
 
-      let canonicalTarget = state.normalizedTargets.get(typed);
+      let canonicalTarget = state.normalizedTargets.get(typed) || state.normalizedTargets.get(interactiveLooseNormalize(languageSampleKey(interactiveInput.value)));
       if (!canonicalTarget) {
         let knownExact = false;
         try {
@@ -26242,6 +26346,10 @@ button,
       if (!typed) return;
 
       let canonicalTarget = state.normalizedTargets.get(typed);
+      if (!canonicalTarget && noun === "currencies") {
+        const code=(CURRENCY_CODES_BY_COUNTRY[currentCountry()?.code]||[]).find(code=>interactiveLooseNormalize(code)===typed);
+        if(code)canonicalTarget=state.targets.find(name=>name===currencyDisplayName(code));
+      }
 
       if (canonicalTarget && state.found.has(canonicalTarget)) {
         interactiveInput.classList.remove("wrong");
@@ -26388,7 +26496,7 @@ button,
     }
 
     function interactiveHelpSupported(stage = currentStage) {
-      return ["country", "capital", "largestCity", "currency", "languages", "neighbours", "flag", "silhouette", "globe"].includes(stage);
+      return ["country", "capital", "capitalPosition", "largestCity", "currency", "languages", "neighbours", "flag", "silhouette", "globe"].includes(stage);
     }
 
     function updateInteractiveHelpControls() {
@@ -26397,7 +26505,7 @@ button,
       if (!supported) return;
 
       const visualChoice = ["flag", "silhouette"].includes(currentStage);
-      const cityLocation = !!interactiveCityLocationState && ["capital", "largestCity"].includes(currentStage);
+      const cityLocation = !!interactiveCityLocationState && ["capital", "capitalPosition", "largestCity"].includes(currentStage);
       const collection = ["languages", "neighbours"].includes(currentStage) ||
         (currentStage === "capital" && !!interactiveCapitalState) ||
         (currentStage === "currency" && !!interactiveCurrencyState);
@@ -26878,7 +26986,7 @@ button,
     }
 
     function interactiveFlagVisualCountries(c, optionCount = interactiveChoiceCount) {
-      const candidates = countries
+      const candidates = enabledGeographyEntities()
         .filter(other => other.code !== c.code)
         .map(country => ({
           country,
@@ -27487,7 +27595,7 @@ button,
         return;
       }
 
-      if (["capital", "largestCity"].includes(stage) && interactiveUsesCityLocation(stage, c)) {
+      if (["capital", "capitalPosition", "largestCity"].includes(stage) && interactiveUsesCityLocation(stage, c)) {
         const handledLocation = await renderInteractiveCityLocationPrompt(stage, c, token);
         if (handledLocation) return;
         // If map geometry fails, fall back to the ordinary name question rather
@@ -27495,6 +27603,13 @@ button,
         resetStageVisuals();
         genericStage.classList.add("interactive-mode");
         interactiveAnswer.classList.remove("hidden");
+      }
+
+      if (stage === "capitalPosition") {
+        ensureAttemptForCurrent(); attempt.results[stage] = {unavailable:true, at:Date.now()}; saveAttempt();
+        interactiveTextPanel.classList.add("hidden");
+        interactiveFeedback.textContent = "Capital map unavailable — skipping without scoring.";
+        completeInteractiveStage(1000); return;
       }
 
       if (stage === "capital" && interactiveCapitalTargets(c).length > 1) {
@@ -28184,7 +28299,7 @@ button,
         return;
       }
 
-      const scoredReveal = phase === "revealed" && isScorableCurrentStage();
+      const scoredReveal = !isInteractiveGameplay() && phase === "revealed" && isScorableCurrentStage();
 
       if (scoredReveal) {
         nextBtn.classList.add("hidden");
@@ -28443,7 +28558,7 @@ button,
           let dueStages = dueFactStagesForRecord(rec, { interaction, respectEnabled });
           if (interaction === "interactive" && !polishPrefs?.allowGiveawayPrompts) {
             const country = countries.find(c => c.code === code);
-            dueStages = dueStages.filter(stage => !countryStageHasObviousNameAnswer(country, stage));
+            dueStages = dueStages.filter(stage => stage === "languages" || !countryStageHasObviousNameAnswer(country, stage));
           }
           return { code, rec, dueStages };
         })
@@ -28708,6 +28823,7 @@ button,
     }
 
     function recordStageResult(correct) {
+      if (isInteractiveGameplay()) return;
       if (isBrowsingHistory()) return;
       if (!isScorableCurrentStage() || phase !== "revealed" || answerLoading) return;
 
@@ -29402,6 +29518,16 @@ button,
 
       const c = currentCountry();
       const finished = !c;
+
+      if (c && isInteractiveGameplay() && !activeStages().length) {
+        genericStage.style.display = ""; doneEl.style.display = "none";
+        headerCountry.textContent = "No playable challenges"; headerCountry.classList.add("visible");
+        stageLabel.textContent = "Challenges unavailable";
+        promptQuestion.textContent = "Choose another challenge for this place.";
+        promptQuestion.classList.remove("hidden");
+        nextBtn.classList.add("hidden"); ratingControls.classList.add("hidden");
+        return;
+      }
 
       genericStage.style.display = finished ? "none" : "";
       doneEl.style.display = finished ? "flex" : "none";
@@ -31389,7 +31515,7 @@ button,
         svg.selectAll(".city-marker, .city-label").remove();
         clearLocationQuizMarks(surface);
         const markerCount = facts.capitals.reduce((count, cap, i) =>
-          count + (addCityMarker(surface, state.projection, cap, "capital", `${cap.name} · capital`, i) ? 1 : 0), 0);
+          count + (addCityMarker(surface, state.projection, cap, "capital", interactiveShouldPreserveCapitalIdentity("capitalPosition", c) ? "Capital" : `${cap.name} · capital`, i) ? 1 : 0), 0);
         if (!markerCount) throw new Error("Capital markers could not be projected");
         cityMapLegend.classList.add("hidden");
         cityMapLoading.style.display = "none";
@@ -32373,7 +32499,7 @@ button,
     }
 
     function detectiveFlagColourClue(c) {
-      if (!c?.code || navigator.onLine === false) return Promise.resolve("");
+      if (!c?.code || !flagAssetExists(c.code)) return Promise.resolve("");
       return new Promise(resolve => {
         const img = new Image();
         img.crossOrigin = "anonymous";
@@ -32409,6 +32535,13 @@ button,
               for (const [name, pr, pg, pb] of palette) {
                 const d = (r-pr)**2 + (g-pg)**2 + (b-pb)**2;
                 if (d < bestD) { bestD = d; best = name; }
+              }
+              // Preserve chromatic dark blues/reds rather than classifying by brightness alone.
+              const max = Math.max(r,g,b), min = Math.min(r,g,b), chroma = max-min;
+              if (best === "black" && chroma > 25 && chroma / Math.max(1,max) > .35) {
+                if (b > r * 1.25 && b > g * 1.12) best = "blue";
+                else if (g > r * 1.15 && g > b * 1.1) best = "green";
+                else if (r > g * 1.5 && r > b * 1.2) best = "red";
               }
               if (best) { counts[best] += 1; total += 1; }
             }
@@ -32975,7 +33108,7 @@ button,
         if (!clue?.key) continue;
         rec.detectiveClueExposure[clue.key] = Math.max(0, Number(rec.detectiveClueExposure[clue.key]) || 0) + 1;
       }
-      recordGameMasteryEvidence(c, "countryIdentification", Math.max(0, Math.min(1, (Number(points) || 0) / 100)), {
+      recordGameMasteryEvidence(c, "countryIdentification", Math.max(0, Math.min(round?.spellingAssisted ? .8 : 1, (Number(points) || 0) / 100)), {
         weight: 1,
         source: "detective",
         save: false
@@ -33654,14 +33787,14 @@ Answer: ${answer}`;
       return !polishPrefs?.allowGiveawayPrompts && rapidTypeHasObviousNameGiveaway(type, c);
     }
 
-    function rapidAvailableTypes(c) {
+    function rapidAvailableTypes(c, context = null) {
       const capitals = rapidCapitalTargets(c);
       const currencies = rapidCurrencyTargets(c);
       const mapLibrariesAvailable = !!(window.d3 && window.topojson);
       const silhouetteAvailable = mapLibrariesAvailable && countryStageIsAvailable(c, "silhouette");
       const cityLocationAvailable = mapLibrariesAvailable && countryStageIsAvailable(c, "cityMap");
-      const sprint = studySession?.sprint?.enabled === true;
-      const daily = !!studySession?.dailyChallenge?.key;
+      const sprint = context ? context.sprint : studySession?.sprint?.enabled === true;
+      const daily = context ? context.daily : !!studySession?.dailyChallenge?.key;
       return Object.keys(RAPID_TYPES).filter(type => {
         const spec = RAPID_TYPES[type];
         if (daily && !DAILY_RAPID_TYPES.includes(type)) return false;
@@ -33760,6 +33893,7 @@ Answer: ${answer}`;
       round.eliminatedCodes = [];
       round.revealed = false;
       round.fullHintReveal = false;
+      delete round.draftInput;
       delete round.userAnswer;
       delete round.choiceCode;
       delete round.answerLabel;
@@ -33811,11 +33945,12 @@ Answer: ${answer}`;
       }
       let generated;
       if (isSprintSession()) {
-        const pool = countrySetIndices(studySession.sprint.set)
+        const localPool = countrySetIndices(studySession.sprint.set)
           .map(i => countries[i])
           .filter(Boolean)
           .filter(other => other.code !== c.code)
           .filter(other => stage !== "silhouette" || countryStageIsAvailable(other, "silhouette"));
+        const pool = localPool.length >= 3 ? localPool : enabledGeographyEntities().filter(other => other.code !== c.code && (stage !== "silhouette" || countryStageIsAvailable(other,"silhouette")));
         const picked = interactiveShuffle(pool).slice(0, 3);
         generated = interactiveShuffle([c, ...picked]);
       } else {
@@ -33830,7 +33965,7 @@ Answer: ${answer}`;
       const target = RAPID_TYPES[round.type]?.target;
       if (target === "country") return countryAcceptedAnswerNames(c);
       if (target === "capital") return rapidCapitalTargets(c);
-      if (target === "currency") return rapidCurrencyTargets(c);
+      if (target === "currency") return [...rapidCurrencyTargets(c), ...(CURRENCY_CODES_BY_COUNTRY[c.code] || [])];
       if (target === "largestCity") return [rapidLargestCity(c)].filter(Boolean);
       return [c.name];
     }
@@ -34409,10 +34544,11 @@ Answer: ${answer}`;
       const values = await rapidCandidateTexts(round);
       if (round !== ensureRapidState()?.round || round.status !== "active") return;
       if (interactiveLooseNormalize(rapidInput.value) !== query) return;
+      const queryAlias = autocompleteQueryAlias(query, RAPID_TYPES[round.type]?.target);
       const matches = values
-        .map(value => ({ value, norm: interactiveLooseNormalize(value) }))
-        .filter(item => item.norm.includes(query))
-        .sort((a,b) => (a.norm.startsWith(query) ? 0 : 1) - (b.norm.startsWith(query) ? 0 : 1) || a.value.localeCompare(b.value))
+        .map(value => ({ value, rank: autocompleteMatchRank(value, query, queryAlias) }))
+        .filter(item => item.rank < 99)
+        .sort((a,b) => a.rank - b.rank || a.value.localeCompare(b.value))
         .slice(0, 50);
       if (!matches.length) {
         rapidSuggestions.classList.add("hidden");
@@ -34436,7 +34572,7 @@ Answer: ${answer}`;
     function rapidMoveSuggestion(delta) {
       const options = [...rapidSuggestions.querySelectorAll(".rapid-suggestion")];
       if (!options.length || rapidSuggestions.classList.contains("hidden")) return false;
-      rapidSuggestionIndex = (rapidSuggestionIndex + delta + options.length) % options.length;
+      rapidSuggestionIndex = rapidSuggestionIndex < 0 ? (delta < 0 ? options.length-1 : 0) : (rapidSuggestionIndex + delta + options.length) % options.length;
       options.forEach((button, i) => button.classList.toggle("active", i === rapidSuggestionIndex));
       options[rapidSuggestionIndex]?.scrollIntoView?.({ block: "nearest" });
       return true;
@@ -34448,6 +34584,7 @@ Answer: ${answer}`;
       if (!round || round.status !== "active" || !value) return false;
       if (round.fullHintReveal && isDailyChallengeSession()) return false;
       rapidInput.value = value;
+      round.draftInput = value;
       rapidSuggestions.classList.add("hidden");
       rapidSuggestionIndex = -1;
       saveStudySession();
@@ -34460,7 +34597,7 @@ Answer: ${answer}`;
       if (rapidSuggestions.classList.contains("hidden")) return false;
       const options = [...rapidSuggestions.querySelectorAll(".rapid-suggestion")];
       let choiceIndex = rapidSuggestionIndex;
-      if (choiceIndex < 0 && options.length) choiceIndex = 0;
+      if (choiceIndex < 0) return false;
       const button = options[choiceIndex];
       if (!button) return false;
       return rapidUseSuggestion(button.dataset.rapidSuggestion || button.textContent || "", submit);
@@ -34813,7 +34950,7 @@ Answer: ${answer}`;
       rapidScore.textContent = isSprintSession() ? `${state.correct} correct · ${state.total} attempted` : `${state.correct}/${state.total} correct`;
       renderSprintTimer();
       rapidStreak.textContent = `${state.streak} clean streak`;
-      rapidInput.value = "";
+      rapidInput.value = round.draftInput || "";
       rapidSuggestions.classList.add("hidden");
       rapidSuggestionIndex = -1;
       rapidChoiceGrid.replaceChildren();
@@ -34958,6 +35095,11 @@ Answer: ${answer}`;
         rapidSuggestions?.classList.add("hidden");
       }
       if (!isSprintSession()) rapidUpdateHintButton(round, c);
+      if (round.status === "active" && !round.fullHintReveal && round.hintCount > 0) {
+        const answer = rapidHintTarget(round,c);
+        rapidFeedback.textContent = round.hintCount >= countLetters(answer) ? `Hint · ${answer}` : `Hint · starts with ${capitalPrefix(answer,round.hintCount)}…`;
+        rapidFeedback.className = "rapid-feedback near";
+      }
     }
 
     function rapidRevealAnswer() {
@@ -35096,6 +35238,8 @@ Answer: ${answer}`;
     }
 
     function closeRapidToMenu() {
+      const round = ensureRapidState()?.round;
+      if (round?.status === "active") { round.draftInput = rapidInput.value; saveStudySession(); }
       if (hasActiveStudyRun()) noteResumableMode("study");
       if (isSprintSession()) pauseSprintTimer();
       invalidateRapidPausedRender();
@@ -35118,7 +35262,12 @@ Answer: ${answer}`;
     rapidNextBtn?.addEventListener("click", advanceRapidQuestion);
     rapidBackToMenuBtn?.addEventListener("click", rapidBackToMenu);
     rapidInput?.addEventListener("input", rapidUpdateSuggestions);
+    rapidInput?.addEventListener("input", () => { const round=ensureRapidState()?.round; if(round?.status === "active") {round.draftInput=rapidInput.value;saveStudySession();} });
     rapidInput?.addEventListener("keydown", event => {
+      if (event.key === "Escape" && !rapidSuggestions.classList.contains("hidden")) {
+        rapidSuggestions.classList.add("hidden"); rapidSuggestionIndex=-1;
+        event.preventDefault(); event.stopPropagation(); return;
+      }
       if (event.key === "ArrowDown") {
         if (rapidMoveSuggestion(1)) event.preventDefault();
         return;
@@ -35452,6 +35601,7 @@ Answer: ${answer}`;
     let settingsReturnFocus = null;
 
     function openSettings(mode = "standard") {
+      if (isInteractiveGameplay() && attempt) { attempt.interactiveReplay = captureInteractiveReplayState(); saveAttempt(); }
       if (isBrowsingHistory()) returnToLiveState();
       settingsReturnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
 
@@ -35526,6 +35676,8 @@ Answer: ${answer}`;
       const structureChanged = settingsConfigAtOpen != null &&
         settingsConfigAtOpen !== JSON.stringify(currentConfig);
 
+      if (structureChanged && !["matching", "detective", "rapid"].includes(settingsModeAtOpen) && isMixedFlashSession()) reconcileMixedFlashDeck();
+
       if (settingsModeAtOpen === "detective") {
         // Apply clue changes from the next case onward. Use the explicit restart
         // action if the player wants to rebuild the current Detective run.
@@ -35540,7 +35692,7 @@ Answer: ${answer}`;
         normalizeCurrentStage();
         saveState();
         if (structureChanged) resetNavigationHistory();
-        render();
+        if (structureChanged) render();
       } else {
         saveMatchingConfig();
       }
@@ -36104,7 +36256,13 @@ Answer: ${answer}`;
         highlight:true
       });
       if (!state) throw new Error("World map rendered without drawable geography");
-      if (svgEl) svgEl.setAttribute("aria-label", `World map showing ${country.name}'s location`);
+      if (svgEl) svgEl.setAttribute("aria-label", options.hideIdentity ? "World map highlighting the place to identify" : `World map showing ${country.name}'s location`);
+      if (options.interactive) {
+        svgEl.style.overflow="hidden";
+        const k = Math.max(1,state.width / state.wrapPeriod * 1.02);
+        const home = d3.zoomIdentity.translate(state.width*(1-k)/2,state.height*(1-k)/2).scale(k);
+        attachCountryProfileMapZoom(svgEl,state.root,state.width,state.height,state.wrapPeriod,home);
+      }
       return state;
     }
 
@@ -38155,7 +38313,7 @@ Answer: ${answer}`;
     }
 
     function startChainTimer() {
-      if (!chainState || chainState.finishedAt) return;
+      if (!chainState || chainState.finishedAt || (!GEODEN_TEST_WORKER && document.hidden)) return;
       if (chainTimerId) window.clearInterval(chainTimerId);
       chainTimerId = null;
       if (!(typeof chainState.timerStartedAt === "number" && Number.isFinite(chainState.timerStartedAt))) chainState.timerStartedAt = Date.now();
@@ -38883,7 +39041,7 @@ Answer: ${answer}`;
     function moveChainSuggestion(delta) {
       const options = [...(chainSuggestions?.querySelectorAll(".chain-suggestion") || [])];
       if (!options.length || chainSuggestions.classList.contains("hidden")) return false;
-      chainSuggestionIndex = (chainSuggestionIndex + delta + options.length) % options.length;
+      chainSuggestionIndex = chainSuggestionIndex < 0 ? (delta < 0 ? options.length-1 : 0) : (chainSuggestionIndex + delta + options.length) % options.length;
       options.forEach((button, index) => button.classList.toggle("active", index === chainSuggestionIndex));
       options[chainSuggestionIndex]?.scrollIntoView?.({ block:"nearest" });
       return true;
@@ -39114,7 +39272,7 @@ Answer: ${answer}`;
         } else {
           const progressText = part.country
             ? `${c.name}: place name added. Enter a capital to finish it.`
-            : `${c.name}: capital added. Enter the place name to finish it.`;
+            : "Capital added. Enter the place name to finish it.";
           chainFeedback.textContent = `${spellingFixed ? `Spelling fixed to ${spellingFixed}. ` : ""}${progressText}`;
         }
         chainFeedback.classList.add("good");
@@ -39598,6 +39756,7 @@ Answer: ${answer}`;
           const flagLoadHandler = mapHuntPromptFlag.onload;
           mapHuntPromptFlag.onload = event => {
             flagLoadHandler?.call(mapHuntPromptFlag, event);
+            if (mapHuntPromptFlag.classList.contains("flag-unavailable")) return;
             if (!mapHuntState || mapHuntState.finished || mapHuntCurrentCountry()?.code !== promptCode) return;
             mapHuntPromptFlag.style.visibility = "";
             mapHuntState.promptFallbackToName = false;
@@ -40797,6 +40956,15 @@ Answer: ${answer}`;
       if (focusSetup) geoDenFocusWhenOverlayOpen(mapHuntOverlay, mapHuntStartBtn, 0);
     }
 
+    function editMapHuntSetup() {
+      // Editing is reversible. Commit replacement only when Start is pressed.
+      pauseMapHuntRevealFlash();
+      setMapHuntPlayLayout(false);
+      mapHuntPlay.classList.add("hidden");mapHuntSetup.classList.remove("hidden");
+      updateMapHuntSetupHelp();
+      geoDenFocusWhenOverlayOpen(mapHuntOverlay,mapHuntStartBtn,0);
+    }
+
     async function openMapHunt() {
       if (mapHuntState?.needsHydration) {
         mapHuntOverlay.classList.add("open");
@@ -40807,6 +40975,7 @@ Answer: ${answer}`;
       updateMapHuntSetupHelp();
       const canResume = !!(mapHuntState?.svg && mapHuntMap?.childNodes?.length);
       if (canResume) {
+        mapHuntSet=mapHuntState.setKey;mapHuntPromptMode=mapHuntState.promptMode;
         noteResumableMode("maphunt");
         setMapHuntPlayLayout(true);
         mapHuntSetup?.classList.add("hidden");
@@ -40869,10 +41038,10 @@ Answer: ${answer}`;
     mapHuntCloseBtn?.addEventListener("click", closeMapHunt);
     mapHuntOverlay?.addEventListener("click", event => { if (event.target === mapHuntOverlay) closeMapHunt(); });
     mapHuntStartBtn?.addEventListener("click", startMapHuntGame);
-    mapHuntRestartBtn?.addEventListener("click", () => resetMapHuntToSetup(true));
+    mapHuntRestartBtn?.addEventListener("click", editMapHuntSetup);
     mapHuntRevisionBtn?.addEventListener("click", startMapHuntRevision);
     mapHuntReplayBtn?.addEventListener("click", startMapHuntGame);
-    mapHuntChangeBtn?.addEventListener("click", () => resetMapHuntToSetup(true));
+    mapHuntChangeBtn?.addEventListener("click", editMapHuntSetup);
     mapHuntZoomOutBtn?.addEventListener("click", event => { event.stopPropagation(); mapHuntZoomBy(1 / BIG_MAP_ZOOM_STEP); });
     mapHuntZoomInBtn?.addEventListener("click", event => { event.stopPropagation(); mapHuntZoomBy(BIG_MAP_ZOOM_STEP); });
     mapHuntZoomResetBtn?.addEventListener("click", event => { event.stopPropagation(); resetMapHuntZoom(); });
@@ -41238,7 +41407,7 @@ function rankingTargetValues() {
       // positions already correct on the first check are clean recall and the
       // remainder are assisted by subsequent checks/hints.
       const dailyTotal = rankingState.items.length;
-      const dailyClean = revealed ? 0 : Math.min(dailyTotal, firstCorrect.size);
+      const dailyClean = revealed || hints > 0 ? 0 : Math.min(dailyTotal, firstCorrect.size);
       recordDailyFactCounts({
         total: dailyTotal,
         clean: dailyClean,
@@ -43456,7 +43625,7 @@ function rankingTargetValues() {
       handlers[dialog.id]();return true;
     }
     function installGeoDenLifecycle() {
-      let shownDate=dailyDateKey(),midnightTimer=null,resumeVisibleSprint=false;
+      let shownDate=dailyDateKey(),midnightTimer=null,resumeVisibleSprint=false,resumeVisibleChain=false;
       function refreshDay() {
         if(dailyDateKey()!==shownDate){
           shownDate=dailyDateKey();renderDailyGoalUI();renderDailyChallengeCard();renderTodayFocusCard();
@@ -43468,11 +43637,15 @@ function rankingTargetValues() {
       refreshDay();window.addEventListener('focus',refreshDay);
       document.addEventListener('visibilitychange',()=>{
         if(document.hidden){
+          resumeVisibleChain=!!chainState && !chainState.finishedAt && chainFillOverlay.classList.contains('open');
+          if(resumeVisibleChain)stopChainTimer();
           resumeVisibleSprint=isSprintSession()&&rapidOverlay.classList.contains('open');
           if(!specialRunSavingSuspended)pauseSprintTimer();
           localStorage.flush();
         }else{
           refreshDay();
+          if(resumeVisibleChain && chainFillOverlay.classList.contains('open'))startChainTimer();
+          resumeVisibleChain=false;
           if(resumeVisibleSprint && rapidOverlay.classList.contains('open')){
             if(studySession.sprint.ended||studySession.rapid?.round?.status==='answered')openRapidMode(true);
             else resumeSprintTimer();
@@ -43481,7 +43654,7 @@ function rankingTargetValues() {
         }
       });
       window.addEventListener('pagehide',()=>{
-        if(!specialRunSavingSuspended){pauseSprintTimer();saveSpecialRuns();}
+        if(!specialRunSavingSuspended){pauseSprintTimer();stopChainTimer();saveSpecialRuns();}
         localStorage.flush();localStorage.release();
       });
     }
