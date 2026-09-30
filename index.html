@@ -15827,7 +15827,7 @@ button,
   <script src="assets/geography.js"></script>
 
   <script>
-    const GEODEN_VERSION = "0.56.46";
+    const GEODEN_VERSION = "0.56.47";
     // v0.56.28 — blank-surface audit: guarded silhouettes/location maps and Matching visual preflight.
     // v0.56.18 — private-beta problem reporting with diagnostic state, recent actions, errors, copy/download/share.
     // v0.56.17 — tester-facing automatic failure reporting with screenshot/copy instructions.
@@ -25343,6 +25343,7 @@ button,
 
     function interactiveLooseNormalize(value) {
       return interactiveNormalize(value)
+        .replace(/\bu[.\s]+s(?:[.\s]+a)?\.?(?=\s|$)/g, match => match.replace(/[^a-z]/g, ""))
         .replace(/&/g, " and ")
         .replace(/[^a-z0-9]+/g, " ")
         .replace(/\b(?:st|saint)\b/g, "saint")
@@ -29753,6 +29754,7 @@ button,
         .replace(/[’‘]/g, "'")
         .replace(/&/g, " and ")
         .toLowerCase()
+        .replace(/\bu[.\s]+s(?:[.\s]+a)?\.?(?=\s|$)/g, match => match.replace(/[^a-z]/g, ""))
         .replace(/[^a-z0-9]+/g, " ")
         .replace(/\s+/g, " ")
         .trim();
@@ -29811,7 +29813,7 @@ button,
       PR: ["commonwealth of puerto rico"],
       PF: ["french polynesia"],
       MP: ["cnmi", "commonwealth of the northern mariana islands"],
-      VI: ["us virgin islands", "u.s. virgin islands", "usvi"],
+      VI: ["us virgin islands", "u.s. virgin islands", "usa virgin islands", "u.s.a. virgin islands", "united states virgin islands", "usvi"],
       VG: ["bvi"],
       TC: ["turks & caicos", "turks and caicos"],
       FK: ["falklands"],
@@ -39666,8 +39668,8 @@ Answer: ${answer}`;
     }
 
     function mapHuntResultClass(code) {
-      // In Revision, anything outside the current revision pool is pure map
-      // context. It should look inactive and behave exactly like water.
+      // Outside the revision pool, countries are inactive context: taps name
+      // them without grading an answer or spending a guess.
       if (mapHuntState?.revision && !mapHuntState.roundSet?.has(code)) return "inactive";
       const result = mapHuntState?.results?.get(code);
       if (result?.revealed) return "revealed";
@@ -39792,7 +39794,10 @@ Answer: ${answer}`;
     }
 
     function mapHuntLabelPoint(code) {
-      return mapHuntState?.labelPoints?.get(code) || null;
+      const saved = mapHuntState?.labelPoints?.get(code);
+      if (saved) return saved;
+      const c = countryByCode(code), point = c && mapHuntState?.projection?.([c.lon, c.lat]);
+      return point?.every(Number.isFinite) ? {x:point[0], y:point[1]} : null;
     }
 
     function clearMapHuntTapLabel() {
@@ -39822,14 +39827,14 @@ Answer: ${answer}`;
       const viewportCenterMap = t.invert([baseWidth / 2, baseHeight / 2]);
       const offset = geoDenWorldNearestCopyOffset(point.x, viewportCenterMap?.[0], mapHuntState?.worldWrapPeriod);
       const transformed = t.apply([point.x + offset, point.y]);
-      const scaleX = rect.width / baseWidth;
-      const scaleY = rect.height / baseHeight;
-      const x = rect.left + transformed[0] * scaleX;
-      const y = rect.top + transformed[1] * scaleY;
+      const scale = Math.min(rect.width / baseWidth, rect.height / baseHeight);
+      const x = rect.left + (rect.width - baseWidth * scale) / 2 + transformed[0] * scale;
+      const y = rect.top + (rect.height - baseHeight * scale) / 2 + transformed[1] * scale;
       return Number.isFinite(x) && Number.isFinite(y) ? { x, y } : null;
     }
 
     function mapHuntTapLabelColor(code, kind = "wrong") {
+      if (kind === "inspect") return "#353d39";
       if (kind === "correct") {
         const resultClass = mapHuntResultClass(code);
         if (resultClass === "try-1") return "#2f7d4d";
@@ -39910,7 +39915,7 @@ Answer: ${answer}`;
       name.className = "map-hunt-tap-flash-name";
       name.textContent = c.name;
       const children = [name];
-      if (mapHuntPromptMode === "capital") {
+      if (mapHuntPromptMode === "capital" && kind !== "inspect") {
         const capital = document.createElement("span");
         capital.className = "map-hunt-tap-flash-capital";
         capital.textContent = mapHuntCapitalDisplay(c);
@@ -39921,7 +39926,7 @@ Answer: ${answer}`;
       mapHuntTapFlash.dataset.kind = kind;
       mapHuntTapFlash.style.color = mapHuntTapLabelColor(code, kind);
       mapHuntTapFlash.classList.remove("hidden", "correct", "wrong", "reveal");
-      mapHuntTapFlash.classList.add(kind === "correct" ? "correct" : kind === "reveal" ? "reveal" : "wrong");
+      if (kind !== "inspect") mapHuntTapFlash.classList.add(kind === "correct" ? "correct" : kind === "reveal" ? "reveal" : "wrong");
       positionMapHuntTapLabel();
 
       delete mapHuntTapFlash.dataset.persist;
@@ -40074,17 +40079,14 @@ Answer: ${answer}`;
     }
 
     function handleMapHuntGuess(code) {
-      if (!mapHuntState || mapHuntState.finished || mapHuntState.locked) return;
+      if (!mapHuntState || !code) return;
+      if (mapHuntState.finished || mapHuntState.locked || !mapHuntEligibleCode(code)) {
+        showMapHuntTapLabel(code, "inspect", {duration:1400});
+        return;
+      }
       noteResumableMode("maphunt");
-      if (!code) return;
-      if (mapHuntState.revision && !mapHuntState.roundSet?.has(code)) return;
       const target = mapHuntCurrentCountry();
       if (!target) return;
-
-      // Countries already completed in this round are inert context. Tapping a
-      // green/yellow completed place should behave like tapping ocean: it never
-      // spends a guess or creates a new confusion record.
-      if (mapHuntState.results.has(code) && code !== target.code) return;
 
       if (code === target.code) {
         clearMapHuntWrongFeedback();
@@ -40289,6 +40291,7 @@ Answer: ${answer}`;
         mapHuntResizeRaf = null;
         if (!mapHuntState?.svg || !mapHuntOverlay?.classList.contains("open")) return;
         mapHuntState.viewportScale = measureMapHuntViewportScale();
+        resizeMapHuntCanvasSurface();
         updateMapHuntMarkerScale(mapHuntState.zoomTransform || d3.zoomIdentity);
         requestMapHuntCanvasDraw();
         positionMapHuntTapLabel();
@@ -40301,7 +40304,7 @@ Answer: ${answer}`;
         return { fill:"#c95845", stroke:"#ffffff", line:2.0, alpha:mapHuntState.revealFlashDim ? .42 : 1 };
       }
       if (mapHuntState?.wrongFeedbackCode === code) return { fill:"#9fa5a2", stroke:"#f7f4ed", line:1.35 };
-      if (base === "inactive") return { fill:"#e5e8e4", stroke:"#f3efe6", line:.72, alpha:.30 };
+      if (base === "inactive") return { fill:"#b4bdb9", stroke:"#f3efe6", line:.72, alpha:.65 };
       if (base === "try-1") return { fill:"#2f7d4d", stroke:"#ffffff", line:1.0 };
       if (base === "try-2") return { fill:"#78a84f", stroke:"#ffffff", line:1.0 };
       if (base === "try-3") return { fill:"#d6b63b", stroke:"#ffffff", line:1.0 };
@@ -40313,7 +40316,7 @@ Answer: ${answer}`;
       const base = mapHuntResultClass(code);
       if (mapHuntState?.revealFlashCode === code && mapHuntState?.awaitingRevealClick) return "#c95845";
       if (mapHuntState?.wrongFeedbackCode === code) return "#626866";
-      if (base === "inactive") return "#e5e8e4";
+      if (base === "inactive") return "#b4bdb9";
       if (base === "try-1") return "#2f7d4d";
       if (base === "try-2") return "#78a84f";
       if (base === "try-3") return "#d6b63b";
@@ -40328,6 +40331,17 @@ Answer: ${answer}`;
         mapHuntCanvasDrawRaf = 0;
         drawMapHuntCanvas();
       });
+    }
+
+    function resizeMapHuntCanvasSurface() {
+      const data = mapHuntState?.canvasData;
+      const rect = mapHuntMap?.getBoundingClientRect();
+      if (!data || !rect?.width || !rect?.height) return;
+      const scale = Math.min(rect.width / data.width, rect.height / data.height);
+      data.surface = {scale, x:(rect.width-data.width*scale)/2, y:(rect.height-data.height*scale)/2};
+      const width = Math.round(rect.width * data.dpr), height = Math.round(rect.height * data.dpr);
+      if (mapHuntCanvas.width !== width) mapHuntCanvas.width = width;
+      if (mapHuntCanvas.height !== height) mapHuntCanvas.height = height;
     }
 
     function drawMapHuntCanvas() {
@@ -40369,7 +40383,8 @@ Answer: ${answer}`;
       ctx.setTransform(1,0,0,1,0,0);
       ctx.fillStyle = "#dce7e8";
       ctx.fillRect(0, 0, mapHuntCanvas.width, mapHuntCanvas.height);
-      ctx.setTransform(dpr,0,0,dpr,0,0);
+      const surface = data.surface || {scale:1,x:0,y:0};
+      ctx.setTransform(dpr*surface.scale,0,0,dpr*surface.scale,dpr*surface.x,dpr*surface.y);
       ctx.save();
       ctx.translate(t.x, t.y);
       ctx.scale(k, k);
@@ -40382,8 +40397,8 @@ Answer: ${answer}`;
 
         if (mapHuntState.setKey !== "world") {
           ctx.save();
-          ctx.globalAlpha = .26;
-          ctx.fillStyle = "#b9bfbd";
+          ctx.globalAlpha = mapHuntState.revision ? .65 : .26;
+          ctx.fillStyle = mapHuntState.revision ? "#b4bdb9" : "#b9bfbd";
           ctx.strokeStyle = "#f3efe6";
           ctx.lineWidth = screenToGeo(.62);
           if (contextPath2D) {
@@ -40460,7 +40475,7 @@ Answer: ${answer}`;
           ctx.arc(point.x, point.y, screenToGeo(visiblePx), 0, Math.PI * 2);
           ctx.fillStyle = mapHuntCanvasMarkerFill(code);
           ctx.strokeStyle = "#f7f4ed";
-          ctx.lineWidth = screenToGeo(mapHuntResultClass(code) === "revealed" ? 3.0 : 2.0);
+          ctx.lineWidth = screenToGeo(2.0);
           ctx.fill();
           ctx.stroke();
           ctx.restore();
@@ -40474,7 +40489,7 @@ Answer: ${answer}`;
 
     function mapHuntEligibleCode(code) {
       if (!code || !mapHuntState) return false;
-      return !mapHuntState.revision || mapHuntState.roundSet?.has(code);
+      return !!mapHuntState.roundSet?.has(code) && !mapHuntState.results.has(code) && !mapHuntState.finished;
     }
 
     function resolveMapHuntClick(event) {
@@ -40489,15 +40504,16 @@ Answer: ${answer}`;
 
       const metrics = mapHuntMarkerMetrics(t);
       const markerPoints = mapHuntState.markerPoints || new Map();
-      let nearest = null;
+      let nearest = null, nearestActive = null;
       for (const [code, point] of markerPoints) {
-        if (!mapHuntEligibleCode(code) || !point) continue;
+        if (!point) continue;
         const wrappedX = geoDenWrapValueNear(point.x, x, wrapPeriod);
         const dx = x - wrappedX;
         const dy = y - point.y;
         const screenDist = Math.hypot(dx, dy) * metrics.k * metrics.viewportScale;
         const candidate = { code, distance:screenDist, wrappedX };
         if (!nearest || screenDist < nearest.distance) nearest = candidate;
+        if (mapHuntEligibleCode(code) && (!nearestActive || screenDist < nearestActive.distance)) nearestActive = candidate;
       }
 
       let targetCode = "";
@@ -40505,9 +40521,9 @@ Answer: ${answer}`;
       const geo = mapHuntState.projection?.invert?.(baseMapPoint);
       if (geo?.every?.(Number.isFinite)) {
         geo[0] = ((Number(geo[0]) + 540) % 360) - 180;
-        const candidates = mapHuntState.canvasData?.selectedFeatures || [];
+        const candidates = [...(mapHuntState.canvasData?.selectedFeatures || []), ...(mapHuntState.canvasData?.inspectFeatures || [])];
         for (const item of candidates) {
-          if (!item?.safe || !item.code || !mapHuntEligibleCode(item.code)) continue;
+          if (!item?.safe || !item.code) continue;
           try {
             if (d3.geoContains(item.feature, geo)) {
               targetCode = item.code;
@@ -40517,17 +40533,23 @@ Answer: ${answer}`;
         }
       }
 
-      // Only the painted dot (including its fine outline) overrides land.
-      // Halos and invisible touch padding are not country-selection targets.
-      if (nearest && nearest.distance <= metrics.visiblePx + .75) {
-        handleMapHuntGuess(nearest.code);
+      // Unanswered land retains priority over invisible padding. Once that
+      // land is completed/context, neighbouring tiny places get more room.
+      if (nearestActive && nearestActive.distance <= metrics.visiblePx + 1) {
+        handleMapHuntGuess(nearestActive.code);
         return;
       }
-      if (targetCode) {
+      if (targetCode && mapHuntEligibleCode(targetCode)) {
         handleMapHuntGuess(targetCode);
         return;
       }
+      const assistPx = targetCode ? metrics.visiblePx + (metrics.mobile ? 10 : 7) : metrics.hitPx;
+      if (nearestActive && nearestActive.distance <= assistPx) {
+        handleMapHuntGuess(nearestActive.code);
+        return;
+      }
       if (nearest && nearest.distance <= metrics.hitPx) handleMapHuntGuess(nearest.code);
+      else if (targetCode) handleMapHuntGuess(targetCode);
     }
 
     function mapHuntFitTransformForCodes(codes = mapHuntState?.roundCodes) {
@@ -40613,10 +40635,12 @@ Answer: ${answer}`;
     }
 
     async function renderMapHuntMap() {
+      const renderingState = mapHuntState;
       // v0.56.4: visible geometry and Home/Reset bounds use the same detailed
       // canonical atlas as Map Crawl. mainTerritoryGeometry removes distant
       // overseas pieces from fit calculations where needed.
       const world = await loadSilhouetteWorld();
+      if (mapHuntState !== renderingState) return;
       if (!mapHuntState || !window.d3 || !window.topojson) throw new Error("Map unavailable");
       const features = topojson.feature(world, world.objects.countries).features;
       const selectedFeatures = mapHuntState.allCodes.map(code => {
@@ -40639,9 +40663,9 @@ Answer: ${answer}`;
       const mapRect = mapHuntMap?.getBoundingClientRect?.();
       const mobileMap = window.matchMedia?.("(max-width: 520px)")?.matches;
       const fallbackWidth = Math.max(300, Math.round((window.visualViewport?.width || window.innerWidth || 390) - 14));
-      const width = Math.max(300, Math.round(Number(mapRect?.width) || fallbackWidth));
+      const width = Math.max(1, Math.round(Number(mapRect?.width) || fallbackWidth));
       const fallbackHeight = Math.max(mobileMap ? 360 : 300, Math.round(width / (mobileMap ? .78 : 1.8)));
-      const height = Math.max(mobileMap ? 360 : 300, Math.round(Number(mapRect?.height) || fallbackHeight));
+      const height = Math.max(1, Math.round(Number(mapRect?.height) || fallbackHeight));
       if (playWasHidden) {
         mapHuntPlay.classList.add("hidden");
         mapHuntPlay.style.visibility = "";
@@ -40704,14 +40728,14 @@ Answer: ${answer}`;
         const cachedPath = safe ? geoDenCanvasPathRecord(feature, path) : null;
         return { feature, code, safe, cachedPath };
       });
-      const provisionalFitCodes = bigMapAutoFitCodes(mapHuntState.setKey, mapHuntState.roundCodes);
+      const provisionalFitCodes = bigMapAutoFitCodes(mapHuntState.setKey, mapHuntState.allCodes);
       const provisionalHome = bigMapFitTransform(width, height, provisionalFitCodes, mapHuntState.featureBounds, allProjectedPoints) || d3.zoomIdentity;
       // width/height are now CSS-pixel logical dimensions, so the fitted zoom
       // scale already represents the on-screen size of each country.
       const homeScreenScale = Math.max(.05, Number(provisionalHome.k) || 1);
       const tiny = new Set();
       for (const item of preparedFeatures) {
-        try { if (!item.safe || bigMapFeatureNeedsMarker(item.code, path, item.feature, homeScreenScale, .45)) tiny.add(item.code); }
+        try { if (["GM", "LS", "SZ"].includes(item.code) || !item.safe || bigMapFeatureNeedsMarker(item.code, path, item.feature, homeScreenScale * .85, .45)) tiny.add(item.code); }
         catch (_) { tiny.add(item.code); }
       }
 
@@ -40769,7 +40793,13 @@ Answer: ${answer}`;
 
       mapHuntState.projection = projection;
       mapHuntState.worldWrapPeriod = worldWrapPeriod;
-      const canvasContextFeatures = features.filter(feature => globeFeaturePaintIsSafe(path, feature, .45));
+      const selectedIds = new Set(selectedFeatures.map(feature => feature.id));
+      const canvasContextFeatures = features.filter(feature => !selectedIds.has(feature.id) && globeFeaturePaintIsSafe(path, feature, .45));
+      const selectedCodes = new Set(mapHuntState.allCodes);
+      const inspectFeatures = enabledGeographyEntities().filter(c => !selectedCodes.has(c.code)).map(c => {
+        const feature = mapFeatureForCountry(c, features, includeMajorTerritories);
+        return feature ? {code:c.code, feature, safe:globeFeaturePaintIsSafe(path, feature, .45)} : null;
+      }).filter(Boolean);
       const contextPathRecords = canvasContextFeatures.map(feature => geoDenCanvasPathRecord(feature, path));
       mapHuntState.canvasData = {
         width, height, dpr,
@@ -40777,6 +40807,7 @@ Answer: ${answer}`;
         contextPathRecords,
         contextPath2D:geoDenCompositeCanvasPath(contextPathRecords),
         selectedFeatures: preparedFeatures,
+        inspectFeatures,
         markerPoints,
         worldWrapPeriod,
         pathCanvas: d3.geoPath(projection).context(mapHuntCanvas?.getContext?.("2d", { alpha:false }) || null),
@@ -40785,6 +40816,7 @@ Answer: ${answer}`;
       };
       mapHuntState.rendererReady = true;
       attachMapHuntZoom(svg, layer, width, height);
+      resizeMapHuntCanvasSurface();
       svg.on("click.maphunt", event => resolveMapHuntClick(event));
       updateMapHuntMapStates();
       fitMapHuntToActiveArea({ animate:false });
@@ -41046,6 +41078,7 @@ Answer: ${answer}`;
     mapHuntZoomInBtn?.addEventListener("click", event => { event.stopPropagation(); mapHuntZoomBy(BIG_MAP_ZOOM_STEP); });
     mapHuntZoomResetBtn?.addEventListener("click", event => { event.stopPropagation(); resetMapHuntZoom(); });
     window.addEventListener("resize", refreshMapHuntViewportMetrics, { passive:true });
+    if (window.ResizeObserver && mapHuntMap) new ResizeObserver(refreshMapHuntViewportMetrics).observe(mapHuntMap);
     window.visualViewport?.addEventListener("resize", refreshMapHuntViewportMetrics, { passive:true });
     window.addEventListener("resize", () => { if (isSprintSession()) updateSprintVisualSizing(); }, { passive:true });
     window.visualViewport?.addEventListener("resize", () => { if (isSprintSession()) updateSprintVisualSizing(); }, { passive:true });
