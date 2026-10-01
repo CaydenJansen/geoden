@@ -15367,7 +15367,7 @@ button,
         </div>
         <div class="chain-input-wrap">
           <div class="chain-input-row">
-            <input class="chain-input" id="chainGuessInput" type="text" autocomplete="off" autocapitalize="words" spellcheck="false" placeholder="Name an available place…" aria-label="Map Crawl answer" aria-autocomplete="list" aria-controls="chainSuggestions" aria-expanded="false" />
+            <input class="chain-input" id="chainGuessInput" type="text" enterkeyhint="enter" autocomplete="off" autocapitalize="words" spellcheck="false" placeholder="Name an available place…" aria-label="Map Crawl answer" aria-autocomplete="list" aria-controls="chainSuggestions" aria-expanded="false" />
             <button class="chain-submit" id="chainGuessBtn" type="button">Add</button>
           </div>
           <div class="chain-suggestions hidden" id="chainSuggestions" role="listbox" aria-label="Answer suggestions"></div>
@@ -15827,7 +15827,7 @@ button,
   <script src="assets/geography.js"></script>
 
   <script>
-    const GEODEN_VERSION = "0.56.47";
+    const GEODEN_VERSION = "0.56.48";
     // v0.56.28 — blank-surface audit: guarded silhouettes/location maps and Matching visual preflight.
     // v0.56.18 — private-beta problem reporting with diagnostic state, recent actions, errors, copy/download/share.
     // v0.56.17 — tester-facing automatic failure reporting with screenshot/copy instructions.
@@ -38376,15 +38376,21 @@ Answer: ${answer}`;
       d3.select(chainWorldMap).transition().duration(150).call(chainState.zoom.scaleBy, factor);
     }
 
-    function fitChainToActiveArea({ animate = false } = {}) {
-      if (!chainState?.zoom || !chainWorldMap || !window.d3 || !chainState?.canvasData) return;
-      const { width, height, featureBounds, markerPointMap, allProjectedPoints } = chainState.canvasData;
+    function chainHomeTransform() {
+      const data = chainState.canvasData;
+      const { featureBounds, markerPointMap, allProjectedPoints } = data;
+      const width = data.surfaceWidth || data.width, height = data.surfaceHeight || data.height;
       const fitCodes = bigMapAutoFitCodes(chainState.setKey, chainState.codes);
       const rawTransform = bigMapFitTransform(
         width, height, fitCodes, featureBounds, allProjectedPoints || markerPointMap,
         chainState.setKey === "world" ? null : chainState.canvasData?.worldWrapPeriod
       ) || d3.zoomIdentity;
-      const transform = geoDenNormalizeWorldZoomTransform(rawTransform, chainState.canvasData?.worldWrapPeriod) || rawTransform;
+      return geoDenNormalizeWorldZoomTransform(rawTransform, data.worldWrapPeriod) || rawTransform;
+    }
+
+    function fitChainToActiveArea({ animate = false } = {}) {
+      if (!chainState?.zoom || !chainWorldMap || !window.d3 || !chainState?.canvasData) return;
+      const transform = chainHomeTransform();
       chainState.homeTransform = transform;
       const canvas = d3.select(chainWorldMap);
       const target = animate ? canvas.transition().duration(180) : canvas;
@@ -38433,6 +38439,30 @@ Answer: ${answer}`;
         chainCanvasDrawRaf = 0;
         drawChainCanvas(chainState?.lastAvailability || chainAvailability());
       });
+    }
+
+    function resizeChainCanvasSurface() {
+      const state = chainState, data = state?.canvasData;
+      if (!data || !state.rendererReady || !chainFillOverlay?.classList.contains("open") || chainFillPlay?.classList.contains("hidden")) return;
+      const rect = chainWorldMap.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+      const oldWidth = data.surfaceWidth || data.width, oldHeight = data.surfaceHeight || data.height;
+      const changed = Math.abs(rect.width-oldWidth) > .01 || Math.abs(rect.height-oldHeight) > .01;
+      data.surfaceWidth = rect.width;
+      data.surfaceHeight = rect.height;
+      const width = Math.round(rect.width*data.dpr), height = Math.round(rect.height*data.dpr);
+      if (chainWorldMap.width !== width) chainWorldMap.width = width;
+      if (chainWorldMap.height !== height) chainWorldMap.height = height;
+      if (changed && state.zoom) {
+        // Canvas zoom coordinates are CSS pixels. Resize the viewport, not the
+        // geography: preserve zoom and the geographic point at its centre.
+        state.zoom.extent([[0,0],[rect.width,rect.height]]);
+        state.homeTransform = chainHomeTransform();
+        const t = state.zoomTransform || d3.zoomIdentity;
+        d3.select(chainWorldMap).interrupt().call(state.zoom.transform,
+          d3.zoomIdentity.translate(t.x+(rect.width-oldWidth)/2,t.y+(rect.height-oldHeight)/2).scale(t.k));
+      }
+      requestChainCanvasDraw();
     }
 
     function drawChainCanvas(availability = chainAvailability()) {
@@ -38608,7 +38638,9 @@ Answer: ${answer}`;
 
     async function renderChainMap() {
       // v0.56.0: use the same detailed visible atlas as Map Hunt.
+      const renderingState = chainState;
       const world = await loadSilhouetteWorld();
+      if (chainState !== renderingState) return;
       if (!chainState || !window.d3 || !window.topojson || !chainWorldMap?.getContext) throw new Error("Map unavailable");
       const features = topojson.feature(world, world.objects.countries).features;
       const rawSelected = chainState.codes.map(code => {
@@ -38628,9 +38660,9 @@ Answer: ${answer}`;
       }
       const rect = chainWorldMap.getBoundingClientRect();
       const fallbackWidth = Math.max(300, Math.min(728, window.innerWidth - 34));
-      const width = Math.max(300, Math.round(rect.width || fallbackWidth));
+      const width = Math.max(1, Math.round(rect.width || fallbackWidth));
       const mobile = window.matchMedia?.("(max-width: 520px)")?.matches;
-      const height = Math.max(mobile ? 230 : 270, Math.round(rect.height || width / (mobile ? 1.45 : 1.8)));
+      const height = Math.max(1, Math.round(rect.height || width / (mobile ? 1.45 : 1.8)));
       if (playWasHidden) {
         chainFillPlay.classList.add("hidden");
         chainFillPlay.style.visibility = "";
@@ -38708,6 +38740,7 @@ Answer: ${answer}`;
       chainState.rendererReady = true;
       chainState.lastAvailability = chainAvailability();
       attachChainZoom(d3.select(chainWorldMap), width, height);
+      resizeChainCanvasSurface();
       fitChainToActiveArea({ animate:false });
       drawChainCanvas(chainState.lastAvailability);
       updateChainMapStates();
@@ -39027,7 +39060,9 @@ Answer: ${answer}`;
         kind.className = "chain-suggestion-kind";
         kind.textContent = entry.kind;
         button.append(answer, kind);
-        button.addEventListener("pointerdown", event => { if (event.pointerType === "mouse") event.preventDefault(); });
+        // Keep the keyboard/list in place until click; do not select on down,
+        // so a touch drag can still scroll the suggestion list.
+        button.addEventListener("pointerdown", event => { if (event.button === 0) event.preventDefault(); });
         button.addEventListener("click", () => {
           chainGuessInput.value = entry.answer;
           clearChainSuggestions();
@@ -39529,6 +39564,11 @@ Answer: ${answer}`;
     chainFillStartBtn?.addEventListener("click", startChainGame);
     chainRestartBtn?.addEventListener("click", resetChainToSetup);
     chainPlayAgainBtn?.addEventListener("click", startChainGame);
+    for (const button of [chainGuessBtn, chainHintBtn, chainGiveUpBtn, chainSpellingBtn]) {
+      button?.addEventListener("pointerdown", event => {
+        if (event.button === 0 && document.activeElement === chainGuessInput) event.preventDefault();
+      });
+    }
     chainGuessBtn?.addEventListener("click", submitChainGuess);
     chainHintBtn?.addEventListener("click", giveChainHint);
     chainGiveUpBtn?.addEventListener("click", giveUpOneChainCountry);
@@ -39589,6 +39629,9 @@ Answer: ${answer}`;
     chainZoomOutBtn?.addEventListener("click", event => { event.stopPropagation(); chainZoomBy(1 / BIG_MAP_ZOOM_STEP); });
     chainZoomInBtn?.addEventListener("click", event => { event.stopPropagation(); chainZoomBy(BIG_MAP_ZOOM_STEP); });
     chainZoomResetBtn?.addEventListener("click", event => { event.stopPropagation(); resetChainZoom(); });
+    if (window.ResizeObserver && chainWorldMap) new ResizeObserver(resizeChainCanvasSurface).observe(chainWorldMap);
+    window.addEventListener("resize", resizeChainCanvasSurface, {passive:true});
+    window.visualViewport?.addEventListener("resize", resizeChainCanvasSurface, {passive:true});
     updateChainSetupHelp();
 
 
