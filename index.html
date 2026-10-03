@@ -15827,7 +15827,7 @@ button,
   <script src="assets/geography.js"></script>
 
   <script>
-    const GEODEN_VERSION = "0.56.48";
+    const GEODEN_VERSION = "0.56.49";
     // v0.56.28 — blank-surface audit: guarded silhouettes/location maps and Matching visual preflight.
     // v0.56.18 — private-beta problem reporting with diagnostic state, recent actions, errors, copy/download/share.
     // v0.56.17 — tester-facing automatic failure reporting with screenshot/copy instructions.
@@ -17054,6 +17054,7 @@ button,
     let activeCityMapCode = null;
     let activeCityMapProjection = null;
     let activeCityMapGeometry = null;
+    let cityMapBuildToken = 0;
 
     let answerLoading = false;
 
@@ -17397,10 +17398,25 @@ button,
     }
 
     // Shared by reload and backup validation, including completed sessions.
-    function validModeCountryOrder(order, session) {
+    function validModeCountryOrder(order, session, storage = null) {
       if(!Array.isArray(order)||!order.length||!order.every(i=>Number.isInteger(i)&&i>=0&&i<countries.length))return false;
       if(session?.interaction==='rapid' && session?.sprint?.enabled===true){
         const set=session.sprint.set;
+        if (set !== 'custom' && !Object.prototype.hasOwnProperty.call(COUNTRY_SET_CODES,set)) return false;
+        if (set === 'custom' || Array.isArray(session.sprint.codes)) {
+          let selected = session.sprint.codes;
+          if (!Array.isArray(selected)) {
+            try {
+              const read = key => storage ? storage[key] : localStorage.getItem(key);
+              selected = JSON.parse(read(CUSTOM_COUNTRY_SET_KEY) || '[]');
+              const extras = read(TERRITORY_PREF_KEY) === 'true';
+              selected = selected.filter(code => countries.some((c,i) => c.code === code && (extras || i < CORE_COUNTRY_COUNT)));
+            } catch (_) { return false; }
+          }
+          if (!selected.length || new Set(selected).size !== selected.length || !selected.every(code => countries.some(c => c.code === code))) return false;
+          const allowed = new Set(selected), codes = order.map(i => countries[i].code);
+          return order.length === countries.length && codes.every(code => allowed.has(code)) && selected.every(code => codes.includes(code));
+        }
         if(!Object.prototype.hasOwnProperty.call(COUNTRY_SET_CODES,set))return false;
         const core=set==='world'?countries.slice(0,CORE_COUNTRY_COUNT).map(c=>c.code):(COUNTRY_SET_CODES[set]||[]);
         const allowed=new Set([...core,...(TERRITORY_SET_CODES[set]||[]),...(ADDITIONAL_PLACE_SET_CODES[set]||[])]);
@@ -17595,9 +17611,20 @@ button,
     function loadConfusionStats() {
       try {
         const saved = JSON.parse(localStorage.getItem(CONFUSION_KEY));
-        if (saved && typeof saved === "object" && saved.pairs && typeof saved.pairs === "object") return saved;
+        if (saved && typeof saved === "object" && saved.pairs && typeof saved.pairs === "object") {
+          for (const pair of Object.values(saved.pairs)) if (pair && !validConfusionDate(pair.lastAt)) pair.lastAt = 0;
+          return saved;
+        }
       } catch (_) {}
       return freshConfusionStats();
+    }
+
+    function validConfusionDate(value) {
+      return Number.isSafeInteger(value) && value >= 0 && value <= 8640000000000000;
+    }
+
+    function confusionDateLabel(value) {
+      return validConfusionDate(value) && value > 0 ? new Intl.DateTimeFormat("en", {month:"short",day:"numeric"}).format(new Date(value)) : "date unavailable";
     }
 
     function saveConfusionStats() {
@@ -17836,6 +17863,7 @@ button,
           dailyChallenge: saved.dailyChallenge && typeof saved.dailyChallenge === "object" ? saved.dailyChallenge : null,
           sprint: saved.sprint && typeof saved.sprint === "object" ? {
             enabled: saved.sprint.enabled === true,
+            codes: Array.isArray(saved.sprint.codes) ? saved.sprint.codes.filter(code => countries.some(c => c.code === code)) : undefined,
             set: Object.prototype.hasOwnProperty.call(COUNTRY_SET_LABELS, saved.sprint.set) ? saved.sprint.set : "world",
             durationMs: Math.max(1000, Number(saved.sprint.durationMs) || 60000),
             // A live checkpoint continues to age after an unclean tab termination.
@@ -18192,14 +18220,14 @@ button,
       };
     }
 
-    function createReviewCountryOrder(interaction = "standard", set = selectedCountrySet) {
+    function createReviewCountryOrder(interaction = "standard", set = selectedCountrySet, persist = true) {
       const plan = reviewPlanForStudySet(set, interaction);
       const primarySet = new Set(plan.indices);
       const rest = shuffleIndices(
         countrySetIndices(set).filter(index => !primarySet.has(index))
       );
       const order = [...plan.indices, ...rest];
-      localStorage.setItem(COUNTRY_ORDER_KEY, JSON.stringify(order));
+      if (persist) localStorage.setItem(COUNTRY_ORDER_KEY, JSON.stringify(order));
       return { order, count: plan.indices.length, factFocus: plan.factFocus, reviewPlan: plan };
     }
 
@@ -18511,7 +18539,7 @@ button,
         return indices.filter(index => interactiveConfiguredStagesForCountry(countries[index]).length > 0).length;
       }
       if (menuPlayMode === "rapid") {
-        return indices.filter(index => rapidAvailableTypes(countries[index]).length > 0).length;
+        return indices.filter(index => rapidAvailableTypes(countries[index], {daily:pool === 'daily', sprint:false}).length > 0).length;
       }
       return indices.length;
     }
@@ -19743,8 +19771,6 @@ button,
     setupAnimatedHomeModeDisclosure();
 
     function startStudySession(mode, requestedLimit = null, interaction = menuPlayMode, pool = selectedCountryPool, countrySet = selectedCountrySet, practiceOverride = null) {
-      matchingBuildToken += 1;
-
       let normalizedPool = ["weakest", "mistakes", "confusions", "due"].includes(pool)
         ? "review"
         : ["random", "fresh", "review", "daily"].includes(pool) ? pool : "random";
@@ -19756,6 +19782,7 @@ button,
       if (normalizedPool === "review" && ["matching", "detective", "rapid"].includes(interaction)) interaction = "standard";
       let poolCount = countries.length;
       let factFocus = {};
+      let nextCountryOrder;
 
       if (focusedPractice) {
         const allowed = new Set(countrySetIndices(normalizedSet));
@@ -19765,7 +19792,7 @@ button,
 
         const primarySet = new Set(primary);
         const rest = shuffleIndices(countrySetIndices(normalizedSet).filter(index => !primarySet.has(index)));
-        countryOrder = [...primary, ...rest];
+        nextCountryOrder = [...primary, ...rest];
         poolCount = primary.length;
 
         for (const index of primary) {
@@ -19779,44 +19806,41 @@ button,
             );
           if (stages.length) factFocus[country.code] = stages.slice(0, 3);
         }
-        localStorage.setItem(COUNTRY_ORDER_KEY, JSON.stringify(countryOrder));
       } else if (normalizedPool === "review") {
         const reviewInteraction = interaction === "interactive" ? "interactive" : "standard";
-        const review = createReviewCountryOrder(reviewInteraction, normalizedSet);
+        const review = createReviewCountryOrder(reviewInteraction, normalizedSet, false);
         if (!review.count) return;
-        countryOrder = review.order;
+        nextCountryOrder = review.order;
         poolCount = review.count;
         factFocus = review.factFocus || {};
       } else {
         const prepared = countryOrderForPool(normalizedPool, normalizedSet);
         if (!prepared.count) return;
-        countryOrder = prepared.order;
+        nextCountryOrder = prepared.order;
         poolCount = prepared.count;
 
         if (interaction === "interactive") {
-          const primary = countryOrder.slice(0, poolCount)
+          const primary = nextCountryOrder.slice(0, poolCount)
             .filter(countryIndex => interactiveConfiguredStagesForCountry(countries[countryIndex]).length > 0);
-          const rest = countryOrder.slice(poolCount)
+          const rest = nextCountryOrder.slice(poolCount)
             .filter(countryIndex => interactiveConfiguredStagesForCountry(countries[countryIndex]).length > 0);
-          countryOrder = [...primary, ...rest];
+          nextCountryOrder = [...primary, ...rest];
           poolCount = primary.length;
           if (!poolCount) return;
         } else if (interaction === "rapid") {
-          const primary = countryOrder.slice(0, poolCount)
+          const primary = nextCountryOrder.slice(0, poolCount)
             .filter(countryIndex => rapidAvailableTypes(countries[countryIndex], {daily: normalizedPool === "daily", sprint: false}).length > 0);
-          const rest = countryOrder.slice(poolCount)
+          const rest = nextCountryOrder.slice(poolCount)
             .filter(countryIndex => rapidAvailableTypes(countries[countryIndex], {daily: normalizedPool === "daily", sprint: false}).length > 0);
-          countryOrder = [...primary, ...rest];
+          nextCountryOrder = [...primary, ...rest];
           poolCount = primary.length;
           if (!poolCount) return;
         }
 
-        localStorage.setItem(COUNTRY_ORDER_KEY, JSON.stringify(countryOrder));
       }
 
       if (interaction === "detective" && poolCount > 1) {
-        countryOrder = diversifyDetectiveCountryOrder(countryOrder, poolCount);
-        localStorage.setItem(COUNTRY_ORDER_KEY, JSON.stringify(countryOrder));
+        nextCountryOrder = diversifyDetectiveCountryOrder(nextCountryOrder, poolCount);
       }
 
       let limit = null;
@@ -19828,6 +19852,10 @@ button,
       // Matching deliberately has no full-set board and Review uses direct fact practice.
       if (interaction === "matching" && (mode === "unlimited" || normalizedPool === "review")) return;
 
+      // Commit only after every eligibility check succeeds.
+      matchingBuildToken += 1;
+      countryOrder = nextCountryOrder;
+      localStorage.setItem(COUNTRY_ORDER_KEY, JSON.stringify(countryOrder));
       studySession = {
         mode,
         pool: normalizedPool,
@@ -20468,6 +20496,7 @@ button,
         c &&
         config.enabled.capital &&
         stages.includes("largestCity") &&
+        !factFocusForCountry(c).includes("largestCity") &&
         largestCityIsCapital(c)
       ) {
         stages = stages.filter(stage => stage !== "largestCity");
@@ -20518,6 +20547,7 @@ button,
         !(studySession?.interaction === "interactive" && !isLookupMode()) &&
         c &&
         stages.includes("largestCity") &&
+        !factFocusForCountry(c).includes("largestCity") &&
         largestCityIsCapital(c) &&
         stages.includes("capital")
       ) {
@@ -20886,7 +20916,7 @@ button,
       const ids = [
         "startOverlay","settingsOverlay","appSettingsOverlay","searchOverlay","countryProfileOverlay","profileOnboardingOverlay","customSetOverlay",
         "masteryOverlay","masteryMapOverlay","matchingOverlay","detectiveOverlay","rapidOverlay","chainFillOverlay",
-        "mapHuntOverlay","rankingOverlay","sprintSetupOverlay","bugReportOverlay","selfTestOverlay"
+        "mapHuntOverlay","rankingOverlay","sprintOverlay","bugReportOverlay","selfTestOverlay"
       ];
       return ids.filter(id => geoDenDiagnosticOverlayOpen(id));
     }
@@ -22027,10 +22057,17 @@ button,
       return value && typeof value.id === "string" ? value.id : null;
     }
 
-    function claimQuantity(claim) {
+    function claimQuantity(claim, property) {
       const amount = claim?.mainsnak?.datavalue?.value?.amount;
+      if (amount == null || amount === "") return null;
       const value = Number(amount);
-      return Number.isFinite(value) ? Math.abs(value) : null;
+      if (!Number.isFinite(value) || value < 0) return null;
+      if (property === "P2046") {
+        const unit = String(claim?.mainsnak?.datavalue?.value?.unit || "").split("/").pop();
+        const factor = { Q712226:1, Q25343:0.000001, Q35852:0.01, Q232291:2.589988110336 }[unit];
+        return factor == null ? null : value * factor;
+      }
+      return value;
     }
 
     function claimTime(claim) {
@@ -22078,18 +22115,25 @@ button,
     }
 
     function bestQuantity(entity, property) {
-      const claims = nonDeprecatedClaims(entity, property);
-      if (!claims.length) return null;
+      return bestQuantityRecord(entity, property)?.value ?? null;
+    }
 
-      const ranked = [...claims].sort((a, b) => {
-        const aDate = qualifierTime(a, "P585") || 0;
-        const bDate = qualifierTime(b, "P585") || 0;
-        if (aDate !== bDate) return bDate - aDate;
-        const aRank = a.rank === "preferred" ? 1 : 0;
-        const bRank = b.rank === "preferred" ? 1 : 0;
-        return bRank - aRank;
-      });
-      return claimQuantity(ranked[0]);
+    function bestQuantityRecord(entity, property) {
+      const now = Date.now();
+      const claims = nonDeprecatedClaims(entity, property).filter(claim =>
+        ["P585", "P580"].every(key => !Number.isFinite(qualifierTime(claim, key)) || qualifierTime(claim, key) <= now));
+      const usable = preferredOrNormal(claims.filter(claim => claimQuantity(claim, property) != null));
+      usable.sort((a,b) => (qualifierTime(b,"P585") || 0) - (qualifierTime(a,"P585") || 0));
+      if (!usable.length) return null;
+      const asOf = qualifierTime(usable[0], "P585");
+      return { value:claimQuantity(usable[0],property), asOf,
+        latestKnownOnly:claims.some(claim => claimQuantity(claim,property) == null && (qualifierTime(claim,"P585") || 0) > (asOf || 0)) };
+    }
+
+    function quantityFactText(facts, field) {
+      const text = field === "area" ? formatArea(facts?.area) : formatWholeNumber(facts?.population);
+      const info = facts?.quantityInfo?.[field];
+      return info?.latestKnownOnly ? `${text} · latest known (${Number.isFinite(info.asOf) ? new Date(info.asOf).getUTCFullYear() : "date unavailable"})` : text;
     }
 
     function latestFormationYear(entity) {
@@ -22218,6 +22262,7 @@ button,
         headsOfGovernment: headGovIds.map(id => labels[id]).filter(name => name && !/^Q\d+$/i.test(name)),
         population,
         area,
+        quantityInfo: { population:bestQuantityRecord(entity,"P1082"), area:bestQuantityRecord(entity,"P2046") },
         formationYear,
         fetchedAt: Date.now()
       };
@@ -22350,8 +22395,8 @@ button,
         addHistoryFactCard("Current leaders", leaderSummary(facts), true, true);
       }
 
-      addHistoryFactCard("Population", formatWholeNumber(facts.population));
-      addHistoryFactCard("Area", formatArea(facts.area));
+      addHistoryFactCard("Population", quantityFactText(facts,"population"));
+      addHistoryFactCard("Area", quantityFactText(facts,"area"));
 
       if (special?.keyDateValue) {
         addHistoryFactCard(special.keyDateLabel || "Key modern date", special.keyDateValue);
@@ -22617,6 +22662,10 @@ button,
     });
 
     Object.assign(BUNDLED_CITY_FACTS, {"GL":{"largest":{"name":"Nuuk","lat":64.1833,"lng":-51.7167},"capitals":[{"name":"Nuuk","lat":64.1833,"lng":-51.7167}]},"PR":{"largest":{"name":"San Juan","lat":18.4655,"lng":-66.1057},"capitals":[{"name":"San Juan","lat":18.4655,"lng":-66.1057}]},"GF":{"largest":{"name":"Cayenne","lat":4.9224,"lng":-52.3135},"capitals":[{"name":"Cayenne","lat":4.9224,"lng":-52.3135}]},"NC":{"largest":{"name":"Nouméa","lat":-22.2758,"lng":166.458},"capitals":[{"name":"Nouméa","lat":-22.2758,"lng":166.458}]},"PF":{"largest":{"name":"Papeete","lat":-17.5516,"lng":-149.5585},"capitals":[{"name":"Papeete","lat":-17.5516,"lng":-149.5585}]},"RE":{"largest":{"name":"Saint-Denis","lat":-20.8789,"lng":55.4481},"capitals":[{"name":"Saint-Denis","lat":-20.8789,"lng":55.4481}]},"GP":{"largest":{"name":"Les Abymes","lat":16.2706,"lng":-61.5045},"capitals":[{"name":"Basse-Terre","lat":15.9985,"lng":-61.7255}]},"MQ":{"largest":{"name":"Fort-de-France","lat":14.6161,"lng":-61.0588},"capitals":[{"name":"Fort-de-France","lat":14.6161,"lng":-61.0588}]},"YT":{"largest":{"name":"Mamoudzou","lat":-12.7806,"lng":45.2278},"capitals":[{"name":"Mamoudzou","lat":-12.7806,"lng":45.2278}]},"GU":{"largest":{"name":"Dededo","lat":13.5178,"lng":144.8391},"capitals":[{"name":"Hagåtña","lat":13.4757,"lng":144.7489}]},"MP":{"largest":{"name":"Garapan","lat":15.21107,"lng":145.72038},"capitals":[{"name":"Saipan","lat":15.2123,"lng":145.7545}]},"AS":{"largest":{"name":"Tafuna","lat":-14.3358,"lng":-170.72},"capitals":[{"name":"Pago Pago","lat":-14.2756,"lng":-170.702}]},"BM":{"largest":{"name":"St. George's","lat":32.37944,"lng":-64.67778},"capitals":[{"name":"Hamilton","lat":32.2948,"lng":-64.7814}]},"KY":{"largest":{"name":"George Town","lat":19.2866,"lng":-81.3744},"capitals":[{"name":"George Town","lat":19.2866,"lng":-81.3744}]},"TC":{"largest":{"name":"Providenciales","lat":21.7825,"lng":-72.2521},"capitals":[{"name":"Cockburn Town","lat":21.4612,"lng":-71.1419}]},"VG":{"largest":{"name":"Road Town","lat":18.4286,"lng":-64.6185},"capitals":[{"name":"Road Town","lat":18.4286,"lng":-64.6185}]},"VI":{"largest":{"name":"Charlotte Amalie","lat":18.3419,"lng":-64.9307},"capitals":[{"name":"Charlotte Amalie","lat":18.3419,"lng":-64.9307}]},"AW":{"largest":{"name":"Oranjestad","lat":12.5186,"lng":-70.0358},"capitals":[{"name":"Oranjestad","lat":12.5186,"lng":-70.0358}]},"CW":{"largest":{"name":"Willemstad","lat":12.1224,"lng":-68.8824},"capitals":[{"name":"Willemstad","lat":12.1224,"lng":-68.8824}]},"SX":{"largest":{"name":"Lower Prince's Quarter","lat":18.0499,"lng":-63.0379},"capitals":[{"name":"Philipsburg","lat":18.026,"lng":-63.0458}]},"FO":{"largest":{"name":"Tórshavn","lat":62.0079,"lng":-6.79},"capitals":[{"name":"Tórshavn","lat":62.0079,"lng":-6.79}]},"GI":{"largest":{"name":"Gibraltar","lat":36.1408,"lng":-5.3536},"capitals":[{"name":"Gibraltar","lat":36.1408,"lng":-5.3536}]},"IM":{"largest":{"name":"Douglas","lat":54.15,"lng":-4.4833},"capitals":[{"name":"Douglas","lat":54.15,"lng":-4.4833}]},"JE":{"largest":{"name":"Saint Helier","lat":49.1868,"lng":-2.1066},"capitals":[{"name":"Saint Helier","lat":49.1868,"lng":-2.1066}]},"GG":{"largest":{"name":"Saint Peter Port","lat":49.4554,"lng":-2.5369},"capitals":[{"name":"Saint Peter Port","lat":49.4554,"lng":-2.5369}]},"FK":{"largest":{"name":"Stanley","lat":-51.6967,"lng":-57.8492},"capitals":[{"name":"Stanley","lat":-51.6967,"lng":-57.8492}]}});
+
+    // City-centre coordinates; Philippine largest city is city proper, not Metro Manila.
+    BUNDLED_CITY_FACTS.NZ.capitals = [{name:"Wellington",lat:-41.2865,lng:174.7762}];
+    BUNDLED_CITY_FACTS.PH.largest = {name:"Quezon City",lat:14.676,lng:121.0437};
 
     function getCityFacts(c) {
       const facts = BUNDLED_CITY_FACTS[c.code];
@@ -23685,7 +23734,7 @@ button,
         }
 
         if (field === "population") {
-          const text = formatWholeNumber(facts.population);
+          const text = quantityFactText(facts,"population");
           return {
             field,
             signature: `population:${matchingNormalise(text)}`,
@@ -23695,7 +23744,7 @@ button,
         }
 
         if (field === "area") {
-          const text = formatArea(facts.area);
+          const text = quantityFactText(facts,"area");
           return {
             field,
             signature: `area:${matchingNormalise(text)}`,
@@ -25345,10 +25394,16 @@ button,
       return interactiveNormalize(value)
         .replace(/\bu[.\s]+s(?:[.\s]+a)?\.?(?=\s|$)/g, match => match.replace(/[^a-z]/g, ""))
         .replace(/&/g, " and ")
+        .replace(/'/g, "")
         .replace(/[^a-z0-9]+/g, " ")
         .replace(/\b(?:st|saint)\b/g, "saint")
         .replace(/\s+/g, " ")
         .trim();
+    }
+
+    function cityAnswerVariants(value) {
+      return ["naypyidaw","naypyitaw","nay pyi taw","nay pyi daw"].includes(interactiveLooseNormalize(value))
+        ? ["Naypyidaw","Naypyitaw","Nay Pyi Taw","Nay Pyi Daw"] : [value];
     }
 
     function interactiveTextMatches(stage, typed, expected, c) {
@@ -25356,6 +25411,7 @@ button,
       const wanted = interactiveLooseNormalize(expected);
       if (!actual) return false;
       if (actual === wanted) return true;
+      if (["capital","largestCity"].includes(stage) && cityAnswerVariants(expected).some(value => interactiveLooseNormalize(value) === actual)) return true;
 
       if (stage === "country" && countryMatchesNaturalAnswer(c, typed)) return true;
       if (stage === "currency" && (CURRENCY_CODES_BY_COUNTRY[c?.code] || []).some(code=>interactiveLooseNormalize(code)===actual)) return true;
@@ -25624,7 +25680,7 @@ button,
     function autocompleteMatchRank(value, query, alias) {
       const normal = interactiveLooseNormalize(value);
       if (normal === query || (alias && normal === alias)) return 0;
-      return normal.startsWith(query) ? 1 : normal.includes(query) ? 2 : 99;
+      return Math.min(...cityAnswerVariants(value).map(value => { const n=interactiveLooseNormalize(value); return n===query ? 0 : n.startsWith(query) ? 1 : n.includes(query) ? 2 : 99; }));
     }
 
     async function updateInteractiveSuggestions() {
@@ -26347,6 +26403,7 @@ button,
       if (!typed) return;
 
       let canonicalTarget = state.normalizedTargets.get(typed);
+      if (!canonicalTarget && noun === "capitals") canonicalTarget = state.targets.find(value => interactiveTextMatches("capital",typed,value,currentCountry()));
       if (!canonicalTarget && noun === "currencies") {
         const code=(CURRENCY_CODES_BY_COUNTRY[currentCountry()?.code]||[]).find(code=>interactiveLooseNormalize(code)===typed);
         if(code)canonicalTarget=state.targets.find(name=>name===currencyDisplayName(code));
@@ -26458,12 +26515,19 @@ button,
       hapticFeedback(correct ? "correct" : "wrong");
     }
 
+    function checkpointInteractivePrompt() {
+      if (!isInteractiveGameplay() || isBrowsingHistory() || attempt?.code !== currentCountry()?.code) return;
+      const replay = captureInteractiveReplayState(currentStage);
+      if (replay) { attempt.interactiveReplay = replay; saveAttempt(); }
+    }
+
     function completeInteractiveStage(delay = 520, autoAdvance = true) {
       if (isBrowsingHistory()) return;
       const completedCode = currentCountry()?.code || null;
       const completedStage = currentStage;
       phase = "revealed";
       markRevealed(currentStage);
+      checkpointInteractivePrompt();
       saveState();
       // Record the solved/revealed screen before auto-advancing. Back should
       // return to an answer the learner can actually review, not the old prompt.
@@ -26555,6 +26619,10 @@ button,
     }
 
     function giveInteractiveHint() {
+      try { return giveInteractiveHintImpl(); } finally { checkpointInteractivePrompt(); }
+    }
+
+    function giveInteractiveHintImpl() {
       if (isBrowsingHistory()) return;
       if (!isInteractiveGameplay() || phase !== "prompt" || !interactiveHelpSupported()) return;
 
@@ -26790,6 +26858,10 @@ button,
     }
 
     async function submitInteractiveTextAnswer() {
+      try { return await submitInteractiveTextAnswerImpl(); } finally { checkpointInteractivePrompt(); }
+    }
+
+    async function submitInteractiveTextAnswerImpl() {
       if (isBrowsingHistory()) return;
       if (!isInteractiveGameplay() || phase !== "prompt") return;
       const c = currentCountry();
@@ -27904,6 +27976,7 @@ button,
       const code = c?.code || null;
       const token = ++interactiveRenderToken;
       ensureCityMapBase(c).then(mapState => {
+        if (!mapState) return;
         if (token !== interactiveRenderToken || !isBrowsingHistory() || currentStage !== stage || currentCountry()?.code !== code) return;
         const surface = mapState.surface || mapState.svg;
         mapState.svg.selectAll(".city-marker, .city-label").remove();
@@ -29217,7 +29290,7 @@ button,
         renderMasteryRow(
           masteryConfusionsList,
           `${a.name} ↔ ${b.name}`,
-          `${dominantConfusionStage(pair)} · last mixed up ${new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(new Date(Number(pair.lastAt) || Date.now()))}`,
+          `${dominantConfusionStage(pair)} · last mixed up ${confusionDateLabel(pair.lastAt)}`,
           `${Number(pair.count) || 0}×`,
           {
             actionLabel: "Practice",
@@ -30125,7 +30198,7 @@ button,
       countryProfileFacts.replaceChildren(
         ...(specialProfileHistory?.status ? [countryProfileFact("Political status", specialProfileHistory.status)] : []),
         countryProfileFact("Capital", capitals.join(" · ") || "Not listed"),
-        countryProfileFact("Largest city", largest),
+        countryProfileFact(c.code === "PH" ? "Largest city · city proper" : "Largest city", largest),
         countryProfileFact("Languages", languages.join(" · ") || "Not listed"),
         countryProfileFact("Currency", currencies.join(" · ") || "Not listed"),
         countryProfileFact("Population", "Loading…", "population"),
@@ -30140,8 +30213,8 @@ button,
 
       loadCountryFacts(c).then(facts => {
         if (token !== countryProfileRenderToken || countryProfileCode !== c.code) return;
-        updateCountryProfileFact("population", formatWholeNumber(facts?.population));
-        updateCountryProfileFact("area", formatArea(facts?.area));
+        updateCountryProfileFact("population", quantityFactText(facts,"population"));
+        updateCountryProfileFact("area", quantityFactText(facts,"area"));
         updateCountryProfileFact("government", governmentTypeForCountry(c, facts));
       }).catch(() => {
         if (token !== countryProfileRenderToken || countryProfileCode !== c.code) return;
@@ -31116,6 +31189,7 @@ button,
 
       try {
         const mapState = await ensureCityMapBase(c);
+        if (!mapState) return;
         if (
           token !== interactiveRenderToken ||
           !isInteractiveGameplay() ||
@@ -31391,6 +31465,8 @@ button,
     }
 
     async function ensureCityMapBase(c) {
+      const buildToken = ++cityMapBuildToken;
+      const requestedStage = currentStage, requestedPhase = phase;
       const svg = d3.select(cityMapEl);
 
       if (
@@ -31411,6 +31487,7 @@ button,
       cityMapLoading.style.display = "grid";
 
       const resolved = await resolveDrawableLocationGeometry(c, [[14,12],[406,308]]);
+      if (buildToken !== cityMapBuildToken || currentCountry()?.code !== c.code || currentStage !== requestedStage || phase !== requestedPhase) return null;
       if (!resolved) throw new Error("Country map geometry not drawable");
       const { geometry:displayTarget, projection, path } = resolved;
       svg.selectAll("*").remove();
@@ -31447,6 +31524,7 @@ button,
 
       try {
         const state = await ensureCityMapBase(c);
+        if (!state) return;
 
         if (
           currentCountry()?.code !== c.code ||
@@ -31510,6 +31588,7 @@ button,
       cityMapLoading.style.display = "grid";
       try {
         const [state, facts] = await Promise.all([ensureCityMapBase(c), getCityFacts(c)]);
+        if (!state) return;
         if (currentCountry()?.code !== c.code || currentStage !== "capitalPosition" || phase !== "revealed") return;
         const svg = state.svg;
         const surface = state.surface || svg;
@@ -31540,6 +31619,7 @@ button,
           ensureCityMapBase(c),
           getCityFacts(c)
         ]);
+        if (!state) return;
 
         if (
           currentCountry()?.code !== c.code ||
@@ -32585,8 +32665,8 @@ button,
         : false;
 
       const clues = [];
-      if (Number.isFinite(facts?.population)) clues.push({ key: "population", label: "Population", value: formatWholeNumber(facts.population) });
-      if (Number.isFinite(facts?.area)) clues.push({ key: "area", label: "Area", value: formatArea(facts.area) });
+      if (Number.isFinite(facts?.population)) clues.push({ key: "population", label: "Population", value: quantityFactText(facts,"population") });
+      if (Number.isFinite(facts?.area)) clues.push({ key: "area", label: "Area", value: quantityFactText(facts,"area") });
       const specialHistory = specialHistoryFor(c);
       if (specialHistory?.keyDateValue) {
         clues.push({ key: "formation", label: specialHistory.keyDateLabel || "Key modern date", value: specialHistory.keyDateValue });
@@ -33987,7 +34067,7 @@ Answer: ${answer}`;
     function rapidTextMatches(round, c, typed) {
       const actual = interactiveLooseNormalize(typed);
       if (!actual) return false;
-      return rapidExpectedValues(round, c).some(value => interactiveLooseNormalize(value) === actual);
+      return rapidExpectedValues(round, c).some(value => interactiveTextMatches(RAPID_TYPES[round?.type]?.target,typed,value,c));
     }
 
     function rapidRoleCorrection(round, c, typed) {
@@ -35677,6 +35757,8 @@ Answer: ${answer}`;
             : config;
       const structureChanged = settingsConfigAtOpen != null &&
         settingsConfigAtOpen !== JSON.stringify(currentConfig);
+      const matchingOrderOnly = settingsModeAtOpen === "matching" && structureChanged &&
+        JSON.stringify(JSON.parse(settingsConfigAtOpen).enabled) === JSON.stringify(currentConfig.enabled);
 
       if (structureChanged && !["matching", "detective", "rapid"].includes(settingsModeAtOpen) && isMixedFlashSession()) reconcileMixedFlashDeck();
 
@@ -35710,7 +35792,18 @@ Answer: ${answer}`;
         settingsModeAtOpen === "matching" &&
         matchingOverlay.classList.contains("open")
       ) {
-        startMatchingRound();
+        if (matchingOrderOnly && matchingState) {
+          const snapshot = matchingRunSnapshot();
+          const drawerField = matchingState.answerFields[matchingState.drawerIndex || 0];
+          matchingState.answerFields.sort((a,b) => matchingConfig.order.indexOf(a) - matchingConfig.order.indexOf(b));
+          matchingState.drawerIndex = Math.max(0,matchingState.answerFields.indexOf(drawerField));
+          if (snapshot) {
+            snapshot.state = specialRunEncode(matchingState);
+            studySession.matching = snapshot;
+            restoreMatchingRun();
+            saveStudySession();
+          }
+        } else startMatchingRound();
       }
     }
 
@@ -36348,7 +36441,10 @@ Answer: ${answer}`;
       interactiveFeedback.classList.remove("wrong", "correct", "near");
       resetInteractiveSuggestionSelection();
       updateInteractiveSuggestions();
+      checkpointInteractivePrompt();
     });
+    window.addEventListener("pagehide", checkpointInteractivePrompt);
+    document.addEventListener("visibilitychange", () => { if (document.hidden) checkpointInteractivePrompt(); });
     interactiveInput.addEventListener("keydown", event => {
       if (event.key === "ArrowDown") {
         if (moveInteractiveSuggestion(1)) event.preventDefault();
@@ -36666,8 +36762,10 @@ Answer: ${answer}`;
         ? event.deltaY
         : event.deltaX;
       if (!delta) return;
+      const next = Math.max(0, Math.min(matchingDrawerCards.scrollWidth - matchingDrawerCards.clientWidth, matchingDrawerCards.scrollLeft + delta));
+      if (Math.abs(next - matchingDrawerCards.scrollLeft) < 1) return;
       event.preventDefault();
-      matchingDrawerCards.scrollLeft += delta;
+      matchingDrawerCards.scrollLeft = next;
     }, { passive: false });
 
     // Desktop: ungraded placed cards can be picked up again.
@@ -36993,11 +37091,16 @@ Answer: ${answer}`;
       }
       if(key===COUNTRY_ORDER_KEY){
         let session=null;try{session=JSON.parse(storage ? storage[STUDY_SESSION_KEY]||'null' : localStorage.getItem(STUDY_SESSION_KEY));}catch(_){}
-        if(!validModeCountryOrder(parsed,session))fail();
+        if(!validModeCountryOrder(parsed,session,storage))fail();
       }
       if(key===CUSTOM_COUNTRY_SET_KEY&&!parsed.every(code=>countries.some(c=>c.code===code)))fail();
       if(key===SMART_REVIEW_KEY&&!object(parsed.countries))fail();
-      if(key===CONFUSION_KEY&&!object(parsed.pairs))fail();
+      if(key===CONFUSION_KEY) {
+        if (!object(parsed.pairs)) fail();
+        for (const pair of Object.values(parsed.pairs)) {
+          if (!object(pair) || (pair.lastAt != null && !validConfusionDate(pair.lastAt))) fail();
+        }
+      }
       if(key===DAILY_PROGRESS_KEY&&(!object(parsed.days)||!Number.isFinite(parsed.goal)))fail();
       if(key===NAV_HISTORY_KEY&&(!Array.isArray(parsed.items)||typeof parsed.order!=='string'))fail();
       if(key===ATTEMPT_KEY&&(!countries.some(c=>c.code===parsed.code)||!object(parsed.results)||!Array.isArray(parsed.revealed)))fail();
@@ -37668,7 +37771,7 @@ Answer: ${answer}`;
     function chainCapitalMatches(c, raw) {
       const q = interactiveLooseNormalize(raw);
       if (!q || !c) return false;
-      return chainCapitalNames(c).some(name => interactiveLooseNormalize(name) === q);
+      return chainCapitalNames(c).some(name => interactiveTextMatches("capital",raw,name,c));
     }
 
     // Canonical Map Crawl logical-route data. Keep these outside buildChainGraph so
@@ -39033,7 +39136,7 @@ Answer: ${answer}`;
           const answer = interactiveLooseNormalize(entry.answer);
           let rank = 99;
           if (answer === query) rank = 0;
-          else if (answer.startsWith(query)) rank = 1;
+          else if (autocompleteMatchRank(entry.answer,query,"") < 99) rank = autocompleteMatchRank(entry.answer,query,"");
           else if (answer.includes(` ${query}`)) rank = 2;
           return { ...entry, rank };
         })
@@ -41228,8 +41331,8 @@ Answer: ${answer}`;
         try {
           const facts = await loadCountryFacts(c);
           if (metric === "density") {
-            const population = Number(facts?.population);
-            const area = Number(facts?.area);
+            const population = facts?.population;
+            const area = facts?.area;
             return Number.isFinite(population) && Number.isFinite(area) && area > 0 ? population / area : null;
           }
           const value = metric === "population" ? facts?.population : facts?.area;
@@ -41239,7 +41342,7 @@ Answer: ${answer}`;
       return null;
     }
 
-    async function rankingBatchValues(metric, batch) {
+    async function rankingBatchValues(metric, batch, quantityInfoByCode = null) {
       if (!["population","area","density"].includes(metric)) {
         return Promise.all(batch.map(c => rankingMetricValue(metric,c)));
       }
@@ -41264,12 +41367,17 @@ Answer: ${answer}`;
           } else {
             value = bestQuantity(entity, metric === "population" ? "P1082" : "P2046");
           }
-          if (Number.isFinite(value)) valuesByCode.set(String(code).toUpperCase(), value);
+          if (Number.isFinite(value)) {
+            valuesByCode.set(String(code).toUpperCase(), value);
+            quantityInfoByCode?.set(String(code).toUpperCase(), {
+              population:bestQuantityRecord(entity,"P1082"), area:bestQuantityRecord(entity,"P2046")
+            });
+          }
         }
         const values = batch.map(c => valuesByCode.get(c.code) ?? null);
         const missing = values.map((value,index) => value == null ? index : -1).filter(index => index >= 0);
-        if (missing.length && missing.length <= 3) {
-          const fallback = await Promise.all(missing.map(index => rankingMetricValue(metric,batch[index])));
+        if (missing.length) {
+          const fallback = await mapWithConcurrency(missing,4,index => rankingMetricValue(metric,batch[index]));
           missing.forEach((index,i) => { if (Number.isFinite(fallback[i])) values[index] = fallback[i]; });
         }
         return values;
@@ -41389,6 +41497,11 @@ Answer: ${answer}`;
       return selected;
     }
 
+    function rankingQuantityNote(metric, info) {
+      return (metric === "density" ? ["population","area"] : [metric]).filter(key => info?.[key]?.latestKnownOnly)
+        .map(key => `latest known ${key} (${Number.isFinite(info[key].asOf) ? new Date(info[key].asOf).getUTCFullYear() : "date unavailable"})`).join(" · ");
+    }
+
     async function buildRankingItems(options = {}) {
       const avoidPrevious = options.avoidPrevious === true;
       const metric = RANKING_METRIC_KEYS.includes(options.metric) ? options.metric : rankingMetric;
@@ -41416,10 +41529,12 @@ Answer: ${answer}`;
       // of simply taking the first five usable records returned by the data source.
       for (let offset=0; offset<pool.length; offset += batchSize) {
         const batch = pool.slice(offset, offset + batchSize);
-        const values = await rankingBatchValues(metric, batch);
+        const quantityInfo = new Map();
+        const values = await rankingBatchValues(metric, batch, quantityInfo);
         batch.forEach((c,i) => {
           const value = values[i];
-          if (Number.isFinite(value)) candidates.push({ c, value });
+          if (Number.isFinite(value)) candidates.push({ c, value,
+            quantityNote:rankingQuantityNote(metric,quantityInfo.get(c.code) || countryFactsCache[c.code]?.quantityInfo) });
         });
         if (candidates.length >= targetCandidateCount && new Set(candidates.map(item => item.value)).size >= 2) break;
       }
@@ -41519,8 +41634,7 @@ function rankingTargetValues() {
         ? rankingState.knownCorrectCodes
         : new Set(rankingState.knownCorrectCodes || []);
       if (!known.has(item.c.code)) return { cls:"", text:"" };
-      const targetIndex = rankingTargetIndexForItem(item);
-      if (targetIndex !== index) return { cls:"", text:"" };
+      if (rankingTargetValues()[index] !== item.value) return { cls:"", text:"" };
       const newly = rankingState.newlyConfirmedCodes instanceof Set
         ? rankingState.newlyConfirmedCodes
         : new Set(rankingState.newlyConfirmedCodes || []);
@@ -41572,6 +41686,7 @@ function rankingTargetValues() {
         const country = document.createElement("div"); country.className="ranking-country";
         const name = document.createElement("div"); name.className="ranking-country-name"; name.textContent=item.c.name;
         const value = document.createElement("div"); value.className=`ranking-country-value${rankingState.revealed ? "" : " hidden"}`; value.textContent=metric.format(item.value,item);
+        if (item.quantityNote) value.textContent += ` · ${item.quantityNote}`;
         country.append(name,value);
         const direction = document.createElement("div"); direction.className="ranking-direction"; direction.textContent=assessment.text;
         const move = document.createElement("div"); move.className="ranking-move";
@@ -41645,11 +41760,10 @@ function rankingTargetValues() {
 
     function giveRankingHint() {
       if (!rankingState || rankingState.revealed) return;
-      rankingState.hints = Math.max(0, Number(rankingState.hints) || 0) + 1;
       const target = rankingTargetValues();
       const misplaced = rankingState.items
         .map((item, index) => ({ item, index, targetIndex: target.indexOf(item.value) }))
-        .filter(entry => entry.targetIndex !== entry.index);
+        .filter(entry => target[entry.index] !== entry.item.value);
       if (!misplaced.length) {
         verifyRanking();
         return;
@@ -41659,6 +41773,7 @@ function rankingTargetValues() {
         : new Set(rankingState.knownCorrectCodes || []);
       const unknownMisplaced = misplaced.filter(entry => !known.has(entry.item.c.code));
       const hintPool = unknownMisplaced.length ? unknownMisplaced : misplaced;
+      rankingState.hints = Math.max(0, Number(rankingState.hints) || 0) + 1;
       const pick = hintPool[randomInt(hintPool.length)];
       const direction = pick.targetIndex < pick.index ? "up" : "down";
       rankingFeedback.textContent = `Hint · move ${pick.item.c.name} ${direction}.`;
@@ -41672,7 +41787,7 @@ function rankingTargetValues() {
       const avoidPrevious = replay || rankingLastRoundCodes.length > 0;
       rankingSetup.classList.add("hidden"); rankingPlay.classList.add("hidden"); rankingLoading.classList.remove("hidden");
       const roundMetric = chooseRankingRoundMetric();
-      rankingLoading.textContent = ["population","area","density"].includes(roundMetric) ? "Loading current values…" : "Building ranking…";
+      rankingLoading.textContent = ["population","area","density"].includes(roundMetric) ? "Loading latest available values…" : "Building ranking…";
       rankingFeedback.textContent="";
       try {
         const items = await buildRankingItems({ avoidPrevious, metric: roundMetric });
@@ -41831,7 +41946,7 @@ function rankingTargetValues() {
     }
 
     function startSprintGame() {
-      if (hasActiveStudyRun() && !isSprintSession() && sprintStartBtn?.dataset.confirmReplace !== "true") {
+      if (hasActiveStudyRun() && !sprintHasEndedPendingResults() && sprintStartBtn?.dataset.confirmReplace !== "true") {
         sprintStartBtn.dataset.confirmReplace = "true";
         sprintStartBtn.textContent = "Replace current session →";
         return;
@@ -41852,7 +41967,7 @@ function rankingTargetValues() {
       studySession.interaction = "rapid";
       studySession.rapid = rapidDefaultState();
       studySession.sprint = {
-        enabled:true, set:sprintSet, durationMs:60000, remainingMs:60000,
+        enabled:true, set:sprintSet, codes:base.map(i => countries[i].code), durationMs:60000, remainingMs:60000,
         runningStartedAt:null, ended:false
       };
       countryOrder = buildSprintCountryOrder(base);
@@ -42723,7 +42838,7 @@ function rankingTargetValues() {
         ['State','Interactive async answers are context-guarded after awaits', () => {
           const language=submitInteractiveLanguageAnswer.toString();
           const collection=submitInteractiveNamedCollectionAnswer.toString();
-          const textAnswer=submitInteractiveTextAnswer.toString();
+          const textAnswer=submitInteractiveTextAnswerImpl.toString();
           geoDenSelfTestAssert(language.includes('interactiveSubmissionStillCurrent(expectedStage, expectedCode, state)'));
           geoDenSelfTestAssert(collection.includes('interactiveSubmissionStillCurrent(expectedStage, expectedCode, state)'));
           geoDenSelfTestAssert(textAnswer.includes('interactiveSubmissionStillCurrent(stage, c.code)'));
