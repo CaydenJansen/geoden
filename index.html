@@ -3499,6 +3499,11 @@
     }
 
     .matching-slot:not(.correct) { cursor: pointer; }
+    .matching-previous { width:100%; min-width:0; padding-top:12px; pointer-events:none; }
+    .matching-previous-label { display:block; margin-bottom:4px; color:var(--muted); font-size:.6rem; font-weight:750; }
+    .matching-previous-content { filter:grayscale(.25); opacity:.65; }
+    .matching-previous-content .matching-card-text { font-size:.8rem; }
+    .matching-previous-content img, .matching-previous-content svg { height:48px; width:auto; max-width:100%; object-fit:contain; }
     .matching-slot:not(.correct):hover {
       border-color: rgba(40,100,240,.46);
       background: rgba(40,100,240,.035);
@@ -8431,7 +8436,7 @@
       overflow-wrap: anywhere;
     }
 
-    /* Challenge settings: simple preset -> challenges/order -> action journey. */
+    /* Topic settings: simple preset -> topics/order -> action journey. */
     .tune-panel .settings-head { margin-bottom: 12px; }
     .tune-panel .settings-subtitle { max-width: 34ch; }
     .tune-panel .stage-settings { gap: 7px; }
@@ -8995,7 +9000,7 @@
 }
 .current-session-card .start-session-title { font-size: clamp(1.28rem,4.5vw,1.68rem); }
 .current-session-card .start-session-summary { margin-top: 6px; }
-.start-session-summary-challenges {
+.start-session-summary-topics {
   margin-top: 4px;
   color: var(--muted);
   font-size: .72rem;
@@ -10248,7 +10253,7 @@ button,
 
     /* Slightly stronger secondary-text contrast without changing the palette. */
     .start-session-summary-secondary,
-    .start-session-summary-challenges,
+    .start-session-summary-topics,
     .session-step-value,
     .country-pool-meta,
     .start-option-meta { color:#625e57; }
@@ -10785,7 +10790,7 @@ button,
       display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 9px;
     }
     .start-session-summary-secondary,
-    .start-session-summary-challenges { margin-top:0 !important; }
+    .start-session-summary-topics { margin-top:0 !important; }
     .start-session-summary-note { flex-basis:100%; margin-top:3px !important; }
 
     @media (max-width:520px) {
@@ -10985,7 +10990,7 @@ button,
     .active-session-resume-title { text-wrap: balance; }
     .today-focus-meta,
     .start-session-summary-secondary,
-    .start-session-summary-challenges,
+    .start-session-summary-topics,
     .active-session-resume-meta { text-wrap: pretty; }
 
     .today-focus-button,
@@ -11290,7 +11295,7 @@ button,
          grid or forcing horizontal scrolling. */
       .session-step-value,
       .start-session-summary-secondary,
-      .start-session-summary-challenges,
+      .start-session-summary-topics,
       .country-set-name,
       .country-pool-name,
       .play-mode-name,
@@ -12279,7 +12284,7 @@ button,
     #startSessionCard .start-session-title { font-size:1.45rem !important; margin-top:3px; }
     #startSessionCard .start-session-summary { margin-top:5px; margin-bottom:9px; gap:3px 8px; }
     #startSessionCard .start-session-summary-secondary,
-    #startSessionCard .start-session-summary-challenges { font-size:.72rem !important; }
+    #startSessionCard .start-session-summary-topics { font-size:.72rem !important; }
     #startSessionCard .session-customize-disclosure { margin-top:8px !important; }
     #startSessionCard .session-customize-summary { min-height:44px !important; }
     #startSessionCard .session-customize-title { font-size:.78rem !important; }
@@ -12301,7 +12306,7 @@ button,
       #startSessionCard { padding:11px !important; }
       #startSessionCard .start-session-title { font-size:1.22rem !important; }
       #startSessionCard .start-session-summary-secondary,
-      #startSessionCard .start-session-summary-challenges { font-size:.66rem !important; }
+      #startSessionCard .start-session-summary-topics { font-size:.66rem !important; }
     }
     @media (max-width:360px) {
       .home-mode-browser-head { display:block; }
@@ -13989,6 +13994,8 @@ button,
     }
     .map-hunt-tap-flash-name { display:block; font-weight:900; letter-spacing:-.015em; }
     .map-hunt-tap-flash-capital { display:block; margin-top:2px; font-size:.88em; font-weight:620; opacity:.9; }
+    .map-hunt-direction { display:flex; align-items:center; justify-content:center; gap:5px; margin-top:4px; font-size:.8em; font-weight:750; }
+    .map-hunt-direction-arrow { display:inline-block; font-size:24px; line-height:1; transform-origin:center; }
     .map-hunt-tap-flash.correct { color:inherit; }
     .map-hunt-tap-flash.wrong,
     .map-hunt-tap-flash.reveal { color:#8f342e; }
@@ -14140,7 +14147,7 @@ button,
       <div class="top-actions">
         <div class="progress-text" id="progressText">1 / 195</div>
         <button class="menu-open" id="mainMenuBtn" type="button" aria-label="Open GeoDen home">Menu</button>
-        <button class="settings-open" id="settingsOpenBtn" type="button" aria-label="Open challenge settings">Challenges</button>
+        <button class="settings-open" id="settingsOpenBtn" type="button" aria-label="Open topic settings">Topics</button>
       </div>
     </div>
 
@@ -14278,7 +14285,7 @@ button,
             </div>
 
             <div class="session-recap-section">
-              <div class="session-recap-section-title">Recall by challenge</div>
+              <div class="session-recap-section-title">Recall by topic</div>
               <div class="session-fact-rows" id="sessionFactRows"></div>
             </div>
 
@@ -14355,7 +14362,7 @@ button,
         <div class="today-daily-challenge" id="dailyChallengeCard" aria-labelledby="dailyChallengeTitle">
           <div class="today-daily-copy">
             <div class="today-daily-title" id="dailyChallengeTitle">Daily GeoDen</div>
-            <div class="today-daily-meta" id="dailyChallengeMeta">10 mixed questions · same challenge all day</div>
+            <div class="today-daily-meta" id="dailyChallengeMeta">10 mixed questions · same quiz all day</div>
           </div>
           <button class="today-daily-button" id="dailyChallengeBtn" type="button">Play →</button>
         </div>
@@ -14415,7 +14422,7 @@ button,
                 <div class="mode-discovery-options mode-discovery-options-four">
                   <button class="play-mode-button sprint-mode-button" id="sprintModeBtn" type="button" data-play-mode="sprint" aria-pressed="false">
                     <span class="play-mode-name">Sprint</span>
-                    <span class="play-mode-meta">60-second regional challenge</span>
+                    <span class="play-mode-meta">60-second regional practice</span>
                   </button>
                   <button class="play-mode-button detective-mode-button" id="detectiveModeBtn" type="button" data-play-mode="detective" aria-pressed="false">
                     <span class="play-mode-name">Detective</span>
@@ -14444,7 +14451,7 @@ button,
         <h3 class="start-session-title" id="startSummaryPrimary">Flash card · Random</h3>
         <div class="start-session-summary" aria-live="polite">
           <div class="start-session-summary-secondary" id="startSummarySecondary">5 places · World</div>
-          <div class="start-session-summary-challenges" id="startSummaryChallenges">Basics · 4 challenges</div>
+          <div class="start-session-summary-topics" id="startSummaryTopics">Basics · 4 topics</div>
           <div class="start-session-summary-note hidden" id="startSummaryNote"></div>
         </div>
 
@@ -14563,18 +14570,18 @@ button,
               </div>
             </details>
 
-            <details class="session-step" data-session-step="challenges">
+            <details class="session-step" data-session-step="topics">
               <summary class="session-step-summary">
-                <span class="session-step-label">Challenges</span>
-                <span class="session-step-value" id="sessionChallengeSummary">Basics · 4 challenges</span>
+                <span class="session-step-label">Topics</span>
+                <span class="session-step-value" id="sessionChallengeSummary">Basics · 4 topics</span>
                 <span class="session-step-chevron" aria-hidden="true">⌄</span>
               </summary>
               <div class="session-step-body challenge-step-body">
                 <div class="play-mode-note" id="playModeNote">
-                  <div class="play-mode-note-count">Basics · 4 challenges</div>
+                  <div class="play-mode-note-count">Basics · 4 topics</div>
                   <div class="play-mode-note-sub">Flag · Place name · World map · Capital</div>
                 </div>
-                <button class="menu-tune-button" id="menuTuneBtn" type="button">Choose challenges</button>
+                <button class="menu-tune-button" id="menuTuneBtn" type="button">Choose topics</button>
               </div>
             </details>
           </div>
@@ -14769,7 +14776,7 @@ button,
       <details class="mastery-map-method-details">
         <summary>How statuses work</summary>
         <div class="mastery-map-method">
-          Due means a scheduled direct-recall fact is ready for review, even if that challenge is currently switched off. Games add weighted mastery evidence without changing the spaced-review clock. Weak and Strong use both direct recall and gameplay evidence; Mastered still requires sustained clean retrieval over time.
+          Due means a scheduled direct-recall fact is ready for review, even if that topic is currently switched off. Games add weighted mastery evidence without changing the spaced-review clock. Weak and Strong use both direct recall and gameplay evidence; Mastered still requires sustained clean retrieval over time.
         </div>
       </details>
     </div>
@@ -14785,7 +14792,7 @@ button,
         </div>
         <div class="matching-head-actions">
           <button class="matching-close" id="matchingCloseBtn" type="button">Menu</button>
-          <button class="matching-close matching-settings" id="matchingSettingsBtn" type="button">Challenges</button>
+          <button class="matching-close matching-settings" id="matchingSettingsBtn" type="button">Topics</button>
         </div>
       </div>
 
@@ -14991,23 +14998,23 @@ button,
     <div class="settings-panel tune-panel">
       <div class="settings-head">
         <div>
-          <h2 class="settings-title" id="settingsTitle">Challenges</h2>
+          <h2 class="settings-title" id="settingsTitle">Topics</h2>
           <p class="settings-subtitle" id="settingsSubtitle">Choose what to include.</p>
         </div>
         <button class="settings-close" id="settingsCloseBtn" type="button">Close</button>
       </div>
 
       <section class="tune-challenge-set" aria-labelledby="tuneChallengeSetLabel">
-        <div class="tune-section-label" id="tuneChallengeSetLabel">Challenge set</div>
-        <div class="tune-challenge-set-summary" id="tuneChallengeSetSummary">Basics · 4 challenges</div>
-        <div class="tune-preset-picker" id="tunePresetPicker" role="group" aria-label="Choose a challenge set">
+        <div class="tune-section-label" id="tuneChallengeSetLabel">Topic set</div>
+        <div class="tune-challenge-set-summary" id="tuneChallengeSetSummary">Basics · 4 topics</div>
+        <div class="tune-preset-picker" id="tunePresetPicker" role="group" aria-label="Choose a topic set">
           <button class="tune-preset-button" type="button" data-challenge-set="basic" aria-pressed="false">
             <span class="tune-preset-name">Basics</span>
-            <span class="tune-preset-meta">Core challenges</span>
+            <span class="tune-preset-meta">Core topics</span>
           </button>
           <button class="tune-preset-button" type="button" data-challenge-set="expert" aria-pressed="false">
             <span class="tune-preset-name">All</span>
-            <span class="tune-preset-meta">All challenges</span>
+            <span class="tune-preset-meta">All topics</span>
           </button>
         </div>
       </section>
@@ -15029,15 +15036,15 @@ button,
           <button class="interactive-city-mode-button" type="button" data-interactive-city-mode="locations" aria-pressed="false">Locations</button>
           <button class="interactive-city-mode-button" type="button" data-interactive-city-mode="mixed" aria-pressed="false">Mixed</button>
         </div>
-        <div class="interactive-city-mode-help">Largest-city names, positions, or a mix. Capital name and Capital position are separate challenges.</div>
+        <div class="interactive-city-mode-help">Largest-city names, positions, or a mix. Capital name and Capital position are separate topics.</div>
       </section>
 
       <section class="flash-flow-settings hidden" id="flashFlowSettings" aria-labelledby="flashFlowSettingsLabel">
         <div class="tune-section-label" id="flashFlowSettingsLabel">Flash card flow</div>
         <div class="flash-flow-grid">
           <div class="flash-flow-option-group">
-            <div class="flash-flow-option-label">Challenge order</div>
-            <div class="interactive-city-mode-picker" id="flashOrderPicker" role="group" aria-label="Flash card challenge order">
+            <div class="flash-flow-option-label">Topic order</div>
+            <div class="interactive-city-mode-picker" id="flashOrderPicker" role="group" aria-label="Flash card topic order">
               <button class="interactive-city-mode-button" type="button" data-flash-order="fixed" aria-pressed="false">Set order</button>
               <button class="interactive-city-mode-button" type="button" data-flash-order="random" aria-pressed="false">Random each place</button>
             </div>
@@ -15050,12 +15057,12 @@ button,
             </div>
           </div>
         </div>
-        <div class="interactive-city-mode-help">Random order reshuffles the enabled challenges for each place. Mix all cards can jump between places after every card.</div>
+        <div class="interactive-city-mode-help">Random order reshuffles the enabled topics for each place. Mix all cards can jump between places after every card.</div>
       </section>
 
       <div class="tune-order-head">
         <div>
-          <div class="tune-section-label" id="tuneSectionLabel">Challenges &amp; order</div>
+          <div class="tune-section-label" id="tuneSectionLabel">Topics &amp; order</div>
           <div class="tune-order-help">Use ↑ ↓ to reorder.</div>
         </div>
         <button class="tune-shuffle-button" id="tuneShuffleBtn" type="button">Shuffle</button>
@@ -15822,12 +15829,62 @@ button,
       html body .matching-drawer-actions button { flex:1 1 90px; font-size:.7rem !important; }
     }
   </style>
+<style id="discoveryStyles">
+    #startOverlay .discovery-browser {padding:16px;}
+    #startOverlay .discovery-browser > summary {display:none;}
+    #startOverlay .discovery-tabs {display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:5px;background:rgba(50,45,35,.06);border-radius:16px;margin-bottom:16px;}
+    #startOverlay .discovery-tabs button {min-height:46px;border:0;border-radius:12px;background:transparent;font:inherit;font-weight:850;color:var(--muted);}
+    #startOverlay .discovery-tabs button[aria-pressed="true"] {background:var(--card,#fff);color:var(--ink,#181818);box-shadow:0 2px 8px #0000000c;}
+    #startOverlay .mode-discovery-heading {display:none;}
+    #startOverlay .mode-discovery-options {display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important;}
+    #startOverlay .play-mode-button {min-height:90px!important;padding:14px!important;text-align:left!important;align-items:flex-start!important;}
+    #startOverlay .play-mode-name {font-size:17px!important;line-height:1.2!important;}
+    #startOverlay .play-mode-meta {font-size:12px!important;line-height:1.4!important;}
+    #startOverlay .discovery-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+    #startOverlay .discovery-card {display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-width:0;min-height:82px;padding:14px;border:1px solid rgba(70,60,45,.12);border-radius:15px;background:rgba(255,255,255,.42);color:inherit;text-align:left;font:inherit;}
+    #startOverlay .discovery-card > span:first-child {min-width:0;flex:1;}
+    #startOverlay .discovery-card strong {display:block;font-size:16px;line-height:1.3;font-weight:850;}
+    #startOverlay .discovery-card small {display:block;color:var(--muted,#706d66);font-size:12px;line-height:1.45;margin-top:4px;}
+    #startOverlay .discovery-card:hover {border-color:#2860ef;}
+    #startOverlay .discovery-primary {background:#2860ef;color:#fff;border-color:#2860ef;}
+    #startOverlay .discovery-primary small {color:#edf2ff;}
+    #startOverlay .discovery-arrow {font-size:19px;flex:none;}
+    #startOverlay .discovery-description {font-size:13px;line-height:1.5;color:var(--muted,#706d66);margin:8px 0 16px;}
+    #startOverlay #discoveryHeading {font-size:25px;line-height:1.2;margin:14px 0 0;letter-spacing:-.6px;}
+    #startOverlay .discovery-back {border:0;background:transparent;font:inherit;font-size:13px;font-weight:750;padding:8px 0;min-height:44px;color:#2859c6;}
+    #startOverlay .discovery-progress {display:block;background:#0000000a;border-radius:4px;height:5px;overflow:hidden;margin-top:10px;}
+    #startOverlay .discovery-progress > span {display:block;height:100%;background:#2860ef;border-radius:4px;}
+    #startOverlay .discovery-today {margin:14px 0 0;padding:16px;border:1px solid rgba(70,60,45,.12);border-radius:20px;}
+    #startOverlay .discovery-today summary {cursor:pointer;font-weight:850;font-size:17px;min-height:28px;}
+    #startOverlay .discovery-today > p {font-size:12px;color:var(--muted,#706d66);line-height:1.5;margin:4px 0 12px;}
+    .daily-share-report {padding:16px;margin:14px 0;background:#2f805e12;border:1px solid #2f805e22;border-radius:16px;text-align:left;max-width:100%;box-sizing:border-box;}
+    .daily-share-report h3 {font-size:17px;margin:0 0 12px;}
+    .daily-share-report pre {font:600 13px/1.7 system-ui,sans-serif;white-space:pre-wrap;overflow-wrap:anywhere;margin:0 0 14px;}
+    .daily-share-actions {display:flex;gap:10px;}
+    .daily-share-actions button {flex:1;min-height:44px;border:0;border-radius:12px;background:#2860ef;color:white;font:750 14px system-ui,sans-serif;padding:10px;}
+    .daily-share-actions button+button {background:#e0e5ef;color:#244a9a;}
+    .daily-share-status {font-size:12px;margin:8px 0 0;}
+    .daily-share-report textarea {width:100%;height:180px;box-sizing:border-box;font:14px/1.5 system-ui;}
+    html body #matchingGame.has-daily-report {display:block!important;overflow:auto!important;}
+    html body #matchingGame.has-daily-report .matching-board {max-height:none!important;height:auto!important;overflow:visible!important;}
+    html body #matchingGame.has-daily-report .matching-pools {position:static!important;}
+    #startOverlay .hidden {display:none!important;}
+    @media(max-width:520px){
+      #startOverlay .discovery-browser,#startOverlay .discovery-today {padding:12px;}
+      #startOverlay #discoveryLanding .discovery-grid {grid-template-columns:1fr;}
+      #startOverlay .discovery-today .discovery-grid {gap:8px;}
+      #startOverlay .discovery-today .discovery-card {padding:11px;min-height:96px;}
+      #startOverlay .discovery-today .discovery-card strong {font-size:14px;}
+      #startOverlay .discovery-today .discovery-arrow {display:none;}
+    }
+
+</style>
   <script src="assets/d3-7.9.0.min.js"></script>
   <script src="assets/topojson-3.1.0.min.js"></script>
   <script src="assets/geography.js"></script>
 
   <script>
-    const GEODEN_VERSION = "0.56.49";
+    const GEODEN_VERSION = "0.56.51";
     // v0.56.28 — blank-surface audit: guarded silhouettes/location maps and Matching visual preflight.
     // v0.56.18 — private-beta problem reporting with diagnostic state, recent actions, errors, copy/download/share.
     // v0.56.17 — tester-facing automatic failure reporting with screenshot/copy instructions.
@@ -15837,7 +15894,7 @@ button,
     // v0.56.11 — behavioral Quiz-history regressions: exact Back/Forward restore and view-only historical prompts.
     // Input policy: autocomplete/typeahead is ordinary entry and remains unassisted.
     // Only an actual spelling correction (or an explicit hint/reveal) counts as help.
-    const GEODEN_BUILD_DATE = "2026-09-24";
+    const GEODEN_BUILD_DATE = "2026-10-04";
     const GEODEN_TEST_WORKER = window.parent !== window && window.name === 'geoden-self-test-worker';
 
     // v0.56.6 — Storage can be unavailable in privacy-restricted browsers,
@@ -17114,6 +17171,7 @@ button,
     let chainState = null;
     let mapHuntState = null;
     let rankingState = null;
+    const HOME_RECORDS_KEY = "geoden-home-records-v1";
     const SPECIAL_RUNS_KEY = "geoden-special-runs-v1";
     const IMPORT_RECOVERY_KEY = "geoden-import-recovery-v1";
 
@@ -17191,6 +17249,7 @@ button,
       return new Set([...source.matchAll(/const\s+([A-Z0-9_]+_KEY)\s*=/g)].map(match => match[1]));
     })();
     const GEODEN_STORAGE_POLICY = Object.freeze([
+      { name:"HOME_RECORDS_KEY", key:HOME_RECORDS_KEY, portable:true, resetProgress:true },
       { name:"SPECIAL_RUNS_KEY", key:SPECIAL_RUNS_KEY, portable:true, resetProgress:true },
       { name:"IMPORT_RECOVERY_KEY", key:IMPORT_RECOVERY_KEY, portable:false, resetProgress:true, recovery:true },
       { name:"PROGRESS_KEY", key:PROGRESS_KEY, portable:true, resetProgress:true },
@@ -17755,6 +17814,7 @@ button,
     function archiveCompletedSession(session) {
       if (!session || session.active !== false || session.historyArchivedAt || session.discardedAt) return;
       const endedAt = Date.now();
+      homeRecordStudyDaily(session);
       const metrics = completedSessionMetrics(session);
       const totalCountries = isMixedFlashSession(session)
         ? mixedFlashPlaceCount(session)
@@ -17777,7 +17837,7 @@ button,
       saveSessionHistory();
       session.historyArchivedAt = endedAt;
 
-      if (entry.dailyKey) {
+      if (entry.dailyKey && !dailyChallengeProgress?.days?.[entry.dailyKey]) {
         if (!dailyChallengeProgress || typeof dailyChallengeProgress !== "object") dailyChallengeProgress = { days: {} };
         if (!dailyChallengeProgress.days || typeof dailyChallengeProgress.days !== "object") dailyChallengeProgress.days = {};
         const previous = dailyChallengeProgress.days[entry.dailyKey] || {};
@@ -17787,7 +17847,10 @@ button,
           total: metrics.total,
           bestCorrect: Math.max(previousBest, metrics.correct),
           plays: Math.max(0, Number(previous.plays) || 0) + 1,
-          completedAt: endedAt
+          completedAt: endedAt,
+          date:entry.dailyKey.slice(0,10),
+          assisted:Math.max(0,session.rapid?.assisted||0),
+          elapsedMs:Math.max(0,session.homeElapsedMs||0)
         };
         saveDailyChallengeProgress();
       }
@@ -17860,6 +17923,8 @@ button,
           flashPrefs: saved.flashPrefs && typeof saved.flashPrefs === "object"
             ? { order:saved.flashPrefs.order === "random" ? "random" : "fixed", flow:saved.flashPrefs.flow === "mixed" ? "mixed" : "country" }
             : null,
+          launchPreset: saved.launchPreset && typeof saved.launchPreset === "object" ? saved.launchPreset : null,
+          homeElapsedMs: Math.max(0,Number(saved.homeElapsedMs)||0),
           dailyChallenge: saved.dailyChallenge && typeof saved.dailyChallenge === "object" ? saved.dailyChallenge : null,
           sprint: saved.sprint && typeof saved.sprint === "object" ? {
             enabled: saved.sprint.enabled === true,
@@ -18676,7 +18741,7 @@ button,
     function challengeSetSummaryForMode(mode = menuPlayMode) {
       const state = challengeSetStateForMode(mode);
       const count = enabledChallengeKeysForMode(mode).length;
-      const unit = normalizeChallengeMode(mode) === "detective" ? "clue" : "challenge";
+      const unit = normalizeChallengeMode(mode) === "detective" ? "clue" : "topic";
       return `${challengeSetDisplayName(state, mode)} · ${count} ${unit}${count === 1 ? "" : "s"}`;
     }
 
@@ -18995,7 +19060,7 @@ button,
       const primary = document.getElementById("startSummaryPrimary");
       const secondary = document.getElementById("startSummarySecondary");
       const note = document.getElementById("startSummaryNote");
-      const challenges = document.getElementById("startSummaryChallenges");
+      const topics = document.getElementById("startSummaryTopics");
       const strategyValue = document.getElementById("sessionStrategyValue");
       const lengthValue = document.getElementById("sessionLengthValue");
       const challengeValue = document.getElementById("sessionChallengeSummary");
@@ -19004,7 +19069,7 @@ button,
       const setName = countrySetDisplayName();
       const lengthName = startMenuLengthLabel();
       const challengeSummary = challengeSetSummaryForMode(menuPlayMode);
-      const challengeStep = document.querySelector('[data-session-step="challenges"]');
+      const challengeStep = document.querySelector('[data-session-step="topics"]');
       const quizStyleStep = document.querySelector('[data-session-step="quiz-style"]');
       const quizStyleValue = document.getElementById("sessionQuizStyleValue");
       const strategyStep = document.querySelector('[data-session-step="strategy"]');
@@ -19029,7 +19094,7 @@ button,
         if (specialMode) customizeDisclosure.open = false;
       }
 
-      if (challenges) challenges.classList.toggle("hidden", specialMode);
+      if (topics) topics.classList.toggle("hidden", specialMode);
 
       if (specialMode) {
         if (primary) primary.textContent = modeName;
@@ -19046,7 +19111,7 @@ button,
       } else {
         if (primary) primary.textContent = modeName;
         if (secondary) secondary.textContent = `${poolName} · ${lengthName} · ${setName}`;
-        if (challenges) challenges.textContent = challengeSummary;
+        if (topics) topics.textContent = challengeSummary;
       }
       if (strategyValue) strategyValue.textContent = poolName;
       if (lengthValue) lengthValue.textContent = lengthName;
@@ -19136,7 +19201,7 @@ button,
         startConfirmBtn.disabled = true;
         startConfirmBtn.textContent = selectedCountryPool === "review"
           ? `Nothing to review in ${countrySetDisplayName()}`
-          : menuPlayMode === "rapid" ? "Choose compatible clues and answers in Challenges"
+          : menuPlayMode === "rapid" ? "Choose compatible clues and answers in Topics"
           : `No places available in ${countrySetDisplayName()}`;
         return;
       }
@@ -19229,7 +19294,7 @@ button,
           const names = challengeSetNamesForMode(menuPlayMode);
           playModeNote.innerHTML = `
             <div class="play-mode-note-count">${setSummary}</div>
-            <div class="play-mode-note-sub">${names || "Choose challenges for this mode"}</div>
+            <div class="play-mode-note-sub">${names || "Choose topics for this mode"}</div>
           `;
         }
       }
@@ -19407,7 +19472,7 @@ button,
       } else {
         dailyChallengeCard.dataset.state = "new";
         dailyChallengeTitle.textContent = "Daily GeoDen";
-        dailyChallengeMeta.textContent = "10 mixed questions · same challenge all day";
+        dailyChallengeMeta.textContent = "10 mixed questions · same quiz all day";
         dailyChallengeBtn.textContent = "Play →";
       }
     }
@@ -19524,6 +19589,7 @@ button,
       document.getElementById("mapHuntOverlay")?.classList.remove("open");
       renderDailyGoalUI();
       renderDailyChallengeCard();
+      renderHomeDiscovery();
       syncTerritoryPreferenceControls?.();
       renderProfileUI();
       const sessionCustomizeDisclosure = document.getElementById("sessionCustomizeDisclosure");
@@ -19770,7 +19836,7 @@ button,
 
     setupAnimatedHomeModeDisclosure();
 
-    function startStudySession(mode, requestedLimit = null, interaction = menuPlayMode, pool = selectedCountryPool, countrySet = selectedCountrySet, practiceOverride = null) {
+    function startStudySession(mode, requestedLimit = null, interaction = menuPlayMode, pool = selectedCountryPool, countrySet = selectedCountrySet, practiceOverride = null, launchPreset = null) {
       let normalizedPool = ["weakest", "mistakes", "confusions", "due"].includes(pool)
         ? "review"
         : ["random", "fresh", "review", "daily"].includes(pool) ? pool : "random";
@@ -19829,9 +19895,9 @@ button,
           if (!poolCount) return;
         } else if (interaction === "rapid") {
           const primary = nextCountryOrder.slice(0, poolCount)
-            .filter(countryIndex => rapidAvailableTypes(countries[countryIndex], {daily: normalizedPool === "daily", sprint: false}).length > 0);
+            .filter(countryIndex => rapidAvailableTypes(countries[countryIndex], {daily: normalizedPool === "daily" || launchPreset?.mode === "quiz", sprint: false}).length > 0);
           const rest = nextCountryOrder.slice(poolCount)
-            .filter(countryIndex => rapidAvailableTypes(countries[countryIndex], {daily: normalizedPool === "daily", sprint: false}).length > 0);
+            .filter(countryIndex => rapidAvailableTypes(countries[countryIndex], {daily: normalizedPool === "daily" || launchPreset?.mode === "quiz", sprint: false}).length > 0);
           nextCountryOrder = [...primary, ...rest];
           poolCount = primary.length;
           if (!poolCount) return;
@@ -19839,7 +19905,11 @@ button,
 
       }
 
-      if (interaction === "detective" && poolCount > 1) {
+      if (launchPreset?.codes?.length) {
+        nextCountryOrder=launchPreset.codes.map(code=>countries.findIndex(c=>c.code===code)).filter(i=>i>=0);
+        poolCount=nextCountryOrder.length;
+      }
+      if (!launchPreset && interaction === "detective" && poolCount > 1) {
         nextCountryOrder = diversifyDetectiveCountryOrder(nextCountryOrder, poolCount);
       }
 
@@ -19881,6 +19951,8 @@ button,
         mixedRevisionFixed: 0,
         flashPlaceCount: 0,
         flashPrefs: interaction === "standard" ? { ...flashFlowPrefs } : null,
+        launchPreset,
+        homeElapsedMs:0,
         dailyChallenge: normalizedPool === "daily" ? (() => {
           const spec = dailyChallengeSpec();
           return { key: spec.key, seed: spec.seed, version: DAILY_CHALLENGE_CONTENT_VERSION };
@@ -23062,14 +23134,14 @@ button,
         interactiveSubmitBtn.disabled = true;
         interactiveChoiceGrid.classList.add("hidden");
         interactiveTextPanel.classList.add("hidden");
-        interactiveFeedback.textContent = "The flag didn’t load, so this name challenge is being skipped.";
+        interactiveFeedback.textContent = "The flag didn’t load, so this name question is being skipped.";
         interactiveFeedback.classList.remove("correct", "wrong", "hint");
         interactiveFeedback.classList.add("near");
         completeInteractiveStage(1100);
         return;
       }
 
-      promptNote.textContent = "The flag didn’t load, so this name challenge won’t count. Reveal it when you’re ready.";
+      promptNote.textContent = "The flag didn’t load, so this name question won’t count. Reveal it when you’re ready.";
       promptNote.classList.remove("hidden");
       updateActionControls();
     }
@@ -23836,6 +23908,7 @@ button,
     }
 
     function matchingSelectedFields() {
+      if(studySession?.launchPreset?.mode === "matching") return ["country","capital"];
       return matchingFieldsFromSettings();
     }
 
@@ -24330,7 +24403,7 @@ button,
       if (tone) matchingFeedback.classList.add(tone);
     }
 
-    function showMatchingUnavailableDrawer(pageText = "Open Challenges to choose another field") {
+    function showMatchingUnavailableDrawer(pageText = "Open Topics to choose another field") {
       matchingDrawerCards.replaceChildren();
       matchingDrawerTitle.textContent = "No cards available";
       matchingDrawerPage.textContent = pageText;
@@ -24339,6 +24412,8 @@ button,
     }
 
     function prepareMatchingBoardBuildUi() {
+      matchingOverlay.querySelectorAll(".daily-share-report").forEach(el=>el.remove());
+      document.getElementById("matchingGame")?.classList.remove("has-daily-report");
       // A new build owns the screen immediately. Never leave the prior board
       // resumable behind a cleared DOM if this build later fails or is cancelled.
       clearMatchingLongPressTimer();
@@ -24388,6 +24463,15 @@ button,
       }
       const items=new Map(state.items.map(item=>[item.id,item]));
       if(items.size!==state.items.length||state.items.length!==keys.size||state.items.some(item=>typeof item.id!=='string'||!fields.includes(item.field)||!state.countries.some(c=>c.code===item.code)||typeof item.signature!=='string'))fail();
+      if (state.previousAttempts == null) {
+        state.previousAttempts = new Map();
+        for (const assignment of state.gradedWrongAssignments) {
+          const [code,field,id] = String(assignment).split('|');
+          if (keys.has(`${code}|${field}`) && items.get(id)?.field === field) state.previousAttempts.set(`${code}|${field}`,id);
+        }
+      }
+      if (!(state.previousAttempts instanceof Map)) fail();
+      for (const [key,id] of state.previousAttempts) if (!keys.has(key) || !items.has(id) || !key.endsWith('|'+items.get(id).field)) fail();
       const assigned=new Set();
       for(const [key,id] of state.slotAssignments){if(!keys.has(key)||!items.has(id)||assigned.has(id)||!key.endsWith('|'+items.get(id).field))fail();assigned.add(id);}
       if(assigned.size!==state.placedIds.size||[...state.placedIds].some(id=>!assigned.has(id)))fail();
@@ -24422,6 +24506,7 @@ button,
         for(const row of matchingBoard.querySelectorAll('.matching-row'))updateMatchingRowCompletion(row);
         matchingFeedback.textContent=saved.feedback;matchingFeedback.className=saved.feedbackClass;
         matchingNewRoundBtn.textContent=saved.nextText;matchingNewRoundBtn.classList.toggle('hidden',!saved.nextVisible);
+        if (state.finalized) refreshMatchingCompletionUi(state);
         matchingCheckBtn.classList.toggle('hidden',!!state.finalized);matchingVerifyBtn.classList.toggle('hidden',!!state.finalized);
         updateMatchingCheckButton();
         requestAnimationFrame(()=>{if(matchingState===state)matchingBoard.scrollTop=Math.max(0,Number(saved.boardScrollTop)||0);});
@@ -24437,8 +24522,8 @@ button,
 
       if (fields.length < 2) {
         matchingRoundStatus.textContent = "Matching needs more information types";
-        setMatchingFeedback("Enable at least two Matching challenges (for example Place name + Flag).", "near");
-        showMatchingUnavailableDrawer("Open Challenges to enable at least two fields");
+        setMatchingFeedback("Enable at least two Matching topics (for example Place name + Flag).", "near");
+        showMatchingUnavailableDrawer("Open Topics to enable at least two fields");
         return;
       }
 
@@ -24519,8 +24604,8 @@ button,
         }
 
         if (!fields.length) {
-          matchingRoundStatus.textContent = "No Matching challenges available";
-          setMatchingFeedback("The selected challenges aren’t available for this board. Open Challenges to choose another field.", "near");
+          matchingRoundStatus.textContent = "No Matching topics available";
+          setMatchingFeedback("The selected topics aren’t available for this board. Open Topics to choose another field.", "near");
           matchingCheckBtn.classList.add("hidden");
           matchingVerifyBtn.classList.add("hidden");
           showMatchingUnavailableDrawer();
@@ -24559,10 +24644,10 @@ button,
 
         if (!fields.length) {
           matchingRoundStatus.textContent = "Couldn’t make a useful board";
-          setMatchingFeedback("These challenges don’t provide enough distinct information for this set. Choose another Matching challenge.", "near");
+          setMatchingFeedback("These topics don’t provide enough distinct information for this set. Choose another Matching challenge.", "near");
           matchingCheckBtn.classList.add("hidden");
           matchingVerifyBtn.classList.add("hidden");
-          showMatchingUnavailableDrawer("Open Challenges to choose a field with useful variation");
+          showMatchingUnavailableDrawer("Open Topics to choose a field with useful variation");
           geoDenFocusWhenOverlayOpen(matchingOverlay, matchingSettingsBtn, 0);
           return;
         }
@@ -24599,11 +24684,11 @@ button,
           : fields.filter(field => field !== anchorField);
 
         if (!answerFields.length) {
-          matchingRoundStatus.textContent = "Matching needs another challenge";
+          matchingRoundStatus.textContent = "Matching needs another topic";
           setMatchingFeedback("There isn’t a second usable field to match on this board. Enable another Matching challenge.", "near");
           matchingCheckBtn.classList.add("hidden");
           matchingVerifyBtn.classList.add("hidden");
-          showMatchingUnavailableDrawer("Open Challenges to enable another usable field");
+          showMatchingUnavailableDrawer("Open Topics to enable another usable field");
           geoDenFocusWhenOverlayOpen(matchingOverlay, matchingSettingsBtn, 0);
           return;
         }
@@ -24649,6 +24734,7 @@ button,
           mistakeCountryCodes: new Set(),
           mistakeKeys: new Set(),
           gradedWrongAssignments: new Set(),
+          previousAttempts: new Map(),
           confusionKeys: new Set(),
           boardRevision: 0,
           lastVerifiedRevision: -1,
@@ -24666,7 +24752,7 @@ button,
         matchingVerifyBtn.classList.add("hidden");
         matchingNewRoundBtn.textContent = "Try again →";
         matchingNewRoundBtn.classList.remove("hidden");
-        showMatchingUnavailableDrawer("Try again, or open Challenges to change fields");
+        showMatchingUnavailableDrawer("Try again, or open Topics to change fields");
       }
     }
 
@@ -24726,6 +24812,7 @@ button,
           slot.setAttribute("role", "button");
           slot.tabIndex = 0;
           slot.setAttribute("aria-label", `${MATCHING_FIELD_META[field].label} slot, row ${rowIndex + 1}. Activate an empty slot to show ${MATCHING_FIELD_META[field].label} cards.`);
+          renderMatchingPreviousAttempt(slot);
           slots.appendChild(slot);
         }
 
@@ -24886,6 +24973,23 @@ button,
       }
     }
 
+    function renderMatchingPreviousAttempt(slot) {
+      if (!matchingState || !slot || slot.dataset.cardId || slot.classList.contains("correct")) return;
+      const item = matchingItemById(matchingState.previousAttempts?.get(matchingSlotKey(slot)));
+      if (!item) return;
+      const ghost = document.createElement("div");
+      ghost.className = "matching-previous";
+      const label = document.createElement("span");
+      label.className = "matching-previous-label";
+      label.textContent = "Previously tried:";
+      const content = document.createElement("div");
+      content.className = "matching-previous-content";
+      fillMatchingContent(content,item);
+      ghost.append(label,content);
+      slot.replaceChildren(ghost);
+      slot.setAttribute("aria-description", `Previously tried: ${item.text || MATCHING_FIELD_META[item.field]?.label || "card"}. This slot is empty; choose a different card.`);
+    }
+
     function clearMatchingSlotDraft(slot, keepWrong = true) {
       if (!matchingState || !slot || slot.classList.contains("correct")) return;
       const cardId = slot.dataset.cardId;
@@ -24896,6 +25000,7 @@ button,
       delete slot.dataset.cardId;
       slot.replaceChildren();
       slot.classList.remove("filled");
+      renderMatchingPreviousAttempt(slot);
       slot.draggable = false;
       slot.removeAttribute("aria-disabled");
       if (!keepWrong) {
@@ -24921,6 +25026,7 @@ button,
       slot.removeAttribute("aria-invalid");
       slot.removeAttribute("aria-disabled");
       fillMatchingContent(slot, item);
+      slot.removeAttribute("aria-description");
 
       const touchLike = (navigator.maxTouchPoints || 0) > 0 &&
         window.matchMedia?.("(pointer: coarse)")?.matches;
@@ -24963,7 +25069,7 @@ button,
         if (targetOldItem) {
           matchingState.slotAssignments.delete(matchingSlotKey(slot));
           paintMatchingDraftSlot(sourceSlot, targetOldItem);
-        }
+        } else renderMatchingPreviousAttempt(sourceSlot);
       } else if (targetOldId) {
         // Drawer card replacing an occupied draft returns the old card to drawer.
         matchingState.placedIds.delete(targetOldId);
@@ -25022,6 +25128,7 @@ button,
 
         const correct = slot.dataset.field === item.field && slot.dataset.signature === item.signature;
         if (correct) {
+          state.previousAttempts?.delete(matchingSlotKey(slot));
           slot.classList.remove("wrong", "filled");
           slot.classList.add("correct");
           slot.draggable = false;
@@ -25035,6 +25142,8 @@ button,
         }
 
         wrongFields += 1;
+        if (!(state.previousAttempts instanceof Map)) state.previousAttempts = new Map();
+        state.previousAttempts.set(matchingSlotKey(slot),cardId);
         slot.classList.add("wrong");
         slot.setAttribute("aria-invalid", "true");
 
@@ -25155,7 +25264,6 @@ button,
       commitMatchingRoundStats(state);
 
       const mistakeCodes = [...state.mistakeCountryCodes];
-      const wasPerfect = mistakeCodes.length === 0;
 
       if (studySession?.interaction === "matching") {
         studySession.matchingRoundNo = (Number(studySession.matchingRoundNo) || 0) + 1;
@@ -25182,32 +25290,26 @@ button,
         saveStudySession();
       }
 
-      if (studySession?.active === false) {
-        setMatchingFeedback("Session complete · all correct ✓", "complete");
-        matchingNewRoundBtn.textContent = "Back to home ✓";
-      } else if (studySession?.phase === "revision") {
-        setMatchingFeedback(
-          wasPerfect
-            ? "Revision complete ✓"
-            : `${mistakeCodes.length} ${mistakeCodes.length === 1 ? "place needs" : "places need"} another pass`,
-          wasPerfect ? "complete" : "wrong"
-        );
-        matchingNewRoundBtn.textContent = state.countries.length === sessionCountryTotal()
-          ? "Start revision →"
-          : "Check remaining places again →";
-      } else {
-        setMatchingFeedback(
-          wasPerfect ? "Perfect ✓" : `${mistakeCodes.length} to revise`,
-          wasPerfect ? "complete" : "wrong"
-        );
-        matchingNewRoundBtn.textContent = "Continue →";
-      }
+      if(studySession?.launchPreset?.mode === "matching"){studySession.active=false;studySession.revisionQueue=[];saveStudySession();}
+      refreshMatchingCompletionUi(state);
+      if(studySession?.launchPreset?.dailyKey)homeShowFinishedDaily("matching",matchingFeedback.parentElement);
       matchingNewRoundBtn.classList.remove("hidden");
       ensureProgressionActionVisible(matchingNewRoundBtn, matchingOverlay?.querySelector(".matching-panel"));
       saveMatchingRun();
     }
 
+    function refreshMatchingCompletionUi(state = matchingState) {
+      if (!state?.finalized) return;
+      setMatchingFeedback(`All ${state.countries.length} places matched ✓`, "complete");
+      const count = studySession?.revisionQueue?.length || 0;
+      matchingNewRoundBtn.textContent = studySession?.active === false ? "Back to home ✓"
+        : count ? `Practise ${count} corrected ${count === 1 ? "place" : "places"} →` : "Continue →";
+      matchingRoundStatus.textContent = studySession?.active === false ? "Session complete" : "Board complete";
+      if(studySession?.launchPreset?.mode === "matching")matchingNewRoundBtn.textContent="Play another board →";
+    }
+
     function nextMatchingRoundOrMenu() {
+      if(studySession?.launchPreset?.mode === "matching" && studySession?.active === false){matchingOverlay.querySelectorAll(".daily-share-report").forEach(el=>el.remove());homeLaunchStudy("matching",false,matchingNewRoundBtn);return;}
       if (studySession?.active === false) {
         matchingOverlay.classList.remove("open");
         matchingState = null;
@@ -25223,6 +25325,7 @@ button,
     }
 
     function openMatchingMode(allowCloseToRun = false, autoStart = false) {
+      matchingSettingsBtn?.classList.toggle("hidden",studySession?.launchPreset?.mode === "matching");
       if (hasActiveStudyRun()) noteResumableMode("study");
       matchingReturnMenuAllowClose = !!allowCloseToRun;
       matchingOverlay.classList.add("open");
@@ -25526,6 +25629,12 @@ button,
       return interactiveUniqueSpellingMatch(typed, interactiveExpectedSpellingValues(stage, expected, c));
     }
 
+    function cityAutocompleteTexts() {
+      return [...new Set(countries.flatMap(c => [
+        ...capitalNamesForCountry(c), BUNDLED_CITY_FACTS[c.code]?.largest?.name
+      ]).filter(Boolean))].sort((a,b) => a.localeCompare(b));
+    }
+
     async function interactiveCandidateTexts(stage) {
       if (interactiveCandidateCache.has(stage)) return interactiveCandidateCache.get(stage);
 
@@ -25540,9 +25649,8 @@ button,
         return values;
       }
 
-      if (stage === "capital") {
-        const values = [...new Set(autocompleteCountries.flatMap(country => capitalNamesForCountry(country)).filter(Boolean))]
-          .sort((a,b) => a.localeCompare(b));
+      if (stage === "capital" || stage === "largestCity") {
+        const values = cityAutocompleteTexts();
         interactiveCandidateCache.set(stage, Promise.resolve(values));
         return values;
       }
@@ -26160,7 +26268,7 @@ button,
         interactiveSubmitBtn.disabled = true;
         interactiveSuggestions.classList.add("hidden");
         interactiveHelpRow.classList.add("hidden");
-        interactiveFeedback.textContent = "Nearby-country data didn’t load, so this challenge is being skipped.";
+        interactiveFeedback.textContent = "Nearby-country data didn’t load, so this question is being skipped.";
         interactiveFeedback.classList.remove("correct", "wrong", "near", "hint");
         interactiveFeedback.classList.add("near");
         completeInteractiveStage(1100);
@@ -26183,7 +26291,7 @@ button,
         saveAttempt();
         interactiveSubmitBtn.disabled = true;
         interactiveHelpRow.classList.add("hidden");
-        interactiveFeedback.textContent = "No individual language answers are available for this place, so this challenge is being skipped.";
+        interactiveFeedback.textContent = "No individual language answers are available for this place, so this question is being skipped.";
         interactiveFeedback.classList.remove("correct", "wrong", "hint");
         interactiveFeedback.classList.add("near");
         completeInteractiveStage(1100);
@@ -26586,7 +26694,7 @@ button,
         const nameAlreadyShown = currentStage === "capital" && (interactiveCityLocationState?.targets?.length || 0) > 1;
         const hintedCurrent = interactiveCityLocationState?.hintedIndices?.has(interactiveCityLocationState.targetIndex);
         interactiveHintBtn.textContent = protectCapitalName
-          ? "Capital name hidden until its name challenge"
+          ? "Capital name hidden until its name question"
           : nameAlreadyShown
             ? "City name already shown"
             : hintedCurrent
@@ -27611,7 +27719,7 @@ button,
         attempt.results.globe = { unavailable: true, at: Date.now() };
         saveAttempt();
         interactiveGlobeLocked = true;
-        interactiveGlobeFeedback.textContent = "The world map didn’t load, so this challenge is being skipped.";
+        interactiveGlobeFeedback.textContent = "The world map didn’t load, so this question is being skipped.";
         interactiveGlobeFeedback.classList.remove("hidden", "correct", "wrong");
         completeInteractiveStage(1100);
         return;
@@ -27646,7 +27754,7 @@ button,
         interactiveSubmitBtn.disabled = true;
         interactiveTextPanel.classList.add("hidden");
         interactiveChoiceGrid.classList.add("hidden");
-        interactiveFeedback.textContent = "The flag didn’t load, so this name challenge is being skipped.";
+        interactiveFeedback.textContent = "The flag didn’t load, so this name question is being skipped.";
         interactiveFeedback.classList.remove("correct", "wrong", "hint");
         interactiveFeedback.classList.add("near");
         completeInteractiveStage(1100);
@@ -27708,7 +27816,7 @@ button,
             saveAttempt();
             interactiveChoiceGrid.replaceChildren();
             interactiveChoiceGrid.classList.add("hidden");
-            interactiveFeedback.textContent = "Flag images didn’t load, so this challenge is being skipped.";
+            interactiveFeedback.textContent = "Flag images didn’t load, so this question is being skipped.";
             interactiveFeedback.classList.remove("correct", "wrong", "hint");
             interactiveFeedback.classList.add("near");
             completeInteractiveStage(1100);
@@ -27733,7 +27841,7 @@ button,
           attempt.results.flag = { unavailable: true, at: Date.now() };
           saveAttempt();
           interactiveChoiceGrid.querySelectorAll("button").forEach(choice => { choice.disabled = true; });
-          interactiveFeedback.textContent = "Flag images stopped loading, so this challenge is being skipped.";
+          interactiveFeedback.textContent = "Flag images stopped loading, so this question is being skipped.";
           interactiveFeedback.classList.remove("correct", "wrong", "hint");
           interactiveFeedback.classList.add("near");
           completeInteractiveStage(1100);
@@ -27771,7 +27879,7 @@ button,
             saveAttempt();
             interactiveChoiceGrid.replaceChildren();
             interactiveChoiceGrid.classList.add("hidden");
-            interactiveFeedback.textContent = "Silhouette maps didn’t load, so this challenge is being skipped.";
+            interactiveFeedback.textContent = "Silhouette maps didn’t load, so this question is being skipped.";
             interactiveFeedback.classList.remove("correct", "wrong", "hint");
             interactiveFeedback.classList.add("near");
             completeInteractiveStage(1100);
@@ -28101,7 +28209,7 @@ button,
       }
 
       if (stage === "country" && attempt?.results?.country?.unavailable) {
-        promptNote.textContent = "The flag didn’t load, so this name challenge won’t count. Reveal it when you’re ready.";
+        promptNote.textContent = "The flag didn’t load, so this name question won’t count. Reveal it when you’re ready.";
         promptNote.classList.remove("hidden");
       }
 
@@ -29391,9 +29499,9 @@ button,
         if (playableDue === snapshot.dueFacts) {
           masteryNextReview.textContent = `${snapshot.dueFacts} fact${snapshot.dueFacts === 1 ? " is" : "s are"} due now.`;
         } else if (playableDue > 0) {
-          masteryNextReview.textContent = `${snapshot.dueFacts} facts are due now · ${playableDue} included by your current challenges.`;
+          masteryNextReview.textContent = `${snapshot.dueFacts} facts are due now · ${playableDue} included by your current topics.`;
         } else {
-          masteryNextReview.textContent = `${snapshot.dueFacts} fact${snapshot.dueFacts === 1 ? " is" : "s are"} due now · none are included by your current challenges.`;
+          masteryNextReview.textContent = `${snapshot.dueFacts} fact${snapshot.dueFacts === 1 ? " is" : "s are"} due now · none are included by your current topics.`;
         }
       } else {
         masteryNextReview.textContent = formatNextReviewTime(nextFutureReviewAt({ set: "world", interaction: "standard", respectEnabled: false }));
@@ -29595,9 +29703,9 @@ button,
 
       if (c && isInteractiveGameplay() && !activeStages().length) {
         genericStage.style.display = ""; doneEl.style.display = "none";
-        headerCountry.textContent = "No playable challenges"; headerCountry.classList.add("visible");
-        stageLabel.textContent = "Challenges unavailable";
-        promptQuestion.textContent = "Choose another challenge for this place.";
+        headerCountry.textContent = "No playable topics"; headerCountry.classList.add("visible");
+        stageLabel.textContent = "Topics unavailable";
+        promptQuestion.textContent = "Choose another topic for this place.";
         promptQuestion.classList.remove("hidden");
         nextBtn.classList.add("hidden"); ratingControls.classList.add("hidden");
         return;
@@ -29894,9 +30002,23 @@ button,
       SX: ["st maarten", "st. maarten"]
     };
 
+    // Only established, unambiguous abbreviations: do not invent initialisms
+    // such as "SA", which could mean South Africa or Saudi Arabia.
+    const COUNTRY_COMMON_ABBREVIATIONS = {
+      NZ:["NZ","NZL"], AU:["AUS"], GB:["UK","GB","GBR"], US:["US","USA"],
+      AE:["UAE"], PG:["PNG"], CD:["DRC"], ZA:["RSA"], CF:["CAR"], FM:["FSM"],
+      CN:["PRC","CHN"], KP:["DPRK"], KR:["ROK"], SA:["KSA"],
+      CA:["CAN"], DE:["GER","DEU"], FR:["FRA"], IE:["IRL"], IT:["ITA"],
+      ES:["ESP"], PT:["POR","PRT"], NL:["NED"], CH:["SUI","CHE"],
+      JP:["JPN"], PH:["PHL"], SG:["SGP"], MY:["MAS","MYS"],
+      LK:["SRI","LKA"], VN:["VNM"], RU:["RUS"], BR:["BRA"],
+      VI:["USVI"], VG:["BVI"], MP:["CNMI"], TC:["TCI"]
+    };
+
     function countryAcceptedAnswerNames(country) {
       if (!country) return [];
-      return [...new Set([country.name, ...(COUNTRY_SEARCH_ALIASES[country.code] || [])].filter(Boolean))];
+      const abbreviations = (COUNTRY_COMMON_ABBREVIATIONS[country.code] || []).flatMap(value => [value,value.split("").join(".")+"."]);
+      return [...new Set([country.name, ...(COUNTRY_SEARCH_ALIASES[country.code] || []), ...abbreviations].filter(Boolean))];
     }
 
     const GIVEAWAY_NAME_STOPWORDS = new Set([
@@ -32096,7 +32218,7 @@ button,
           : "No spaced review scheduled";
       const directTypes = Math.max(0, Number(profile.directFactCount) || 0);
       const gameTypes = profile.gameEvents ? gameMasteryRows(profile.rec).length : 0;
-      masteryMapCountryMeta.textContent = `${directTypes} direct challenge type${directTypes === 1 ? "" : "s"} · ${gameTypes} game skill${gameTypes === 1 ? "" : "s"} · ${dueText}`;
+      masteryMapCountryMeta.textContent = `${directTypes} direct topic${directTypes === 1 ? "" : "s"} · ${gameTypes} game skill${gameTypes === 1 ? "" : "s"} · ${dueText}`;
 
       const stats = profile.gameEvents ? [
         [clean, "Direct first try"],
@@ -32469,6 +32591,7 @@ button,
     }
 
     function detectiveConfigSignature() {
+      if(studySession?.launchPreset?.dailyKey) return "daily-fixed-v1";
       const enabledOrder = detectiveConfig.order.filter(key => detectiveConfig.enabled[key]);
       return `${enabledOrder.join("|")}|giveaways:${polishPrefs?.allowGiveawayPrompts ? 1 : 0}`;
     }
@@ -32645,6 +32768,7 @@ button,
     }
 
     async function buildDetectiveClues(c) {
+      if(studySession?.launchPreset?.dailyKey) return homeDailyDetectiveClues(c);
       const wantsFacts = detectiveNeedsLiveFacts();
       const cachedFacts = wantsFacts ? (countryFactsCache?.[c.code] || null) : null;
       const factsPromise = wantsFacts
@@ -32933,6 +33057,8 @@ button,
 
     async function prepareDetectiveRound(force = false) {
       if (studySession?.interaction !== "detective" || studySession?.active === false) return;
+      detectiveBackToMenuBtn.textContent="Back to menu";
+      detectiveComplete.querySelectorAll(".daily-share-report").forEach(el=>el.remove());
       const state = ensureDetectiveState();
       const c = currentCountry();
       if (!state || !c) {
@@ -33369,6 +33495,7 @@ button,
     }
 
     function finishDetectiveSession() {
+      homeTickTimers();
       const state = ensureDetectiveState() || detectiveDefaultState();
       if (studySession) {
         studySession.active = false;
@@ -33386,6 +33513,8 @@ button,
       detectiveCompleteScore.textContent = `${state.score} points`;
       const average = state.completed ? (state.totalClues / state.completed).toFixed(1) : "—";
       detectiveCompleteMeta.textContent = `${state.solved} of ${state.completed} cases solved · ${average} clues used on average`;
+      if(studySession?.launchPreset?.mode === "detective")detectiveBackToMenuBtn.textContent="Play another case →";
+      if(studySession?.launchPreset?.dailyKey)homeShowFinishedDaily("detective",detectiveComplete);
     }
 
     function detectiveUpdateSuggestions() {
@@ -33463,6 +33592,7 @@ button,
     detectiveGiveUpBtn?.addEventListener("click", giveUpDetectiveRound);
     detectiveNextBtn?.addEventListener("click", advanceDetectiveCase);
     detectiveBackToMenuBtn?.addEventListener("click", () => {
+      if(studySession?.launchPreset?.mode === "detective"){detectiveComplete.querySelectorAll(".daily-share-report").forEach(el=>el.remove());homeLaunchStudy("detective",false,detectiveBackToMenuBtn);return;}
       detectiveOverlay.classList.remove("open");
       openStartOverlay(false);
     });
@@ -33876,7 +34006,7 @@ Answer: ${answer}`;
       const silhouetteAvailable = mapLibrariesAvailable && countryStageIsAvailable(c, "silhouette");
       const cityLocationAvailable = mapLibrariesAvailable && countryStageIsAvailable(c, "cityMap");
       const sprint = context ? context.sprint : studySession?.sprint?.enabled === true;
-      const daily = context ? context.daily : !!studySession?.dailyChallenge?.key;
+      const daily = context ? context.daily : !!studySession?.dailyChallenge?.key || studySession?.launchPreset?.mode === "quiz";
       return Object.keys(RAPID_TYPES).filter(type => {
         const spec = RAPID_TYPES[type];
         if (daily && !DAILY_RAPID_TYPES.includes(type)) return false;
@@ -33884,7 +34014,7 @@ Answer: ${answer}`;
         // Daily GeoDen is a fixed challenge, not a reflection of the learner's
         // Mixed Practice switches. This keeps the same daily seed meaningful.
         if (!sprint && !daily && !rapidConfig.enabled[spec.stage]) return false;
-        // Visual/capital clues respect Challenges too, not just answers.
+        // Visual/capital clues respect Topics too, not just answers.
         // Place names may still provide context when only their facts are enabled.
         if (!sprint && !daily && ["flag", "silhouette", "capital"].includes(spec.cue) && !rapidConfig.enabled[spec.cue]) return false;
         // Daily also always avoids name-giveaway questions, regardless of the
@@ -34576,14 +34706,11 @@ Answer: ${answer}`;
       if (target === "country") {
         return autocompleteCountries.map(c => c.name).sort((a,b) => a.localeCompare(b));
       }
-      if (target === "capital") {
-        return [...new Set(autocompleteCountries.flatMap(rapidCapitalTargets).filter(Boolean))].sort((a,b) => a.localeCompare(b));
+      if (target === "capital" || target === "largestCity") {
+        return cityAutocompleteTexts();
       }
       if (target === "currency") {
         return [...new Set(autocompleteCountries.flatMap(rapidCurrencyTargets).filter(Boolean))].sort((a,b) => a.localeCompare(b));
-      }
-      if (target === "largestCity") {
-        return [...new Set(autocompleteCountries.map(rapidLargestCity).filter(Boolean))].sort((a,b) => a.localeCompare(b));
       }
       return [];
     }
@@ -34904,7 +35031,7 @@ Answer: ${answer}`;
       const sprintRun = isSprintSession();
       if (!message) message = sprintRun
         ? "That question isn’t available right now, so Sprint is skipping it."
-        : "The selected Mixed Practice challenges aren’t available for this place, so it’s being skipped.";
+        : "The selected Mixed Practice topics aren’t available for this place, so it’s being skipped.";
       if (sprintRun) suspendSprintClockForRender();
       state.round = null;
       rapidFeedback.textContent = message;
@@ -35252,6 +35379,7 @@ Answer: ${answer}`;
     }
 
     function showRapidComplete() {
+      homeTickTimers();
       const state = ensureRapidState() || rapidDefaultState();
       if (studySession) {
         studySession.active = false;
@@ -35277,8 +35405,11 @@ Answer: ${answer}`;
       const eyebrow = rapidComplete.querySelector(".rapid-complete-eyebrow");
       const title = rapidComplete.querySelector(".rapid-complete-title");
       if (eyebrow) eyebrow.textContent = sprint ? "Sprint" : daily ? "Daily GeoDen" : "Mixed Practice";
-      if (title) title.textContent = sprint ? "Time’s up" : daily ? "Today’s challenge complete" : "Session complete";
+      if (title) title.textContent = sprint ? "Time’s up" : daily ? "Today’s quiz complete" : "Session complete";
       rapidSprintTimer?.classList.add("hidden");
+      rapidComplete.querySelectorAll(".daily-share-report").forEach(el=>el.remove());
+      if(daily){const r=dailyChallengeProgress.days[studySession.dailyChallenge.key];if(r)homeShowFinishedDaily("quiz",rapidComplete,r);}
+      rapidBackToMenuBtn.textContent=daily||studySession?.launchPreset?.mode==="quiz"?"Play another Quick 10 →":"Back to menu";
     }
 
     function invalidateRapidPausedRender() {
@@ -35330,6 +35461,7 @@ Answer: ${answer}`;
     }
 
     function rapidBackToMenu() {
+      if(studySession?.active===false&&(studySession.dailyChallenge||studySession.launchPreset?.mode==="quiz")){rapidComplete.querySelectorAll(".daily-share-report").forEach(el=>el.remove());homeLaunchStudy("quiz",false,rapidBackToMenuBtn);return;}
       if (isSprintSession()) pauseSprintTimer();
       invalidateRapidPausedRender();
       rapidOverlay.classList.remove("open");
@@ -35524,11 +35656,11 @@ Answer: ${answer}`;
       const expertButton = tunePresetPicker.querySelector('[data-challenge-set="expert"]');
       if (basicButton) {
         basicButton.querySelector(".tune-preset-name").textContent = detectiveMode ? "Recommended" : "Basics";
-        basicButton.querySelector(".tune-preset-meta").textContent = detectiveMode ? "Balanced clue order" : "Core challenges";
+        basicButton.querySelector(".tune-preset-meta").textContent = detectiveMode ? "Balanced clue order" : "Core topics";
       }
       if (expertButton) {
         expertButton.querySelector(".tune-preset-name").textContent = detectiveMode ? "All clues" : "All";
-        expertButton.querySelector(".tune-preset-meta").textContent = detectiveMode ? "Every clue type" : "All challenges";
+        expertButton.querySelector(".tune-preset-meta").textContent = detectiveMode ? "Every clue type" : "All topics";
       }
 
       tunePresetPicker.querySelectorAll("[data-challenge-set]").forEach(button => {
@@ -35564,16 +35696,16 @@ Answer: ${answer}`;
 
       const rapidMode = mode === "rapid";
       const setLabel = document.getElementById("tuneChallengeSetLabel");
-      if (setLabel) setLabel.textContent = detectiveMode ? "Clue preset" : "Challenge set";
+      if (setLabel) setLabel.textContent = detectiveMode ? "Clue preset" : "Topic set";
       const sectionLabel = document.getElementById("tuneSectionLabel");
       const orderHelp = document.querySelector(".tune-order-help");
-      if (sectionLabel) sectionLabel.textContent = detectiveMode ? "Clues & order" : rapidMode ? "Mixed Practice challenges" : "Challenges & order";
+      if (sectionLabel) sectionLabel.textContent = detectiveMode ? "Clues & order" : rapidMode ? "Mixed Practice topics" : "Topics & order";
       if (orderHelp) orderHelp.textContent = detectiveMode
         ? "Earlier clues appear first."
         : mode === "matching"
-          ? "Top challenge is the row reference; match the rest."
+          ? "First topic is the row reference; match the rest."
           : rapidMode
-            ? "Mixed Practice mixes these enabled challenge types automatically. These settings are separate from Country Deep Dive."
+            ? "Mixed Practice mixes these enabled topics automatically. These settings are separate from Country Deep Dive."
             : "Use ↑ ↓ to reorder.";
       if (tuneShuffleBtn) tuneShuffleBtn.classList.toggle("hidden", rapidMode);
     }
@@ -35601,7 +35733,7 @@ Answer: ${answer}`;
         saveDetectiveConfig();
       } else if (normalized === "interactive") {
         // Flash-card-only stages keep their existing setting. The preset controls
-        // only the challenges Interactive can actually use.
+        // only the topics Interactive can actually use.
         for (const key of universe) config.enabled[key] = target.has(key);
         saveConfig();
       } else if (normalized === "rapid") {
@@ -35650,7 +35782,7 @@ Answer: ${answer}`;
       if (values.length < 2) {
         settingsWarning.textContent = normalized === "detective"
           ? "Turn on at least two clues to shuffle their order."
-          : "Turn on at least two challenges to shuffle their order.";
+          : "Turn on at least two topics to shuffle their order.";
         return;
       }
 
@@ -35705,7 +35837,7 @@ Answer: ${answer}`;
             : settingsModeAtOpen === "detective"
               ? "Detective"
               : "Flash card";
-      if (title) title.textContent = `Challenges · ${modeLabel}`;
+      if (title) title.textContent = `Topics · ${modeLabel}`;
       if (subtitle) subtitle.textContent = settingsModeAtOpen === "detective"
         ? "Choose clues and order."
         : settingsModeAtOpen === "rapid"
@@ -35867,13 +35999,13 @@ Answer: ${answer}`;
 
       if (settingsModeAtOpen === "rapid" && ![...RAPID_CHALLENGE_STAGES].some(key => proposed[key])) {
         input.checked = true;
-        settingsWarning.textContent = "Keep at least one Mixed Practice challenge switched on.";
+        settingsWarning.textContent = "Keep at least one Mixed Practice topic switched on.";
         return;
       }
 
       if (!Object.values(proposed).some(Boolean)) {
         input.checked = true;
-        settingsWarning.textContent = "Keep at least one challenge switched on.";
+        settingsWarning.textContent = "Keep at least one topic switched on.";
         return;
       }
 
@@ -36493,10 +36625,7 @@ Answer: ${answer}`;
     playModePicker.addEventListener("click", event => {
       const button = event.target.closest("[data-play-mode]");
       if (!button) return;
-      startOverlay.dataset.modeArmed = "true";
-      setMenuPlayMode(button.dataset.playMode);
-      if (button.dataset.playMode === "sprint") { openSprintSetup(); return; }
-      showHomeSessionSetup({ scroll: true });
+      homeOpenMode(button.dataset.playMode);
     });
 
     document.getElementById("quizStylePicker")?.addEventListener("click", event => {
@@ -36634,18 +36763,18 @@ Answer: ${answer}`;
       if (!selectedSessionMode) return;
 
       if (menuPlayMode === "matching" && matchingFieldsFromSettings().length < 2) {
-        playModeNote.textContent = "Matching needs at least two enabled challenges.";
+        playModeNote.textContent = "Matching needs at least two enabled topics.";
         clearNewSessionConfirmation();
         return;
       }
 
       if (menuPlayMode === "interactive" && interactiveStagesFromSettings().length < 1) {
-        playModeNote.textContent = "Country Deep Dive needs at least one enabled challenge.";
+        playModeNote.textContent = "Country Deep Dive needs at least one enabled topic.";
         clearNewSessionConfirmation();
         return;
       }
       if (menuPlayMode === "rapid" && enabledChallengeKeysForMode("rapid").length < 1) {
-        playModeNote.textContent = "Mixed Practice needs at least one enabled challenge.";
+        playModeNote.textContent = "Mixed Practice needs at least one enabled topic.";
         clearNewSessionConfirmation();
         return;
       }
@@ -37101,6 +37230,7 @@ Answer: ${answer}`;
           if (!object(pair) || (pair.lastAt != null && !validConfusionDate(pair.lastAt))) fail();
         }
       }
+      if(key===HOME_RECORDS_KEY)homeValidateRecords(parsed);
       if(key===DAILY_PROGRESS_KEY&&(!object(parsed.days)||!Number.isFinite(parsed.goal)))fail();
       if(key===NAV_HISTORY_KEY&&(!Array.isArray(parsed.items)||typeof parsed.order!=='string'))fail();
       if(key===ATTEMPT_KEY&&(!countries.some(c=>c.code===parsed.code)||!object(parsed.results)||!Array.isArray(parsed.revealed)))fail();
@@ -38985,6 +39115,7 @@ Answer: ${answer}`;
       const key = chainMasteryPartKey(country.code, kind);
       if (chainState.recordedMastery.has(key)) return;
       chainState.recordedMastery.add(key);
+      if(chainState.challenge && score>=.95)chainState.challengeClean=(chainState.challengeClean||0)+1;
       const skill = kind === "country" ? "placeNameRecall" : "capitalRecall";
       recordGameMasteryEvidence(country, skill, score, { weight:1, source:"chain", save:true });
       recordDailyFactCounts({
@@ -39115,13 +39246,15 @@ Answer: ${answer}`;
           entries.push({ answer: country.name, kind: "Place", country });
         }
         if (chainState.answerMode === "capital" || chainState.answerMode === "both") {
-          for (const capital of chainCapitalNames(country)) entries.push({ answer: capital, kind: "Capital", country });
+          const cities = [...new Set([...chainCapitalNames(country),BUNDLED_CITY_FACTS[country.code]?.largest?.name].filter(Boolean))];
+          for (const city of cities) entries.push({ answer: city, kind: "City", country });
         }
       }
       return entries;
     }
 
     function updateChainSuggestions() {
+      if(chainState?.challenge){clearChainSuggestions();return;}
       if (!chainAutocompleteEnabled || !chainGuessInput || !chainSuggestions || !chainState || chainGuessInput.disabled) {
         clearChainSuggestions();
         return;
@@ -39135,7 +39268,7 @@ Answer: ${answer}`;
         .map(entry => {
           const answer = interactiveLooseNormalize(entry.answer);
           let rank = 99;
-          if (answer === query) rank = 0;
+          if (answer === query || (entry.kind === "Place" && countryMatchesNaturalAnswer(entry.country,query))) rank = 0;
           else if (autocompleteMatchRank(entry.answer,query,"") < 99) rank = autocompleteMatchRank(entry.answer,query,"");
           else if (answer.includes(` ${query}`)) rank = 2;
           return { ...entry, rank };
@@ -39426,6 +39559,7 @@ Answer: ${answer}`;
       // time and time spent on Home are deliberately excluded from the score.
       stopChainTimer();
       chainState.finishedAt = Date.now();
+      homeRecordMap(chainState,"chain");
       updateChainTimer();
       chainFinish?.classList.remove("hidden");
       const filledCount = chainFilledCodes().size;
@@ -39451,6 +39585,7 @@ Answer: ${answer}`;
           : ` · ${total} places`;
         chainFinishMeta.textContent = `${formatChainTime(chainElapsedMs())}${trailText} · ${answerLabel} · ${rules}${hintText}${giveUpText}`;
       }
+      if(chainState?.challenge && chainFinishMeta)chainFinishMeta.textContent=homeRecordMapText(chainState);
       chainGuessInput.disabled = true;
       chainGuessBtn.disabled = true;
       if (chainHintBtn) chainHintBtn.disabled = true;
@@ -39464,7 +39599,7 @@ Answer: ${answer}`;
       chainFillOverlay?.classList.toggle("playing", !!playing);
     }
 
-    async function startChainGame() {
+    async function startChainGame(options = {}) {
       const token = ++chainBuildToken;
       setChainPlayLayout(true);
       if (!window.d3 || !window.topojson) {
@@ -39496,7 +39631,7 @@ Answer: ${answer}`;
       clearChainSuggestions();
 
       try {
-        const codes = chainCodesForSet(chainSet);
+        const codes = options.challenge ? homeCoreCountries(chainSet).map(c=>c.code) : chainCodesForSet(chainSet);
         const graph = await buildChainGraph(codes);
         if (token !== chainBuildToken || !chainFillOverlay?.classList.contains("open")) return;
         const viable = codes.filter(code => (graph.get(code)?.size || 0) > 0);
@@ -39505,9 +39640,11 @@ Answer: ${answer}`;
         const previousStartGroup = varietyContext.group(countryByCode(chainPreviousStartCode));
         const variedStarts = freshStarts.filter(code => varietyContext.group(countryByCode(code)) !== previousStartGroup);
         const startPool = variedStarts.length ? variedStarts : (freshStarts.length ? freshStarts : viable);
-        const startCode = startPool[randomInt(startPool.length)] || codes[0];
+        const startCode = options.challenge ? homeSeededOrder(viable,options.challenge.id)[0] || codes[0] : startPool[randomInt(startPool.length)] || codes[0];
         chainPreviousStartCode = startCode;
         chainState = {
+          challenge:options.challenge || null,
+          challengeClean:0,
           setKey:chainSet,
           answerMode:chainAnswerMode,
           ruleMode:chainRuleMode,
@@ -39666,7 +39803,7 @@ Answer: ${answer}`;
     chainFillOverlay?.addEventListener("click", event => { if (event.target === chainFillOverlay) closeChainFill(); });
     chainFillStartBtn?.addEventListener("click", startChainGame);
     chainRestartBtn?.addEventListener("click", resetChainToSetup);
-    chainPlayAgainBtn?.addEventListener("click", startChainGame);
+    chainPlayAgainBtn?.addEventListener("click", () => startChainGame({challenge:chainState?.challenge || null}));
     for (const button of [chainGuessBtn, chainHintBtn, chainGiveUpBtn, chainSpellingBtn]) {
       button?.addEventListener("pointerdown", event => {
         if (event.button === 0 && document.activeElement === chainGuessInput) event.preventDefault();
@@ -40005,8 +40142,8 @@ Answer: ${answer}`;
       // Keep the feedback just above the actual geography, but close enough that
       // it still reads as attached to the country rather than floating above it.
       let top = screenPoint.y - wrapRect.top - 10;
-      const sidePad = Math.min(54, Math.max(28, wrapRect.width * .075));
-      const topPad = 24;
+      const sidePad = Math.max(Math.min(54, Math.max(28, wrapRect.width * .075)), el.offsetWidth / 2 + 8);
+      const topPad = Math.max(24, el.offsetHeight + 8);
       left = Math.max(sidePad, Math.min(wrapRect.width - sidePad, left));
       top = Math.max(topPad, Math.min(wrapRect.height - 14, top));
       el.style.left = `${left}px`;
@@ -40051,6 +40188,25 @@ Answer: ${answer}`;
       positionMapHuntLabelElement(mapHuntRevealHint);
     }
 
+    function mapHuntDirectionBetweenPoints(from, to, period = 0) {
+      if (!from || !to || ![from.x,from.y,to.x,to.y].every(Number.isFinite)) return null;
+      const dx = to.x + geoDenWorldNearestCopyOffset(to.x,from.x,period) - from.x;
+      const dy = to.y - from.y;
+      if (Math.hypot(dx,dy) < 1e-7) return null;
+      const angle = (Math.atan2(dx,-dy) * 180 / Math.PI + 360) % 360;
+      const direction = ["north","north-east","east","south-east","south","south-west","west","north-west"][Math.round(angle/45)%8];
+      return {angle,direction};
+    }
+
+    function mapHuntDirectionClue(code) {
+      if (!mapHuntState || mapHuntState.finished || mapHuntState.locked) return null;
+      const target = mapHuntCurrentCountry();
+      if (!target || target.code === code) return null;
+      // Use the rendered geography and the nearest wrapped copy so the arrow
+      // agrees with the flat map, including guesses across the date line.
+      return mapHuntDirectionBetweenPoints(mapHuntLabelPoint(code),mapHuntLabelPoint(target.code),mapHuntState.worldWrapPeriod);
+    }
+
     function showMapHuntTapLabel(code, kind = "wrong", options = {}) {
       if (!code || !mapHuntState || !mapHuntTapFlash || !mapHuntMap || !window.d3) return;
       const c = countryByCode(code);
@@ -40068,6 +40224,20 @@ Answer: ${answer}`;
         children.push(capital);
       }
       mapHuntTapFlash.replaceChildren(...children);
+      const clue = (kind === "wrong" || kind === "inspect") ? mapHuntDirectionClue(code) : null;
+      if (clue) {
+        const line = document.createElement("span");
+        line.className = "map-hunt-direction";
+        const arrow = document.createElement("span");
+        arrow.className = "map-hunt-direction-arrow";
+        arrow.textContent = "↑";
+        arrow.style.transform = `rotate(${clue.angle}deg)`;
+        arrow.setAttribute("aria-hidden","true");
+        const text = document.createElement("span");
+        text.textContent = `Try ${clue.direction}`;
+        line.append(arrow,text);
+        mapHuntTapFlash.append(line);
+      }
       mapHuntTapFlash.dataset.code = code;
       mapHuntTapFlash.dataset.kind = kind;
       mapHuntTapFlash.style.color = mapHuntTapLabelColor(code, kind);
@@ -40116,7 +40286,7 @@ Answer: ${answer}`;
       clicked.classed("wrong-tap", true);
       if (mapHuntState) mapHuntState.wrongFeedbackCode = code;
       pulseMapHuntMarker(code);
-      showMapHuntTapLabel(code, "wrong");
+      showMapHuntTapLabel(code, "wrong", {duration:2200});
       requestMapHuntCanvasDraw();
       mapHuntWrongFeedbackTimer = window.setTimeout(() => {
         mapHuntWrongFeedbackTimer = null;
@@ -40265,11 +40435,13 @@ Answer: ${answer}`;
       const wrong = countryByCode(code);
       if (wrong) recordCountryConfusion(target.code, wrong.code, "globe");
       showMapHuntWrongFeedback(code);
+      const direction = mapHuntDirectionClue(code);
+      const clueText = direction ? `${wrong?.name || "That place"} · try ${direction.direction}. ` : "";
 
       if (mapHuntState.awaitingRevealClick) {
         // Keep the target flashing, but do not overwrite the normal feedback
         // label for the country the learner just tapped.
-        mapHuntFeedback.textContent = "Not that one · find the revealed place.";
+        mapHuntFeedback.textContent = `${clueText}Find the revealed place.`;
         mapHuntFeedback.className = "map-hunt-feedback near";
         if (mapHuntRoundMeta) mapHuntRoundMeta.textContent = "Tap the revealed place";
         hapticFeedback?.("warning");
@@ -40281,7 +40453,7 @@ Answer: ${answer}`;
         mapHuntState.misses = 3;
         mapHuntState.awaitingRevealClick = true;
         flashMapHuntTargetReveal(target.code);
-        mapHuntFeedback.textContent = "Three misses · the correct place will keep flashing until you tap it.";
+        mapHuntFeedback.textContent = `${clueText}Three misses · tap the flashing place.`;
         mapHuntFeedback.className = "map-hunt-feedback near";
         if (mapHuntRoundMeta) mapHuntRoundMeta.textContent = "Revealed · tap the flashing place";
         hapticFeedback?.("warning");
@@ -40289,7 +40461,7 @@ Answer: ${answer}`;
       }
 
       const left = 3 - mapHuntState.misses;
-      mapHuntFeedback.textContent = `Not quite · ${left} guess${left === 1 ? "" : "es"} left.`;
+      mapHuntFeedback.textContent = `${clueText || "Not quite · "}${left} guess${left === 1 ? "" : "es"} left.`;
       mapHuntFeedback.className = "map-hunt-feedback";
       if (mapHuntRoundMeta) mapHuntRoundMeta.textContent = `${left} guess${left === 1 ? "" : "es"} left`;
       hapticFeedback?.("warning");
@@ -40322,8 +40494,10 @@ Answer: ${answer}`;
 
     function finishMapHuntRound() {
       if (!mapHuntState) return;
+      homeTickTimers();
       mapHuntState.finished = true;
       mapHuntState.locked = true;
+      homeRecordMap(mapHuntState,"maphunt");
       mapHuntOverlay?.classList.add("map-hunt-complete");
       const struggled = mapHuntStruggledCodes();
       if (mapHuntRoundTitle) mapHuntRoundTitle.textContent = mapHuntState.revision ? "Revision complete" : "Map complete";
@@ -40341,7 +40515,7 @@ Answer: ${answer}`;
         mapHuntFeedback.className = struggled.length ? "map-hunt-feedback near" : "map-hunt-feedback good";
       }
       if (mapHuntFinishTitle) mapHuntFinishTitle.textContent = mapHuntState.revision ? "Revision complete." : "Map complete.";
-      if (mapHuntFinishMeta) mapHuntFinishMeta.textContent = mapHuntSummaryText();
+      if (mapHuntFinishMeta) mapHuntFinishMeta.textContent = mapHuntState.challenge ? homeRecordMapText(mapHuntState) : mapHuntSummaryText();
       if (mapHuntRevisionBtn) {
         mapHuntRevisionBtn.classList.toggle("hidden", struggled.length === 0);
         mapHuntRevisionBtn.textContent = struggled.length
@@ -41020,7 +41194,7 @@ Answer: ${answer}`;
       });
     }
 
-    async function startMapHuntGame() {
+    async function startMapHuntGame(options = {}) {
       const token = ++mapHuntBuildToken;
       mapHuntOverlay?.classList.remove("map-hunt-complete");
       setMapHuntPlayLayout(true);
@@ -41033,9 +41207,11 @@ Answer: ${answer}`;
       if (mapHuntLoading) mapHuntLoading.textContent = "Building the map…";
       mapHuntFinish?.classList.add("hidden");
       try {
-        const allCodes = mapHuntCodesForSet(mapHuntSet);
+        const allCodes = options.challenge ? homeCoreCountries(mapHuntSet).map(c=>c.code) : mapHuntCodesForSet(mapHuntSet);
         if (!allCodes.length) throw new Error("No places available");
         const state = makeMapHuntState(allCodes, allCodes, false);
+        state.challenge=options.challenge || null;
+        if(state.challenge)state.roundCodes=homeSeededOrder(allCodes,state.challenge.id);
         mapHuntState = state;
         noteResumableMode("maphunt");
         await renderMapHuntMap();
@@ -41218,7 +41394,7 @@ Answer: ${answer}`;
     mapHuntStartBtn?.addEventListener("click", startMapHuntGame);
     mapHuntRestartBtn?.addEventListener("click", editMapHuntSetup);
     mapHuntRevisionBtn?.addEventListener("click", startMapHuntRevision);
-    mapHuntReplayBtn?.addEventListener("click", startMapHuntGame);
+    mapHuntReplayBtn?.addEventListener("click", () => startMapHuntGame({challenge:mapHuntState?.challenge || null}));
     mapHuntChangeBtn?.addEventListener("click", editMapHuntSetup);
     mapHuntZoomOutBtn?.addEventListener("click", event => { event.stopPropagation(); mapHuntZoomBy(1 / BIG_MAP_ZOOM_STEP); });
     mapHuntZoomInBtn?.addEventListener("click", event => { event.stopPropagation(); mapHuntZoomBy(BIG_MAP_ZOOM_STEP); });
@@ -41609,8 +41785,10 @@ function rankingTargetValues() {
 
     function rankingFinishPerfect() {
       if (!rankingState) return;
+      homeTickTimers();
       rankingState.revealed = true;
       rankingState.verified = true;
+      if(rankingState.launchPreset?.dailyKey){homeRecordDaily(rankingState.launchPreset,100*(rankingState.firstCheckCorrectCodes?.length||0)/rankingState.items.length,rankingState.homeElapsedMs||0,{correct:rankingState.firstCheckCorrectCodes?.length||0,total:rankingState.items.length,checks:rankingState.checks,hints:rankingState.hints});homeShowFinishedDaily("ranking",rankingFeedback.parentElement);}
       rankingState.checkedCorrectCodes = new Set(rankingState.items.map(item => item.c.code));
       rankingState.knownCorrectCodes = new Set(rankingState.items.map(item => item.c.code));
       rankingState.newlyConfirmedCodes = new Set();
@@ -41782,18 +41960,19 @@ function rankingTargetValues() {
     }
 
     async function startRankingGame(options = {}) {
+      rankingOverlay.querySelectorAll(".daily-share-report").forEach(el=>el.remove());
       const token = ++rankingBuildToken;
       const replay = options?.replay === true;
       const avoidPrevious = replay || rankingLastRoundCodes.length > 0;
       rankingSetup.classList.add("hidden"); rankingPlay.classList.add("hidden"); rankingLoading.classList.remove("hidden");
-      const roundMetric = chooseRankingRoundMetric();
+      const roundMetric = options.launchPreset ? "borders" : chooseRankingRoundMetric();
       rankingLoading.textContent = ["population","area","density"].includes(roundMetric) ? "Loading latest available values…" : "Building ranking…";
       rankingFeedback.textContent="";
       try {
-        const items = await buildRankingItems({ avoidPrevious, metric: roundMetric });
+        const items = options.launchPreset ? await homeRankingItems(options.launchPreset) : await buildRankingItems({ avoidPrevious, metric: roundMetric });
         if (token !== rankingBuildToken || !rankingOverlay?.classList.contains("open")) return;
         if (items.length < 2) throw new Error("Not enough values");
-        rankingState={ metric:roundMetric, setKey:rankingSet, items, verified:false, revealed:false, checks:0, firstCheckCorrectCodes:null, checkedCorrectCodes:null, knownCorrectCodes:new Set(), newlyConfirmedCodes:new Set(), hints:0, masteryRecorded:false };
+        rankingState={ launchPreset:options.launchPreset || null, metric:roundMetric, setKey:options.launchPreset ? "world" : rankingSet, items, verified:false, revealed:false, checks:0, firstCheckCorrectCodes:null, checkedCorrectCodes:null, knownCorrectCodes:new Set(), newlyConfirmedCodes:new Set(), hints:0, masteryRecorded:false };
         noteResumableMode("ranking");
         rankingLastRoundCodes = items.map(item => item.c.code);
         saveSpecialGamePrefs();
@@ -41882,7 +42061,7 @@ function rankingTargetValues() {
     rankingRevealBtn?.addEventListener("click", () => {
       if (!rankingState?.revealed) { giveRankingHint(); return; }
       if (rankingRevealBtn.dataset.rankingAction === "setup") { resetRankingToSetup(true); return; }
-      startRankingGame({ replay: true });
+      if(rankingState?.launchPreset){rankingOverlay.querySelectorAll(".daily-share-report").forEach(el=>el.remove());homeLaunchRanking(false,rankingRevealBtn);}else startRankingGame({ replay: true });
     });
     rankingList?.addEventListener("click",event=>{const b=event.target.closest("[data-ranking-move]");if(!b)return;const index=Number(b.dataset.rankingIndex);rankingMove(index,b.dataset.rankingMove==="up"?-1:1);});
 
@@ -42744,9 +42923,9 @@ function rankingTargetValues() {
           try {
             const temp=document.createElement('div'); temp.textContent='stale card'; matchingDrawerCards.replaceChildren(temp);
             matchingDrawerPrevBtn.disabled=false; matchingDrawerNextBtn.disabled=false;
-            showMatchingUnavailableDrawer('Open Challenges for another field');
+            showMatchingUnavailableDrawer('Open Topics for another field');
             geoDenSelfTestEqual(matchingDrawerTitle.textContent,'No cards available');
-            geoDenSelfTestEqual(matchingDrawerPage.textContent,'Open Challenges for another field');
+            geoDenSelfTestEqual(matchingDrawerPage.textContent,'Open Topics for another field');
             geoDenSelfTestAssert(matchingDrawerPrevBtn.disabled && matchingDrawerNextBtn.disabled);
             geoDenSelfTestEqual(matchingDrawerCards.childElementCount,0);
           } finally {
@@ -43702,7 +43881,7 @@ function rankingTargetValues() {
         ? Array.isArray(v.$set) ? new Set(v.$set) : Array.isArray(v.$map) ? new Map(v.$map) : v : v);
     }
     function specialRunSnapshot() {
-      const chain = specialRunPick(chainState, 'setKey answerMode ruleMode codes graph parts hintsUsed giveUpsUsed activeHint assistedMastery recordedMastery assistedInputValue startCode lastFilledCode trailCurrentCode trailStack trailBounces trailAdvances trailEndReason elapsedMs finishedAt');
+      const chain = specialRunPick(chainState, 'challenge challengeClean challengeRecorded setKey answerMode ruleMode codes graph parts hintsUsed giveUpsUsed activeHint assistedMastery recordedMastery assistedInputValue startCode lastFilledCode trailCurrentCode trailStack trailBounces trailAdvances trailEndReason elapsedMs finishedAt');
       if (chain) {
         chain.graphLayers={landGraph:chain.graph.landGraph,bridgeGraph:chain.graph.bridgeGraph,anchorGraph:chain.graph.anchorGraph};
         chain.savedFeedback=chainState.needsHydration?chainState.savedFeedback:chainFeedback.textContent;
@@ -43711,13 +43890,13 @@ function rankingTargetValues() {
         if(chain.finishedAt){chain.finishTitle=chainState.needsHydration?chainState.finishTitle:chainFinishTitle.textContent;chain.finishMeta=chainState.needsHydration?chainState.finishMeta:chainFinishMeta.textContent;}
       }
       if (chain && chainState.timerStartedAt != null) chain.elapsedMs += Math.max(0,Date.now()-chainState.timerStartedAt);
-      const maphunt = specialRunPick(mapHuntState, 'setKey promptMode allCodes roundCodes results cursor misses awaitingRevealClick revision finished');
+      const maphunt = specialRunPick(mapHuntState, 'challenge challengeRecorded homeElapsedMs setKey promptMode allCodes roundCodes results cursor misses awaitingRevealClick revision finished');
       // A correct-answer animation may still be pending when the page closes.
       if (maphunt && !maphunt.finished && maphunt.results.has(maphunt.roundCodes[maphunt.cursor])) {
         maphunt.cursor++; maphunt.misses=0; maphunt.awaitingRevealClick=false;
         maphunt.finished=maphunt.cursor>=maphunt.roundCodes.length;
       }
-      const ranking = specialRunPick(rankingState, 'metric setKey verified revealed checks firstCheckCorrectCodes checkedCorrectCodes knownCorrectCodes newlyConfirmedCodes hints masteryRecorded savedFeedback');
+      const ranking = specialRunPick(rankingState, 'launchPreset homeElapsedMs metric setKey verified revealed checks firstCheckCorrectCodes checkedCorrectCodes knownCorrectCodes newlyConfirmedCodes hints masteryRecorded savedFeedback');
       if (ranking) {
         ranking.items=rankingState.items.map(item=>({code:item.c.code,value:item.value}));
         if (rankingOverlay.classList.contains('open')) ranking.savedFeedback=rankingFeedback.textContent;
@@ -43819,7 +43998,7 @@ function rankingTargetValues() {
       let shownDate=dailyDateKey(),midnightTimer=null,resumeVisibleSprint=false,resumeVisibleChain=false;
       function refreshDay() {
         if(dailyDateKey()!==shownDate){
-          shownDate=dailyDateKey();renderDailyGoalUI();renderDailyChallengeCard();renderTodayFocusCard();
+          shownDate=dailyDateKey();renderDailyGoalUI();renderDailyChallengeCard();renderTodayFocusCard();renderHomeDiscovery();
         }
         clearTimeout(midnightTimer);
         const next=new Date();next.setDate(next.getDate()+1);next.setHours(0,0,0,0);
@@ -43904,6 +44083,183 @@ function rankingTargetValues() {
         window.addEventListener('popstate',begin,{once:true});history.go(-previous.depth);
       }else begin();
     }
+    /* Learn / Games discovery; preset records are separate from custom practice. */
+    const HOME_MAP_REGIONS = ['europe','africa','asia','northAmerica','southAmerica','oceania','world'];
+    const HOME_MAP_VARIANTS = {maphunt:{country:'Country names',flag:'Flags',capital:'Capitals'},chain:{country:'Country names',capital:'Capitals',both:'Countries & capitals'}};
+    let homeSection='learn',homeMode=null,homeVariant=null,homeLaunching=false;
+    const homeRecords=loadHomeRecords();
+    function homeValidateRecords(v){
+      const object=x=>x&&typeof x==='object'&&!Array.isArray(x),result=x=>object(x)&&Number.isFinite(x.score)&&x.score>=0&&x.score<=100&&Number.isFinite(x.elapsedMs)&&x.elapsedMs>=0&&Number.isFinite(x.completedAt);
+      if(!object(v)||v.schema!==1||!object(v.challenges)||!object(v.dailies))throw new Error('Invalid challenge records');
+      for(const [id,r] of Object.entries(v.challenges))if(!homeChallengeSpec(id)||!object(r)||!Number.isInteger(r.plays)||r.plays<1||!result(r.best)||!result(r.last)||![r.best,r.last].every(x=>Number.isInteger(x.correct)&&Number.isInteger(x.total)&&x.correct>=0&&x.correct<=x.total&&x.total>0))throw new Error('Invalid map challenge result');
+      for(const [id,r] of Object.entries(v.dailies))if(!/^\d{4}-\d{2}-\d{2}:v1:(detective|matching|ranking)$/.test(id)||!result(r)||r.date!==id.slice(0,10))throw new Error('Invalid daily result');
+      return v;
+    }
+    function loadHomeRecords(){try{return homeValidateRecords(JSON.parse(localStorage.getItem(HOME_RECORDS_KEY)));}catch(_){}return {schema:1,challenges:{},dailies:{}};}
+    function saveHomeRecords(){localStorage.setItem(HOME_RECORDS_KEY,JSON.stringify(homeRecords));}
+    function homeCoreCountries(region='world'){return countries.filter(c=>!c.isTerritory&&!c.isAdditionalPlace&&(region==='world'||(COUNTRY_SET_CODES[region]||[]).includes(c.code)));}
+    function homeSeededOrder(items,key){const result=[...items],rng=seededRandom(hashString32('GeoDen:discovery:v1:'+key));for(let i=result.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[result[i],result[j]]=[result[j],result[i]];}return result;}
+    function homeChallengeId(mode,variant,region){return `v1:${mode}:${variant}:${region}`;}
+    function homeChallengeSpec(id){const [v,mode,variant,region]=String(id||'').split(':');return v==='v1'&&HOME_MAP_VARIANTS[mode]?.[variant]&&HOME_MAP_REGIONS.includes(region)?{id,mode,variant,region}:null;}
+    function homeChallengeProgress(mode,variant=null){const ids=Object.keys(HOME_MAP_VARIANTS[mode]).filter(v=>!variant||variant===v).flatMap(v=>HOME_MAP_REGIONS.map(r=>homeChallengeId(mode,v,r)));const completed=ids.filter(id=>homeRecords.challenges[id]?.best).length;return {completed,total:ids.length,percent:Math.round(100*completed/ids.length)};}
+    function homeTime(ms){return formatChainTime(Math.max(0,ms||0));}
+    function homeButton(title,meta,action,primary=false){const b=document.createElement('button');b.type='button';b.className='discovery-card'+(primary?' discovery-primary':'');const copy=document.createElement('span'),name=document.createElement('strong'),detail=document.createElement('small');name.textContent=title;detail.textContent=meta;copy.append(name,detail);const arrow=document.createElement('span');arrow.className='discovery-arrow';arrow.textContent='→';arrow.setAttribute('aria-hidden','true');b.append(copy,arrow);b.addEventListener('click',()=>action(b));return b;}
+    function homeProgressCard(title,p,action){const b=homeButton(title,`${p.completed} / ${p.total} completed · ${p.percent}%`,action),bar=document.createElement('span');bar.className='discovery-progress';bar.setAttribute('role','progressbar');bar.setAttribute('aria-label',title+' completion');bar.setAttribute('aria-valuemin','0');bar.setAttribute('aria-valuemax','100');bar.setAttribute('aria-valuenow',p.percent);const fill=document.createElement('span');fill.style.width=p.percent+'%';bar.append(fill);b.firstChild.append(bar);return b;}
+    function homeSetSection(section){homeSection=section==='games'?'games':'learn';homeMode=null;homeVariant=null;document.getElementById('startSessionCard').classList.add('hidden');startOverlay.dataset.modeArmed='false';renderHomeDiscovery();}
+    function homeOpenMode(mode){homeMode=mode;homeVariant=null;homeSection=['standard','quiz','interactive','rapid','sprint'].includes(mode)?'learn':'games';document.getElementById('startSessionCard').classList.add('hidden');startOverlay.dataset.modeArmed='false';setMenuPlayMode(mode);renderHomeDiscovery();document.getElementById('discoveryHeading')?.focus({preventScroll:true});}
+    function homeCustom(mode){setMenuPlayMode(mode);showHomeSessionSetup({scroll:true});if(mode==='sprint'){openSprintSetup();return;}document.getElementById('sessionCustomizeDisclosure').open=true;if(['maphunt','chain','ranking'].includes(mode)){startOverlay.classList.remove('open');if(mode==='maphunt'){mapHuntOverlay.classList.add('open');editMapHuntSetup();}else if(mode==='chain'){chainFillOverlay.classList.add('open');chainFillSetup.classList.remove('hidden');chainFillPlay.classList.add('hidden');setChainPlayLayout(false);updateChainSetupHelp();}else{rankingOverlay.classList.add('open');rankingSetup.classList.remove('hidden');rankingPlay.classList.add('hidden');updateRankingSetupHelp();}}}
+    function renderHomeDiscovery(){
+      const landing=document.getElementById('discoveryLanding');if(!landing)return;
+      document.querySelectorAll('[data-home-section]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.homeSection===homeSection)));
+      [...playModePicker.querySelectorAll('.mode-discovery-group')].forEach((g,i)=>g.classList.toggle('hidden',!!homeMode||(i===0?'learn':'games')!==homeSection));
+      playModePicker.classList.toggle('hidden',!!homeMode);landing.replaceChildren();landing.classList.toggle('hidden',!homeMode);
+      if(homeMode){
+        const back=document.createElement('button');back.type='button';back.className='discovery-back';back.textContent=homeVariant?'← '+modeDisplayName(homeMode):'← '+(homeSection==='learn'?'Learn':'Games');
+        back.onclick=()=>{if(homeVariant)homeVariant=null;else homeMode=null;document.getElementById('startSessionCard').classList.add('hidden');startOverlay.dataset.modeArmed='false';renderHomeDiscovery();};
+        const h=document.createElement('h3');h.id='discoveryHeading';h.tabIndex=-1;h.textContent=homeMode==='quiz'?'Quiz':homeMode==='standard'?'Flash cards':modeDisplayName(homeMode);
+        if(homeVariant)h.textContent+=' · '+HOME_MAP_VARIANTS[homeMode][homeVariant];
+        const desc=document.createElement('p');desc.className='discovery-description';landing.append(back,h,desc);
+        const cards=document.createElement('div');cards.className='discovery-grid';landing.append(cards);
+        if(HOME_MAP_VARIANTS[homeMode]){
+          desc.textContent=homeMode==='maphunt'?'Challenges · fixed country sets, three guesses per place. Accuracy is first-try correct; time breaks ties.':'Challenges · fixed country sets and Connected routes. Score is unassisted answers; the starting place is free. Autocomplete is off.';
+          if(!homeVariant)for(const [variant,label] of Object.entries(HOME_MAP_VARIANTS[homeMode]))cards.append(homeProgressCard(label,homeChallengeProgress(homeMode,variant),()=>{homeVariant=variant;renderHomeDiscovery();}));
+          else for(const region of HOME_MAP_REGIONS){
+            const spec=homeChallengeSpec(homeChallengeId(homeMode,homeVariant,region)),record=homeRecords.challenges[spec.id],state=homeMode==='maphunt'?mapHuntState:chainState;
+            const active=state?.challenge?.id===spec.id&&!(state.finished||state.finishedAt),result=record?.best;
+            const status=active?'In progress · Resume':result?`${result.score===100?'Perfect':'Completed'} · Best ${result.score}% · ${homeTime(result.elapsedMs)} · Replay`:'Unplayed · Play';
+            cards.append(homeButton(countrySetDisplayName(region),`${homeCoreCountries(region).length} countries · ${status}`,b=>homeLaunchMap(spec,b)));
+          }
+        }else if(homeMode==='quiz'||['interactive','rapid'].includes(homeMode)){
+          desc.textContent='A short mixed quiz or a closer look at each country. Play as often as you like.';
+          cards.append(homeButton('Quick 10','Ten mixed questions · new set each time',b=>homeLaunchStudy('quiz',false,b),true));
+          cards.append(homeButton('Country deep dive','Work through your selected topics, country by country',()=>{setMenuPlayMode('interactive');showHomeSessionSetup({scroll:true});}));cards.append(homeDailyButton('quiz'));
+        }else if(homeMode==='standard'){
+          desc.textContent='Explore a place, reveal its facts, and check what you remember.';
+          cards.append(homeButton('Study 5 places','Your selected topics · random places',b=>homeLaunchStudy('standard',false,b),true));cards.append(homeButton('Choose a study session','Pick topics, regions and review options',()=>homeCustom('standard')));
+        }else if(homeMode==='sprint'){
+          desc.textContent='Sixty seconds of mixed questions. Choose a region and beat your own score.';cards.append(homeButton('Start a Sprint','Choose your region →',()=>openSprintSetup(),true));
+        }else{
+          const title={detective:'Play a case',matching:'Play a board',ranking:'Play a round'}[homeMode];
+          desc.textContent={detective:'Follow the clues to identify a country. Every new case is a fresh mystery.',matching:'Match countries to their capitals. Finish a board, then play another.',ranking:'Put five countries in order. Each new round is a fresh puzzle.'}[homeMode];
+          cards.append(homeButton(title,'Fresh random round · play as often as you like',b=>homeMode==='ranking'?homeLaunchRanking(false,b):homeLaunchStudy(homeMode,false,b),true));cards.append(homeDailyButton(homeMode));
+        }
+        if(homeMode!=='standard')cards.append(homeButton('Custom '+(homeSection==='learn'?'session':'game'),'Choose your own topics, region and settings',()=>homeCustom(homeMode)));
+      }
+      renderHomePicks();
+      for(const mode of ['maphunt','chain']){const el=playModePicker.querySelector(`[data-play-mode="${mode}"] .play-mode-meta`),p=homeChallengeProgress(mode);if(el)el.textContent=`Challenges · ${p.completed}/${p.total} completed`;}
+    }
+    function homeDailyId(mode){return `${dailyDateKey()}:v1:${mode}`;}
+    function homeDailyResult(mode){return mode==='quiz'?dailyChallengeProgress?.days?.[dailyChallengeRunKey()]:homeRecords.dailies[homeDailyId(mode)];}
+    function homeDailyButton(mode){
+      const label={quiz:'10-question quiz',detective:'case',matching:'board',ranking:'ranking round'}[mode],result=homeDailyResult(mode);
+      const active=mode==='quiz'?studySession?.active!==false&&studySession?.dailyChallenge?.key===dailyChallengeRunKey():(mode==='ranking'?rankingState:studySession)?.launchPreset?.dailyKey===homeDailyId(mode)&&!result;
+      const meta=result?(mode==='quiz'?`${result.correct}/${result.total} correct · View & share`:`${result.score}% · ${homeTime(result.elapsedMs)} · View & share`):active?'In progress · Resume':'Same puzzle for everyone today';
+      return homeButton(`Today’s ${label}`,meta,button=>{
+        if(result){homeOpenMode(mode==='quiz'?'quiz':mode);document.getElementById('discoveryLanding').append(homeDailyReport(mode,result));return;}
+        if(mode==='quiz'){if(!homeConfirmReplace('study',button,active))return;if(active){startOverlay.classList.remove('open');openRapidMode(true);}else startDailyChallengeSession();}
+        else if(mode==='ranking')homeLaunchRanking(true,button);else homeLaunchStudy(mode,true,button);
+      });
+    }
+    function renderHomePicks(){const host=document.getElementById('homeDailyPicks');if(host)host.replaceChildren(...['quiz','detective','matching','ranking'].map(homeDailyButton));}
+    function homeConfirmReplace(kind,button,resume=false){
+      const active=kind==='study'?hasActiveStudyRun():kind==='maphunt'?mapHuntState&&!mapHuntState.finished:kind==='chain'?chainState&&!chainState.finishedAt:rankingState&&!rankingState.revealed;
+      if(!active||resume)return true;if(Number(button?.dataset.replaceUntil)>Date.now())return true;
+      if(button){button.dataset.replaceUntil=String(Date.now()+8000);(button.querySelector('small')||button).textContent='Replaces your unfinished run. Tap again to confirm.';}return false;
+    }
+    async function homeLaunchMap(spec,button){
+      if(homeLaunching)return;const old=spec.mode==='maphunt'?mapHuntState:chainState,resume=old?.challenge?.id===spec.id&&!(old.finished||old.finishedAt);
+      if(!homeConfirmReplace(spec.mode,button,resume))return;homeLaunching=true;
+      try{setMenuPlayMode(spec.mode);startOverlay.classList.remove('open');if(resume){if(spec.mode==='maphunt')await openMapHunt();else await openChainFill(true);return;}
+        if(spec.mode==='maphunt'){mapHuntSet=spec.region;mapHuntPromptMode=spec.variant;mapHuntOverlay.classList.add('open');await startMapHuntGame({challenge:spec});}
+        else{chainSet=spec.region;chainAnswerMode=spec.variant;chainRuleMode='open';chainFillOverlay.classList.add('open');await startChainGame({challenge:spec});}saveSpecialRuns();
+      }finally{homeLaunching=false;}
+    }
+    function homeStudyPreset(mode,daily){const key=daily?homeDailyId(mode):`${mode}:${Date.now()}:${Math.random()}`,count=mode==='detective'?1:mode==='quiz'?10:5;return {mode,dailyKey:daily?key:null,seed:hashString32(key),codes:homeSeededOrder(homeCoreCountries().map(c=>c.code),key).slice(0,count),startedAt:Date.now()};}
+    function homeLaunchStudy(mode,daily,button){
+      if(homeLaunching)return;const resume=daily&&studySession?.active!==false&&studySession?.launchPreset?.dailyKey===homeDailyId(mode);if(!homeConfirmReplace('study',button,resume))return;
+      if(resume){startOverlay.classList.remove('open');if(mode==='detective')openDetectiveMode(true);else openMatchingMode(true,true);return;}
+      homeLaunching=true;try{const preset=homeStudyPreset(mode,daily),interaction=mode==='quiz'?'rapid':mode;setMenuPlayMode(interaction);startStudySession('finite',preset.codes.length,interaction,'random','world',null,preset);}finally{homeLaunching=false;}
+    }
+    async function homeLaunchRanking(daily,button){
+      if(homeLaunching)return;const resume=daily&&rankingState?.launchPreset?.dailyKey===homeDailyId('ranking')&&!rankingState.revealed;if(!homeConfirmReplace('ranking',button,resume))return;
+      if(resume){startOverlay.classList.remove('open');openRanking();return;}homeLaunching=true;
+      try{const key=daily?homeDailyId('ranking'):`ranking:${Date.now()}:${Math.random()}`,preset={mode:'ranking',dailyKey:daily?key:null,seed:hashString32(key),startedAt:Date.now()};setMenuPlayMode('ranking');startOverlay.classList.remove('open');rankingOverlay.classList.add('open');await startRankingGame({launchPreset:preset});saveSpecialRuns();}finally{homeLaunching=false;}
+    }
+    async function homeRankingItems(preset){
+      const pool=homeSeededOrder(homeCoreCountries(),String(preset.seed)),values=[];
+      for(const c of pool){const neighbours=await neighbouringCountriesFor(c),value=neighbours?.names?.length;if(Number.isFinite(value))values.push({c,value});if(values.length>=5&&new Set(values.map(x=>x.value)).size>=2)break;}
+      if(values.length<5)throw new Error('not-enough-values');return homeSeededOrder(values.slice(0,5),String(preset.seed)+':order');
+    }
+    function homeDailyDetectiveClues(c){return [{key:'continent',label:'Continent',value:detectiveContinent(c)},{key:'capitalLength',label:'Capital name length',value:detectiveNameShape(detectivePrimaryCapital(c))},{key:'currency',label:'Currency',value:detectiveCurrencies(c).join(' · ')},{key:'languages',label:'Languages',value:detectiveLanguages(c).join(' · ')},{key:'capital',label:'Capital city',value:detectiveCapital(c)}].filter(x=>x.value);}
+    function homeRecordDaily(preset,score,elapsedMs,details={}){
+      if(!preset?.dailyKey||homeRecords.dailies[preset.dailyKey])return;
+      homeRecords.dailies[preset.dailyKey]={score:Math.round(Math.max(0,Math.min(100,score))),elapsedMs:Math.max(0,elapsedMs),completedAt:Date.now(),date:preset.dailyKey.slice(0,10),...details};saveHomeRecords();
+    }
+    function homeRecordStudyDaily(session){
+      const preset=session?.launchPreset;if(!preset?.dailyKey)return;const metrics=completedSessionMetrics(session);
+      const score=preset.mode==='detective'?(session.detective?.score||0):(metrics.total?100*metrics.correct/metrics.total:0);
+      homeRecordDaily(preset,score,session.homeElapsedMs||0,{correct:metrics.correct,total:metrics.total,clues:session.detective?.round?.revealedCount||0});
+    }
+    function homeRecordMap(state,mode){
+      const spec=homeChallengeSpec(state?.challenge?.id);if(!spec||state.revision||state.challengeRecorded)return;
+      const complete=mode==='maphunt'?state.results.size===state.roundCodes.length:chainFilledCodes().size===state.codes.length;if(!complete)return;
+      let total,clean;if(mode==='maphunt'){total=state.roundCodes.length;clean=[...state.results.values()].filter(r=>!r.revealed&&r.tries===1).length;}else{total=(state.codes.length-1)*(state.answerMode==='both'?2:1);clean=state.challengeClean||0;}
+      const result={correct:clean,total,score:Math.round(100*clean/Math.max(1,total)),elapsedMs:mode==='chain'?chainElapsedMs():(state.homeElapsedMs||0),completedAt:Date.now()},record=homeRecords.challenges[spec.id]||{plays:0},best=record.best;
+      record.plays++;record.last=result;if(!best||result.correct>best.correct||(result.correct===best.correct&&result.elapsedMs<best.elapsedMs))record.best=result;
+      homeRecords.challenges[spec.id]=record;state.challengeRecorded=true;saveHomeRecords();
+    }
+    function homeRecordMapText(state){const r=homeRecords.challenges[state?.challenge?.id];return r?.last?`Challenge · ${r.last.score}% · ${homeTime(r.last.elapsedMs)} · Best ${r.best.score}% in ${homeTime(r.best.elapsedMs)}`:'';}
+    function homeTickTimers(){
+      const now=Date.now();for(const [state,visible,finished] of [[mapHuntState,mapHuntOverlay?.classList.contains('open')&&!mapHuntPlay.classList.contains('hidden'),mapHuntState?.finished],[studySession,['matchingOverlay','detectiveOverlay','rapidOverlay'].some(id=>document.getElementById(id)?.classList.contains('open')),studySession?.active===false],[rankingState,rankingOverlay?.classList.contains('open')&&!rankingPlay.classList.contains('hidden'),rankingState?.revealed]]){
+        if(!state||(!state.challenge&&!state.launchPreset&&!state.dailyChallenge))continue;
+        if(state.homeTimerAt&&visible&&!document.hidden&&!finished)state.homeElapsedMs=(state.homeElapsedMs||0)+Math.min(1000,now-state.homeTimerAt);
+        state.homeTimerAt=visible&&!document.hidden&&!finished?now:null;
+      }
+    }
+    function homeDailyShareText(mode,r,date=r.date||dailyDateKey()){
+      const name={quiz:'Quick 10',detective:'Detective',matching:'Matching',ranking:'Ranking'}[mode];
+      const score=mode==='quiz'?Math.round(100*r.correct/Math.max(1,r.total)):r.score;
+      const total=mode==='detective'?5:Math.min(10,Math.max(1,r.total||5));
+      const green=mode==='detective'?(r.correct?1:0):Math.round(total*score/100);
+      const tiles=mode==='detective'?'🔎'.repeat(Math.min(5,r.clues||1))+(r.correct?' ✅':' ⬜'):'🟩'.repeat(green)+'⬜'.repeat(total-green);
+      const grid=mode!=='detective'&&total>5?[...tiles].slice(0,5).join('')+'\n'+[...tiles].slice(5).join(''):tiles;
+      const result=mode==='quiz'?`${r.correct}/${r.total} correct`:mode==='detective'?`${r.correct?'Solved':'Revealed'} · ${score} points`:mode==='ranking'?`${score}% first check`:`${score}% first-try accuracy`;
+      const time=Number.isFinite(r.elapsedMs)?` · ⏱ ${homeTime(r.elapsedMs)}`:'';
+      const help=mode==='ranking'?`\n${r.checks||1} check${r.checks===1?'':'s'} · ${r.hints||0} hints`:mode==='quiz'&&r.assisted?`\n${r.assisted} with help`:'';
+      const url=/^https?:$/.test(location.protocol)&&!['localhost','127.0.0.1'].includes(location.hostname)?'\n'+location.origin+location.pathname:'';
+      return `🌍 GeoDen Daily · ${name}\n${date}\n\n${grid}\n${result}${time}${help}\n${mode==='detective'?'A little geography mystery.':'🟩 correct · ⬜ missed or corrected'}${url}`;
+    }
+    function homeDailyReport(mode,result){
+      const box=document.createElement('section');box.className='discovery-result daily-share-report';
+      const title=document.createElement('h3');title.textContent='Your daily result';
+      const preview=document.createElement('pre');preview.textContent=homeDailyShareText(mode,result);
+      const actions=document.createElement('div');actions.className='daily-share-actions';
+      const status=document.createElement('p');status.setAttribute('role','status');status.className='daily-share-status';
+      const manual=()=>{if(box.querySelector('textarea'))return;const field=document.createElement('textarea');field.readOnly=true;field.value=preview.textContent;field.setAttribute('aria-label','Daily report to copy');box.append(field);field.focus();field.select();status.textContent='Select and copy the report below.';};
+      const copy=document.createElement('button');copy.type='button';copy.textContent='Copy result';copy.onclick=async()=>{try{await geoDenCopyText(preview.textContent);status.textContent='Copied! Ready to paste.';}catch(_){manual();}};
+      const share=document.createElement('button');share.type='button';share.textContent='Share';share.onclick=async()=>{if(!navigator.share){copy.click();return;}try{await navigator.share({title:'GeoDen Daily',text:preview.textContent});status.textContent='Shared!';}catch(e){if(e?.name!=='AbortError')copy.click();}};
+      actions.append(copy,share);box.append(title,preview,actions,status);return box;
+    }
+    function homeShowFinishedDaily(mode,host,result=null){
+      if(!host)return;host.querySelectorAll('.daily-share-report').forEach(el=>el.remove());
+      const r=result||homeDailyResult(mode);if(r){const report=homeDailyReport(mode,r);if(mode==='matching'||mode==='ranking')host.prepend(report);else host.append(report);if(mode==='matching')host.classList.add('has-daily-report');}
+    }
+    function installHomeDiscovery(){
+      if(document.getElementById('discoveryLanding'))return;
+      const browser=document.getElementById('homeModeBrowser');browser.classList.add('discovery-browser');browser.open=true;
+      document.getElementById('homeModeBrowserTitle').textContent='Find your next session';
+      const tabs=document.createElement('div');tabs.className='discovery-tabs';tabs.setAttribute('role','group');tabs.setAttribute('aria-label','Learn or Games');
+      for(const section of ['learn','games']){const b=document.createElement('button');b.type='button';b.dataset.homeSection=section;b.textContent=section==='learn'?'Learn':'Games';b.onclick=()=>homeSetSection(section);tabs.append(b);}playModePicker.before(tabs);
+      const groups=playModePicker.querySelectorAll('.mode-discovery-options');groups[0].append(document.getElementById('sprintModeBtn'));for(const id of ['mapHuntModeBtn','chainModeBtn','detectiveModeBtn','matchingModeBtn','rankingModeBtn'])groups[1].append(document.getElementById(id));
+      document.getElementById('modeGroupStudy').textContent='Learn';document.getElementById('modeGroupGames').textContent='Games';playModePicker.querySelector('[data-play-mode="standard"] .play-mode-name').textContent='Flash cards';document.getElementById('sprintModeBtn').querySelector('.play-mode-meta').textContent='60-second practice';
+      const landing=document.createElement('div');landing.id='discoveryLanding';landing.className='hidden';browser.append(landing);
+      const today=document.createElement('details');today.className='discovery-today';today.open=true;const heading=document.createElement('summary');heading.textContent='Today’s picks';const p=document.createElement('p');p.textContent='One shared daily run per game. Regular play is always available.';const picks=document.createElement('div');picks.id='homeDailyPicks';picks.className='discovery-grid';today.append(heading,p,picks);browser.after(today);
+      dailyChallengeCard.classList.add('hidden');renderHomeDiscovery();setInterval(homeTickTimers,250);document.addEventListener('visibilitychange',homeTickTimers);
+      for(const [overlay,state] of [[mapHuntOverlay,()=>mapHuntState],[matchingOverlay,()=>studySession],[detectiveOverlay,()=>studySession],[rapidOverlay,()=>studySession],[rankingOverlay,()=>rankingState]])new MutationObserver(()=>{if(!overlay.classList.contains('open')&&state())state().homeTimerAt=null;}).observe(overlay,{attributes:true,attributeFilter:['class']});
+      for(const [id,mode] of [['matchingSettingsBtn','matching'],['detectiveSettingsBtn','detective']])document.getElementById(id)?.addEventListener('click',e=>{if(studySession?.launchPreset?.mode===mode){e.stopImmediatePropagation();if(mode==='matching')closeMatchingToMenu();else closeDetectiveToMenu();homeOpenMode(mode);}},true);
+    }
+
+    installHomeDiscovery();
     restoreSpecialRuns();
     if (!GEODEN_TEST_WORKER) {
       for (const event of ['click','keyup','pointerup','dragend']) document.addEventListener(event,()=>queueMicrotask(()=>{saveSpecialRuns();saveMatchingRun();}));
