@@ -15879,12 +15879,53 @@ button,
     }
 
 </style>
+<style id="discovery-progress-v52">
+    /* State is expressed through words and symbols as well as colour. */
+    #startOverlay #playModePicker {grid-template-columns:minmax(0,1fr)!important;}
+    #startOverlay .discovery-tabs button[aria-pressed="false"] {background:transparent!important;box-shadow:none;}
+    #startOverlay .discovery-tabs button[aria-pressed="true"] {background:#fff!important;color:#2456b4;}
+    #startOverlay .discovery-card[data-challenge-state="completed"],
+    #startOverlay .discovery-card[data-challenge-state="perfect"] {background:#edf5ef;border-color:#9fc6ac;}
+    #startOverlay .discovery-card[data-challenge-state="perfect"] {background:linear-gradient(135deg,#e3f2e8,#f3f8ee);border-color:#69a980;}
+    #startOverlay .discovery-card[data-challenge-state="active"] {background:#eef3ff;border-color:#a9beef;}
+    #startOverlay .challenge-region {align-items:flex-start;gap:10px;position:relative;}
+    #startOverlay .challenge-region strong,#startOverlay .challenge-region .challenge-status {padding-right:40px;}
+    #startOverlay .challenge-status {display:flex;align-items:center;gap:5px;font-size:11px;line-height:1.3;font-weight:850;letter-spacing:.025em;margin-bottom:9px;color:#68665f;}
+    #startOverlay .challenge-status-completed,#startOverlay .challenge-status-perfect {color:#23663e;}
+    #startOverlay .challenge-status-active {color:#2456b4;}
+    #startOverlay .challenge-status-icon {font-size:15px;line-height:1;}
+    #startOverlay .challenge-medallion {position:absolute;top:14px;right:14px;display:grid;place-items:center;width:34px;height:34px;border-radius:50%;font-size:23px;font-weight:850;background:#eae8e0;color:#77756d;}
+    #startOverlay [data-challenge-state="completed"] .challenge-medallion,
+    #startOverlay [data-challenge-state="perfect"] .challenge-medallion {background:#2c7b4a;color:#fff;}
+    #startOverlay [data-challenge-state="active"] .challenge-medallion {background:#dce7ff;color:#2456b4;}
+    #startOverlay .challenge-best {display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:13px;padding-top:11px;border-top:1px solid #276a3e24;}
+    #startOverlay .challenge-best b {display:block;font-size:22px;line-height:1.2;color:#245c3a;}
+    #startOverlay .challenge-best span span {display:block;font-size:10px;line-height:1.35;color:#526156;margin-top:3px;}
+    #startOverlay .challenge-action {display:block;font-size:12px;font-weight:850;margin-top:12px;color:#2456b4;}
+    #startOverlay [data-challenge-state="completed"] .challenge-action,
+    #startOverlay [data-challenge-state="perfect"] .challenge-action {color:#23663e;}
+    #startOverlay .challenge-collection .discovery-progress {height:7px;margin-top:12px;}
+    #startOverlay [data-challenge-state="completed"] .discovery-progress>span {background:#2c7b4a;}
+    #startOverlay .daily-mode-description {display:block;font-size:12px;line-height:1.4;margin:5px 0 9px;color:#555950;}
+    #startOverlay .daily-mode-card small {font-weight:750;}
+    #startOverlay .play-mode-button .discovery-progress {width:100%;height:5px;margin-top:8px;}
+    #startOverlay .play-mode-button.map-challenges-complete {background:#edf5ef!important;border-color:#9fc6ac!important;}
+    #startOverlay .map-challenges-complete .discovery-progress>span {background:#2c7b4a;}
+    #mapHuntFinish[data-challenge-state],#chainFinish[data-challenge-state] {background:#edf5ef;border-color:#9fc6ac;}
+    #mapHuntFinish[data-challenge-state] .map-hunt-finish-title,#chainFinish[data-challenge-state] .chain-finish-title {color:#23663e;}
+    #mapHuntFinish[data-challenge-state] .map-hunt-finish-title::before,#chainFinish[data-challenge-state] .chain-finish-title::before {content:'✓';display:inline-grid;place-items:center;width:30px;height:30px;margin-right:8px;border-radius:50%;background:#2c7b4a;color:white;font-size:22px;vertical-align:middle;}
+    #mapHuntFinish[data-challenge-state="perfect"] .map-hunt-finish-title::before,#chainFinish[data-challenge-state="perfect"] .chain-finish-title::before {content:'★';}
+    /* The canvas must occupy exactly the SVG viewport. Contain also prevents
+       transient distortion before the next resize/redraw frame catches up. */
+    #mapHuntCanvas {width:100%!important;height:100%!important;min-height:0!important;max-height:none!important;aspect-ratio:auto!important;object-fit:contain!important;object-position:center!important;}
+
+</style>
   <script src="assets/d3-7.9.0.min.js"></script>
   <script src="assets/topojson-3.1.0.min.js"></script>
   <script src="assets/geography.js"></script>
 
   <script>
-    const GEODEN_VERSION = "0.56.51";
+    const GEODEN_VERSION = "0.56.52";
     // v0.56.28 — blank-surface audit: guarded silhouettes/location maps and Matching visual preflight.
     // v0.56.18 — private-beta problem reporting with diagnostic state, recent actions, errors, copy/download/share.
     // v0.56.17 — tester-facing automatic failure reporting with screenshot/copy instructions.
@@ -39586,6 +39627,7 @@ Answer: ${answer}`;
         chainFinishMeta.textContent = `${formatChainTime(chainElapsedMs())}${trailText} · ${answerLabel} · ${rules}${hintText}${giveUpText}`;
       }
       if(chainState?.challenge && chainFinishMeta)chainFinishMeta.textContent=homeRecordMapText(chainState);
+      homeStyleMapCompletion(chainState,"chain");
       chainGuessInput.disabled = true;
       chainGuessBtn.disabled = true;
       if (chainHintBtn) chainHintBtn.disabled = true;
@@ -39739,6 +39781,7 @@ Answer: ${answer}`;
     }
 
     async function openChainFill(resume = true) {
+      homeStyleMapCompletion(chainState,"chain");
       syncTerritoryPreferenceControls?.();
       setSpecialOptionActive(chainSetOptions, "data-chain-set", chainSet);
       setSpecialOptionActive(chainAnswerOptions, "data-chain-answer", chainAnswerMode);
@@ -40516,6 +40559,7 @@ Answer: ${answer}`;
       }
       if (mapHuntFinishTitle) mapHuntFinishTitle.textContent = mapHuntState.revision ? "Revision complete." : "Map complete.";
       if (mapHuntFinishMeta) mapHuntFinishMeta.textContent = mapHuntState.challenge ? homeRecordMapText(mapHuntState) : mapHuntSummaryText();
+      homeStyleMapCompletion(mapHuntState,"maphunt");
       if (mapHuntRevisionBtn) {
         mapHuntRevisionBtn.classList.toggle("hidden", struggled.length === 0);
         mapHuntRevisionBtn.textContent = struggled.length
@@ -40613,7 +40657,7 @@ Answer: ${answer}`;
         mapHuntState.viewportScale = measureMapHuntViewportScale();
         resizeMapHuntCanvasSurface();
         updateMapHuntMarkerScale(mapHuntState.zoomTransform || d3.zoomIdentity);
-        requestMapHuntCanvasDraw();
+        drawMapHuntCanvas();
         positionMapHuntTapLabel();
       });
     }
@@ -41320,6 +41364,7 @@ Answer: ${answer}`;
     }
 
     async function openMapHunt() {
+      homeStyleMapCompletion(mapHuntState,"maphunt");
       if (mapHuntState?.needsHydration) {
         mapHuntOverlay.classList.add("open");
         if (!await hydrateSpecialRun("maphunt")) return;
@@ -44104,7 +44149,50 @@ function rankingTargetValues() {
     function homeChallengeProgress(mode,variant=null){const ids=Object.keys(HOME_MAP_VARIANTS[mode]).filter(v=>!variant||variant===v).flatMap(v=>HOME_MAP_REGIONS.map(r=>homeChallengeId(mode,v,r)));const completed=ids.filter(id=>homeRecords.challenges[id]?.best).length;return {completed,total:ids.length,percent:Math.round(100*completed/ids.length)};}
     function homeTime(ms){return formatChainTime(Math.max(0,ms||0));}
     function homeButton(title,meta,action,primary=false){const b=document.createElement('button');b.type='button';b.className='discovery-card'+(primary?' discovery-primary':'');const copy=document.createElement('span'),name=document.createElement('strong'),detail=document.createElement('small');name.textContent=title;detail.textContent=meta;copy.append(name,detail);const arrow=document.createElement('span');arrow.className='discovery-arrow';arrow.textContent='→';arrow.setAttribute('aria-hidden','true');b.append(copy,arrow);b.addEventListener('click',()=>action(b));return b;}
-    function homeProgressCard(title,p,action){const b=homeButton(title,`${p.completed} / ${p.total} completed · ${p.percent}%`,action),bar=document.createElement('span');bar.className='discovery-progress';bar.setAttribute('role','progressbar');bar.setAttribute('aria-label',title+' completion');bar.setAttribute('aria-valuemin','0');bar.setAttribute('aria-valuemax','100');bar.setAttribute('aria-valuenow',p.percent);const fill=document.createElement('span');fill.style.width=p.percent+'%';bar.append(fill);b.firstChild.append(bar);return b;}
+    function homeStatusBadge(state,label){
+      const badge=document.createElement('span');badge.className='challenge-status challenge-status-'+state;
+      const icon=document.createElement('span');icon.className='challenge-status-icon';icon.setAttribute('aria-hidden','true');
+      icon.textContent=state==='perfect'?'★':state==='completed'?'✓':state==='active'?'◔':'○';
+      badge.append(icon,document.createTextNode(label));return badge;
+    }
+    function homeProgressCard(title,p,action){
+      const done=p.completed===p.total,state=done?'completed':p.completed?'active':'unplayed';
+      const b=homeButton(title,`${p.completed} of ${p.total} challenges completed`,action);
+      b.classList.add('challenge-collection');b.dataset.challengeState=state;
+      b.firstChild.prepend(homeStatusBadge(state,done?'All completed':p.completed?'Keep going':'Ready to explore'));
+      const bar=document.createElement('span');bar.className='discovery-progress';bar.setAttribute('role','progressbar');
+      bar.setAttribute('aria-label',title+' completion');bar.setAttribute('aria-valuemin','0');bar.setAttribute('aria-valuemax',String(p.total));bar.setAttribute('aria-valuenow',String(p.completed));
+      bar.setAttribute('aria-valuetext',`${p.completed} of ${p.total} challenges completed`);
+      const fill=document.createElement('span');fill.style.width=p.percent+'%';bar.append(fill);b.firstChild.append(bar);
+      return b;
+    }
+    function homeChallengeCard(spec,result,active){
+      // Completing the run and earning a perfect score are separate achievements.
+      const perfect=!!result&&result.correct===result.total;
+      const state=active?'active':result?(perfect?'perfect':'completed'):'unplayed';
+      const label=active?(result?'Replay in progress':'In progress'):result?(perfect?'Perfect':'Completed'):'Not played';
+      const b=homeButton(countrySetDisplayName(spec.region),`${homeCoreCountries(spec.region).length} countries`,button=>homeLaunchMap(spec,button));
+      b.classList.add('challenge-region');b.dataset.challengeState=state;
+      const copy=b.firstChild;copy.prepend(homeStatusBadge(state,label));
+      if(result){
+        const stats=document.createElement('span');stats.className='challenge-best';
+        for(const [value,title] of [[`${result.score}%`,'Best accuracy'],[homeTime(result.elapsedMs),'Time at best score']]){
+          const item=document.createElement('span'),valueEl=document.createElement('b'),caption=document.createElement('span');
+          valueEl.textContent=value;caption.textContent=title;item.append(valueEl,caption);stats.append(item);
+        }
+        copy.append(stats);
+      }
+      const action=document.createElement('span');action.className='challenge-action';action.textContent=active?'Resume →':result?'Play again →':'Play challenge →';copy.append(action);
+      const mark=b.querySelector('.discovery-arrow');mark.className='challenge-medallion';mark.textContent=active?'◔':result?(perfect?'★':'✓'):'○';
+      return b;
+    }
+    function homeStyleMapCompletion(state,mode){
+      const host=mode==='maphunt'?mapHuntFinish:chainFinish;
+      if(!host)return;
+      const result=state?.challenge&&!state.revision&&(state.finished||state.finishedAt)&&homeRecords.challenges[state.challenge.id]?.last;
+      if(result)host.dataset.challengeState=result.correct===result.total?'perfect':'completed';
+      else delete host.dataset.challengeState;
+    }
     function homeSetSection(section){homeSection=section==='games'?'games':'learn';homeMode=null;homeVariant=null;document.getElementById('startSessionCard').classList.add('hidden');startOverlay.dataset.modeArmed='false';renderHomeDiscovery();}
     function homeOpenMode(mode){homeMode=mode;homeVariant=null;homeSection=['standard','quiz','interactive','rapid','sprint'].includes(mode)?'learn':'games';document.getElementById('startSessionCard').classList.add('hidden');startOverlay.dataset.modeArmed='false';setMenuPlayMode(mode);renderHomeDiscovery();document.getElementById('discoveryHeading')?.focus({preventScroll:true});}
     function homeCustom(mode){setMenuPlayMode(mode);showHomeSessionSetup({scroll:true});if(mode==='sprint'){openSprintSetup();return;}document.getElementById('sessionCustomizeDisclosure').open=true;if(['maphunt','chain','ranking'].includes(mode)){startOverlay.classList.remove('open');if(mode==='maphunt'){mapHuntOverlay.classList.add('open');editMapHuntSetup();}else if(mode==='chain'){chainFillOverlay.classList.add('open');chainFillSetup.classList.remove('hidden');chainFillPlay.classList.add('hidden');setChainPlayLayout(false);updateChainSetupHelp();}else{rankingOverlay.classList.add('open');rankingSetup.classList.remove('hidden');rankingPlay.classList.add('hidden');updateRankingSetupHelp();}}}
@@ -44126,8 +44214,7 @@ function rankingTargetValues() {
           else for(const region of HOME_MAP_REGIONS){
             const spec=homeChallengeSpec(homeChallengeId(homeMode,homeVariant,region)),record=homeRecords.challenges[spec.id],state=homeMode==='maphunt'?mapHuntState:chainState;
             const active=state?.challenge?.id===spec.id&&!(state.finished||state.finishedAt),result=record?.best;
-            const status=active?'In progress · Resume':result?`${result.score===100?'Perfect':'Completed'} · Best ${result.score}% · ${homeTime(result.elapsedMs)} · Replay`:'Unplayed · Play';
-            cards.append(homeButton(countrySetDisplayName(region),`${homeCoreCountries(region).length} countries · ${status}`,b=>homeLaunchMap(spec,b)));
+            cards.append(homeChallengeCard(spec,result,active));
           }
         }else if(homeMode==='quiz'||['interactive','rapid'].includes(homeMode)){
           desc.textContent='A short mixed quiz or a closer look at each country. Play as often as you like.';
@@ -44146,19 +44233,31 @@ function rankingTargetValues() {
         if(homeMode!=='standard')cards.append(homeButton('Custom '+(homeSection==='learn'?'session':'game'),'Choose your own topics, region and settings',()=>homeCustom(homeMode)));
       }
       renderHomePicks();
-      for(const mode of ['maphunt','chain']){const el=playModePicker.querySelector(`[data-play-mode="${mode}"] .play-mode-meta`),p=homeChallengeProgress(mode);if(el)el.textContent=`Challenges · ${p.completed}/${p.total} completed`;}
+      for(const mode of ['maphunt','chain']){
+        const button=playModePicker.querySelector(`[data-play-mode="${mode}"]`),el=button?.querySelector('.play-mode-meta'),p=homeChallengeProgress(mode);if(!button||!el)continue;
+        el.textContent=`${p.completed===p.total?'✓ All challenges completed':p.completed+' of '+p.total+' challenges completed'}`;
+        button.classList.toggle('map-challenges-complete',p.completed===p.total);
+        let bar=button.querySelector('.discovery-progress');if(!bar){bar=document.createElement('span');bar.className='discovery-progress';bar.append(document.createElement('span'));button.append(bar);}
+        bar.setAttribute('role','progressbar');bar.setAttribute('aria-label',modeDisplayName(mode)+' challenge completion');bar.setAttribute('aria-valuemin','0');bar.setAttribute('aria-valuemax',String(p.total));bar.setAttribute('aria-valuenow',String(p.completed));bar.firstChild.style.width=p.percent+'%';
+      }
     }
     function homeDailyId(mode){return `${dailyDateKey()}:v1:${mode}`;}
     function homeDailyResult(mode){return mode==='quiz'?dailyChallengeProgress?.days?.[dailyChallengeRunKey()]:homeRecords.dailies[homeDailyId(mode)];}
     function homeDailyButton(mode){
-      const label={quiz:'10-question quiz',detective:'case',matching:'board',ranking:'ranking round'}[mode],result=homeDailyResult(mode);
+      const names={quiz:'Daily Quiz',detective:'Daily Detective',matching:'Daily Matching',ranking:'Daily Ranking'};
+      const descriptions={quiz:'10 mixed geography questions',detective:'Solve one country mystery',matching:'Match five countries to their capitals',ranking:'Order five countries by land borders'};
+      const result=homeDailyResult(mode);
       const active=mode==='quiz'?studySession?.active!==false&&studySession?.dailyChallenge?.key===dailyChallengeRunKey():(mode==='ranking'?rankingState:studySession)?.launchPreset?.dailyKey===homeDailyId(mode)&&!result;
-      const meta=result?(mode==='quiz'?`${result.correct}/${result.total} correct · View & share`:`${result.score}% · ${homeTime(result.elapsedMs)} · View & share`):active?'In progress · Resume':'Same puzzle for everyone today';
-      return homeButton(`Today’s ${label}`,meta,button=>{
+      const meta=result?(mode==='quiz'?`${result.correct}/${result.total} correct · View & share`:`${result.score}% · ${homeTime(result.elapsedMs)} · View & share`):active?'In progress · Resume':'New puzzle each day';
+      const b=homeButton(names[mode],meta,button=>{
         if(result){homeOpenMode(mode==='quiz'?'quiz':mode);document.getElementById('discoveryLanding').append(homeDailyReport(mode,result));return;}
         if(mode==='quiz'){if(!homeConfirmReplace('study',button,active))return;if(active){startOverlay.classList.remove('open');openRapidMode(true);}else startDailyChallengeSession();}
         else if(mode==='ranking')homeLaunchRanking(true,button);else homeLaunchStudy(mode,true,button);
       });
+      b.classList.add('daily-mode-card');b.dataset.dailyMode=mode;
+      const description=document.createElement('span');description.className='daily-mode-description';description.textContent=descriptions[mode];b.firstChild.querySelector('strong').after(description);
+      if(result||active){b.dataset.challengeState=result?'completed':'active';b.firstChild.prepend(homeStatusBadge(result?'completed':'active',result?'Played today':'In progress'));}
+      return b;
     }
     function renderHomePicks(){const host=document.getElementById('homeDailyPicks');if(host)host.replaceChildren(...['quiz','detective','matching','ranking'].map(homeDailyButton));}
     function homeConfirmReplace(kind,button,resume=false){
