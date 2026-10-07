@@ -16051,12 +16051,19 @@ html.geoden-light body .daily-share-actions button{background:#476c79!important;
 html.geoden-light body .daily-share-actions button+button{background:#e2e9e8!important;color:#355664!important;}
 
 </style>
+<style id="daily-topics-custom-v60">
+html.geoden-light body #startOverlay .discovery-custom-section{margin-top:20px;padding-top:15px;border-top:1px solid #d2d4c8;}
+html.geoden-light body #startOverlay .discovery-custom-section h4{margin:0 0 9px;font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:#756345;}
+html.geoden-light body #startOverlay .discovery-card.discovery-custom-card{width:100%;min-height:72px;background:#eee7d8!important;border-color:#c7b99e!important;color:#4f4534!important;box-shadow:none!important;}
+html.geoden-light body #startOverlay .discovery-custom-card small{color:#695d47!important;}
+#matchingOverlay .matching-round-status{line-height:1.35;white-space:normal;max-width:100%;overflow-wrap:anywhere;}
+</style>
   <script src="assets/d3-7.9.0.min.js"></script>
   <script src="assets/topojson-3.1.0.min.js"></script>
   <script src="assets/geography.js"></script>
 
   <script>
-    const GEODEN_VERSION = "0.56.59";
+    const GEODEN_VERSION = "0.56.61";
     // v0.56.28 — blank-surface audit: guarded silhouettes/location maps and Matching visual preflight.
     // v0.56.18 — private-beta problem reporting with diagnostic state, recent actions, errors, copy/download/share.
     // v0.56.17 — tester-facing automatic failure reporting with screenshot/copy instructions.
@@ -24082,7 +24089,7 @@ html.geoden-light body .daily-share-actions button+button{background:#e2e9e8!imp
     }
 
     function matchingSelectedFields() {
-      if(studySession?.launchPreset?.mode === "matching") return ["country","capital"];
+      if(studySession?.launchPreset?.mode === "matching") return homeMatchingPresetFields(studySession.launchPreset);
       return matchingFieldsFromSettings();
     }
 
@@ -24826,6 +24833,10 @@ html.geoden-light body .daily-share-actions button+button{background:#e2e9e8!imp
           return;
         }
 
+        if(studySession?.launchPreset?.dailyKey && studySession.launchPreset.fields &&
+          homeMatchingPresetFields(studySession.launchPreset).some(field=>!fields.includes(field)))
+          throw new Error('Daily topics unavailable; retry this same board');
+
         // The row reference must uniquely identify every place. If the first
         // configured field repeats (e.g. several Euro or English rows), prefer
         // the first configured field that is unique. If none is unique, use the
@@ -24943,6 +24954,7 @@ html.geoden-light body .daily-share-actions button+button{background:#e2e9e8!imp
       if (studySession?.pool === "review") {
         return `${count} review ${count === 1 ? "place" : "places"}`;
       }
+      if(studySession?.launchPreset?.dailyKey) return 'Daily Matching · '+count+' places · '+state.answerFields.map(f=>MATCHING_FIELD_META[f]?.label||f).join(' + ');
       return `${count} random ${count === 1 ? "place" : "places"}`;
     }
 
@@ -25539,7 +25551,7 @@ html.geoden-light body .daily-share-actions button+button{background:#e2e9e8!imp
       }
     }
 
-    // v0.56.59: the browser owns touch scrolling and momentum. Pointer events
+    // v0.56.61: the browser owns touch scrolling and momentum. Pointer events
     // only distinguish a tap from a swipe; never prevent or emulate scrolling.
     function beginMatchingRailSwipe(event, strip) {
       if (!strip) return;
@@ -42164,7 +42176,7 @@ function rankingTargetValues() {
       const replay = options?.replay === true;
       const avoidPrevious = replay || rankingLastRoundCodes.length > 0;
       rankingSetup.classList.add("hidden"); rankingPlay.classList.add("hidden"); rankingLoading.classList.remove("hidden");
-      const roundMetric = options.launchPreset ? "borders" : chooseRankingRoundMetric();
+      const roundMetric = options.launchPreset ? (RANKING_METRIC_KEYS.includes(options.launchPreset.metric) ? options.launchPreset.metric : "borders") : chooseRankingRoundMetric();
       rankingLoading.textContent = ["population","area","density"].includes(roundMetric) ? "Loading ranking values…" : "Building ranking…";
       rankingFeedback.textContent="";
       try {
@@ -42182,10 +42194,10 @@ function rankingTargetValues() {
         rankingVerifyBtn.classList.remove("hidden");
         rankingVerifyBtn.textContent = "Check order";
         rankingPromptTitle.textContent=RANKING_METRICS[roundMetric].title;
-        const requestedCount = Math.min(rankingCount, rankingCountriesForSet(rankingSet).length);
+        const requestedCount = options.launchPreset ? 5 : Math.min(rankingCount, rankingCountriesForSet(rankingSet).length);
         const availabilityNote = items.length < requestedCount ? " · available data only" : "";
         const tieNote = new Set(items.map(item => item.value)).size < items.length ? " · ties can swap" : "";
-        rankingPromptMeta.textContent = `${items.length} places · ${countrySetDisplayName(rankingSet)}${availabilityNote}${tieNote} · rank 1 is highest`;
+        rankingPromptMeta.textContent = `${items.length} places · ${options.launchPreset?"World":countrySetDisplayName(rankingSet)}${availabilityNote}${tieNote} · rank 1 is highest`;
         rankingLoading.classList.add("hidden"); rankingPlay.classList.remove("hidden");
         rankingRevealBtn.classList.remove("hidden"); renderRankingList();
         geoDenFocusWhenOverlayOpen(rankingOverlay, rankingList?.querySelector("button:not([disabled])"), 0);
@@ -42194,6 +42206,11 @@ function rankingTargetValues() {
         rankingState = null;
         rankingLoading.classList.add("hidden");
         rankingPlay.classList.add("hidden");
+        if(options.launchPreset?.dailyKey){
+          rankingSetup.classList.add('hidden');rankingLoading.classList.remove('hidden');rankingLoading.replaceChildren();
+          const message=document.createElement('p');message.textContent='Today’s '+rankingMetricDisplayName(roundMetric).toLowerCase()+' data is unavailable. Connect to the internet and retry; your daily puzzle will stay the same.';
+          const retry=document.createElement('button');retry.type='button';retry.className='special-game-start';retry.textContent='Retry daily Ranking';retry.onclick=()=>startRankingGame({launchPreset:options.launchPreset});rankingLoading.append(message,retry);return;
+        }
         rankingSetup.classList.remove("hidden");
         updateRankingSetupHelp();
         if (rankingMetricHelp) {
@@ -44380,7 +44397,7 @@ function rankingTargetValues() {
           cards.append(homeButton('Country deep dive','Work through your selected topics, country by country',()=>{setMenuPlayMode('interactive');showHomeSessionSetup({scroll:true});}));cards.append(homeDailyButton('quiz'));
         }else if(homeMode==='standard'){
           desc.textContent='Explore a place, reveal its facts, and check what you remember.';
-          cards.append(homeButton('Study 5 places','Your selected topics · random places',b=>homeLaunchStudy('standard',false,b),true));cards.append(homeButton('Choose a study session','Pick topics, regions and review options',()=>homeCustom('standard')));
+          cards.append(homeButton('Study 5 places','Your selected topics · random places',b=>homeLaunchStudy('standard',false,b),true));
         }else if(homeMode==='sprint'){
           desc.textContent='Sixty seconds of mixed questions. Choose a region and beat your own score.';cards.append(homeButton('Start a Sprint','Choose your region →',()=>openSprintSetup(),true));
         }else{
@@ -44388,7 +44405,7 @@ function rankingTargetValues() {
           desc.textContent={detective:'Follow the clues to identify a country. Every new case is a fresh mystery.',matching:'Match countries to their capitals. Finish a board, then play another.',ranking:'Put five countries in order. Each new round is a fresh puzzle.'}[homeMode];
           cards.append(homeButton(title,'Fresh random round · play as often as you like',b=>homeMode==='ranking'?homeLaunchRanking(false,b):homeLaunchStudy(homeMode,false,b),true));cards.append(homeDailyButton(homeMode));
         }
-        if(homeMode!=='standard')cards.append(homeButton('Custom '+(homeSection==='learn'?'session':'game'),'Choose your own topics, region and settings',()=>homeCustom(homeMode)));
+        landing.append(homeCustomSection(homeMode));
       }
       renderHomePicks();
       for(const mode of ['maphunt','chain']){
@@ -44399,11 +44416,46 @@ function rankingTargetValues() {
         bar.setAttribute('role','progressbar');bar.setAttribute('aria-label',modeDisplayName(mode)+' challenge completion');bar.setAttribute('aria-valuemin','0');bar.setAttribute('aria-valuemax',String(p.total));bar.setAttribute('aria-valuenow',String(p.completed));bar.firstChild.style.width=p.percent+'%';
       }
     }
+    // Calendar-day rotation is independent of preferences, time zone offsets,
+    // launch count and network availability. Existing daily IDs remain valid.
+    function homeDailyTopicPlan(mode, date = dailyDateKey()) {
+      const day = Math.floor(Date.parse(date + 'T00:00:00Z') / 86400000);
+      const index = size => ((Number.isFinite(day) ? day : 0) % size + size) % size;
+      const topicSets = [['flag','capital','largestCity'],['silhouette','largestCity','currency'],['currency','capital','flag'],['flag','silhouette','capital'],['largestCity','flag','silhouette'],['silhouette','currency','capital'],['capital','largestCity','currency'],['flag','currency','silhouette']];
+      if (mode === 'matching') return {fields:['country',...topicSets[index(topicSets.length)]]};
+      if (mode === 'ranking') return {metric:['borders','population','area','density'][index(4)]};
+      return {};
+    }
+    function homeMatchingPresetFields(preset) {
+      const allowed = new Set(['country','flag','capital','silhouette','largestCity','currency']);
+      const fields = Array.isArray(preset?.fields) ? [...new Set(preset.fields.filter(f=>allowed.has(f)))] : [];
+      return fields[0] === 'country' && fields.length >= 2 ? fields : ['country','capital'];
+    }
+    function homeDailyTopics(mode) {
+      const result = homeDailyResult(mode);
+      const state = mode === 'ranking' ? rankingState : studySession;
+      const preset = state?.launchPreset?.dailyKey === homeDailyId(mode) ? state.launchPreset : null;
+      if (mode === 'matching') return result ? {fields:homeMatchingPresetFields(result)} : preset ? {fields:homeMatchingPresetFields(preset)} : homeDailyTopicPlan(mode);
+      if (mode === 'ranking') return result || preset ? {metric:RANKING_METRIC_KEYS.includes((result||preset).metric) ? (result||preset).metric : 'borders'} : homeDailyTopicPlan(mode);
+      return {};
+    }
+    function homeTopicDescription(mode, topics = homeDailyTopics(mode)) {
+      if (mode === 'matching') return 'Match five countries · ' + homeMatchingPresetFields(topics).filter(f=>f!=='country').map(f=>({flag:'flags',capital:'capitals',silhouette:'silhouettes',largestCity:'largest cities',currency:'currencies'})[f]).join(' + ');
+      if (mode === 'ranking') return 'Order five countries by ' + rankingMetricDisplayName(topics.metric).toLowerCase();
+      return '';
+    }
+    function homeCustomSection(mode) {
+      const section = document.createElement('section');section.className='discovery-custom-section';
+      const title=document.createElement('h4');title.textContent='Make it your own';section.append(title);
+      const button=homeButton('Custom '+(homeSection==='learn'?'session':'game'),'Choose your own topics, region and settings',()=>homeCustom(mode));
+      button.classList.add('discovery-custom-card');section.append(button);return section;
+    }
+
     function homeDailyId(mode){return `${dailyDateKey()}:v1:${mode}`;}
     function homeDailyResult(mode){return mode==='quiz'?dailyChallengeProgress?.days?.[dailyChallengeRunKey()]:homeRecords.dailies[homeDailyId(mode)];}
     function homeDailyButton(mode){
       const names={quiz:'Daily Quiz',detective:'Daily Detective',matching:'Daily Matching',ranking:'Daily Ranking'};
-      const descriptions={quiz:'10 mixed geography questions',detective:'Solve one country mystery',matching:'Match five countries to their capitals',ranking:'Order five countries by land borders'};
+      const descriptions={quiz:'10 mixed geography questions',detective:'Solve one country mystery',matching:homeTopicDescription('matching'),ranking:homeTopicDescription('ranking')};
       const result=homeDailyResult(mode);
       const active=mode==='quiz'?studySession?.active!==false&&studySession?.dailyChallenge?.key===dailyChallengeRunKey():(mode==='ranking'?rankingState:studySession)?.launchPreset?.dailyKey===homeDailyId(mode)&&!result;
       const meta=result?(mode==='quiz'?`${result.correct}/${result.total} correct · View & share`:`${result.score}% · ${homeTime(result.elapsedMs)} · View & share`):active?'In progress · Resume':'New puzzle each day';
@@ -44431,7 +44483,7 @@ function rankingTargetValues() {
         else{chainSet=spec.region;chainAnswerMode=spec.variant;chainRuleMode='open';chainFillOverlay.classList.add('open');await startChainGame({challenge:spec});}saveSpecialRuns();
       }finally{homeLaunching=false;}
     }
-    function homeStudyPreset(mode,daily){const key=daily?homeDailyId(mode):`${mode}:${Date.now()}:${Math.random()}`,count=mode==='detective'?1:mode==='quiz'?10:5;return {mode,dailyKey:daily?key:null,seed:hashString32(key),codes:homeSeededOrder(homeCoreCountries().map(c=>c.code),key).slice(0,count),startedAt:Date.now()};}
+    function homeStudyPreset(mode,daily){const key=daily?homeDailyId(mode):`${mode}:${Date.now()}:${Math.random()}`,count=mode==='detective'?1:mode==='quiz'?10:5;return {mode,...(daily&&mode==='matching'?homeDailyTopicPlan(mode):{}),dailyKey:daily?key:null,seed:hashString32(key),codes:homeSeededOrder(homeCoreCountries().map(c=>c.code),key).slice(0,count),startedAt:Date.now()};}
     function homeLaunchStudy(mode,daily,button){
       if(homeLaunching)return;const resume=daily&&studySession?.active!==false&&studySession?.launchPreset?.dailyKey===homeDailyId(mode);if(!homeConfirmReplace('study',button,resume))return;
       if(resume){startOverlay.classList.remove('open');if(mode==='detective')openDetectiveMode(true);else openMatchingMode(true,true);return;}
@@ -44440,17 +44492,26 @@ function rankingTargetValues() {
     async function homeLaunchRanking(daily,button){
       if(homeLaunching)return;const resume=daily&&rankingState?.launchPreset?.dailyKey===homeDailyId('ranking')&&!rankingState.revealed;if(!homeConfirmReplace('ranking',button,resume))return;
       if(resume){startOverlay.classList.remove('open');openRanking();return;}homeLaunching=true;
-      try{const key=daily?homeDailyId('ranking'):`ranking:${Date.now()}:${Math.random()}`,preset={mode:'ranking',dailyKey:daily?key:null,seed:hashString32(key),startedAt:Date.now()};setMenuPlayMode('ranking');startOverlay.classList.remove('open');rankingOverlay.classList.add('open');await startRankingGame({launchPreset:preset});saveSpecialRuns();}finally{homeLaunching=false;}
+      try{const key=daily?homeDailyId('ranking'):`ranking:${Date.now()}:${Math.random()}`,preset={mode:'ranking',...(daily?homeDailyTopicPlan('ranking'):{}),dailyKey:daily?key:null,seed:hashString32(key),startedAt:Date.now()};setMenuPlayMode('ranking');startOverlay.classList.remove('open');rankingOverlay.classList.add('open');await startRankingGame({launchPreset:preset});saveSpecialRuns();}finally{homeLaunching=false;}
     }
     async function homeRankingItems(preset){
-      const pool=homeSeededOrder(homeCoreCountries(),String(preset.seed)),values=[];
-      for(const c of pool){const neighbours=await neighbouringCountriesFor(c),value=neighbours?.names?.length;if(Number.isFinite(value))values.push({c,value});if(values.length>=5&&new Set(values.map(x=>x.value)).size>=2)break;}
-      if(values.length<5)throw new Error('not-enough-values');return homeSeededOrder(values.slice(0,5),String(preset.seed)+':order');
+      const pool=homeSeededOrder(homeCoreCountries(),String(preset.seed));
+      const metric=RANKING_METRIC_KEYS.includes(preset.metric)?preset.metric:'borders';
+      const selected=pool.slice(0,5),notes=new Map(),values=await rankingBatchValues(metric,selected,notes);
+      if(values.some(value=>!Number.isFinite(value)))throw new Error('daily-data-unavailable');
+      const items=selected.map((c,i)=>({c,value:values[i],quantityNote:rankingQuantityNote(metric,notes.get(c.code))}));
+      // A board of five islands can tie at zero borders. Choose a deterministic
+      // sixth-or-later country with a distinct value, never a random fallback.
+      if(new Set(values).size<2&&metric==='borders'){
+        for(const c of pool.slice(5)){const value=await rankingMetricValue(metric,c);if(!Number.isFinite(value))throw new Error('daily-data-unavailable');if(value!==values[0]){items[4]={c,value};break;}}
+      }
+      if(new Set(items.map(x=>x.value)).size<2)throw new Error('not-enough-distinct-values');
+      return homeSeededOrder(items,String(preset.seed)+':order');
     }
     function homeDailyDetectiveClues(c){return [{key:'continent',label:'Continent',value:detectiveContinent(c)},{key:'capitalLength',label:'Capital name length',value:detectiveNameShape(detectivePrimaryCapital(c))},{key:'currency',label:'Currency',value:detectiveCurrencies(c).join(' · ')},{key:'languages',label:'Languages',value:detectiveLanguages(c).join(' · ')},{key:'capital',label:'Capital city',value:detectiveCapital(c)}].filter(x=>x.value);}
     function homeRecordDaily(preset,score,elapsedMs,details={}){
       if(!preset?.dailyKey||homeRecords.dailies[preset.dailyKey])return;
-      homeRecords.dailies[preset.dailyKey]={score:Math.round(Math.max(0,Math.min(100,score))),elapsedMs:Math.max(0,elapsedMs),completedAt:Date.now(),date:preset.dailyKey.slice(0,10),...details};saveHomeRecords();
+      homeRecords.dailies[preset.dailyKey]={score:Math.round(Math.max(0,Math.min(100,score))),elapsedMs:Math.max(0,elapsedMs),completedAt:Date.now(),date:preset.dailyKey.slice(0,10),...(preset.mode==='matching'?{fields:homeMatchingPresetFields(preset)}:preset.mode==='ranking'?{metric:RANKING_METRIC_KEYS.includes(preset.metric)?preset.metric:'borders'}:{}),...details};saveHomeRecords();
     }
     function homeRecordStudyDaily(session){
       const preset=session?.launchPreset;if(!preset?.dailyKey)return;const metrics=completedSessionMetrics(session);
@@ -44475,6 +44536,7 @@ function rankingTargetValues() {
     }
     function homeDailyShareText(mode,r,date=r.date||dailyDateKey()){
       const name={quiz:'Quick 10',detective:'Detective',matching:'Matching',ranking:'Ranking'}[mode];
+      const topicLine=mode==='matching'||mode==='ranking'?'\n'+homeTopicDescription(mode,r):'';
       const score=mode==='quiz'?Math.round(100*r.correct/Math.max(1,r.total)):r.score;
       const total=mode==='detective'?5:Math.min(10,Math.max(1,r.total||5));
       const green=mode==='detective'?(r.correct?1:0):Math.round(total*score/100);
@@ -44484,7 +44546,7 @@ function rankingTargetValues() {
       const time=Number.isFinite(r.elapsedMs)?` · ⏱ ${homeTime(r.elapsedMs)}`:'';
       const help=mode==='ranking'?`\n${r.checks||1} check${r.checks===1?'':'s'} · ${r.hints||0} hints`:mode==='quiz'&&r.assisted?`\n${r.assisted} with help`:'';
       const url=/^https?:$/.test(location.protocol)&&!['localhost','127.0.0.1'].includes(location.hostname)?'\n'+location.origin+location.pathname:'';
-      return `🌍 GeoDen Daily · ${name}\n${date}\n\n${grid}\n${result}${time}${help}\n${mode==='detective'?'A little geography mystery.':'🟩 correct · ⬜ missed or corrected'}${url}`;
+      return `🌍 GeoDen Daily · ${name}\n${date}${topicLine}\n\n${grid}\n${result}${time}${help}\n${mode==='detective'?'A little geography mystery.':'🟩 correct · ⬜ missed or corrected'}${url}`;
     }
     function homeDailyReport(mode,result){
       const box=document.createElement('section');box.className='discovery-result daily-share-report';
