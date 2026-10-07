@@ -13994,8 +13994,9 @@ button,
     }
     .map-hunt-tap-flash-name { display:block; font-weight:900; letter-spacing:-.015em; }
     .map-hunt-tap-flash-capital { display:block; margin-top:2px; font-size:.88em; font-weight:620; opacity:.9; }
-    .map-hunt-direction { display:flex; align-items:center; justify-content:center; gap:5px; margin-top:4px; font-size:.8em; font-weight:750; }
-    .map-hunt-direction-arrow { display:inline-block; font-size:24px; line-height:1; transform-origin:center; }
+    .map-hunt-direction { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; margin-top:5px; font-size:.8em; font-weight:750; }
+    .map-hunt-direction-arrow { display:block; flex:none; width:28px; height:28px; line-height:0; }
+    .map-hunt-direction-arrow svg { display:block; width:28px; height:28px; overflow:visible; transform-origin:50% 50%; filter:drop-shadow(0 0 1px #f8f5ee); }
     .map-hunt-tap-flash.correct { color:inherit; }
     .map-hunt-tap-flash.wrong,
     .map-hunt-tap-flash.reveal { color:#8f342e; }
@@ -15920,12 +15921,67 @@ button,
     #mapHuntCanvas {width:100%!important;height:100%!important;min-height:0!important;max-height:none!important;aspect-ratio:auto!important;object-fit:contain!important;object-position:center!important;}
 
 </style>
+<style id="daily-hero-v54">
+    #startOverlay .discovery-today {grid-column:1/-1;position:relative;overflow:hidden;margin:14px 0;padding:18px;border:1px solid #414e8c;border-radius:23px;background:radial-gradient(ellipse at 100% 0,#514482 0,transparent 60%),linear-gradient(140deg,#18294d,#252447);color:#fff;box-shadow:0 10px 25px #13234922;}
+    #startOverlay .daily-hero-head {display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:4px;}
+    #startOverlay .daily-hero-head h3 {font-size:24px;letter-spacing:-.6px;margin:0;color:#fff;}
+    #startOverlay .daily-refresh-badge {font-size:9px;font-weight:900;letter-spacing:.09em;color:#253249;background:#ffe8a6;border-radius:20px;padding:7px 9px;white-space:nowrap;}
+    #startOverlay .discovery-today>p {color:#d6ddf5;font-size:12px;margin:5px 0 13px;line-height:1.4;}
+    #startOverlay #dailyPlayedCount {font-size:11px;color:#dce7ff;letter-spacing:.02em;font-weight:750;margin:12px 0 0;}
+    #startOverlay #homeDailyPicks {grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;}
+    #startOverlay #homeDailyPicks .daily-mode-card {height:100%;position:relative;align-items:stretch;min-height:150px;padding:13px;border-radius:16px;background:#334271;border:1px solid #6977b2;color:#fff;box-shadow:0 3px 8px #0a113b22;}
+    #startOverlay #homeDailyPicks [data-daily-mode="quiz"] {background:linear-gradient(145deg,#5551a4,#373768);border-color:#8c86d9;}
+    #startOverlay #homeDailyPicks [data-daily-mode="detective"] {background:linear-gradient(145deg,#75532d,#4d3b38);border-color:#b99a69;}
+    #startOverlay #homeDailyPicks [data-daily-mode="matching"] {background:linear-gradient(145deg,#7b4269,#50345b);border-color:#c18eb1;}
+    #startOverlay #homeDailyPicks [data-daily-mode="ranking"] {background:linear-gradient(145deg,#226662,#244655);border-color:#69b0a5;}
+    #startOverlay #homeDailyPicks [data-challenge-state="completed"] {background:linear-gradient(145deg,#2b664e,#244939);border-color:#80bd99;}
+    #startOverlay #homeDailyPicks .daily-mode-card>span:first-child {display:flex;flex-direction:column;width:100%;}
+    #startOverlay #homeDailyPicks strong {color:#fff;font-size:15px;line-height:1.2;}
+    #startOverlay #homeDailyPicks .daily-mode-description {color:#f2f0fa;font-size:11px;margin:6px 0 9px;}
+    #startOverlay #homeDailyPicks small {color:#d8dbed;font-size:10px;font-weight:550;margin-top:0;}
+    #startOverlay #homeDailyPicks .daily-game-icon {font-size:23px;line-height:1;display:grid;place-items:center;width:35px;height:35px;border-radius:10px;background:#ffffff1d;margin-bottom:10px;}
+    #startOverlay #homeDailyPicks .daily-play-action {display:block;padding-top:12px;margin-top:auto;font-size:12px;font-weight:850;color:#fff;}
+    #startOverlay #homeDailyPicks .discovery-arrow {display:none;}
+    #startOverlay #homeDailyPicks .challenge-status {color:#e4ffdf;margin-bottom:8px;}
+    #startOverlay #homeDailyPicks .daily-mode-card:hover {filter:brightness(1.08);}
+    #startOverlay #homeDailyPicks .daily-mode-card:focus-visible {outline:3px solid #ffe8a6;outline-offset:3px;}
+    #startOverlay .hunt-challenge-group {grid-column:1/-1;margin:8px 0 0;font-size:14px;font-weight:850;color:#315477;}
+    @media(max-width:360px){#startOverlay .discovery-today{padding:12px;}#startOverlay .daily-hero-head h3{font-size:22px;}#startOverlay .daily-refresh-badge{font-size:8px;padding:6px;}#startOverlay #homeDailyPicks .daily-mode-card{padding:11px;}#startOverlay #homeDailyPicks strong{font-size:14px;}}
+
+</style>
+  <style id="matching-native-scroll-v55">
+    /* Remove ancestor restrictions as well as old coarse-pointer overrides.
+       The nested horizontal rail and vertical board use native gesture routing. */
+    #matchingOverlay,
+    #matchingOverlay .matching-panel,
+    #matchingOverlay .matching-game,
+    #matchingOverlay .matching-pools { touch-action:auto !important; }
+    #matchingOverlay #matchingDrawerCards,
+    #matchingOverlay #matchingDrawerCards .matching-card,
+    #matchingOverlay #matchingDrawerCards .matching-card * { touch-action:manipulation !important; }
+    #matchingOverlay #matchingDrawerCards {
+      min-width:0; overflow-x:auto !important; overflow-y:hidden !important;
+      -webkit-overflow-scrolling:touch !important;
+      scroll-behavior:auto !important; overscroll-behavior-x:contain;
+    }
+    #matchingOverlay #matchingDrawerCards img,
+    #matchingOverlay #matchingDrawerCards svg { -webkit-user-drag:none; user-select:none; }
+  </style>
+  <style id="detective-direction-v56">
+    #detectiveOverlay .detective-prior-chip {display:grid!important;grid-template-columns:minmax(0,1fr) auto;column-gap:12px;row-gap:3px;padding:9px 11px;border-radius:14px;align-items:center!important;}
+    #detectiveOverlay .detective-guess-name {grid-column:1;font-size:.82rem;line-height:1.25;}
+    #detectiveOverlay .detective-guess-meta {grid-column:1;grid-row:2;white-space:normal;font-size:.7rem;}
+    #detectiveOverlay .detective-direction-badge {grid-column:2;grid-row:1 / 3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-width:42px;min-height:48px;border-radius:11px;background:rgba(255,255,255,.7);box-shadow:inset 0 0 0 1px rgba(30,40,50,.08);font-size:.65rem;font-weight:900;letter-spacing:.04em;}
+    #detectiveOverlay .detective-direction-badge svg {display:block;width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;}
+    #detectiveOverlay .detective-prior-chip.latest .detective-direction-badge {min-width:48px;min-height:52px;}
+    #detectiveOverlay .detective-prior-chip.latest .detective-direction-badge svg {width:29px;height:29px;}
+  </style>
   <script src="assets/d3-7.9.0.min.js"></script>
   <script src="assets/topojson-3.1.0.min.js"></script>
   <script src="assets/geography.js"></script>
 
   <script>
-    const GEODEN_VERSION = "0.56.52";
+    const GEODEN_VERSION = "0.56.56";
     // v0.56.28 — blank-surface audit: guarded silhouettes/location maps and Matching visual preflight.
     // v0.56.18 — private-beta problem reporting with diagnostic state, recent actions, errors, copy/download/share.
     // v0.56.17 — tester-facing automatic failure reporting with screenshot/copy instructions.
@@ -15935,7 +15991,7 @@ button,
     // v0.56.11 — behavioral Quiz-history regressions: exact Back/Forward restore and view-only historical prompts.
     // Input policy: autocomplete/typeahead is ordinary entry and remains unassisted.
     // Only an actual spelling correction (or an explicit hint/reveal) counts as help.
-    const GEODEN_BUILD_DATE = "2026-10-04";
+    const GEODEN_BUILD_DATE = "2026-10-07";
     const GEODEN_TEST_WORKER = window.parent !== window && window.name === 'geoden-self-test-worker';
 
     // v0.56.6 — Storage can be unavailable in privacy-restricted browsers,
@@ -16330,6 +16386,7 @@ button,
     const REVIEW_COUNTRY_KEY = "flag-by-flag-review-country-v1";
     const SMART_REVIEW_KEY = "flag-by-flag-smart-review-v2";
     const ATTEMPT_KEY = "flag-by-flag-current-attempt-v1";
+    const RANKING_QUANTITY_CACHE_KEY = "geoden-ranking-quantities-v1";
     const COUNTRY_FACTS_CACHE_KEY = "flag-by-flag-country-facts-v2";
     const NAV_HISTORY_KEY = "flag-by-flag-navigation-history-v2";
     const STUDY_SESSION_KEY = "flag-by-flag-study-session-v1";
@@ -17304,6 +17361,7 @@ button,
       { name:"REVIEW_COUNTRY_KEY", key:REVIEW_COUNTRY_KEY, portable:true, resetProgress:true },
       { name:"SMART_REVIEW_KEY", key:SMART_REVIEW_KEY, portable:true, resetProgress:true },
       { name:"ATTEMPT_KEY", key:ATTEMPT_KEY, portable:true, resetProgress:true },
+      { name:"RANKING_QUANTITY_CACHE_KEY", key:RANKING_QUANTITY_CACHE_KEY, portable:false, resetProgress:false, cache:true },
       { name:"COUNTRY_FACTS_CACHE_KEY", key:COUNTRY_FACTS_CACHE_KEY, portable:false, resetProgress:false, cache:true },
       { name:"NAV_HISTORY_KEY", key:NAV_HISTORY_KEY, portable:true, resetProgress:true },
       { name:"STUDY_SESSION_KEY", key:STUDY_SESSION_KEY, portable:true, resetProgress:true },
@@ -25406,112 +25464,39 @@ button,
       }
     }
 
+    // v0.56.56: the browser owns touch scrolling and momentum. Pointer events
+    // only distinguish a tap from a swipe; never prevent or emulate scrolling.
     function beginMatchingRailSwipe(event, strip) {
-      // Coarse pointers use the explicit rail scroller below. This avoids the
-      // nested-overflow gesture failures seen in Samsung/Android browsers while
-      // leaving desktop mouse/trackpad behaviour unchanged.
       if (!strip) return;
-
+      matchingSuppressClickUntil=0;
+      const card=event.target.closest('.matching-card');
+      if(event.pointerType==='mouse') {
+        if(card)card.draggable=true;
+        return;
+      }
+      if(card)card.draggable=false;
       cancelMatchingRailMomentum();
-
-      matchingRailSwipeState = {
-        strip,
-        pointerId: event.pointerId,
-        startX: event.clientX,
-        startY: event.clientY,
-        lastX: event.clientX,
-        lastY: event.clientY,
-        lastTime: performance.now(),
-        velocityX: 0,
-        moved: false
-      };
+      clearMatchingLongPressTimer();
+      matchingRailSwipeState={strip,pointerId:event.pointerId,startX:event.clientX,startY:event.clientY,moved:false};
     }
 
     function moveMatchingRailSwipe(event) {
-      const swipe = matchingRailSwipeState;
-      if (!swipe || swipe.pointerId !== event.pointerId) return false;
-
-      const now = performance.now();
-      const totalDx = event.clientX - swipe.startX;
-      const totalDy = event.clientY - swipe.startY;
-      const stepDx = event.clientX - swipe.lastX;
-      const dt = Math.max(8, now - swipe.lastTime);
-
-      if (!swipe.moved && Math.hypot(totalDx, totalDy) > 5) {
-        // Horizontal drawer gestures own the interaction. Vertical movement is
-        // allowed to fall through to the page until the horizontal intent is clear.
-        if (Math.abs(totalDx) < Math.abs(totalDy) * 1.15) return false;
-
-        swipe.moved = true;
-        clearMatchingLongPressTimer();
-        if (matchingDragState?.pointerId === event.pointerId) {
-          matchingDragState.cancelled = true;
-          matchingDragState.card?.classList.remove("long-press-armed");
-          matchingDragState = null;
-        }
+      const swipe=matchingRailSwipeState;
+      if(!swipe||swipe.pointerId!==event.pointerId)return false;
+      if(Math.hypot(event.clientX-swipe.startX,event.clientY-swipe.startY)>8){
+        swipe.moved=true;
+        matchingSuppressClickUntil=Date.now()+350;
       }
-
-      if (!swipe.moved) return false;
-
-      // Follow the finger continuously. A small low-pass filter makes release
-      // velocity stable without making the rail lag behind the gesture.
-      swipe.strip.scrollLeft -= stepDx;
-      const instantaneous = (-stepDx / dt) * 16.667;
-      swipe.velocityX = swipe.velocityX * .68 + instantaneous * .32;
-
-      swipe.lastX = event.clientX;
-      swipe.lastY = event.clientY;
-      swipe.lastTime = now;
-
-      event.preventDefault();
-      matchingSuppressClickUntil = Date.now() + 180;
-      return true;
-    }
-
-    function startMatchingRailMomentum(strip, initialVelocity) {
-      cancelMatchingRailMomentum();
-
-      let velocity = initialVelocity;
-      let previous = performance.now();
-
-      const tick = now => {
-        const dt = Math.min(32, now - previous);
-        previous = now;
-
-        const maxScroll = Math.max(0, strip.scrollWidth - strip.clientWidth);
-        const before = strip.scrollLeft;
-        strip.scrollLeft = Math.max(0, Math.min(maxScroll, before + velocity * (dt / 16.667)));
-
-        // Smooth friction. Stop sooner at the physical ends of the rail.
-        velocity *= Math.pow(.92, dt / 16.667);
-        const hitEdge = strip.scrollLeft <= .5 || strip.scrollLeft >= maxScroll - .5;
-
-        if (Math.abs(velocity) > .22 && !(hitEdge && Math.abs(strip.scrollLeft - before) < .1)) {
-          matchingRailMomentumFrame = requestAnimationFrame(tick);
-        } else {
-          matchingRailMomentumFrame = null;
-        }
-      };
-
-      if (Math.abs(velocity) > .22) {
-        matchingRailMomentumFrame = requestAnimationFrame(tick);
-      }
+      return swipe.moved;
     }
 
     function endMatchingRailSwipe(event) {
-      const swipe = matchingRailSwipeState;
-      if (!swipe || swipe.pointerId !== event.pointerId) return false;
-
-      const wasMoved = swipe.moved;
-      if (wasMoved) {
-        matchingSuppressClickUntil = Date.now() + 240;
-        startMatchingRailMomentum(swipe.strip, swipe.velocityX);
-      }
-
-      // Asset swipes only browse the current rail. Category changes are handled
-      // by the labelled ‹ / › controls, avoiding the old edge-swipe "jump".
-      matchingRailSwipeState = null;
-      return wasMoved;
+      const swipe=matchingRailSwipeState;
+      if(!swipe||swipe.pointerId!==event.pointerId)return false;
+      const moved=swipe.moved||event.type==='pointercancel';
+      if(moved)matchingSuppressClickUntil=Date.now()+350;
+      matchingRailSwipeState=null;
+      return moved;
     }
 
     function interactiveShuffle(items) {
@@ -29067,6 +29052,7 @@ button,
 
     const GAME_MASTERY_META = {
       mapLocation: { label: "Map location", practiceStage: "globe" },
+      capitalMapLocation: { label: "Capital map location", practiceStage: "capitalPosition" },
       flagRecognition: { label: "Flag recognition", practiceStage: "flag" },
       capitalToPlace: { label: "Capital → place", practiceStage: "capital" },
       placeNameRecall: { label: "Place-name recall", practiceStage: "country" },
@@ -33323,7 +33309,7 @@ button,
 
       const details = [];
       if (meta?.proximityLabel) details.push(meta.proximityLabel);
-      if (meta?.directionArrow) details.push(`${meta.directionArrow} ${meta.directionShort || ""}`.trim());
+
       if (details.length) {
         const detail = document.createElement("span");
         detail.className = "detective-guess-meta";
@@ -33331,6 +33317,13 @@ button,
         chip.appendChild(detail);
       }
 
+      const compass=['N','NE','E','SE','S','SW','W','NW'],sector=compass.indexOf(meta?.directionShort);
+      if(sector>=0){
+        const badge=document.createElement('span');badge.className='detective-direction-badge';badge.setAttribute('aria-hidden','true');
+        const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('viewBox','0 0 24 24');svg.setAttribute('focusable','false');
+        const arrow=document.createElementNS(svg.namespaceURI,'path');arrow.setAttribute('d','M12 20V4M5.5 10.5 12 4l6.5 6.5');arrow.setAttribute('transform','rotate('+sector*45+' 12 12)');svg.append(arrow);
+        const label=document.createElement('span');label.textContent=meta.directionShort;badge.append(svg,label);chip.append(badge);
+      }
       const ariaBits = [meta?.label];
       if (meta?.proximityLabel) ariaBits.push(meta.proximityLabel);
       if (meta?.directionLabel) ariaBits.push(`target is ${meta.directionLabel}`);
@@ -36872,7 +36865,7 @@ Answer: ${answer}`;
     matchingDrawerNextBtn.addEventListener("click", () => changeMatchingDrawerPage(1));
 
     matchingPools.addEventListener("click", event => {
-      if (Date.now() < matchingSuppressClickUntil) return;
+      if (event.detail !== 0 && Date.now() < matchingSuppressClickUntil) return;
       const card = event.target.closest(".matching-card");
       if (card) selectMatchingCard(card);
     });
@@ -36926,6 +36919,10 @@ Answer: ${answer}`;
     });
 
     // Desktop: ordinary mouse-wheel motion over the asset rail pans it left/right.
+    // Retain native scroll position (including momentum) when changing topics.
+    matchingDrawerCards.addEventListener('scroll',()=>{
+      if(matchingState?.renderedDrawerField)matchingState.drawerScrollByField[matchingState.renderedDrawerField]=matchingDrawerCards.scrollLeft;
+    },{passive:true});
     matchingDrawerCards.addEventListener("wheel", event => {
       if (!matchingOverlay.classList.contains("open")) return;
       const delta = Math.abs(event.deltaY) >= Math.abs(event.deltaX)
@@ -37001,7 +36998,7 @@ Answer: ${answer}`;
     });
     window.addEventListener("pointermove", event => {
       moveMatchingRailSwipe(event);
-    }, { passive: false });
+    }, { passive: true });
     window.addEventListener("pointerup", event => {
       endMatchingRailSwipe(event);
     });
@@ -37859,7 +37856,7 @@ Answer: ${answer}`;
       try {
         localStorage.setItem(SPECIAL_GAME_PREFS_KEY, JSON.stringify({
           chainSet, chainAnswerMode, chainRuleMode, chainAutocompleteEnabled,
-          mapHuntSet, mapHuntPromptMode,
+          mapHuntSet, mapHuntPromptMode, mapHuntTargetMode,
           rankingMetric, rankingRandomMetric, rankingLastRandomMetric, rankingCount, rankingSet, rankingLastRoundCodes
         }));
       } catch (_) {}
@@ -39954,6 +39951,7 @@ Answer: ${answer}`;
     let mapHuntPromptMode = ["country", "flag", "capital"].includes(specialGamePrefs.mapHuntPromptMode)
       ? specialGamePrefs.mapHuntPromptMode
       : "country";
+    let mapHuntTargetMode = specialGamePrefs.mapHuntTargetMode === "capital" ? "capital" : "country";
     let mapHuntBuildToken = 0;
     let mapHuntAdvanceTimer = null;
     let mapHuntWrongFeedbackTimer = null;
@@ -39982,6 +39980,7 @@ Answer: ${answer}`;
     }
 
     function updateMapHuntSetupHelp() {
+      setSpecialOptionActive(document.getElementById('mapHuntTargetOptions'), 'data-map-hunt-target', mapHuntTargetMode);
       if (mapHuntPromptHelp) {
         mapHuntPromptHelp.textContent = mapHuntPromptMode === "flag"
           ? "See a flag, then click its place on the map."
@@ -39989,6 +39988,7 @@ Answer: ${answer}`;
             ? "See a capital city, then click its country on the map."
             : "Read the place name, then click it on the map.";
       }
+      if(mapHuntTargetMode==='capital'&&mapHuntPromptHelp)mapHuntPromptHelp.textContent='Tap a capital-city dot, not the country shape. Zoom in for nearby cities. For countries with several capitals, any listed capital counts.';
       setSpecialOptionActive(mapHuntSetOptions, "data-map-hunt-set", mapHuntSet);
       setSpecialOptionActive(mapHuntPromptOptions, "data-map-hunt-prompt", mapHuntPromptMode);
     }
@@ -40037,6 +40037,9 @@ Answer: ${answer}`;
       const total = mapHuntState.roundCodes.length;
       const number = Math.min(total, mapHuntState.cursor + 1);
       const guessesLeft = Math.max(0, 3 - mapHuntState.misses);
+      mapHuntState.capitalTapPoint=null;
+      mapHuntOverlay.querySelector('.special-game-title').textContent=mapHuntIsCapitalCityMode()?'Map Hunt · Capitals':'Map Hunt';
+      mapHuntMap.setAttribute('aria-label',mapHuntIsCapitalCityMode()?'Clickable capital-city dots. Country shapes are background.':'Clickable geography map');
       if (mapHuntRoundTitle) {
         mapHuntRoundTitle.textContent = mapHuntState.revision
           ? `Revision · ${number} of ${total}`
@@ -40051,6 +40054,10 @@ Answer: ${answer}`;
             : "Find this place";
       }
 
+      if(mapHuntIsCapitalCityMode()){
+        mapHuntPromptKicker.textContent=mapHuntPromptMode==='flag'?'Tap the capital of this country':mapHuntPromptMode==='capital'?'Find this capital city':'Tap this country’s capital';
+        mapHuntRoundMeta.textContent+=' · Tap a city dot';
+      }
       mapHuntState.promptFallbackToName = false;
       if (mapHuntPromptMode === "flag") {
         mapHuntPromptText?.classList.add("hidden");
@@ -40120,6 +40127,10 @@ Answer: ${answer}`;
     }
 
     function mapHuntLabelPoint(code) {
+      if(mapHuntIsCapitalCityMode()){
+        const tapped=mapHuntState.capitalTapPoint;
+        return tapped?.country?.code===code?tapped:mapHuntState.markerPoints?.get(code)||null;
+      }
       const saved = mapHuntState?.labelPoints?.get(code);
       if (saved) return saved;
       const c = countryByCode(code), point = c && mapHuntState?.projection?.([c.lon, c.lat]);
@@ -40182,9 +40193,12 @@ Answer: ${answer}`;
       const wrapRect = wrap?.getBoundingClientRect?.() || mapHuntMap?.getBoundingClientRect?.();
       if (!wrapRect) return;
       let left = screenPoint.x - wrapRect.left;
-      // Keep the feedback just above the actual geography, but close enough that
-      // it still reads as attached to the country rather than floating above it.
-      let top = screenPoint.y - wrapRect.top - 10;
+      // Keep the names above the country, with the centered arrow over its map
+      // anchor. Edge clamping moves the label only; it never changes the bearing.
+      const arrow = el.querySelector(".map-hunt-direction-arrow");
+      let top = screenPoint.y - wrapRect.top + (arrow
+        ? el.offsetHeight - arrow.offsetTop - arrow.offsetHeight / 2
+        : -10);
       const sidePad = Math.max(Math.min(54, Math.max(28, wrapRect.width * .075)), el.offsetWidth / 2 + 8);
       const topPad = Math.max(24, el.offsetHeight + 8);
       left = Math.max(sidePad, Math.min(wrapRect.width - sidePad, left));
@@ -40214,12 +40228,12 @@ Answer: ${answer}`;
       if (!c || !mapHuntScreenPointForCode(code)) return;
       const name = document.createElement("span");
       name.className = "map-hunt-tap-flash-name";
-      name.textContent = c.name;
+      name.textContent = mapHuntIsCapitalCityMode()?(mapHuntState.capitalTapPoint?.country?.code===code?mapHuntState.capitalTapPoint.city.name:mapHuntCapitalDisplay(c)):c.name;
       const children = [name];
-      if (mapHuntPromptMode === "capital") {
+      if (mapHuntIsCapitalCityMode() || mapHuntPromptMode === "capital") {
         const capital = document.createElement("span");
         capital.className = "map-hunt-tap-flash-capital";
-        capital.textContent = mapHuntCapitalDisplay(c);
+        capital.textContent = mapHuntIsCapitalCityMode() ? c.name : mapHuntCapitalDisplay(c);
         children.push(capital);
       }
       mapHuntRevealHint.replaceChildren(...children);
@@ -40245,6 +40259,7 @@ Answer: ${answer}`;
       if (!mapHuntState || mapHuntState.finished || mapHuntState.locked) return null;
       const target = mapHuntCurrentCountry();
       if (!target || target.code === code) return null;
+      if(mapHuntIsCapitalCityMode())return mapHuntCapitalDirectionClue(code,target);
       // Use the rendered geography and the nearest wrapped copy so the arrow
       // agrees with the flat map, including guesses across the date line.
       return mapHuntDirectionBetweenPoints(mapHuntLabelPoint(code),mapHuntLabelPoint(target.code),mapHuntState.worldWrapPeriod);
@@ -40258,12 +40273,12 @@ Answer: ${answer}`;
 
       const name = document.createElement("span");
       name.className = "map-hunt-tap-flash-name";
-      name.textContent = c.name;
+      name.textContent = mapHuntIsCapitalCityMode()?(mapHuntState.capitalTapPoint?.country?.code===code?mapHuntState.capitalTapPoint.city.name:mapHuntCapitalDisplay(c)):c.name;
       const children = [name];
-      if (mapHuntPromptMode === "capital" && kind !== "inspect") {
+      if (mapHuntIsCapitalCityMode() || (mapHuntPromptMode === "capital" && kind !== "inspect")) {
         const capital = document.createElement("span");
         capital.className = "map-hunt-tap-flash-capital";
-        capital.textContent = mapHuntCapitalDisplay(c);
+        capital.textContent = mapHuntIsCapitalCityMode() ? c.name : mapHuntCapitalDisplay(c);
         children.push(capital);
       }
       mapHuntTapFlash.replaceChildren(...children);
@@ -40273,8 +40288,15 @@ Answer: ${answer}`;
         line.className = "map-hunt-direction";
         const arrow = document.createElement("span");
         arrow.className = "map-hunt-direction-arrow";
-        arrow.textContent = "↑";
-        arrow.style.transform = `rotate(${clue.angle}deg)`;
+        const vector = document.createElementNS("http://www.w3.org/2000/svg","svg");
+        vector.setAttribute("viewBox","0 0 28 28");
+        vector.setAttribute("focusable","false");
+        vector.style.transform = `rotate(${clue.angle}deg)`;
+        const shaft = document.createElementNS("http://www.w3.org/2000/svg","path");
+        shaft.setAttribute("d","M14 25V3M5 12L14 3L23 12");
+        shaft.setAttribute("fill","none");shaft.setAttribute("stroke","currentColor");
+        shaft.setAttribute("stroke-width","3");shaft.setAttribute("stroke-linecap","round");shaft.setAttribute("stroke-linejoin","round");
+        vector.append(shaft);arrow.append(vector);
         arrow.setAttribute("aria-hidden","true");
         const text = document.createElement("span");
         text.textContent = `Try ${clue.direction}`;
@@ -40422,10 +40444,10 @@ Answer: ${answer}`;
     function recordMapHuntMastery(country, result) {
       if (!country || !result) return;
       const score = mapHuntMasteryScore(result);
-      recordGameMasteryEvidence(country, "mapLocation", score, { weight:1, source:"maphunt", save:false });
+      recordGameMasteryEvidence(country, mapHuntIsCapitalCityMode()?"capitalMapLocation":"mapLocation", score, { weight:1, source:"maphunt", save:false });
       if (mapHuntPromptMode === "flag" && !mapHuntState?.promptFallbackToName) {
         recordGameMasteryEvidence(country, "flagRecognition", score, { weight:.85, source:"maphunt", save:false });
-      } else if (mapHuntPromptMode === "capital") {
+      } else if (mapHuntPromptMode === "capital" && !mapHuntIsCapitalCityMode()) {
         recordGameMasteryEvidence(country, "capitalToPlace", score, { weight:.85, source:"maphunt", save:false });
       }
       saveSmartReview();
@@ -40558,7 +40580,7 @@ Answer: ${answer}`;
         mapHuntFeedback.className = struggled.length ? "map-hunt-feedback near" : "map-hunt-feedback good";
       }
       if (mapHuntFinishTitle) mapHuntFinishTitle.textContent = mapHuntState.revision ? "Revision complete." : "Map complete.";
-      if (mapHuntFinishMeta) mapHuntFinishMeta.textContent = mapHuntState.challenge ? homeRecordMapText(mapHuntState) : mapHuntSummaryText();
+      if (mapHuntFinishMeta) mapHuntFinishMeta.textContent = mapHuntState.challenge && !mapHuntState.revision ? homeRecordMapText(mapHuntState) : mapHuntSummaryText();
       homeStyleMapCompletion(mapHuntState,"maphunt");
       if (mapHuntRevisionBtn) {
         mapHuntRevisionBtn.classList.toggle("hidden", struggled.length === 0);
@@ -40596,12 +40618,12 @@ Answer: ${answer}`;
       const mobile = window.matchMedia?.("(max-width: 520px)")?.matches;
       const zoomSteps = Math.max(0, Math.log2(k));
       // Small at overview; steadily becomes a useful target as the map zooms.
-      const visiblePx = mobile
+      const visiblePx = mapHuntIsCapitalCityMode() ? Math.min(8,4.2+zoomSteps*.7) : mobile
         ? Math.min(7.4, 2.25 + zoomSteps * 1.08)
         : Math.min(6.0, 2.05 + zoomSteps * .78);
       // A small allowance outside the painted dot helps with ocean taps only.
       // It must never steal the neighbouring country's land hit.
-      const hitPx = visiblePx + (mobile ? 2 : 1.5);
+      const hitPx = visiblePx + (mapHuntIsCapitalCityMode() ? (mobile?4:3) : (mobile ? 2 : 1.5));
       const haloPx = visiblePx + (mobile ? 4.0 : 3.2);
       return { k, viewportScale, mobile, visiblePx, hitPx, haloPx };
     }
@@ -40663,6 +40685,7 @@ Answer: ${answer}`;
     }
 
     function mapHuntCanvasCountryStyle(code) {
+      if(mapHuntIsCapitalCityMode())return {fill:'#bdc9c5',stroke:'#f6f5ed',line:.7,alpha:.75};
       const base = mapHuntResultClass(code);
       if (mapHuntState?.revealFlashCode === code && mapHuntState?.awaitingRevealClick) {
         return { fill:"#c95845", stroke:"#ffffff", line:2.0, alpha:mapHuntState.revealFlashDim ? .42 : 1 };
@@ -40685,7 +40708,7 @@ Answer: ${answer}`;
       if (base === "try-2") return "#78a84f";
       if (base === "try-3") return "#d6b63b";
       if (base === "revealed") return "#8f342e";
-      return "#aeb4b0";
+      return mapHuntIsCapitalCityMode()?"#426bb2":"#aeb4b0";
     }
 
     function requestMapHuntCanvasDraw() {
@@ -40831,7 +40854,7 @@ Answer: ${answer}`;
           const code = point.country?.code;
           if (!code || !Number.isFinite(point.x) || !Number.isFinite(point.y)) continue;
           ctx.save();
-          ctx.globalAlpha = mapHuntCanvasCountryStyle(code).alpha ?? 1;
+          ctx.globalAlpha = mapHuntIsCapitalCityMode()?(mapHuntResultClass(code)==="inactive"?.45:1):(mapHuntCanvasCountryStyle(code).alpha ?? 1);
           if (mapHuntState?.revealFlashCode === code && mapHuntState?.awaitingRevealClick) {
             ctx.globalAlpha = mapHuntState.revealFlashDim ? .42 : 1;
           }
@@ -40858,6 +40881,7 @@ Answer: ${answer}`;
 
     function resolveMapHuntClick(event) {
       if (!mapHuntState || !window.d3 || event.defaultPrevented) return;
+      if(mapHuntIsCapitalCityMode()){resolveMapHuntCapitalClick(event);return;}
       const t = mapHuntState.zoomTransform || d3.zoomIdentity;
       const pointer = d3.pointer(event, mapHuntMap);
       if (!pointer?.every?.(Number.isFinite)) return;
@@ -40937,7 +40961,7 @@ Answer: ${answer}`;
       const transform = mapHuntState?.zoomTransform || d3.zoomIdentity;
       const k = Number(transform?.k) || 1;
       if (mapHuntZoomOutBtn) mapHuntZoomOutBtn.disabled = k <= 1.001;
-      if (mapHuntZoomInBtn) mapHuntZoomInBtn.disabled = k >= BIG_MAP_MAX_ZOOM - .01;
+      if (mapHuntZoomInBtn) mapHuntZoomInBtn.disabled = k >= (mapHuntIsCapitalCityMode()?2048:BIG_MAP_MAX_ZOOM) - .01;
       if (mapHuntZoomResetBtn) mapHuntZoomResetBtn.disabled = !mapHuntState?.homeTransform || bigMapTransformsMatch(transform, mapHuntState.homeTransform);
     }
 
@@ -40957,7 +40981,7 @@ Answer: ${answer}`;
       // slow/jittery viewBox rewriting that also triggered Samsung paint bands.
       layer.attr("transform", null);
       const zoom = d3.zoom()
-        .scaleExtent([1, BIG_MAP_MAX_ZOOM])
+        .scaleExtent([1, mapHuntIsCapitalCityMode()?2048:BIG_MAP_MAX_ZOOM])
         .extent([[0, 0], [width, height]])
         .translateExtent([[-1e9, 0], [1e9, height]])
         .filter(event => {
@@ -40999,6 +41023,7 @@ Answer: ${answer}`;
     }
 
     async function renderMapHuntMap() {
+      mapHuntOverlay.querySelector('.special-game-title').textContent=mapHuntIsCapitalCityMode()?'Map Hunt · Capitals':'Map Hunt';
       const renderingState = mapHuntState;
       // v0.56.4: visible geometry and Home/Reset bounds use the same detailed
       // canonical atlas as Map Crawl. mainTerritoryGeometry removes distant
@@ -41077,7 +41102,8 @@ Answer: ${answer}`;
         if (code) {
           if (safe) represented.add(code);
           try {
-            const centroid = path.centroid(feature);
+            const anchorCountry = countryByCode(code);
+            const centroid = path.centroid(anchorCountry ? mainTerritoryGeometry(anchorCountry,feature) : feature);
             if (Number.isFinite(centroid?.[0]) && Number.isFinite(centroid?.[1])) {
               mapHuntState.labelPoints.set(code, { x:centroid[0], y:centroid[1] });
             }
@@ -41114,11 +41140,13 @@ Answer: ${answer}`;
         .style("pointer-events", "none");
 
       const markerCountries = mapHuntState.allCodes.map(countryByCode).filter(c => c && (!represented.has(c.code) || tiny.has(c.code)));
-      const markerPoints = markerCountries.map(c => {
+      const markerPoints = mapHuntIsCapitalCityMode()?mapHuntBuildCapitalMarkers(mapHuntState.allCodes,projection):markerCountries.map(c => {
         const point = allProjectedPoints.get(c.code);
         return { country:c, x:point?.x ?? -20, y:point?.y ?? -20 };
       });
-      mapHuntState.markerPoints = new Map(markerPoints.map(point => [point.country.code, { x:point.x, y:point.y }]));
+      mapHuntState.capitalMarkers=mapHuntIsCapitalCityMode()?markerPoints:[];
+      mapHuntState.markerPoints = new Map();
+      for(const point of markerPoints)if(!mapHuntState.markerPoints.has(point.country.code))mapHuntState.markerPoints.set(point.country.code,point);
       mapHuntState.allProjectedPoints = allProjectedPoints;
       for (const point of markerPoints) {
         if (Number.isFinite(point.x) && Number.isFinite(point.y)) {
@@ -41191,6 +41219,7 @@ Answer: ${answer}`;
       return {
         setKey:mapHuntSet,
         promptMode:mapHuntPromptMode,
+        targetMode:mapHuntTargetMode,
         allCodes:[...allCodes],
         roundCodes:diversifyGameCountryItems(mapHuntShuffle(roundCodes), code => countryByCode(code)),
         roundSet:new Set(roundCodes),
@@ -41239,6 +41268,7 @@ Answer: ${answer}`;
     }
 
     async function startMapHuntGame(options = {}) {
+      if(options.challenge){mapHuntTargetMode=options.challenge.variant.startsWith('city-')?'capital':'country';mapHuntPromptMode=options.challenge.variant.replace(/^city-/,'');mapHuntSet=options.challenge.region;}
       const token = ++mapHuntBuildToken;
       mapHuntOverlay?.classList.remove("map-hunt-complete");
       setMapHuntPlayLayout(true);
@@ -41251,7 +41281,8 @@ Answer: ${answer}`;
       if (mapHuntLoading) mapHuntLoading.textContent = "Building the map…";
       mapHuntFinish?.classList.add("hidden");
       try {
-        const allCodes = options.challenge ? homeCoreCountries(mapHuntSet).map(c=>c.code) : mapHuntCodesForSet(mapHuntSet);
+        const baseCodes = options.challenge ? mapHuntChallengeCountries(options.challenge).map(c=>c.code) : mapHuntCodesForSet(mapHuntSet);
+        const allCodes = mapHuntTargetMode==='capital'?baseCodes.filter(code=>mapHuntCapitalCities(countryByCode(code)).length):baseCodes;
         if (!allCodes.length) throw new Error("No places available");
         const state = makeMapHuntState(allCodes, allCodes, false);
         state.challenge=options.challenge || null;
@@ -41306,7 +41337,9 @@ Answer: ${answer}`;
       // Build a genuinely fresh revision board. Reusing only the old SVG/zoom
       // state left the completed Canvas bitmap onscreen, which made Revision
       // look as though it had immediately finished.
+      mapHuntTargetMode=previousState.targetMode||'country';mapHuntPromptMode=previousState.promptMode;mapHuntSet=previousState.setKey;
       const state = makeMapHuntState(allCodes, struggled, true);
+      state.challenge=previousState.challenge||null;
       mapHuntState = state;
       noteResumableMode("maphunt");
       if (mapHuntRoundTitle) mapHuntRoundTitle.textContent = `Revision · 1 of ${struggled.length}`;
@@ -41374,7 +41407,7 @@ Answer: ${answer}`;
       updateMapHuntSetupHelp();
       const canResume = !!(mapHuntState?.svg && mapHuntMap?.childNodes?.length);
       if (canResume) {
-        mapHuntSet=mapHuntState.setKey;mapHuntPromptMode=mapHuntState.promptMode;
+        mapHuntSet=mapHuntState.setKey;mapHuntPromptMode=mapHuntState.promptMode;mapHuntTargetMode=mapHuntState.targetMode||"country";
         noteResumableMode("maphunt");
         setMapHuntPlayLayout(true);
         mapHuntSetup?.classList.add("hidden");
@@ -41544,67 +41577,95 @@ Answer: ${answer}`;
         .filter(Boolean);
     }
 
-    async function rankingMetricValue(metric, c) {
-      if (metric === "borders") {
-        try { return (await neighbouringCountriesFor(c))?.names?.length ?? null; } catch (_) { return null; }
-      }
-      if (["population", "area", "density"].includes(metric)) {
-        try {
-          const facts = await loadCountryFacts(c);
-          if (metric === "density") {
-            const population = facts?.population;
-            const area = facts?.area;
-            return Number.isFinite(population) && Number.isFinite(area) && area > 0 ? population / area : null;
+    const RANKING_CACHE_MAX_AGE=12*60*60*1000;
+    const rankingQuantityCache=loadRankingQuantityCache();
+    const rankingQuantityInflight=new Map(),rankingQuantityLastAttempt=new Map();
+    function rankingValidQuantity(key,value){return Number.isFinite(value)&&(key==='area'?value>0:value>=0);}
+    function rankingSafeQuantityInfo(info){return {asOf:Number.isFinite(info?.asOf)?info.asOf:null,latestKnownOnly:info?.latestKnownOnly===true};}
+    function loadRankingQuantityCache(){
+      const entries={};
+      try{
+        const saved=JSON.parse(localStorage.getItem(RANKING_QUANTITY_CACHE_KEY));
+        if(saved?.schema!==1)return entries;
+        for(const [code,row] of Object.entries(saved.entries||{})){
+          if(!countries.some(c=>c.code===code))continue;
+          for(const key of ['population','area']){
+            const r=row?.[key];
+            if(!rankingValidQuantity(key,r?.value)||!Number.isFinite(r?.fetchedAt)||r.fetchedAt<=0||r.fetchedAt>Date.now()+60000)continue;
+            (entries[code]||={})[key]={value:r.value,fetchedAt:r.fetchedAt,info:rankingSafeQuantityInfo(r.info)};
           }
-          const value = metric === "population" ? facts?.population : facts?.area;
-          return Number.isFinite(value) ? value : null;
-        } catch (_) { return null; }
+        }
+      }catch(_){}
+      return entries;
+    }
+    function rankingSaveQuantityCache(){try{localStorage.setItem(RANKING_QUANTITY_CACHE_KEY,JSON.stringify({schema:1,entries:rankingQuantityCache}));}catch(_){}}
+    function rankingRememberQuantities(code,facts){
+      if(!facts||facts.fallbackOnly||!Number.isFinite(facts.fetchedAt)||facts.fetchedAt<=0||facts.fetchedAt>Date.now()+60000)return;
+      for(const key of ['population','area']){
+        if(!rankingValidQuantity(key,facts[key]))continue;
+        const row=rankingQuantityCache[code]||={};
+        if(!row[key]||row[key].fetchedAt<facts.fetchedAt)row[key]={value:facts[key],fetchedAt:facts.fetchedAt,info:rankingSafeQuantityInfo(facts.quantityInfo?.[key])};
       }
-      return null;
+    }
+    function rankingCachedMetric(metric,c){
+      rankingRememberQuantities(c.code,countryFactsCache[c.code]);
+      const row=rankingQuantityCache[c.code],keys=metric==='density'?['population','area']:[metric];
+      if(!row||keys.some(key=>!row[key]))return null;
+      const fetchedAt=Math.min(...keys.map(key=>row[key].fetchedAt));
+      return {value:metric==='density'?row.population.value/row.area.value:row[metric].value,fetchedAt,
+        info:{population:row.population?.info,area:row.area?.info,rankingCachedAt:fetchedAt}};
+    }
+    function rankingRememberEntity(c,entity){
+      if(!entity?.claims)return;
+      rankingRememberQuantities(c.code,{population:bestQuantity(entity,'P1082'),area:bestQuantity(entity,'P2046'),
+        quantityInfo:{population:bestQuantityRecord(entity,'P1082'),area:bestQuantityRecord(entity,'P2046')},fetchedAt:Date.now()});
+    }
+    async function rankingRefreshQuantities(batch,{background=false}={}){
+      if(navigator.onLine===false||GEODEN_TEST_WORKER)return;
+      const fresh=[],waits=[],resolveByCode=new Map();
+      for(const c of [...new Map(batch.map(c=>[c.code,c])).values()]){
+        if(rankingQuantityInflight.has(c.code)){waits.push(rankingQuantityInflight.get(c.code));continue;}
+        if(background&&Date.now()-(rankingQuantityLastAttempt.get(c.code)||0)<60000)continue;
+        rankingQuantityLastAttempt.set(c.code,Date.now());
+        const promise=new Promise(resolve=>resolveByCode.set(c.code,resolve));rankingQuantityInflight.set(c.code,promise);waits.push(promise);fresh.push(c);
+      }
+      if(fresh.length)(async()=>{
+        try{
+          const titles=fresh.map(c=>WIKIPEDIA_TITLE_OVERRIDES[c.code]||c.name);
+          const data=await wikidataApi({action:'wbgetentities',sites:'enwiki',titles:titles.join('|'),props:'claims',redirects:'yes'});
+          const entities=new Map();
+          for(const entity of Object.values(data.entities||{})){
+            const code=nonDeprecatedClaims(entity,'P297').map(claimStringValue).find(Boolean);
+            if(code)entities.set(String(code).toUpperCase(),entity);
+          }
+          await mapWithConcurrency(fresh,4,async c=>{
+            let entity=entities.get(c.code);
+            if(!entity){
+              try{entity=await fetchCountryEntityByTitle(c);}catch(_){try{entity=await fetchCountryEntityBySearch(c);}catch(_){return;}}
+            }
+            rankingRememberEntity(c,entity);
+          });
+          rankingSaveQuantityCache();
+        }catch(_){/* Keep cached values; do not fan out requests on network failure. */}
+        finally{for(const c of fresh){rankingQuantityInflight.delete(c.code);resolveByCode.get(c.code)();}}
+      })();
+      await Promise.all(waits);
+    }
+    async function rankingBatchValues(metric,batch,quantityInfoByCode=null){
+      if(!['population','area','density'].includes(metric))return Promise.all(batch.map(c=>rankingMetricValue(metric,c)));
+      const cached=batch.map(c=>rankingCachedMetric(metric,c));
+      const missing=batch.filter((c,i)=>!cached[i]);
+      const stale=batch.filter((c,i)=>cached[i]&&Date.now()-cached[i].fetchedAt>RANKING_CACHE_MAX_AGE);
+      // Stale values are snapshots for this round; refresh can only affect later rounds.
+      if(stale.length)void rankingRefreshQuantities(stale,{background:true});
+      if(missing.length)await rankingRefreshQuantities(missing);
+      return batch.map((c,i)=>{const r=cached[i]||rankingCachedMetric(metric,c);if(r)quantityInfoByCode?.set(c.code,r.info);return r?.value??null;});
     }
 
-    async function rankingBatchValues(metric, batch, quantityInfoByCode = null) {
-      if (!["population","area","density"].includes(metric)) {
-        return Promise.all(batch.map(c => rankingMetricValue(metric,c)));
-      }
-      try {
-        const titles = batch.map(c => WIKIPEDIA_TITLE_OVERRIDES[c.code] || c.name);
-        const data = await wikidataApi({
-          action:"wbgetentities",
-          sites:"enwiki",
-          titles:titles.join("|"),
-          props:"claims",
-          redirects:"yes"
-        });
-        const valuesByCode = new Map();
-        for (const entity of Object.values(data.entities || {})) {
-          const code = nonDeprecatedClaims(entity,"P297").map(claimStringValue).find(Boolean);
-          if (!code) continue;
-          let value = null;
-          if (metric === "density") {
-            const population = bestQuantity(entity, "P1082");
-            const area = bestQuantity(entity, "P2046");
-            if (Number.isFinite(population) && Number.isFinite(area) && area > 0) value = population / area;
-          } else {
-            value = bestQuantity(entity, metric === "population" ? "P1082" : "P2046");
-          }
-          if (Number.isFinite(value)) {
-            valuesByCode.set(String(code).toUpperCase(), value);
-            quantityInfoByCode?.set(String(code).toUpperCase(), {
-              population:bestQuantityRecord(entity,"P1082"), area:bestQuantityRecord(entity,"P2046")
-            });
-          }
-        }
-        const values = batch.map(c => valuesByCode.get(c.code) ?? null);
-        const missing = values.map((value,index) => value == null ? index : -1).filter(index => index >= 0);
-        if (missing.length) {
-          const fallback = await mapWithConcurrency(missing,4,index => rankingMetricValue(metric,batch[index]));
-          missing.forEach((index,i) => { if (Number.isFinite(fallback[i])) values[index] = fallback[i]; });
-        }
-        return values;
-      } catch (_) {
-        return Promise.all(batch.map(c => rankingMetricValue(metric,c)));
-      }
+    async function rankingMetricValue(metric,c){
+      if(metric==='borders'){try{return (await neighbouringCountriesFor(c))?.names?.length??null;}catch(_){return null;}}
+      if(['population','area','density'].includes(metric))return (await rankingBatchValues(metric,[c]))[0];
+      return null;
     }
 
     function shuffleRanking(items) {
@@ -41719,8 +41780,10 @@ Answer: ${answer}`;
     }
 
     function rankingQuantityNote(metric, info) {
-      return (metric === "density" ? ["population","area"] : [metric]).filter(key => info?.[key]?.latestKnownOnly)
-        .map(key => `latest known ${key} (${Number.isFinite(info[key].asOf) ? new Date(info[key].asOf).getUTCFullYear() : "date unavailable"})`).join(" · ");
+      const notes = (metric === "density" ? ["population","area"] : [metric]).filter(key => info?.[key]?.latestKnownOnly)
+        .map(key => `latest known ${key} (${Number.isFinite(info[key].asOf) ? new Date(info[key].asOf).getUTCFullYear() : "date unavailable"})`);
+      if(Number.isFinite(info?.rankingCachedAt)&&Date.now()-info.rankingCachedAt>RANKING_CACHE_MAX_AGE)notes.push("cached "+new Date(info.rankingCachedAt).toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"}));
+      return notes.join(" · ");
     }
 
     async function buildRankingItems(options = {}) {
@@ -42011,7 +42074,7 @@ function rankingTargetValues() {
       const avoidPrevious = replay || rankingLastRoundCodes.length > 0;
       rankingSetup.classList.add("hidden"); rankingPlay.classList.add("hidden"); rankingLoading.classList.remove("hidden");
       const roundMetric = options.launchPreset ? "borders" : chooseRankingRoundMetric();
-      rankingLoading.textContent = ["population","area","density"].includes(roundMetric) ? "Loading latest available values…" : "Building ranking…";
+      rankingLoading.textContent = ["population","area","density"].includes(roundMetric) ? "Loading ranking values…" : "Building ranking…";
       rankingFeedback.textContent="";
       try {
         const items = options.launchPreset ? await homeRankingItems(options.launchPreset) : await buildRankingItems({ avoidPrevious, metric: roundMetric });
@@ -43935,7 +43998,7 @@ function rankingTargetValues() {
         if(chain.finishedAt){chain.finishTitle=chainState.needsHydration?chainState.finishTitle:chainFinishTitle.textContent;chain.finishMeta=chainState.needsHydration?chainState.finishMeta:chainFinishMeta.textContent;}
       }
       if (chain && chainState.timerStartedAt != null) chain.elapsedMs += Math.max(0,Date.now()-chainState.timerStartedAt);
-      const maphunt = specialRunPick(mapHuntState, 'challenge challengeRecorded homeElapsedMs setKey promptMode allCodes roundCodes results cursor misses awaitingRevealClick revision finished');
+      const maphunt = specialRunPick(mapHuntState, 'challenge challengeRecorded homeElapsedMs setKey promptMode targetMode allCodes roundCodes results cursor misses awaitingRevealClick revision finished');
       // A correct-answer animation may still be pending when the page closes.
       if (maphunt && !maphunt.finished && maphunt.results.has(maphunt.roundCodes[maphunt.cursor])) {
         maphunt.cursor++; maphunt.misses=0; maphunt.awaitingRevealClick=false;
@@ -43970,7 +44033,7 @@ function rankingTargetValues() {
         if (!codes(s.allCodes)||!codes(s.roundCodes)||s.roundCodes.some(c=>!s.allCodes.includes(c))||!(s.results instanceof Map)||
             !integer(s.cursor)||s.cursor>s.roundCodes.length||!integer(s.misses)||s.misses>3||
             !['awaitingRevealClick','revision','finished'].every(key=>typeof s[key]==='boolean')||
-            !['country','name','flag','capital'].includes(s.promptMode)||
+            !['country','name','flag','capital'].includes(s.promptMode)||(s.targetMode!==undefined&&!['country','capital'].includes(s.targetMode))||
             [...s.results].some(([c,r])=>!s.roundCodes.includes(c)||!r||!Number.isInteger(r.tries)||r.tries<1||r.tries>4)) throw new Error('Invalid Map Hunt save');
       }
       if (saved.ranking) {
@@ -43997,7 +44060,7 @@ function rankingTargetValues() {
           chainState={...saved.chain,timerStartedAt:null,rendererReady:false,needsHydration:true,lastAvailability:null};
           for(const key of ['landGraph','bridgeGraph','anchorGraph']) if(saved.chain.graphLayers?.[key] instanceof Map) chainState.graph[key]=saved.chain.graphLayers[key];
         }
-        if (saved.maphunt) mapHuntState={...makeMapHuntState(saved.maphunt.allCodes,saved.maphunt.roundCodes),...saved.maphunt,needsHydration:true};
+        if (saved.maphunt) mapHuntState={...makeMapHuntState(saved.maphunt.allCodes,saved.maphunt.roundCodes),...saved.maphunt,targetMode:saved.maphunt.targetMode||"country",needsHydration:true};
         if (saved.ranking) rankingState={...saved.ranking,items:saved.ranking.items.map(i=>({c:countryByCode(i.code),value:i.value}))};
       } catch (_) { setDataTransferStatus('A saved game could not be restored. Your other study data is unchanged.',true); }
     }
@@ -44019,7 +44082,7 @@ function rankingTargetValues() {
           chainHintBtn.textContent=state.savedHintLabel||'Hint · first letter';
           if(state.finishedAt){chainFinishTitle.textContent=state.finishTitle||'Map Crawl complete';chainFinishMeta.textContent=state.finishMeta||'';updateChainTimer();}
         } else {
-          mapHuntSet=state.setKey;mapHuntPromptMode=state.promptMode;
+          mapHuntSet=state.setKey;mapHuntPromptMode=state.promptMode;mapHuntTargetMode=state.targetMode||"country";
           setMapHuntPlayLayout(true); await renderMapHuntMap();
           if (state.finished) finishMapHuntRound(); else renderMapHuntPrompt();
         }
@@ -44130,7 +44193,7 @@ function rankingTargetValues() {
     }
     /* Learn / Games discovery; preset records are separate from custom practice. */
     const HOME_MAP_REGIONS = ['europe','africa','asia','northAmerica','southAmerica','oceania','world'];
-    const HOME_MAP_VARIANTS = {maphunt:{country:'Country names',flag:'Flags',capital:'Capitals'},chain:{country:'Country names',capital:'Capitals',both:'Countries & capitals'}};
+    const HOME_MAP_VARIANTS = {maphunt:{country:'Country names',flag:'Flags',capital:'Capitals','city-country':'City dots · Country names','city-flag':'City dots · Flags','city-capital':'City dots · Capital names'},chain:{country:'Country names',capital:'Capitals',both:'Countries & capitals'}};
     let homeSection='learn',homeMode=null,homeVariant=null,homeLaunching=false;
     const homeRecords=loadHomeRecords();
     function homeValidateRecords(v){
@@ -44171,7 +44234,7 @@ function rankingTargetValues() {
       const perfect=!!result&&result.correct===result.total;
       const state=active?'active':result?(perfect?'perfect':'completed'):'unplayed';
       const label=active?(result?'Replay in progress':'In progress'):result?(perfect?'Perfect':'Completed'):'Not played';
-      const b=homeButton(countrySetDisplayName(spec.region),`${homeCoreCountries(spec.region).length} countries`,button=>homeLaunchMap(spec,button));
+      const b=homeButton(countrySetDisplayName(spec.region),`${mapHuntChallengeCountries(spec).length} countries${spec.variant.startsWith("city-")?" · tap capitals":""}`,button=>homeLaunchMap(spec,button));
       b.classList.add('challenge-region');b.dataset.challengeState=state;
       const copy=b.firstChild;copy.prepend(homeStatusBadge(state,label));
       if(result){
@@ -44210,7 +44273,11 @@ function rankingTargetValues() {
         const cards=document.createElement('div');cards.className='discovery-grid';landing.append(cards);
         if(HOME_MAP_VARIANTS[homeMode]){
           desc.textContent=homeMode==='maphunt'?'Challenges · fixed country sets, three guesses per place. Accuracy is first-try correct; time breaks ties.':'Challenges · fixed country sets and Connected routes. Score is unassisted answers; the starting place is free. Autocomplete is off.';
-          if(!homeVariant)for(const [variant,label] of Object.entries(HOME_MAP_VARIANTS[homeMode]))cards.append(homeProgressCard(label,homeChallengeProgress(homeMode,variant),()=>{homeVariant=variant;renderHomeDiscovery();}));
+          if(homeMode==='maphunt'&&homeVariant?.startsWith('city-'))desc.textContent='Tap the capital-city dots, not the country shapes. Three guesses per country; first-try accuracy and time are saved. For countries with several capitals, any listed capital counts. Zoom in to separate nearby cities.';
+          if(!homeVariant)for(const [variant,label] of Object.entries(HOME_MAP_VARIANTS[homeMode])){
+            if(homeMode==='maphunt'&&(variant==='country'||variant==='city-country')){const heading=document.createElement('h4');heading.className='hunt-challenge-group';heading.textContent=variant==='country'?'Country locations · tap the shapes':'NEW · Capital city locations · tap the dots';cards.append(heading);}
+            cards.append(homeProgressCard(label,homeChallengeProgress(homeMode,variant),()=>{homeVariant=variant;renderHomeDiscovery();}));
+          }
           else for(const region of HOME_MAP_REGIONS){
             const spec=homeChallengeSpec(homeChallengeId(homeMode,homeVariant,region)),record=homeRecords.challenges[spec.id],state=homeMode==='maphunt'?mapHuntState:chainState;
             const active=state?.challenge?.id===spec.id&&!(state.finished||state.finishedAt),result=record?.best;
@@ -44257,9 +44324,9 @@ function rankingTargetValues() {
       b.classList.add('daily-mode-card');b.dataset.dailyMode=mode;
       const description=document.createElement('span');description.className='daily-mode-description';description.textContent=descriptions[mode];b.firstChild.querySelector('strong').after(description);
       if(result||active){b.dataset.challengeState=result?'completed':'active';b.firstChild.prepend(homeStatusBadge(result?'completed':'active',result?'Played today':'In progress'));}
-      return b;
+      return homeDailyDecorateCard(b,mode);
     }
-    function renderHomePicks(){const host=document.getElementById('homeDailyPicks');if(host)host.replaceChildren(...['quiz','detective','matching','ranking'].map(homeDailyButton));}
+    function renderHomePicks(){const modes=['quiz','detective','matching','ranking'],host=document.getElementById('homeDailyPicks');if(host)host.replaceChildren(...modes.map(homeDailyButton));const count=document.getElementById('dailyPlayedCount');if(count)count.textContent=`${modes.filter(mode=>homeDailyResult(mode)).length} of 4 played today · Same puzzles for everyone`;}
     function homeConfirmReplace(kind,button,resume=false){
       const active=kind==='study'?hasActiveStudyRun():kind==='maphunt'?mapHuntState&&!mapHuntState.finished:kind==='chain'?chainState&&!chainState.finishedAt:rankingState&&!rankingState.revealed;
       if(!active||resume)return true;if(Number(button?.dataset.replaceUntil)>Date.now())return true;
@@ -44269,7 +44336,7 @@ function rankingTargetValues() {
       if(homeLaunching)return;const old=spec.mode==='maphunt'?mapHuntState:chainState,resume=old?.challenge?.id===spec.id&&!(old.finished||old.finishedAt);
       if(!homeConfirmReplace(spec.mode,button,resume))return;homeLaunching=true;
       try{setMenuPlayMode(spec.mode);startOverlay.classList.remove('open');if(resume){if(spec.mode==='maphunt')await openMapHunt();else await openChainFill(true);return;}
-        if(spec.mode==='maphunt'){mapHuntSet=spec.region;mapHuntPromptMode=spec.variant;mapHuntOverlay.classList.add('open');await startMapHuntGame({challenge:spec});}
+        if(spec.mode==='maphunt'){mapHuntSet=spec.region;mapHuntPromptMode=spec.variant.replace(/^city-/,'');mapHuntTargetMode=spec.variant.startsWith('city-')?'capital':'country';mapHuntOverlay.classList.add('open');await startMapHuntGame({challenge:spec});}
         else{chainSet=spec.region;chainAnswerMode=spec.variant;chainRuleMode='open';chainFillOverlay.classList.add('open');await startChainGame({challenge:spec});}saveSpecialRuns();
       }finally{homeLaunching=false;}
     }
@@ -44352,12 +44419,66 @@ function rankingTargetValues() {
       const groups=playModePicker.querySelectorAll('.mode-discovery-options');groups[0].append(document.getElementById('sprintModeBtn'));for(const id of ['mapHuntModeBtn','chainModeBtn','detectiveModeBtn','matchingModeBtn','rankingModeBtn'])groups[1].append(document.getElementById(id));
       document.getElementById('modeGroupStudy').textContent='Learn';document.getElementById('modeGroupGames').textContent='Games';playModePicker.querySelector('[data-play-mode="standard"] .play-mode-name').textContent='Flash cards';document.getElementById('sprintModeBtn').querySelector('.play-mode-meta').textContent='60-second practice';
       const landing=document.createElement('div');landing.id='discoveryLanding';landing.className='hidden';browser.append(landing);
-      const today=document.createElement('details');today.className='discovery-today';today.open=true;const heading=document.createElement('summary');heading.textContent='Today’s picks';const p=document.createElement('p');p.textContent='One shared daily run per game. Regular play is always available.';const picks=document.createElement('div');picks.id='homeDailyPicks';picks.className='discovery-grid';today.append(heading,p,picks);browser.after(today);
+      const today=document.createElement('section');today.className='discovery-today';today.setAttribute('aria-labelledby','dailyHeroTitle');
+      const heading=document.createElement('div');heading.className='daily-hero-head';heading.innerHTML='<h3 id="dailyHeroTitle">Today’s picks</h3><span class="daily-refresh-badge">NEW EVERY DAY</span>';
+      const p=document.createElement('p');p.textContent='Four little adventures. How will you do today?';const picks=document.createElement('div');picks.id='homeDailyPicks';picks.className='discovery-grid';
+      const count=document.createElement('p');count.id='dailyPlayedCount';count.setAttribute('aria-live','polite');today.append(heading,p,picks,count);browser.before(today);
       dailyChallengeCard.classList.add('hidden');renderHomeDiscovery();setInterval(homeTickTimers,250);document.addEventListener('visibilitychange',homeTickTimers);
       for(const [overlay,state] of [[mapHuntOverlay,()=>mapHuntState],[matchingOverlay,()=>studySession],[detectiveOverlay,()=>studySession],[rapidOverlay,()=>studySession],[rankingOverlay,()=>rankingState]])new MutationObserver(()=>{if(!overlay.classList.contains('open')&&state())state().homeTimerAt=null;}).observe(overlay,{attributes:true,attributeFilter:['class']});
       for(const [id,mode] of [['matchingSettingsBtn','matching'],['detectiveSettingsBtn','detective']])document.getElementById(id)?.addEventListener('click',e=>{if(studySession?.launchPreset?.mode===mode){e.stopImmediatePropagation();if(mode==='matching')closeMatchingToMenu();else closeDetectiveToMenu();homeOpenMode(mode);}},true);
     }
 
+    function mapHuntIsCapitalCityMode(){return mapHuntState?.targetMode==='capital';}
+    function mapHuntCapitalCities(c){
+      return cityLocationTargetsForStage(c,'capital').filter(city=>city.name&&Math.abs(city.lat)<=90&&Math.abs(city.lng)<=180);
+    }
+    function mapHuntChallengeCountries(spec){
+      const list=homeCoreCountries(spec.region);
+      return spec.mode==='maphunt'&&spec.variant.startsWith('city-')?list.filter(c=>mapHuntCapitalCities(c).length):list;
+    }
+    function mapHuntBuildCapitalMarkers(codes,projection){
+      return codes.flatMap(code=>{const country=countryByCode(code);return mapHuntCapitalCities(country).map(city=>{
+        const point=projection([city.lng,city.lat]);return {country,city,x:point[0],y:point[1]};
+      });});
+    }
+    function resolveMapHuntCapitalClick(event){
+      const s=mapHuntState,t=s.zoomTransform||d3.zoomIdentity,pointer=d3.pointer(event,mapHuntMap);
+      if(!pointer?.every(Number.isFinite))return;
+      const [x,y]=t.invert(pointer),m=mapHuntMarkerMetrics(t);let nearest=null;
+      for(const point of s.capitalMarkers||[]){
+        const dx=x-geoDenWrapValueNear(point.x,x,s.worldWrapPeriod),distance=Math.hypot(dx,y-point.y)*m.k*m.viewportScale;
+        if(!nearest||distance<nearest.distance)nearest={point,distance};
+      }
+      // Only dots are answers. Country polygons and empty ocean never spend a guess.
+      if(!nearest||nearest.distance>m.hitPx)return;
+      s.capitalTapPoint=nearest.point;
+      handleMapHuntGuess(nearest.point.country.code);
+    }
+    function mapHuntCapitalDirectionClue(code,target){
+      const from=mapHuntLabelPoint(code);if(!from)return null;
+      const targets=(mapHuntState.capitalMarkers||[]).filter(p=>p.country.code===target.code);
+      targets.sort((a,b)=>{
+        const distance=p=>Math.hypot(geoDenWrapValueNear(p.x,from.x,mapHuntState.worldWrapPeriod)-from.x,p.y-from.y);
+        return distance(a)-distance(b);
+      });
+      return mapHuntDirectionBetweenPoints(from,targets[0],mapHuntState.worldWrapPeriod);
+    }
+    function installCapitalHuntSetup(){
+      if(document.getElementById('mapHuntTargetOptions'))return;
+      const field=document.createElement('div');field.className='special-game-field';
+      field.innerHTML='<div class="special-game-label">What you tap</div><div class="special-game-options" id="mapHuntTargetOptions" role="group" aria-label="Choose map target"><button type="button" class="special-game-option" data-map-hunt-target="country">Country shapes</button><button type="button" class="special-game-option" data-map-hunt-target="capital">Capital city dots</button></div>';
+      mapHuntSetup.querySelector('.special-game-field').after(field);
+      field.addEventListener('click',event=>{const b=event.target.closest('[data-map-hunt-target]');if(!b)return;mapHuntTargetMode=b.dataset.mapHuntTarget;saveSpecialGamePrefs();updateMapHuntSetupHelp();});
+      updateMapHuntSetupHelp();
+    }
+    function homeDailyDecorateCard(button,mode){
+      const icons={quiz:'⚡',detective:'🔎',matching:'🧩',ranking:'↕'};
+      const icon=document.createElement('span');icon.className='daily-game-icon';icon.textContent=icons[mode];icon.setAttribute('aria-hidden','true');button.firstChild.prepend(icon);
+      const action=document.createElement('span');action.className='daily-play-action';action.textContent=button.dataset.challengeState==='completed'?'View & share →':button.dataset.challengeState==='active'?'Resume →':'Play today →';button.firstChild.append(action);
+      return button;
+    }
+
+    installCapitalHuntSetup();
     installHomeDiscovery();
     restoreSpecialRuns();
     if (!GEODEN_TEST_WORKER) {
