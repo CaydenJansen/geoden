@@ -1,19 +1,19 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="geoden-night">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#f3efe6" />
+  <meta name="theme-color" content="#10182a" />
   <meta name="application-name" content="GeoDen" />
   <meta name="apple-mobile-web-app-title" content="GeoDen" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="format-detection" content="telephone=no" />
-  <meta name="color-scheme" content="light" />
+  <meta name="color-scheme" content="dark" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20180%20180%22%3E%3Crect%20width%3D%22180%22%20height%3D%22180%22%20rx%3D%2240%22%20fill%3D%22%232864f0%22%2F%3E%3Ccircle%20cx%3D%2290%22%20cy%3D%2290%22%20r%3D%2248%22%20fill%3D%22none%22%20stroke%3D%22white%22%20stroke-width%3D%228%22%20opacity%3D%22.95%22%2F%3E%3Cpath%20d%3D%22M42%2090h96M90%2042c17%2018%2025%2034%2025%2048s-8%2030-25%2048M90%2042C73%2060%2065%2076%2065%2090s8%2030%2025%2048%22%20fill%3D%22none%22%20stroke%3D%22white%22%20stroke-width%3D%226%22%20stroke-linecap%3D%22round%22%20opacity%3D%22.9%22%2F%3E%3Cpath%20d%3D%22M101%2054v42l34-12-34-12%22%20fill%3D%22%23ffd166%22%2F%3E%3Cpath%20d%3D%22M101%2054v56%22%20stroke%3D%22white%22%20stroke-width%3D%227%22%20stroke-linecap%3D%22round%22%2F%3E%3C%2Fsvg%3E" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAAEc0lEQVR42u3dPVLjQBBAYaFyzjWWhFMtRUTKIUiJKG7lxNdYbrCBd6H4sRGyrOnu+V5tSO3IM0/dPSPN6OLX7z8D8BWjLgA5QA6QA+QAOUAOkAPkADlADoAcIAfIAXKAHCAHyAFygBwgB0AOkAPkADlADpAD5AA5QA6QAyAHyAFygBwgB8gBcoAcIAfIgX7Z9Pzjd8+XU/7s6ualz/656Op464k2cKUXORYRok9RKstxVi16UKSgHKs5Ud6SUnI01KKkIkXkCKJFMUVGZnR1VR1FjhMHYOLNvU4r5GhvxolD1aRRaSXHIM37H5KmmHyRY3ZHL3j7RrgGckQZlbd2t7fD9VMnJchYz4zPvb/weGxv//1rUd6uyaaSGfvhWa/3X/24ftq3O/ECXv9S5FjVjDZh/H0gmdJiivgxFjOjZadvb3d397u7+zJ+bLKbcXwYmkTvvR/Ddrh6fDh+/cHzS+43wT707IeRaN7vu7v7YftWlKRjzBs2Mq0ZHJjgBE8uYxkzooWN6ZaE9WMUM1paEtuPfDXHl2ZkfT7+fqWEHMvMXU+ZwsS0ZHc3DMNw9fhAjo4TypRpcAxLMqWVQ2YUeOfq7TeKHDPCxvSYkTK6/K85ds+Brr/r7ZBxnDCVXSNsZEofB8yIkyXTR44ca18hS4oKchQIG186cXXzEryU3sQMAGVKitkvJEe4JaJHjtRTjym/LvJdEUKO2R0UquB4zR275wViQITgsRE22paZkYOHdY5eph7kWLmkKP6gp/0iWLJ5yoprms17Ju6bYP2cyxb2lzqHFBXlCLtwfvydeHJA5DhbzdXbocEx32MSOUAOkAML0vhkn5pP6lcpR0QOSCsgB8gBcqA6Qd/nmHGm1lmr+i9nVUdanHFtASduIgfIgXRy9LBxfnbaGlo/gBQ5UFGOsO/U5Nq+K3Kglhz9lB2OmvxxTYrmPSOtgBwoJkcPZYezz8+VXAPOZpeax0YoxUY3ll8XXQ5zloC9Mbq9/K6ys5VQZUeZhfM9m1DDfGhomx+QtXjrKU7ktc6BJHJMf/EuYC5f5ApDZaIKnyuPmdoLvMc0ZunTGjOXXJ8aGhPdc5FniSU/PTbWuPmi9WyNrxQGlaNecsn47bqsR01+7uuGq2Hfrn0l/aph6LRSI37k/d5l7kWw47fsOvZEuIZO5fj2xto9Xx4ZgHOPzfGmv209+MOXBJHjR7uQgzyCmSJl/MdyOdLKKbvUzxc8TmkxxQPbNDXHRD8aPr/dP1UuY8bQ/DTBZSv/NccjzpWIHKf27LLJpQcz8kWOE4dnkbFp2LTIcca+Pj1+9GNG4sixyGBPHLN1WiFHREUCVkjSSvExKLATp0LkiBZCymzQKiVHc0WK7dsrKMf6llTdy1lZjhUUqb3Ft74ci4vSz57vvuSY50q3JwB0LQeOY68syAFygBwgB8gBcoAcIAfIAXIA5AA5QA6QA+QAOUAOkAPkADkAcoAcIAfIAXKAHCAHyAFygBwAOUAOkAPkADlADpAD5AA5UJ+/FbYG7/LdBzYAAAAASUVORK5CYII=" />
-  <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22GeoDen%22%2C%22short_name%22%3A%22GeoDen%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23f3efe6%22%2C%22theme_color%22%3A%22%232864f0%22%2C%22orientation%22%3A%22any%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%2520xmlns%253D%2522http%253A%252F%252Fwww.w3.org%252F2000%252Fsvg%2522%2520viewBox%253D%25220%25200%2520180%2520180%2522%253E%253Crect%2520width%253D%2522180%2522%2520height%253D%2522180%2522%2520rx%253D%252240%2522%2520fill%253D%2522%25232864f0%2522%252F%253E%253Ccircle%2520cx%253D%252290%2522%2520cy%253D%252290%2522%2520r%253D%252248%2522%2520fill%253D%2522none%2522%2520stroke%253D%2522white%2522%2520stroke-width%253D%25228%2522%2520opacity%253D%2522.95%2522%252F%253E%253Cpath%2520d%253D%2522M42%252090h96M90%252042c17%252018%252025%252034%252025%252048s-8%252030-25%252048M90%252042C73%252060%252065%252076%252065%252090s8%252030%252025%252048%2522%2520fill%253D%2522none%2522%2520stroke%253D%2522white%2522%2520stroke-width%253D%25226%2522%2520stroke-linecap%253D%2522round%2522%2520opacity%253D%2522.9%2522%252F%253E%253Cpath%2520d%253D%2522M101%252054v42l34-12-34-12%2522%2520fill%253D%2522%2523ffd166%2522%252F%253E%253Cpath%2520d%253D%2522M101%252054v56%2522%2520stroke%253D%2522white%2522%2520stroke-width%253D%25227%2522%2520stroke-linecap%253D%2522round%2522%252F%253E%253C%252Fsvg%253E%22%2C%22sizes%22%3A%22any%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%2C%22purpose%22%3A%22any%20maskable%22%7D%5D%7D" />
+  <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22GeoDen%22%2C%22short_name%22%3A%22GeoDen%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%2310182a%22%2C%22theme_color%22%3A%22%2310182a%22%2C%22orientation%22%3A%22any%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%2520xmlns%253D%2522http%253A%252F%252Fwww.w3.org%252F2000%252Fsvg%2522%2520viewBox%253D%25220%25200%2520180%2520180%2522%253E%253Crect%2520width%253D%2522180%2522%2520height%253D%2522180%2522%2520rx%253D%252240%2522%2520fill%253D%2522%25232864f0%2522%252F%253E%253Ccircle%2520cx%253D%252290%2522%2520cy%253D%252290%2522%2520r%253D%252248%2522%2520fill%253D%2522none%2522%2520stroke%253D%2522white%2522%2520stroke-width%253D%25228%2522%2520opacity%253D%2522.95%2522%252F%253E%253Cpath%2520d%253D%2522M42%252090h96M90%252042c17%252018%252025%252034%252025%252048s-8%252030-25%252048M90%252042C73%252060%252065%252076%252065%252090s8%252030%252025%252048%2522%2520fill%253D%2522none%2522%2520stroke%253D%2522white%2522%2520stroke-width%253D%25226%2522%2520stroke-linecap%253D%2522round%2522%2520opacity%253D%2522.9%2522%252F%253E%253Cpath%2520d%253D%2522M101%252054v42l34-12-34-12%2522%2520fill%253D%2522%2523ffd166%2522%252F%253E%253Cpath%2520d%253D%2522M101%252054v56%2522%2520stroke%253D%2522white%2522%2520stroke-width%253D%25227%2522%2520stroke-linecap%253D%2522round%2522%252F%253E%253C%252Fsvg%253E%22%2C%22sizes%22%3A%22any%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%2C%22purpose%22%3A%22any%20maskable%22%7D%5D%7D" />
   <title>GeoDen</title>
 
   <style>
@@ -15976,12 +15976,138 @@ button,
     #detectiveOverlay .detective-prior-chip.latest .detective-direction-badge {min-width:48px;min-height:52px;}
     #detectiveOverlay .detective-prior-chip.latest .detective-direction-badge svg {width:29px;height:29px;}
   </style>
+<style id="geoden-daily-inspired-theme-v57">
+/* GeoDen's daily-card visual language. Appearance only: no layout, gesture,
+   geometry, flag-color or game-state changes. */
+html.geoden-night {
+  color-scheme:dark;
+  --page:#10182a; --panel:#18233b; --card:#202e49; --soft:#293954;
+  --text:#f6f7ff; --ink:#f6f7ff; --muted:#bcc8e1; --line:#405170;
+  --accent:#8274ec; --accent-dark:#c8bdff; --blue:#a7bfff;
+  --correct:#79d7a4; --correct-dark:#a3edbf; --correct-soft:#213f39;
+  --incorrect:#ff9f9a; --incorrect-dark:#ffc1b7; --incorrect-soft:#4b2c3b;
+  --near:#f4d08a; --button-muted:#293954;
+  --shadow:0 16px 45px #050b1d55;
+  --flag-surface:#e5e9f1; --flag-surface-border:#8695b1;
+  --mode-rgb:137,119,224; --mode-color:#c8bdff;
+}
+html.geoden-night body {background:radial-gradient(ellipse at 15% 0,#30365c 0,transparent 55%),radial-gradient(ellipse at 100% 85%,#193b46 0,transparent 55%),var(--page)!important;color:var(--text);}
+html.geoden-night body [role="dialog"] {background:rgba(7,12,26,.97)!important;}
+html.geoden-night body [role="dialog"]>:first-child,
+html.geoden-night body .shell>.card {background:radial-gradient(ellipse at 100% 0,rgba(var(--mode-rgb),.18),transparent 65%),linear-gradient(145deg,#19263e,#191f36)!important;border-color:#405170!important;color:var(--text)!important;box-shadow:var(--shadow)!important;}
+html.geoden-night #detectiveOverlay {--mode-rgb:195,139,71;--mode-color:#f4d08a;}
+html.geoden-night #matchingOverlay {--mode-rgb:187,105,164;--mode-color:#f1bce3;}
+html.geoden-night #rankingOverlay {--mode-rgb:68,171,155;--mode-color:#96e2d5;}
+html.geoden-night :is(#mapHuntOverlay,#masteryMapOverlay) {--mode-rgb:68,156,201;--mode-color:#a3d8f7;}
+html.geoden-night #chainFillOverlay {--mode-rgb:71,176,151;--mode-color:#96e2d5;}
+html.geoden-night body :is(h1,h2,h3,h4,.title,.country-name,.start-title,.special-game-title,.rapid-question,.rapid-answer,.ranking-name,.ranking-item-name,.country-profile-fact-value,.matching-card-text,.detective-clue-value) {color:var(--text)!important;}
+html.geoden-night body :is(.header-kicker,.label,.eyebrow,.special-game-label,.special-game-help,.special-game-note,.detective-clue-number,.detective-eyebrow,.rapid-eyebrow,.rapid-kicker,.tune-section-label,.flash-flow-option-label,.country-profile-kicker,.country-profile-map-title,.country-profile-fact-label,.history-fact-label) {color:var(--mode-color)!important;}
+html.geoden-night body :is(.play-mode-meta,.start-note,.country-set-meta,.country-pool-meta,.tune-preset-meta,.build-version,.data-audit,.stage-foot,.fact-note-text,.country-profile-map-note,.ranking-value,.settings-subtitle,.special-game-subtitle,.detective-guess-meta,.matching-round-status) {color:var(--muted)!important;opacity:1;}
+html.geoden-night body a {color:#b4cdff;}
+/* Shared secondary/primary action styles; preserve original sizes and focus order. */
+html.geoden-night body button {background:#293954!important;border-color:#4a5d80!important;color:var(--text)!important;box-shadow:none!important;}
+html.geoden-night body button:hover:not(:disabled) {filter:brightness(1.12);}
+html.geoden-night body :is(button,input,select,textarea,[tabindex]):focus-visible {outline:3px solid #ffe6a6!important;outline-offset:3px!important;}
+html.geoden-night body :is(.primary,.start-confirm,.start-session-button,.special-game-start,.interactive-submit,.rapid-check,.rapid-next,.detective-guess-button,.detective-next,.chain-submit,.chain-play-again,.map-hunt-replay,.map-hunt-revision,.matching-check,.matching-next-round,.ranking-verify,.country-profile-primary,.mastery-review-now,.custom-set-save,.profile-onboarding-primary,.profile-name-save,.tune-done,.done-settings,.city-location-lock,.new-session-confirm,.experience-action-button.primary) {background:linear-gradient(135deg,#6752c7,#3e60b9)!important;border-color:#9787eb!important;color:#fff!important;box-shadow:0 5px 16px #0b102933!important;}
+html.geoden-night body :is(.got-button,.today-focus-button,.session-recap-action) {background:linear-gradient(135deg,#287859,#20574a)!important;border-color:#65b395!important;color:#f2fff7!important;}
+html.geoden-night body :is(.missed-button,.interactive-give-up-button,.chain-give-up,.rapid-reveal,.detective-give-up,.progress-reset-button,.reset-button) {background:#4c2f40!important;border-color:#a86372!important;color:#ffd1c9!important;}
+html.geoden-night body :is(.hint-button,.interactive-hint-button,.rapid-hint,.chain-hint,.ranking-reveal) {background:#493d32!important;border-color:#957b4c!important;color:#ffe1a3!important;}
+html.geoden-night body button:is(.active,[aria-pressed="true"]):not(.play-mode-button) {background:#494878!important;border-color:#c4b5ff!important;color:#fff!important;box-shadow:inset 0 0 0 1px #c4b5ff!important;}
+html.geoden-night body :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),select,textarea) {background:#111c30!important;color:#f6f7ff!important;border-color:#63779c!important;caret-color:#fff;}
+html.geoden-night body :is(input,textarea)::placeholder {color:#aebdd8!important;opacity:1;}
+html.geoden-night body :is(select option,select optgroup) {background:#152139;color:#f6f7ff;}
+html.geoden-night body .switch-track {background:#536280!important;}
+html.geoden-night body .switch input:checked+.switch-track {background:#7c69dc!important;}
+/* Home and mode catalog. */
+html.geoden-night body #startOverlay :is(.home-today,.today-focus-card,.home-mode-browser,.discovery-browser,.active-session-resume,.start-session-card,.session-customize-disclosure,.daily-challenge-card) {background:#202f47!important;border-color:#485977!important;color:var(--text)!important;}
+html.geoden-night body #startOverlay .today-focus-card {background:linear-gradient(120deg,#244841,#23384b)!important;border-color:#528376!important;}
+html.geoden-night body #startOverlay :is(.discovery-tabs,.start-session-tabs) {background:#111c30!important;}
+html.geoden-night body #startOverlay .discovery-back {background:transparent!important;color:#c9c0ff!important;}
+html.geoden-night body #startOverlay .discovery-tabs button {background:transparent!important;}
+html.geoden-night body #startOverlay .discovery-tabs button[aria-pressed="true"] {background:#46446e!important;}
+html.geoden-night body #startOverlay .play-mode-button {--tile-top:#5551a4;--tile-base:#373768;--tile-border:#8c86d9;background:linear-gradient(140deg,var(--tile-top),var(--tile-base))!important;border:1px solid var(--tile-border)!important;box-shadow:0 5px 14px #080f2426!important;border-radius:18px!important;}
+html.geoden-night body #startOverlay .play-mode-button[data-play-mode="sprint"] {--tile-top:#874663;--tile-base:#4d344e;--tile-border:#b983a3;}
+html.geoden-night body #startOverlay .play-mode-button[data-play-mode="maphunt"] {--tile-top:#2d6883;--tile-base:#293d66;--tile-border:#6bafce;}
+html.geoden-night body #startOverlay .play-mode-button[data-play-mode="chain"] {--tile-top:#286c61;--tile-base:#264c51;--tile-border:#70b8a2;}
+html.geoden-night body #startOverlay .play-mode-button[data-play-mode="detective"] {--tile-top:#75532d;--tile-base:#4d3b38;--tile-border:#b99a69;}
+html.geoden-night body #startOverlay .play-mode-button[data-play-mode="matching"] {--tile-top:#7b4269;--tile-base:#50345b;--tile-border:#c18eb1;}
+html.geoden-night body #startOverlay .play-mode-button[data-play-mode="ranking"] {--tile-top:#226662;--tile-base:#244655;--tile-border:#69b0a5;}
+html.geoden-night body #startOverlay .play-mode-button.active {outline:2px solid #e0d5ff;outline-offset:2px;}
+html.geoden-night body #startOverlay :is(.play-mode-name,.play-mode-meta) {color:#fff!important;opacity:1!important;}
+html.geoden-night body #startOverlay .discovery-card {background:linear-gradient(135deg,#2c3e60,#24314d)!important;border-color:#5a6d96!important;color:#f6f7ff!important;}
+html.geoden-night body #startOverlay .discovery-primary {background:linear-gradient(135deg,#6752c7,#3e60b9)!important;}
+html.geoden-night body #startOverlay :is(.challenge-status,.challenge-action,.hunt-challenge-group,.today-focus-eyebrow) {color:#c8c0ff!important;}
+html.geoden-night body #startOverlay [data-challenge-state="active"] {background:linear-gradient(135deg,#454278,#2f375a)!important;border-color:#a694ed!important;}
+html.geoden-night body #startOverlay :is([data-challenge-state="completed"],[data-challenge-state="perfect"]) {background:linear-gradient(135deg,#295d4b,#243e3c)!important;border-color:#7aba99!important;}
+html.geoden-night body #startOverlay :is([data-challenge-state="completed"],[data-challenge-state="perfect"]) :is(.challenge-status,.challenge-action,.challenge-medallion) {color:#b5f4c7!important;background:transparent!important;}
+html.geoden-night body :is(.progress-track,.today-track,.mastery-daily-track,.discovery-progress,.mastery-map-track) {background:#101b2d!important;}
+html.geoden-night body :is(.progress-fill,.today-fill,.mastery-daily-fill,.discovery-progress>span) {background:linear-gradient(90deg,#8c79e6,#78b7e0)!important;}
+/* Keep the original daily palette that inspired the theme. */
+html.geoden-night body #startOverlay .discovery-today {background:radial-gradient(ellipse at 100% 0,#514482 0,transparent 60%),linear-gradient(140deg,#18294d,#252447)!important;border-color:#776cb0!important;}
+html.geoden-night body #homeDailyPicks [data-daily-mode="quiz"] {background:linear-gradient(145deg,#5551a4,#373768)!important;border-color:#8c86d9!important;}
+html.geoden-night body #homeDailyPicks [data-daily-mode="detective"] {background:linear-gradient(145deg,#75532d,#4d3b38)!important;border-color:#b99a69!important;}
+html.geoden-night body #homeDailyPicks [data-daily-mode="matching"] {background:linear-gradient(145deg,#7b4269,#50345b)!important;border-color:#c18eb1!important;}
+html.geoden-night body #homeDailyPicks [data-daily-mode="ranking"] {background:linear-gradient(145deg,#226662,#244655)!important;border-color:#69b0a5!important;}
+html.geoden-night body #homeDailyPicks [data-challenge-state="completed"] {background:linear-gradient(145deg,#2b664e,#244939)!important;border-color:#80bd99!important;}
+/* Settings, profiles and progress surfaces. */
+html.geoden-night body :is(.stage-setting,.setting-row,.settings-row,.tune-row,.tune-stage-row,.tune-challenge-set,.flash-flow-settings,.country-profile-fact,.country-profile-map-card,.history-fact-card,.fact-note,.language-sample-card,.mastery-section,.mastery-summary-card,.mastery-daily-card,.mastery-map-detail,.mastery-map-detail-stat,.mastery-map-fact,.session-score-card,.session-recap-insight,.custom-set-country,.experience-card) {background:#22314c!important;border-color:#475878!important;color:var(--text)!important;}
+html.geoden-night body :is(.settings-footer,.tune-footer,.matching-pools,.matching-drawer-actions,.custom-set-footer,.country-profile-actions,.settings-support-section) {background:#1a2740!important;border-color:#405170!important;}
+html.geoden-night body :is(.settings-support-action,.mastery-row,.mastery-history-item,.country-search-result) {background:#263750!important;color:var(--text)!important;border-color:#526384!important;}
+html.geoden-night body :is(.settings-warning,.audit-warning) {color:#ffc1b7!important;}
+/* Game boards and their colored status strips. */
+html.geoden-night body :is(.detective-clue-card,.detective-guess-card,.rapid-question-card,.ranking-row,.matching-row,.matching-anchor,.matching-slot,.rapid-cue,.interactive-text-panel,.session-recap,.special-game-setup) {background:linear-gradient(135deg,rgba(var(--mode-rgb),.12),transparent),#1e2c45!important;border-color:#4a5d7b!important;color:var(--text)!important;}
+html.geoden-night body :is(.detective-scorebar,.rapid-scorebar,.ranking-prompt,.chain-status,.special-game-summary,.detective-clue-label) {background:rgba(var(--mode-rgb),.18)!important;color:var(--mode-color)!important;border-color:rgba(var(--mode-rgb),.55)!important;}
+html.geoden-night body :is(.rapid-choice,.interactive-choice,.matching-card) {background:#293d5b!important;border-color:#607594!important;color:#fff!important;}
+html.geoden-night body :is(.matching-card.selected,.matching-slot.tap-ready,.matching-slot.drawer-active,.ranking-row.selected) {background:#443b64!important;border-color:#c6a5ed!important;}
+html.geoden-night body :is(.interactive-suggestions,.rapid-suggestions,.detective-suggestions,.chain-suggestions) {background:#17253e!important;border-color:#7385ac!important;box-shadow:0 12px 24px #080e2055!important;}
+html.geoden-night body :is(.interactive-suggestion,.rapid-suggestion,.detective-suggestion,.chain-suggestion) {background:#263954!important;color:#f6f7ff!important;border-color:#415778!important;}
+html.geoden-night body :is(.detective-prior-chip,.detective-prior-chip.cold) {background:#2a374b!important;color:#d5ddec!important;border-color:#66738a!important;}
+html.geoden-night body .detective-prior-chip.cool {background:#263e60!important;color:#c4deff!important;border-color:#638aba!important;}
+html.geoden-night body .detective-prior-chip.warm {background:#50432f!important;color:#ffe0a4!important;border-color:#a58c59!important;}
+html.geoden-night body .detective-prior-chip.hot {background:#583a32!important;color:#ffd1b3!important;border-color:#ba886d!important;}
+html.geoden-night body .detective-direction-badge {background:#111b2d66!important;color:inherit!important;box-shadow:inset 0 0 0 1px #dce4ff33!important;}
+/* Semantic feedback always wins over mode colors. */
+html.geoden-night body :is(.rapid-result.correct,.rapid-choice.correct,.interactive-choice.correct,.matching-slot.correct,.matching-row.complete,.ranking-row.correct,.detective-reveal-card,.detective-complete,.rapid-complete,.chain-finish,.map-hunt-finish,.daily-share-report) {background:#213f39!important;border-color:#67b58c!important;color:#c2f5d4!important;}
+html.geoden-night body :is(.rapid-result.wrong,.rapid-choice.wrong,.interactive-choice.wrong,.matching-slot.wrong) {background:#4c2c3b!important;border-color:#dc8d95!important;color:#ffd3cd!important;}
+html.geoden-night body :is(.rapid-result.correct,.ranking-row.correct,.detective-complete,.rapid-complete) :is(.rapid-result-kicker,.ranking-direction,.detective-complete-score,.rapid-complete-score) {color:#a3edbf!important;}
+html.geoden-night body :is(.rapid-result.wrong,.matching-feedback.wrong,.detective-feedback.wrong) {color:#ffc1b7!important;}
+html.geoden-night body .daily-share-report pre {background:#111f2e!important;border-color:#567c78!important;color:#d6f5e3!important;}
+/* Keep cartography/flags unfiltered; only restyle the surrounding UI and HUD. */
+html.geoden-night body :is(.map-hunt-prompt,.map-hunt-tap-flash,.map-hunt-reveal-hint,.chain-map-hud,.chain-map-label) {background:#1a2945f5!important;color:#f6f7ff!important;border-color:#7689ab!important;}
+html.geoden-night body :is(.map-hunt-prompt-kicker,.map-hunt-tap-flash-capital,.chain-map-hud-label) {color:#ccd7ef!important;}
+html.geoden-night body :is(.map-hunt-tap-flash.wrong,.map-hunt-tap-flash.reveal,.map-hunt-reveal-hint) {background:#492c3df5!important;color:#ffd1c9!important;border-color:#d5969e!important;}
+html.geoden-night body :is(.country-profile-city-map,.country-profile-globe,.mastery-map-canvas-card) {background:#e4ebed!important;border-radius:14px;}
+html.geoden-night body :is(.header-flag-wrap,.flag-wrap,.flag-shell,.matching-flag-frame) {background:var(--flag-surface)!important;border-color:var(--flag-surface-border)!important;}
+html.geoden-night body .network-banner {background:#493e2d!important;color:#ffe0a4!important;border-color:#a58c59!important;}
+@media(prefers-reduced-motion:reduce){html.geoden-night body button{transition:none!important;}}
+/* Legacy light-theme surfaces and compact labels. */
+html.geoden-night body :is(.experience-setting-row,.mastery-stat,.mastery-coverage,.mastery-daily,.ranking-feedback,.rapid-result.revealed,.rapid-sprint-feedback,.session-recap-stat,.country-set-panel,.custom-set-panel) {background:#22314c!important;border-color:#4a5d7b!important;color:var(--text)!important;}
+html.geoden-night body :is(.tune-preset-name,.matching-drawer-page,.mastery-map-feature-eyebrow,.mastery-map-feature-copy) {color:#c8d4ef!important;}
+html.geoden-night body .detective-case-meta {background:#463d35!important;border-color:#9c8054!important;color:#ffe0a4!important;}
+html.geoden-night body :is(.mastery-progress-track,.daily-goal-track) {background:#101b2d!important;}
+html.geoden-night body :is(.mastery-progress-fill,.daily-goal-fill) {background:linear-gradient(90deg,#8c79e6,#78b7e0)!important;}
+html.geoden-night body .rapid-overlay.sprint-active .rapid-choice-grid.reveal-labels .rapid-choice-label {background:#14223cf5!important;color:#f6f7ff!important;}
+html.geoden-night body .territory-inline-toggle {background:#22314c!important;border-color:#4a5d7b!important;color:var(--text)!important;}
+html.geoden-night body #matchingOverlay .matching-row.complete :is(.matching-anchor,.matching-slot.correct) {background:#284e42!important;border-color:#76be9b!important;color:#d3f9df!important;}
+html.geoden-night body #matchingOverlay .matching-row.complete .matching-card-text {color:#e2ffeb!important;}
+html.geoden-night body #matchingOverlay .matching-row.complete::after {background:#287859!important;color:#fff!important;}
+html.geoden-night body #startOverlay [data-challenge-state="unplayed"] .challenge-medallion {background:#364963!important;color:#c6d2eb!important;}
+html.geoden-night body #rapidOverlay .rapid-sprint-feedback.correct {background:#213f39!important;color:#c2f5d4!important;border-color:#67b58c!important;}
+html.geoden-night body #rapidOverlay .rapid-sprint-feedback.wrong {background:#4c2c3b!important;color:#ffd3cd!important;border-color:#dc8d95!important;}
+/* Pale backing protects the original blue silhouette contrast, without
+   recoloring flags, geographic outlines or status markers. */
+html.geoden-night body :is(.rapid-cue,.rapid-choice,.detective-clue-visual,.matching-card):has(svg path[fill="#2864f0"]) svg,
+html.geoden-night body #silhouette {background:#e6ecf6!important;border-radius:12px;}
+html.geoden-night body #startOverlay :is(.play-mode-picker,.mode-discovery-group) {background:#1b2a43!important;border-color:#405170!important;}
+html.geoden-night body #rapidOverlay.sprint-active .sprint-visual-choice .rapid-cue-text {font-size:clamp(1.15rem,5.4vw,2rem)!important;line-height:1.12!important;}
+
+</style>
   <script src="assets/d3-7.9.0.min.js"></script>
   <script src="assets/topojson-3.1.0.min.js"></script>
   <script src="assets/geography.js"></script>
 
   <script>
-    const GEODEN_VERSION = "0.56.56";
+    const GEODEN_VERSION = "0.56.57";
     // v0.56.28 — blank-surface audit: guarded silhouettes/location maps and Matching visual preflight.
     // v0.56.18 — private-beta problem reporting with diagnostic state, recent actions, errors, copy/download/share.
     // v0.56.17 — tester-facing automatic failure reporting with screenshot/copy instructions.
@@ -25464,7 +25590,7 @@ button,
       }
     }
 
-    // v0.56.56: the browser owns touch scrolling and momentum. Pointer events
+    // v0.56.57: the browser owns touch scrolling and momentum. Pointer events
     // only distinguish a tap from a swipe; never prevent or emulate scrolling.
     function beginMatchingRailSwipe(event, strip) {
       if (!strip) return;
