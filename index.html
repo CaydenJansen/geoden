@@ -16366,7 +16366,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
   <script src="assets/geography.js"></script>
 
   <script>
-    const GEODEN_VERSION = "0.56.75";
+    const GEODEN_VERSION = "0.56.78";
     // v0.56.28 — blank-surface audit: guarded silhouettes/location maps and Matching visual preflight.
     // v0.56.18 — private-beta problem reporting with diagnostic state, recent actions, errors, copy/download/share.
     // v0.56.17 — tester-facing automatic failure reporting with screenshot/copy instructions.
@@ -17750,7 +17750,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
 
     const SUBDIVISION_PLAY_KEY='geoden-subdivision-play-v1';
     const SUBDIVISION_SCOPE_KEY='geoden-study-domain-v1';
-    let subdivisionScope=['world','US','CA','AU'].includes(localStorage.getItem(SUBDIVISION_SCOPE_KEY))?localStorage.getItem(SUBDIVISION_SCOPE_KEY):'world';
+    let subdivisionScope='world'; // Legacy preference is accepted in backups, but no longer controls navigation.
     const SUBDIVISION_IDENTITIES=["CA-AB","CA-BC","CA-MB","CA-NB","CA-NL","CA-NS","CA-NT","CA-NU","CA-ON","CA-PE","CA-QC","CA-SK","CA-YT","US-AK","US-AL","US-AR","US-AZ","US-CA","US-CO","US-CT","US-DE","US-FL","US-GA","US-HI","US-IA","US-ID","US-IL","US-IN","US-KS","US-KY","US-LA","US-MA","US-MD","US-ME","US-MI","US-MN","US-MO","US-MS","US-MT","US-NC","US-ND","US-NE","US-NH","US-NJ","US-NM","US-NV","US-NY","US-OH","US-OK","US-OR","US-PA","US-RI","US-SC","US-SD","US-TN","US-TX","US-UT","US-VA","US-VT","US-WA","US-WI","US-WV","US-WY","AU-ACT","AU-NSW","AU-NT","AU-QLD","AU-SA","AU-TAS","AU-VIC","AU-WA"];
     const SUB_SET_MEMBERS={"us-states":["US-AK","US-AL","US-AR","US-AZ","US-CA","US-CO","US-CT","US-DE","US-FL","US-GA","US-HI","US-IA","US-ID","US-IL","US-IN","US-KS","US-KY","US-LA","US-MA","US-MD","US-ME","US-MI","US-MN","US-MO","US-MS","US-MT","US-NC","US-ND","US-NE","US-NH","US-NJ","US-NM","US-NV","US-NY","US-OH","US-OK","US-OR","US-PA","US-RI","US-SC","US-SD","US-TN","US-TX","US-UT","US-VA","US-VT","US-WA","US-WI","US-WV","US-WY"],"canada-provinces-territories":["CA-AB","CA-BC","CA-MB","CA-NB","CA-NL","CA-NS","CA-NT","CA-NU","CA-ON","CA-PE","CA-QC","CA-SK","CA-YT"],"us-west":["US-AK","US-AZ","US-CA","US-CO","US-HI","US-ID","US-MT","US-NM","US-NV","US-OR","US-UT","US-WA","US-WY"],"us-south":["US-AL","US-AR","US-DE","US-FL","US-GA","US-KY","US-LA","US-MD","US-MS","US-NC","US-OK","US-SC","US-TN","US-TX","US-VA","US-WV"],"us-northeast":["US-CT","US-MA","US-ME","US-NH","US-NJ","US-NY","US-PA","US-RI","US-VT"],"us-midwest":["US-IA","US-IL","US-IN","US-KS","US-MI","US-MN","US-MO","US-ND","US-NE","US-OH","US-SD","US-WI"],"australia-states-territories":["AU-ACT","AU-NSW","AU-NT","AU-QLD","AU-SA","AU-TAS","AU-VIC","AU-WA"]};
     const SUB_SET_IDENTITIES=["us-states","us-northeast","us-south","us-midwest","us-west","canada-provinces-territories","australia-states-territories"];
@@ -19391,12 +19391,12 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
       let saved = "";
       try { saved = localStorage.getItem(LAST_RESUMABLE_MODE_KEY) || ""; } catch (_) {}
       const available = {
-        subdivision: subdivisionScope!=="world"&&subStore.run?.parent===subdivisionScope,
-        study: subdivisionScope==="world"&&hasActiveStudyRun(),
-        chain: subdivisionScope==="world"&&hasResumableChain(),
-        maphunt: subdivisionScope==="world"&&hasResumableMapHunt(),
-        borderless: subdivisionScope==="world"&&!!borderlessRun?.codes?.length,
-        ranking: subdivisionScope==="world"&&!!rankingState?.items?.length
+        subdivision: !!subStore.run,
+        study: hasActiveStudyRun(),
+        chain: hasResumableChain(),
+        maphunt: hasResumableMapHunt(),
+        borderless: !!borderlessRun?.codes?.length,
+        ranking: !!rankingState?.items?.length
       };
       const candidates = Object.keys(available).filter(mode => available[mode]);
       if (!candidates.length) return "";
@@ -19411,6 +19411,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
       if (available.chain) return "chain";
       if (available.ranking) return "ranking";
       if (available.study) return "study";
+      if (available.subdivision) return "subdivision";
       return "";
     }
 
@@ -25919,7 +25920,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
       }
     }
 
-    // v0.56.75: the browser owns touch scrolling and momentum. Pointer events
+    // v0.56.78: the browser owns touch scrolling and momentum. Pointer events
     // only distinguish a tap from a swipe; never prevent or emulate scrolling.
     function beginMatchingRailSwipe(event, strip) {
       if (!strip) return;
@@ -36945,6 +36946,7 @@ Answer: ${answer}`;
     function validateBorderlessRun(s){
       const codes=Array.isArray(s?.codes)&&s.codes.length>0&&s.codes.length<=countries.length&&new Set(s.codes).size===s.codes.length&&s.codes.every(code=>countryByCode(code));
       if(!s||!codes||!['country','capital'].includes(s.target)||!['country','flag','capital'].includes(s.clue)||!Object.hasOwn(COUNTRY_SET_LABELS,s.set)||!Number.isSafeInteger(s.index)||s.index<0||s.index>s.codes.length||!Array.isArray(s.results)||s.results.length!==s.index||s.results.some(r=>!Number.isFinite(r.score)||r.score<0||r.score>100)||!Number.isFinite(s.elapsedMs)||s.elapsedMs<0||!Number.isInteger(s.misses)||s.misses<0||s.misses>3)throw Error('Invalid Borderless save');
+      if(s.mapProgress!=null&&(!['fill','blind'].includes(s.mapProgress)||(s.mapProgress==='blind'&&(s.target!=='country'||s.challenge||s.dailyKey))))throw Error('Invalid Borderless map memory');
       if(s.results.some((r,i)=>r.code!==s.codes[i]||typeof r.correct!=='boolean'||(r.km!=null&&(!Number.isFinite(r.km)||r.km<0))||(r.geo!=null&&(!Array.isArray(r.geo)||r.geo.length!==2||!r.geo.every(Number.isFinite)||Math.abs(r.geo[0])>180||Math.abs(r.geo[1])>90))))throw Error('Invalid Borderless result');
       if(s.challenge&&(!homeChallengeSpec(s.challenge.id)||homeChallengeSpec(s.challenge.id).mode!=='borderless'))throw Error('Invalid Borderless challenge');
       if(s.dailyKey&&!/^\d{4}-\d{2}-\d{2}:v1:borderless-(country|capital)$/.test(s.dailyKey))throw Error('Invalid Borderless daily');
@@ -36963,9 +36965,10 @@ Answer: ${answer}`;
       function select(label,id,items,value){const wrap=document.createElement('label');wrap.className='borderless-field';const name=document.createElement('span');name.textContent=label;const input=document.createElement('select');input.id=id;for(const [key,title]of items){const o=document.createElement('option');o.value=key;o.textContent=title;input.append(o);}input.value=value;wrap.append(name,input);content.append(wrap);return input;}
       const target=select('Find','borderlessTarget',[['country','Countries · tap inside'],['capital','Capitals · closest guess']],borderlessRun?.target||'country');
       const clue=select('Clue','borderlessClue',[['country','Country name'],['flag','Flag'],['capital','Capital name']],borderlessRun?.clue||'country');
+      const progress=select('Map memory','borderlessMapProgress',[['fill','Fill the map'],['blind','Keep each country blind']],borderlessRun?.mapProgress||'fill');const memoryHelp=document.createElement('small');memoryHelp.textContent='Fill: completed countries stay visible. Blind: previous answers disappear before the next country. Your map position stays the same.';progress.parentElement.append(memoryHelp);
       const regions=Object.entries(COUNTRY_SET_LABELS).filter(([key])=>key!=='custom'||countrySetIndices('custom').length);
-      const region=select('Study set','borderlessRegion',regions,borderlessRun?.set||'world');
-      const lengthLabel=document.createElement('label');lengthLabel.className='borderless-field';lengthLabel.textContent='Number of capitals';const length=document.createElement('input');length.id='borderlessLength';length.type='number';length.min='1';length.max='50';length.step='1';length.value='5';lengthLabel.append(length);content.append(lengthLabel);const syncLength=()=>{lengthLabel.hidden=target.value!=='capital';};target.addEventListener('change',syncLength);syncLength();
+      const region=select('Study set','borderlessRegion',regions,borderlessRun?.set||'world');const stateGroup=document.createElement('optgroup');stateGroup.label='States & provinces';for(const[parent,name,detail]of SUB_PARENT_CHOICES){const option=document.createElement('option');option.value='sub:'+parent;option.textContent=name+' · '+detail;stateGroup.append(option);}region.append(stateGroup);region.addEventListener('change',()=>{if(region.value.startsWith('sub:'))subOpenSetup('borderless',region.value.slice(4),{custom:true,target:target.value==='capital'?'capitalLocation':'location',clue:clue.value==='country'?'name':clue.value,mapProgress:progress.value});});
+      const lengthLabel=document.createElement('label');lengthLabel.className='borderless-field';lengthLabel.textContent='Number of capitals';const length=document.createElement('input');length.id='borderlessLength';length.type='number';length.min='1';length.max='50';length.step='1';length.value='5';lengthLabel.append(length);content.append(lengthLabel);const syncLength=()=>{lengthLabel.hidden=target.value!=='capital';progress.parentElement.hidden=target.value!=='country';};target.addEventListener('change',syncLength);syncLength();
       const help=document.createElement('p');help.className='borderless-help';help.textContent='Countries: 3 tries, scored by first-try accuracy. Capitals: 1 guess, 100% within 25 km, then a gradually decreasing distance score. Country runs cover the full set. Capital runs sample your chosen number of places (up to the size of the set).';content.append(help);
       const start=document.createElement('button');start.type='button';start.className='borderless-primary';start.textContent='Start Borderless →';content.append(start);
       if(borderlessRun&&borderlessRun.index<borderlessRun.codes.length){const b=document.createElement('button');b.type='button';b.className='borderless-secondary';b.textContent='Resume current Borderless run';b.onclick=()=>openBorderless(true);content.append(b);}
@@ -36973,7 +36976,7 @@ Answer: ${answer}`;
         const features=await loadBorderlessMapFeatures();if(token!==borderlessRenderToken)return;
         const codes=countrySetIndices(region.value).map(i=>countries[i]).filter(c=>canonicalWorldTargetFeature(c,features)&&(target.value!=='capital'||mapHuntCapitalCities(c).length)&&(clue.value!=='capital'||capitalNamesForCountry(c).length)).map(c=>c.code);
         if(!codes.length)throw Error('No map data for this set');
-        borderlessRun={target:target.value,clue:clue.value,set:region.value,codes:interactiveShuffle(codes).slice(0,target.value==='capital'?Number(length.value):codes.length),index:0,results:[],misses:0,elapsedMs:0};saveBorderlessRun();await renderBorderlessRound();
+        borderlessRun={target:target.value,mapProgress:target.value==='country'?progress.value:'fill',clue:clue.value,set:region.value,codes:interactiveShuffle(codes).slice(0,target.value==='capital'?Number(length.value):codes.length),index:0,results:[],misses:0,elapsedMs:0};saveBorderlessRun();await renderBorderlessRound();
       }catch(e){help.textContent='The map could not load. Please try again.';start.disabled=false;}};
     }
     async function renderBorderlessRound(){
@@ -36989,8 +36992,8 @@ Answer: ${answer}`;
       let finished=false;
       function complete(result,api){if(finished||token!==borderlessRenderToken)return;finished=true;pauseBorderlessClock();api.reveal(result.geo);s.results.push({code:c.code,...result,tries:Math.min(3,s.misses+1)});s.index++;s.misses=0;borderlessRecordChallenge(s);borderlessRecordDaily(s);saveBorderlessRun();borderlessProgress(s,content);const current=host.querySelector('.borderless-marks path');if(current)current.setAttribute('fill',borderlessResultColor(result));reveal.remove();feedback.textContent=`${c.name} · ${s.target==='capital'?mapHuntCapitalCities(c).map(p=>p.name).join(' / ')+' · ':''}${result.revealed?'Location revealed':borderlessResultText(result,s.target)}`;
         const next=document.createElement('button');next.type='button';next.className='borderless-primary';next.textContent=s.index===s.codes.length?'See results →':'Next place →';next.onclick=renderBorderlessRound;content.append(next);if(s.index<s.codes.length)setTimeout(()=>{if(token===borderlessRenderToken&&document.getElementById('borderlessOverlay').classList.contains('open'))renderBorderlessRound();},s.target==='capital'?2200:1100);}
-      const map=await createBorderlessMap(host,c,s.target,{reuse:true,set:s.set,results:s.results,view:s.mapView,onView:view=>{s.mapView=view;},isCurrent:()=>token===borderlessRenderToken&&document.getElementById('borderlessOverlay').classList.contains('open'),onGuess:(r,api)=>{
-        if(finished)return;if(s.target==='country'&&s.results.some(result=>result.code===r.clickedCode)){feedback.textContent=r.clickedName+' · already filled';return;}if(s.target==='capital'){complete(r,api);return;}if(r.correct){r.score=s.misses===0?100:0;complete(r,api);return;}
+      const map=await createBorderlessMap(host,c,s.target,{reuse:true,set:s.set,results:s.mapProgress==='blind'?[]:s.results,view:s.mapView,onView:view=>{s.mapView=view;},isCurrent:()=>token===borderlessRenderToken&&document.getElementById('borderlessOverlay').classList.contains('open'),onGuess:(r,api)=>{
+        if(finished)return;if(s.target==='country'&&s.mapProgress!=='blind'&&s.results.some(result=>result.code===r.clickedCode)){feedback.textContent=r.clickedName+' · already filled';return;}if(s.target==='capital'){complete(r,api);return;}if(r.correct){r.score=s.misses===0?100:0;complete(r,api);return;}
         s.misses++;saveBorderlessRun();if(s.misses>=3)complete({...r,score:0,revealed:true},api);else feedback.textContent=`${r.clickedName} · try again · ${3-s.misses} guesses left`;
       }});
       if(token!==borderlessRenderToken)return;
@@ -45083,7 +45086,7 @@ function rankingTargetValues() {
           for(const el of dialogs){if(el.id==='selfTestOverlay')el.hidden=!route.includes(el.id);else el.classList.toggle('open',route.includes(el.id));}
           // Resume through the normal entry points so timers, map layouts and
           // any render invalidated by Menu are reactivated on browser Forward.
-          const reopen={subdivisionOverlay:()=>subHost?.dataset.screen==="run"&&subStore.run?subResume():subOpenSetup(subSetup?.mode||"quiz",subdivisionScope),borderlessOverlay:()=>openBorderless(true),chainFillOverlay:()=>openChainFill(true),mapHuntOverlay:openMapHunt,rankingOverlay:openRanking,
+          const reopen={subdivisionOverlay:()=>subHost?.dataset.screen==="run"&&subStore.run?subResume():subSetup?subOpenSetup(subSetup.mode,subSetup.parent,subSetup):subClose(),borderlessOverlay:()=>openBorderless(true),chainFillOverlay:()=>openChainFill(true),mapHuntOverlay:openMapHunt,rankingOverlay:openRanking,
             matchingOverlay:()=>openMatchingMode(true),detectiveOverlay:()=>openDetectiveMode(true),rapidOverlay:()=>openRapidMode(true),
             appSettingsOverlay:openAppSettings,settingsOverlay:()=>openSettings(settingsModeAtOpen),
             countryProfileOverlay:()=>openCountryProfile(countryProfileCode),searchOverlay:openCountrySearch,
@@ -45133,7 +45136,7 @@ function rankingTargetValues() {
     function homeSeededOrder(items,key){const result=[...items],rng=seededRandom(hashString32('GeoDen:discovery:v1:'+key));for(let i=result.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[result[i],result[j]]=[result[j],result[i]];}return result;}
     function homeChallengeId(mode,variant,region){return `v1:${mode}:${variant}:${region}`;}
     function homeChallengeSpec(id){const [v,mode,variant,region]=String(id||'').split(':');return v==='v1'&&HOME_MAP_VARIANTS[mode]?.[variant]&&HOME_MAP_REGIONS.includes(region)?{id,mode,variant,region}:null;}
-    function homeChallengeProgress(mode,variant=null){const ids=Object.keys(HOME_MAP_VARIANTS[mode]).filter(v=>!variant||variant===v).flatMap(v=>HOME_MAP_REGIONS.map(r=>homeChallengeId(mode,v,r)));const completed=ids.filter(id=>homeRecords.challenges[id]?.best).length;const extra=subChallengeProgress(mode,variant);if(subdivisionScope!=='world'&&extra.total)return {...extra,percent:Math.round(100*extra.completed/extra.total)};return {completed,total:ids.length,percent:Math.round(100*completed/ids.length)};}
+    function homeChallengeProgress(mode,variant=null){const ids=Object.keys(HOME_MAP_VARIANTS[mode]).filter(v=>!variant||variant===v).flatMap(v=>HOME_MAP_REGIONS.map(r=>homeChallengeId(mode,v,r)));const completed=ids.filter(id=>homeRecords.challenges[id]?.best).length;const extra=['US','AU','CA'].map(parent=>subChallengeProgress(mode,variant,parent)).reduce((sum,p)=>({completed:sum.completed+p.completed,total:sum.total+p.total}),{completed:0,total:0});const total=ids.length+extra.total,done=completed+extra.completed;return {completed:done,total,percent:total?Math.round(100*done/total):0};}
     function homeTime(ms){return formatChainTime(Math.max(0,ms||0));}
     function homeButton(title,meta,action,primary=false){const b=document.createElement('button');b.type='button';b.className='discovery-card'+(primary?' discovery-primary':'');const copy=document.createElement('span'),name=document.createElement('strong'),detail=document.createElement('small');name.textContent=title;detail.textContent=meta;copy.append(name,detail);const arrow=document.createElement('span');arrow.className='discovery-arrow';arrow.textContent='→';arrow.setAttribute('aria-hidden','true');b.append(copy,arrow);b.addEventListener('click',()=>action(b));return b;}
     function homeStatusBadge(state,label){
@@ -45290,8 +45293,8 @@ function rankingTargetValues() {
       }
     }
 
-    function homeSetSection(section){homePendingLaunch=null;startOverlay.dataset.homeView='home';homeSection=section==='games'?'games':'learn';homeMode=null;homeVariant=null;document.getElementById('startSessionCard').classList.add('hidden');startOverlay.dataset.modeArmed='false';renderHomeDiscovery();}
-    function homeOpenMode(mode){if(subdivisionScope!=='world'){if(SUB_MODES[subMode(mode)])subOpenSetup(mode,subdivisionScope);return;}homeCrawlStyle=null;homePendingLaunch=null;startOverlay.dataset.homeView='mode';homeMode=mode;homeVariant=null;homeSection=['standard','quiz','interactive','rapid','sprint'].includes(mode)?'learn':'games';document.getElementById('startSessionCard').classList.add('hidden');startOverlay.dataset.modeArmed='false';if(mode!=='borderless')setMenuPlayMode(mode);if(HOME_DIRECT_SETUP_MODES.includes(mode)){homeOpenDirectSetup(mode);return;}renderHomeDiscovery();document.getElementById('discoveryHeading')?.focus({preventScroll:true});}
+    function homeSetSection(section){homeStateRegions=false;homePendingLaunch=null;startOverlay.dataset.homeView='home';homeSection=section==='games'?'games':'learn';homeMode=null;homeVariant=null;document.getElementById('startSessionCard').classList.add('hidden');startOverlay.dataset.modeArmed='false';renderHomeDiscovery();}
+    function homeOpenMode(mode){homeStateRegions=false;homeCrawlStyle=null;homePendingLaunch=null;startOverlay.dataset.homeView='mode';homeMode=mode;homeVariant=null;homeSection=['standard','quiz','interactive','rapid','sprint'].includes(mode)?'learn':'games';document.getElementById('startSessionCard').classList.add('hidden');startOverlay.dataset.modeArmed='false';if(mode!=='borderless')setMenuPlayMode(mode);if(HOME_DIRECT_SETUP_MODES.includes(mode)){homeOpenDirectSetup(mode);return;}renderHomeDiscovery();document.getElementById('discoveryHeading')?.focus({preventScroll:true});}
     function homeQuizSetup(style) {
       if(!['rapid','interactive'].includes(style))return;
       homeMode='quiz';setMenuPlayMode(style);
@@ -45613,6 +45616,7 @@ function subValidateStore(v){
  for(const [key,value]of Object.entries(v.learning)){const [id,topic]=key.split(':');if(!ids.has(id)||!['name','capital','flag','silhouette','location','capitalLocation'].includes(topic)||!obj(value)||!Number.isInteger(value.attempts)||value.attempts<0||!Number.isInteger(value.correct)||value.correct<0||value.correct>value.attempts)fail();}
  const r=v.run;if(r!==null){
   if(!obj(r)||!['maphunt','borderless','standard','quiz','matching'].includes(r.mode)||!['US','CA','AU'].includes(r.parent)||!SUB_SET_IDENTITIES.includes(r.set)||!Array.isArray(r.ids)||!r.ids.length||r.ids.length>SUBDIVISION_IDENTITIES.length||new Set(r.ids).size!==r.ids.length||!r.ids.every(id=>ids.has(id)&&id.startsWith(r.parent+'-'))||!Array.isArray(r.queue)||!r.queue.length||r.queue.length>400||!r.queue.every(q=>obj(q)&&r.ids.includes(q.id)&&['name','capital','flag','silhouette','location','capitalLocation'].includes(q.topic)&&['name','capital','flag','silhouette'].includes(q.clue)&&q.topic!==q.clue)||!Number.isInteger(r.index)||r.index<0||r.index>r.queue.length||!Array.isArray(r.results)||r.results.length!==r.index||!r.results.every((x,i)=>obj(x)&&x.id===r.queue[i].id&&x.topic===r.queue[i].topic&&num(x.score)&&x.score<=100&&Number.isInteger(x.tries)&&x.tries>=1&&x.tries<=3&&typeof x.revealed==='boolean')||!num(r.elapsedMs)||!num(r.updatedAt)||!Array.isArray(r.misses)||!r.misses.every(id=>ids.has(id))||typeof r.finished!=='boolean'||(r.finished&&r.index!==r.queue.length)||!['mixed','deep'].includes(r.style)||!['choices','typing'].includes(r.answer))fail();
+  if(r.mapProgress!=null&&(!['fill','blind'].includes(r.mapProgress)||(r.mapProgress==='blind'&&(r.mode!=='borderless'||r.challenge||r.queue.some(q=>q.topic!=='location')))))fail();
   if(r.challenge&&!subChallengeParts(r.challenge))fail();
   if(!r.ids.every(id=>SUB_SET_MEMBERS[r.set].includes(id))||typeof r.recorded!=='boolean'||typeof r.feedback!=='string'||r.feedback.length>2048||r.misses.length>2)fail();
   if(r.challenge){const spec=subChallengeParts(r.challenge);if(spec.mode!==r.mode||spec.set!==r.set||r.ids.length!==SUB_SET_MEMBERS[r.set].length||r.queue.length!==r.ids.length||new Set(r.queue.map(q=>q.id)).size!==r.ids.length||r.queue.some(q=>q.topic!==spec.target||q.clue!==spec.clue))fail();}
@@ -45630,37 +45634,14 @@ function subLabel(parent){return parent==='US'?'US states':parent==='AU'?'Austra
 function subNoun(parent){return parent==='US'?'state':parent==='AU'?'state or territory':'province or territory';}
 function subEl(tag,text,className){const e=document.createElement(tag);if(text!==undefined)e.textContent=text;if(className)e.className=className;return e;}
 function subButton(text,fn,className=''){const b=subEl('button',text,className);b.type='button';b.onclick=fn;return b;}
-function subGeographyPicker(mode,parent='world'){
- const box=subEl('fieldset',undefined,'sub-geography');box.append(subEl('legend','What are you exploring?'));
- const country=subButton('🌍 Countries',()=>subSetScope('world',mode));country.dataset.geography='world';country.setAttribute('aria-pressed',String(parent==='world'));box.append(country);
- const menu=subEl('details',undefined,'sub-region-menu');const summary=subEl('summary');summary.append(subEl('span','States, provinces & territories'),subEl('small',parent==='world'?'Explore within a country':subLabel(parent)));menu.append(summary);menu.classList.toggle('has-selection',parent!=='world');
- const children=subEl('div',undefined,'sub-region-options');for(const [id,name,detail]of [['US','United States','50 states'],['CA','Canada','13 provinces & territories'],['AU','Australia','6 states · 2 territories']]){const b=subButton('',()=>subSetScope(id,mode));b.append(subEl('strong',name),subEl('small',detail));b.dataset.geography=id;b.setAttribute('aria-pressed',String(id===parent));children.append(b);}menu.append(children);box.append(menu);return box;
-}
-function subSetScope(scope,mode=null){if(!['world','US','CA','AU'].includes(scope))return;subdivisionScope=scope;localStorage.setItem(SUBDIVISION_SCOPE_KEY,scope);subHost?.classList.remove('open');subToken++;subBusy=false;openStartOverlay(false);homeSetSection('games');document.querySelector('#startOverlay .start-panel').scrollTop=0;if(mode)homeOpenMode(mode);updateActiveSessionResumeCard();}
-function subDecorateHome(){
- document.documentElement.dataset.studyDomain=subdivisionScope;let box=document.getElementById('studyDomainSwitcher');if(!box){box=subEl('section',undefined,'sub-home-scope');box.id='studyDomainSwitcher';document.getElementById('dailyGoalCard').before(box);}box.replaceChildren(subGeographyPicker(null,subdivisionScope));
- const help=subEl('p',subdivisionScope==='world'?'Explore countries. State and province progress stays separate.':'You’re exploring '+subLabel(subdivisionScope)+'. No country questions or daily games will appear in this study set.');box.append(help);box.classList.toggle('hidden',!!homeMode);
- const unavailable=subdivisionScope!=='world';for(const id of ['chainModeBtn','detectiveModeBtn','rankingModeBtn','sprintModeBtn'])document.getElementById(id)?.classList.toggle('sub-domain-unavailable',unavailable);
- if(unavailable)box.append(subEl('small','Map Crawl, Detective, Ranking and Sprint are currently available in Countries.'));
-}
-function subDecorateSetup(){const card=document.getElementById('startSessionCard');card?.querySelector('.sub-geography')?.remove();const mode=subMode(menuPlayMode);if(card&&SUB_MODES[mode])card.querySelector('#homeSetupBack')?.after(subGeographyPicker(mode));}
-function subDecorateDiscovery(){
- subDecorateHome();
- const mode=subMode(homeMode),landing=document.getElementById('discoveryLanding');if(!landing||!SUB_MODES[mode])return;
- landing.querySelector('.sub-geography')?.remove();landing.querySelector('#discoveryHeading')?.after(subGeographyPicker(mode));
- if(subdivisionScope!=='world'&&['maphunt','borderless'].includes(mode)&&homeVariant){const grid=landing.querySelector('.discovery-grid'),clue=homeVariant.replace('city-','').replace('country','name'),target=homeVariant.startsWith('city-')?'capitalLocation':'location';
-  grid.prepend(subEl('h4','World countries','hunt-challenge-group'));
-  for(const parent of ['US','CA','AU']){grid.append(subEl('h4',subLabel(parent),'hunt-challenge-group'));for(const [set,meta]of Object.entries(SUB_SETS).filter(([,x])=>x.parent===parent))grid.append(subChallengeCard(mode,clue,target,set));}
- }
-}
 function subChallengeCard(mode,clue,target,set){
  const id=['sub1',mode,clue,target,set].join(':'),best=subStore.challenges[id]?.best,active=subStore.run?.challenge===id&&!subStore.run.finished;
- const card=homeButton(SUB_SETS[set].name,best?`${best.score}% best accuracy · ${homeTime(best.elapsedMs)}`:'A fixed set · separate subdivision progress',()=>active?subResume():subOpenSetup(mode,SUB_SETS[set].parent,{set,clue,target,challenge:id}));
+ const card=homeButton(SUB_SETS[set].name,best?`${best.score}% best accuracy · ${homeTime(best.elapsedMs)}`:'Three guesses per place · first-try accuracy',()=>active?subResume():subOpenSetup(mode,SUB_SETS[set].parent,{set,clue,target,challenge:id}));
  card.classList.add('sub-challenge','challenge-region');card.dataset.subChallenge=id;card.dataset.challengeState=active?'active':best?'completed':'unplayed';card.firstChild.prepend(homeStatusBadge(active?'active':best?'completed':'unplayed',active?'Resume':best?'Completed':'Not played'));return card;
 }
-function subChallengeProgress(mode,variant){if(subdivisionScope==='world'||!['maphunt','borderless'].includes(mode))return {completed:0,total:0};const variants=variant?[variant]:Object.keys(HOME_MAP_VARIANTS[mode]);const ids=variants.flatMap(v=>Object.keys(SUB_SETS).filter(set=>SUB_SETS[set].parent===subdivisionScope).map(set=>['sub1',mode,v.replace('city-','').replace('country','name'),v.startsWith('city-')?'capitalLocation':'location',set].join(':')));return {completed:ids.filter(id=>subStore.challenges[id]?.best).length,total:ids.length};}
+function subChallengeProgress(mode,variant,parent=subSetup?.parent){if(!['US','AU','CA'].includes(parent)||!['maphunt','borderless'].includes(mode))return {completed:0,total:0};const variants=variant?[variant]:Object.keys(HOME_MAP_VARIANTS[mode]);const ids=variants.flatMap(v=>Object.keys(SUB_SETS).filter(set=>SUB_SETS[set].parent===parent).map(set=>['sub1',mode,v.replace('city-','').replace('country','name'),v.startsWith('city-')?'capitalLocation':'location',set].join(':')));return {completed:ids.filter(id=>subStore.challenges[id]?.best).length,total:ids.length};}
 function subEnsureHost(){if(subHost)return subHost;subHost=subEl('section',undefined,'sub-overlay');subHost.id='subdivisionOverlay';subHost.setAttribute('role','dialog');subHost.setAttribute('aria-modal','true');subHost.setAttribute('aria-label','Subdivision game');document.body.append(subHost);subHost.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();subClose();}});return subHost;}
-function subShow(){subEnsureHost().classList.add('open');startOverlay.classList.remove('open');subTickAt=performance.now();}
+function subShow(){mapHuntOverlay?.classList.remove('open');document.getElementById('borderlessOverlay')?.classList.remove('open');subEnsureHost().classList.add('open');startOverlay.classList.remove('open');subTickAt=performance.now();}
 function subClose(){subToken++;subBusy=false;subTick();subHost?.classList.remove('open');if(subHost)subHost.dataset.play='false';if(subStore.run)subSave();openStartOverlay(false);homeSetSection('games');if(subStore.run)noteResumableMode('subdivision');updateActiveSessionResumeCard();}
 function subFrame(title){const host=subEnsureHost();host.replaceChildren();host.scrollTop=0;const panel=subEl('div',undefined,'sub-panel');const head=subEl('header',undefined,'sub-head');const h=subEl('h2',title);h.tabIndex=-1;head.append(h,subButton('Menu',subClose));panel.append(head);host.append(panel);h.focus({preventScroll:true});return panel;}
 async function subReady(){subData=await loadGeoDenSubdivisions();return subData;}
@@ -45671,7 +45652,7 @@ async function subOpenSetup(mode,parent,options={}){
 }
 function subSelect(parent,label,values,value){const wrap=subEl('label',undefined,'sub-field');wrap.append(subEl('span',label));const select=document.createElement('select');for(const [val,text]of values){const opt=subEl('option',text);opt.value=val;select.append(opt);}select.value=value;wrap.append(select);parent.append(wrap);return select;}
 function subRenderSetup(){
- const c=subSetup,panel=subFrame(SUB_MODES[c.mode]),fixed=!!c.challenge;panel.append(subGeographyPicker(c.mode,c.parent));panel.append(subEl('p',fixed?'Scored challenge · complete this set. First-try accuracy, then time.':'Choose your study set and topics. Your country settings stay unchanged.','sub-intro'));
+ const c=subSetup,panel=subFrame(SUB_MODES[c.mode]+' · '+subLabel(c.parent)),fixed=!!c.challenge;panel.append(subButton('← Study regions',()=>subReturnToRegions(c),'sub-region-back'));panel.append(subEl('p',fixed?'Scored challenge · complete this set. First-try accuracy, then time.':'Choose your study set and topics. Your country settings stay unchanged.','sub-intro'));
  if(['maphunt','borderless'].includes(c.mode)&&!fixed&&!c.custom){
   const grid=subEl('div',undefined,'discovery-grid');panel.append(grid);
   if(c.chooseRegion){panel.insertBefore(subButton('← Topics',()=>subOpenSetup(c.mode,c.parent)),grid);panel.insertBefore(subEl('h3',(c.clue==='name'?'Names':SUB_TOPICS[c.clue])+' · '+(c.target==='location'?'Find the '+subNoun(c.parent):'Capital city dots')),grid);for(const [set,meta]of Object.entries(SUB_SETS).filter(([,x])=>x.parent===c.parent))grid.append(subChallengeCard(c.mode,c.clue,c.target,set));}
@@ -45682,7 +45663,7 @@ function subRenderSetup(){
  const form=subEl('form',undefined,'sub-setup');panel.append(form);
  const set=subSelect(form,'Study set',Object.entries(SUB_SETS).filter(([,v])=>v.parent===c.parent).map(([id,v])=>[id,v.name]),c.set);set.disabled=fixed;
  const clue=subSelect(form,'Clue',[['name',c.parent==='US'?'State name':c.parent==='AU'?'State / territory name':'Province / territory name'],['flag','Flag'],['capital','Capital name'],...(!['maphunt','borderless'].includes(c.mode)?[['silhouette','Outline']]:[])],c.clue);clue.disabled=fixed;
- let target=null,style=null,answer=null,length=null,topics=[];
+ let target=null,style=null,answer=null,length=null,mapProgress=null,topics=[];
  if(['maphunt','borderless'].includes(c.mode))target=subSelect(form,'Find on the map',[['location',c.parent==='US'?'State location':c.parent==='AU'?'State / territory location':'Province / territory location'],['capitalLocation',c.mode==='borderless'?'Pinpoint the capital · distance score':'Capital city dots']],c.target),target.disabled=fixed;
  else{
   if(c.mode==='quiz')style=subSelect(form,'Quiz style',[['mixed','Mixed quiz'],['deep',c.parent==='US'?'State deep dive':c.parent==='AU'?'State / territory deep dive':'Province / territory deep dive']],c.style||'mixed');
@@ -45691,10 +45672,11 @@ function subRenderSetup(){
   const sync=()=>{for(const check of topics){check.disabled=check.value===clue.value;if(check.disabled)check.checked=false;}};clue.onchange=sync;sync();
   if(c.mode==='quiz')answer=subSelect(form,'Text answers',[['choices','Multiple choice'],['typing','Type the answer']],c.answer||'choices');
  }
+ if(c.mode==='borderless'&&!fixed){mapProgress=subSelect(form,'Map memory',[['fill','Fill the map'],['blind','Keep each place blind']],c.mapProgress||'fill');mapProgress.id='subMapProgress';mapProgress.parentElement.append(subEl('small','Fill: completed places stay visible. Blind: previous answers disappear before the next place. Your map position stays the same.'));const syncMemory=()=>{mapProgress.parentElement.hidden=target.value!=='location';};target.addEventListener('change',syncMemory);syncMemory();}
  if(!fixed){length=subSelect(form,c.mode==='quiz'?'Places per session':c.mode==='matching'?'Places on the board':'Places per run',[['5','5'],['10','10'],['all','All in this set']],c.mode==='maphunt'?'all':'5');if(c.mode==='matching')length.querySelector('[value="all"]').remove();}
  const help=subEl('p',undefined,'sub-status');help.setAttribute('role','status');form.append(help);
  const start=subButton(fixed?'Start challenge →':'Start '+SUB_MODES[c.mode]+' →',null,'sub-primary');start.type='submit';form.append(start);start.disabled=true;setTimeout(()=>{if(start.isConnected)start.disabled=false;},350);
- form.onsubmit=async e=>{e.preventDefault();if(subBusy)return;const selected=topics.filter(x=>x.checked&&!x.disabled).map(x=>x.value);if(topics.length&&!selected.length){help.textContent='Choose at least one answer topic.';return;}if(c.mode==='matching'&&selected.length>3){help.textContent='Choose up to three matching topics.';return;}if(subStore.run&&!subStore.run.finished&&start.dataset.confirm!=='yes'){start.dataset.confirm='yes';help.textContent='Starting this replaces your unfinished subdivision session. Country sessions are kept.';start.textContent='Replace session & start →';return;}subBusy=true;start.disabled=true;try{await subStart({...c,set:set.value,clue:clue.value,target:target?.value,topics:selected,style:style?.value||'mixed',answer:answer?.value||'choices',count:fixed?'all':length.value});}catch(err){help.textContent='Could not start: '+err.message;start.disabled=false;}finally{subBusy=false;}};
+ form.onsubmit=async e=>{e.preventDefault();if(subBusy)return;const selected=topics.filter(x=>x.checked&&!x.disabled).map(x=>x.value);if(topics.length&&!selected.length){help.textContent='Choose at least one answer topic.';return;}if(c.mode==='matching'&&selected.length>3){help.textContent='Choose up to three matching topics.';return;}if(subStore.run&&!subStore.run.finished&&start.dataset.confirm!=='yes'){start.dataset.confirm='yes';help.textContent='Starting this replaces your unfinished subdivision session. Country sessions are kept.';start.textContent='Replace session & start →';return;}subBusy=true;start.disabled=true;try{await subStart({...c,set:set.value,clue:clue.value,target:target?.value,topics:selected,style:style?.value||'mixed',answer:answer?.value||'choices',count:fixed?'all':length.value,mapProgress:mapProgress&&target.value==='location'?mapProgress.value:'fill'});}catch(err){help.textContent='Could not start: '+err.message;start.disabled=false;}finally{subBusy=false;}};
 }
 async function subStart(c){
  const generation=subToken;
@@ -45704,8 +45686,8 @@ async function subStart(c){
  if(!queue.length)throw Error('Choose different clues and answers');
  // Fetch required maps before replacing an existing run; failures cannot lose it.
  await subPreflight(queue,c.parent);
- if(generation!==subToken||subdivisionScope!==c.parent)throw Error('Study set changed. Start again from the current setup.');
- const run={mode:c.mode,parent:c.parent,set:c.set,ids,queue,index:0,results:[],misses:[],elapsedMs:0,updatedAt:Date.now(),finished:false,style:c.style,answer:c.answer,challenge:c.challenge||null,view:null,feedback:'',recorded:false};
+ if(generation!==subToken)throw Error('Study set changed. Start again from the current setup.');
+ const run={mode:c.mode,mapProgress:c.mode==='borderless'&&!c.challenge&&c.target==='location'&&c.mapProgress==='blind'?'blind':'fill',parent:c.parent,set:c.set,ids,queue,index:0,results:[],misses:[],elapsedMs:0,updatedAt:Date.now(),finished:false,style:c.style,answer:c.answer,challenge:c.challenge||null,view:null,feedback:'',recorded:false};
  if(c.mode==='matching')run.match={placements:{},locked:[],failed:[],previous:{}};
  subValidateStore({...subStore,run});subStore.run=run;subSave();noteResumableMode('subdivision');await subRenderRun();
 }
@@ -45770,12 +45752,12 @@ async function subCreateMap(host,token){
  const cross=svg.append('path').attr('d','M-10 0H10M0-10V10').attr('stroke','#65482f').attr('stroke-width',2).style('display','none').attr('pointer-events','none');
  const zoom=d3.zoom().extent([[0,0],[w,h]]).scaleExtent([1,100]).on('zoom',e=>{transform=e.transform;layer.attr('transform',transform);r.view={k:transform.k,x:transform.x,y:transform.y};rescale();});svg.call(zoom).on('dblclick.zoom',null);
  function rescale(){const k=transform.k*(svg.node().getBoundingClientRect().width/w);dots.selectAll('circle').attr('r',6/Math.max(k,.01));marks.selectAll('circle').attr('r',5/Math.max(k,.01));}
- function update(){marks.selectAll('*').remove();const q=subCurrent(),borderless=r.mode==='borderless',done=new Map(r.results.map(x=>[x.id,x]));shapes.attr('fill',f=>done.has(f.id)?done.get(f.id).score===100?'#47734f':'#b38c48':r.ids.includes(f.id)?'#a4ae99':'#c3c5b7').attr('stroke',borderless?null:'#faf5e9').attr('stroke-width',borderless?0:1);if(borderless)shapes.attr('fill',f=>done.has(f.id)&&q?.topic!=='capitalLocation'?(done.get(f.id).score===100?'#47734f':'#b38c48'):'#c2c8b5');dots.selectAll('*').remove();if(q?.topic==='capitalLocation'&&!borderless){dots.selectAll('circle').data(subData.list({set:r.set})).join('circle').attr('cx',d=>projection(d.capital.coordinates)[0]).attr('cy',d=>projection(d.capital.coordinates)[1]).attr('fill',d=>done.has(d.id)?'#47734f':'#78623d').attr('stroke','#fff9ee').attr('stroke-width',2).attr('vector-effect','non-scaling-stroke').attr('data-capital-id',d=>d.id);}rescale();}
+ function update(){marks.selectAll('*').remove();const q=subCurrent(),borderless=r.mode==='borderless',done=new Map(r.results.map(x=>[x.id,x]));shapes.attr('fill',f=>done.has(f.id)?done.get(f.id).score===100?'#47734f':'#b38c48':r.ids.includes(f.id)?'#a4ae99':'#c3c5b7').attr('stroke',borderless?null:'#faf5e9').attr('stroke-width',borderless?0:1);if(borderless)shapes.attr('fill',f=>r.mapProgress!=='blind'&&done.has(f.id)&&q?.topic!=='capitalLocation'?(done.get(f.id).score===100?'#47734f':'#b38c48'):'#c2c8b5');dots.selectAll('*').remove();if(q?.topic==='capitalLocation'&&!borderless){dots.selectAll('circle').data(subData.list({set:r.set})).join('circle').attr('cx',d=>projection(d.capital.coordinates)[0]).attr('cy',d=>projection(d.capital.coordinates)[1]).attr('fill',d=>done.has(d.id)?'#47734f':'#78623d').attr('stroke','#fff9ee').attr('stroke-width',2).attr('vector-effect','non-scaling-stroke').attr('data-capital-id',d=>d.id);}rescale();}
  function reveal(guess){const q=subCurrent();if(!q)return;const record=subData.get(q.id),geo=q.topic==='capitalLocation'?record.capital.coordinates:record.labelPoint;if(q.topic==='location')shapes.filter(f=>f.id===q.id).attr('fill','#47734f').attr('stroke','#fff9ee').attr('stroke-width',2);const actual=projection(geo);marks.append('circle').attr('cx',actual[0]).attr('cy',actual[1]).attr('fill','#47734f').attr('stroke','#fff9ee').attr('stroke-width',2).attr('vector-effect','non-scaling-stroke');if(guess){const pt=projection(guess);marks.append('path').attr('d',`M${pt}L${actual}`).attr('stroke','#975d4b').attr('stroke-width',2).attr('vector-effect','non-scaling-stroke');marks.append('circle').attr('cx',pt[0]).attr('cy',pt[1]).attr('fill','#975d4b');}rescale();}
  function guess(xy){const q=subCurrent();if(!q||r.mode==='standard'||r.pending||r.finished)return;const point=transform.invert(xy),geo=projection.invert(point);if(!geo||!geo.every(Number.isFinite)||Math.abs(geo[1])>90)return;const record=subData.get(q.id),stage=host.parentElement;
   if(r.mode==='borderless'&&q.topic==='capitalLocation'){const km=d3.geoDistance(geo,record.capital.coordinates)*6371,score=Math.round(100*Math.exp(-km/500));subAnswer(km<=25,null,stage,false,{km,score,guess:geo});return;}
   let hit=null;if(q.topic==='capitalLocation'){const screenScale=svg.node().getBoundingClientRect().width/w;const targets=subData.list({set:r.set}).map(d=>({id:d.id,distance:Math.hypot(...projection(d.capital.coordinates).map((v,i)=>v-point[i]))*transform.k*screenScale})).sort((a,b)=>a.distance-b.distance);if(targets[0]?.distance<=22)hit=targets[0].id;}else hit=features.find(f=>d3.geoContains(f,geo))?.id;
-  if(!hit)return;const done=r.results.find(x=>x.id===hit);if(done&&['maphunt','borderless'].includes(r.mode)){document.getElementById('subFeedback').textContent=subData.get(hit).name+' · already completed';return;}if(!r.ids.includes(hit)&&['maphunt','borderless'].includes(r.mode)){document.getElementById('subFeedback').textContent=subData.get(hit).name+' · outside this set';return;}subAnswer(hit===q.id,hit,stage);
+  if(!hit)return;const done=r.results.find(x=>x.id===hit);if(done&&['maphunt','borderless'].includes(r.mode)&&!(r.mode==='borderless'&&r.mapProgress==='blind')){document.getElementById('subFeedback').textContent=subData.get(hit).name+' · already completed';return;}if(!r.ids.includes(hit)&&['maphunt','borderless'].includes(r.mode)){document.getElementById('subFeedback').textContent=subData.get(hit).name+' · outside this set';return;}subAnswer(hit===q.id,hit,stage);
  }
  svg.on('click.guess',event=>{if(!event.defaultPrevented)guess(d3.pointer(event,svg.node()));}).on('keydown.guess',event=>{const moves={ArrowLeft:[-10,0],ArrowRight:[10,0],ArrowUp:[0,-10],ArrowDown:[0,10]};if(moves[event.key]){event.preventDefault();focus=focus.map((v,i)=>Math.max(0,Math.min(i?h:w,v+moves[event.key][i])));cross.attr('transform',`translate(${focus})`).style('display',null);}else if(event.key==='Enter'){event.preventDefault();guess(focus);}else if(['+','=','-'].includes(event.key)){event.preventDefault();svg.call(zoom.scaleBy,event.key==='-'?.7:1.4);}});
  host.subMap={update,reveal,guess,projection,svg,zoom};if(r.view)svg.call(zoom.transform,d3.zoomIdentity.translate(r.view.x,r.view.y).scale(r.view.k));update();
@@ -45789,7 +45771,36 @@ async function subRenderMatching(stage,token){
 async function subOpenLibrary(progress=false){subShow();subHost.dataset.play='false';const panel=subFrame((progress?'Progress':'Explore')+' · '+subLabel(subdivisionScope)),token=++subToken;try{await subReady();if(token!==subToken)return;const input=document.createElement('input');input.type='search';input.placeholder='Find a name or capital';input.setAttribute('aria-label','Search '+subLabel(subdivisionScope));panel.append(input);const list=subEl('div',undefined,'sub-review-list');list.style.maxHeight='none';panel.append(list);const render=()=>{list.replaceChildren();const query=subData.normalize(input.value);for(const r of subData.list({parent:subdivisionScope}).filter(r=>subData.normalize(r.name+' '+r.capital.name+' '+r.postalCode).includes(query))){const row=subEl('p');row.append(subEl('strong',r.name),document.createTextNode(' · '+r.capital.name));if(progress){const stats=Object.entries(subStore.learning).filter(([key])=>key.startsWith(r.id+':')).map(([,v])=>v),attempts=stats.reduce((n,v)=>n+v.attempts,0),correct=stats.reduce((n,v)=>n+v.correct,0);row.append(document.createTextNode(attempts?' · '+correct+'/'+attempts+' first-try recalls':' · Not studied yet'));}list.append(row);}};input.oninput=render;render();input.focus();}catch{panel.append(subEl('p','Study set unavailable. Please check the assets folder.'),subButton('Retry',()=>subOpenLibrary(progress)));}}
 function installSubdivisionPlay(){if(GEODEN_TEST_WORKER)return;subEnsureHost();for(const [id,progress]of [['searchStartBtn',false],['masteryOpenBtn',true]])document.getElementById(id)?.addEventListener('click',e=>{if(subdivisionScope!=='world'){e.preventDefault();e.stopImmediatePropagation();subOpenLibrary(progress);}},true);setInterval(()=>{subTick();if(subHost?.classList.contains('open')&&subStore.run&&subHost.dataset.play==='true')subSave();},1000);window.addEventListener('pagehide',()=>{subTick();if(subStore.run)subSave();});document.addEventListener('visibilitychange',()=>{subTickAt=performance.now();if(subStore.run)subSave();});}
 
+/* Subdivisions are local study sets, never an app-wide domain. */
+let homeStateRegions=false;
+const SUB_PARENT_CHOICES=[['US','United States','50 states','us-states'],['AU','Australia','6 states · 2 territories','australia-states-territories'],['CA','Canada','13 provinces & territories','canada-provinces-territories']];
+function subDecorateHome(){document.documentElement.dataset.studyDomain='world';document.getElementById('studyDomainSwitcher')?.remove();for(const id of ['chainModeBtn','detectiveModeBtn','rankingModeBtn','sprintModeBtn'])document.getElementById(id)?.classList.remove('sub-domain-unavailable');}
+function subStudyRegionChoices(mode,options={}){const box=subEl('div',undefined,'sub-study-regions');box.setAttribute('role','group');box.setAttribute('aria-label','States, provinces and territories');for(const[parent,name,detail]of SUB_PARENT_CHOICES){const button=subButton('',()=>subOpenSetup(mode,parent,options),'country-set-button');button.dataset.subParent=parent;button.append(subEl('span',name,'country-set-name'),subEl('span',detail,'country-set-meta'));box.append(button);}return box;}
+function subDecorateSetup(){
+ const card=document.getElementById('startSessionCard');card?.querySelector('.sub-geography')?.remove();document.getElementById('subStudyRegionButton')?.remove();document.getElementById('subStudyRegionChoices')?.remove();const mode=subMode(menuPlayMode);if(!card||!['quiz','standard','matching'].includes(mode))return;
+ const grid=card.querySelector('#countrySetPicker');if(!grid)return;const choices=subStudyRegionChoices(mode,{style:menuPlayMode==='interactive'?'deep':'mixed'});choices.id='subStudyRegionChoices';choices.classList.add('hidden');grid.after(choices);
+ const button=subButton('',()=>{const open=choices.classList.contains('hidden');choices.classList.toggle('hidden',!open);button.setAttribute('aria-expanded',String(open));},'country-set-button sub-study-region-entry');button.id='subStudyRegionButton';button.setAttribute('aria-expanded','false');button.setAttribute('aria-controls',choices.id);button.append(subEl('span','States & provinces →','country-set-name'),subEl('span','US · Australia · Canada','country-set-meta'));grid.append(button);
+}
+function subDecorateDiscovery(){
+ subDecorateHome();const mode=subMode(homeMode),landing=document.getElementById('discoveryLanding');if(!landing||!['maphunt','borderless'].includes(mode)||!homeVariant)return;
+ const grid=landing.querySelector('.discovery-grid'),clue=homeVariant.replace('city-','').replace('country','name'),target=homeVariant.startsWith('city-')?'capitalLocation':'location';
+ if(!homeStateRegions){const card=homeButton('States & provinces','United States · Australia · Canada',()=>{homeStateRegions=true;renderHomeDiscovery();document.getElementById('discoveryHeading')?.focus({preventScroll:true});});card.classList.add('sub-states-entry');card.dataset.stateRegions='true';grid.append(card);return;}
+ grid.replaceChildren();landing.querySelector('#discoveryHeading').textContent=SUB_MODES[mode]+' · States & provinces · '+(target==='capitalLocation'?'City locations · ':'')+(clue==='name'?'Names':clue==='flag'?'Flags':'Capitals');landing.querySelector('.discovery-description').textContent='Choose a state or province challenge. These runs stay separate from country challenges.';const back=landing.querySelector('.discovery-back');back.textContent='← Regions';back.onclick=()=>{homeStateRegions=false;renderHomeDiscovery();};
+ for(const[parent,name,detail,set]of SUB_PARENT_CHOICES){const card=subChallengeCard(mode,clue,target,set);card.querySelector('strong').textContent=name;const info=subEl('span',detail,'sub-region-detail');card.firstChild.append(info);grid.append(card);}
+ const regional=subEl('details',undefined,'sub-extra-regions');regional.append(subEl('summary','US regional challenges'));const regionalCards=subEl('div',undefined,'discovery-grid');for(const set of ['us-northeast','us-south','us-midwest','us-west'])regionalCards.append(subChallengeCard(mode,clue,target,set));regional.append(regionalCards);grid.append(regional);
+ const custom=landing.querySelector('.discovery-custom-section');if(custom)custom.replaceChildren(subEl('h4','Custom state / province game'),subStudyRegionChoices(mode,{custom:true,clue,target}));
+}
+function subReturnToRegions(c){
+ subToken++;subBusy=false;subHost?.classList.remove('open');openStartOverlay(false);homeOpenMode(c.mode);
+ if(['maphunt','borderless'].includes(c.mode)){homeVariant=(c.target==='capitalLocation'&&c.mode==='maphunt'?'city-':'')+(c.clue==='name'?'country':c.clue);homeStateRegions=true;renderHomeDiscovery();}
+ else{if(c.mode==='quiz')homeQuizSetup(c.style==='deep'?'interactive':'rapid');document.getElementById('countrySetDisclosure').open=true;document.getElementById('subStudyRegionButton')?.click();document.getElementById('subStudyRegionButton')?.scrollIntoView({block:'center'});}
+}
+function subInstallCustomMapRegions(){
+ const hunt=document.getElementById('mapHuntSetOptions');if(hunt&&!document.getElementById('subHuntRegions')){const more=subEl('details',undefined,'sub-extra-regions');more.id='subHuntRegions';more.append(subEl('summary','States & provinces'));const choices=subStudyRegionChoices('maphunt');for(const button of choices.querySelectorAll('[data-sub-parent]'))button.onclick=()=>subOpenSetup('maphunt',button.dataset.subParent,{custom:true,clue:mapHuntPromptMode==='country'?'name':mapHuntPromptMode,target:mapHuntTargetMode==='capital'?'capitalLocation':'location'});more.append(choices);hunt.after(more);}
+}
+
     installSubdivisionPlay();
+    subInstallCustomMapRegions();
     installCapitalHuntSetup();
     installHomeDiscovery();
     installBorderlessGame();
@@ -45875,5 +45886,22 @@ function installSubdivisionPlay(){if(GEODEN_TEST_WORKER)return;subEnsureHost();f
 
 
   </script>
+<style id="home-disclosure-cards-v76">
+/* Independent home disclosures: no shared enclosing card or inset Learn divider. */
+html.geoden-light body #startOverlay[data-home-view="home"] #homeModeBrowser{padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;overflow:visible!important}
+html.geoden-light body #startOverlay[data-home-view="home"] #playModePicker{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:14px!important;padding:0!important;margin:0!important;border:0!important;background:transparent!important}
+html.geoden-light body #startOverlay[data-home-view="home"] #playModePicker>.mode-discovery-group{padding:18px!important;margin:0!important;border:1px solid #d6d8ce!important;border-radius:20px!important;background:#faf8f2!important;box-shadow:none!important;box-sizing:border-box}
+html.geoden-light body #startOverlay[data-home-view="home"] #playModePicker>.mode-discovery-group>.home-section-summary{min-height:44px!important;margin:0!important}
+html.geoden-light body #startOverlay[data-home-view="home"] #playModePicker>.mode-discovery-group[open]>.mode-section-intro{margin:4px 0 14px!important}
+@media(max-width:520px){html.geoden-light body #startOverlay[data-home-view="home"] #playModePicker>.mode-discovery-group{padding:14px!important;border-radius:18px!important}}
+
+html.geoden-light body #startOverlay #studyDomainSwitcher{padding:0!important;margin:14px 0!important;border:0!important;background:transparent!important;border-radius:0!important}
+.sub-geography{padding:0;margin:12px 0;border:1px solid #d6d8ce;border-radius:14px;background:#f5f1e7;overflow:hidden}
+.sub-scope-summary{display:flex;align-items:center;justify-content:space-between;gap:14px;cursor:pointer;list-style:none;padding:14px 16px;min-height:48px;box-sizing:border-box;font-size:14px;font-weight:750;color:#62583f}
+.sub-scope-summary::-webkit-details-marker{display:none}.sub-scope-value{display:flex;align-items:center;gap:10px;text-align:right;font-size:13px;font-weight:600;color:#626754}.sub-scope-value:after{content:'';width:7px;height:7px;border-right:2px solid;border-bottom:2px solid;transform:rotate(45deg);flex-shrink:0}.sub-geography[open]>.sub-scope-summary .sub-scope-value:after{transform:rotate(225deg)}
+.sub-geography-options{margin:0;padding:4px 16px 16px;border:0;min-width:0}.sub-geography-options>legend{font-size:12px;color:#756b55;margin-bottom:8px}.sub-geography-options>button{width:100%;text-align:left;font-weight:750}.sub-geography-options>p,.sub-geography-options>small{font-size:12px;line-height:1.5;color:#69644f}.sub-scope-summary:focus-visible{outline:3px solid #8d9b70;outline-offset:-3px;border-radius:12px}
+</style>
+<style id="local-state-regions-v77">.sub-study-regions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0;padding:12px;border:1px solid #d1c6af;border-radius:14px;background:#eee7d8}.sub-study-regions .country-set-button{display:grid;gap:5px;text-align:left;min-height:60px;padding:12px;border:1px solid #c9c8b6;border-radius:12px;background:#fffdf7;color:#394637}.sub-study-regions .country-set-name{font-weight:800}.sub-study-regions .country-set-meta{font-size:12px;color:#6b6f5d}.sub-study-region-entry[aria-expanded=true]{background:#eee7d8!important;border-color:#ad9770!important}.sub-extra-regions{grid-column:1/-1;margin:14px 0;padding:14px;border:1px solid #d1c6af;border-radius:14px;background:#f3eee3}.sub-extra-regions>summary{cursor:pointer;font-weight:750;color:#6a5b40;min-height:28px}.sub-extra-regions>.discovery-grid{margin-top:14px}.sub-region-detail{font-size:12px;color:inherit}.sub-region-back{background:transparent!important;border:0!important;color:#62583f!important;padding-left:0!important}#discoveryLanding .sub-states-entry{background:#eee7d8!important;color:#5c513d!important;border-color:#c8b895!important}@media(max-width:520px){.sub-study-regions{grid-template-columns:1fr}}</style>
+<style>.borderless-field[hidden],.sub-field[hidden]{display:none!important}.borderless-field small,.sub-field small{font-size:13px;line-height:1.5;font-weight:400;color:#686b5b}</style>
 </body>
 </html>
