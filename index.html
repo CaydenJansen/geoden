@@ -15204,10 +15204,11 @@ html:is([data-study-domain="US"],[data-study-domain="CA"],[data-study-domain="AU
             <span class="switch-track"></span>
           </label>
         </div>
+        <details class="obvious-clues-settings"><summary>Obvious clues</summary><p>Choose whether clues can make the answer easier to guess. Turn a switch on to allow those clues.</p>
         <div class="experience-setting-row">
           <div class="experience-setting-copy">
-            <div class="experience-setting-name">Obvious name clues</div>
-            <div class="experience-setting-desc">Allow clues that nearly reveal the answer. Flash cards are unchanged.</div>
+            <div class="experience-setting-name">Obvious capital cities &amp; other names</div>
+            <div class="experience-setting-desc">Allow names that give away the country—for example, Mexico City → Mexico or Kuwaiti dinar → Kuwait. Also includes other city and language names. Applies to Quiz and supported games; Flash cards are unchanged.</div>
           </div>
           <label class="switch" aria-label="Allow obvious name clues in quiz and game modes">
             <input id="settingsGiveawayToggle" type="checkbox" />
@@ -15216,14 +15217,15 @@ html:is([data-study-domain="US"],[data-study-domain="CA"],[data-study-domain="AU
         </div>
         <div class="experience-setting-row">
           <div class="experience-setting-copy">
-            <div class="experience-setting-name">Hide language clue names</div>
-            <div class="experience-setting-desc">In Quiz, show text samples without language names when languages are the clue. Language answers still show their names.</div>
+            <div class="experience-setting-name">Obvious languages</div>
+            <div class="experience-setting-desc">In Quiz, show language names alongside text samples—for example, Japanese → Japan. Turn off to hide all language names when they are clues. Names still appear when the language itself is the answer.</div>
           </div>
-          <label class="switch" aria-label="Hide language names on Quiz clue screens">
+          <label class="switch" aria-label="Allow language names on Quiz clue screens">
             <input id="settingsLanguageClueToggle" type="checkbox" />
             <span class="switch-track"></span>
           </label>
         </div>
+        </details>
         <div class="experience-setting-row">
           <div class="experience-setting-copy">
             <div class="experience-setting-name">Haptic feedback</div>
@@ -15233,13 +15235,6 @@ html:is([data-study-domain="US"],[data-study-domain="CA"],[data-study-domain="AU
             <input id="settingsHapticsToggle" type="checkbox" />
             <span class="switch-track"></span>
           </label>
-        </div>
-        <div class="experience-setting-row install-setting-row">
-          <div class="experience-setting-copy">
-            <div class="experience-setting-name">Home screen</div>
-            <div class="experience-setting-desc" id="installAppMeta">Add GeoDen to your home screen.</div>
-          </div>
-          <button class="experience-action-button" id="installAppBtn" type="button">Install</button>
         </div>
       </section>
 
@@ -15260,24 +15255,7 @@ html:is([data-study-domain="US"],[data-study-domain="CA"],[data-study-domain="AU
         <div class="data-transfer-status" id="dataTransferStatus" role="status" aria-live="polite"></div>
       </section>
 
-      <section class="experience-settings bug-report-settings" aria-labelledby="bugReportSettingsTitle">
-        <div class="experience-settings-head">
-          <div>
-            <div class="experience-settings-title" id="bugReportSettingsTitle">Beta feedback</div>
-            <div class="experience-setting-desc">Found a bug or have an idea? Help make GeoDen better.</div>
-          </div>
-        </div>
-        <div class="settings-support-actions">
-          <button class="settings-support-action" id="bugReportSettingsBtn" type="button">
-            <span class="settings-support-copy"><span class="settings-support-title">Report a problem</span><span class="settings-support-description">Describe what happened and choose which details to share.</span></span>
-            <span class="settings-support-arrow" aria-hidden="true">→</span>
-          </button>
-          <a class="settings-support-action" href="mailto:caydenjansen2@gmail.com?subject=GeoDen%20beta%20feedback">
-            <span class="settings-support-copy"><span class="settings-support-title">Email feedback</span><span class="settings-support-description">caydenjansen2@gmail.com</span></span>
-            <span class="settings-support-arrow" aria-hidden="true">↗</span>
-          </a>
-        </div>
-      </section>
+
 
       <section class="experience-settings privacy-settings" aria-labelledby="privacySettingsTitle">
         <div class="experience-settings-head">
@@ -16366,7 +16344,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
   <script src="assets/geography.js"></script>
 
   <script>
-    const GEODEN_VERSION = "0.56.85";
+    const GEODEN_VERSION = "0.56.94";
     // v0.56.28 — blank-surface audit: guarded silhouettes/location maps and Matching visual preflight.
     // v0.56.18 — private-beta problem reporting with diagnostic state, recent actions, errors, copy/download/share.
     // v0.56.17 — tester-facing automatic failure reporting with screenshot/copy instructions.
@@ -17178,40 +17156,49 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
       return `${snapshot.remaining} fact${snapshot.remaining === 1 ? "" : "s"} to complete today’s goal.`;
     }
 
+    function renderDailyFactsBar(fill,snapshot){
+      if(!fill)return;
+      const track=fill.parentElement,denominator=Math.max(1,snapshot.goal,snapshot.facts);
+      const categories=[['clean','First try','#39784e'],['assisted','With help','#b08a39'],['missed','Missed','#995347']];
+      let remaining=snapshot.facts;
+      fill.style.display='none';track.replaceChildren(fill);
+      for(const[key,label,color]of categories){
+        const count=Math.min(remaining,Math.max(0,Math.floor(Number(snapshot[key])||0)));
+        remaining-=count;
+        if(!count)continue;
+        const segment=document.createElement('span');segment.className='daily-fact-segment daily-fact-'+key;
+        segment.style.width=(100*count/denominator)+'%';segment.style.background=color;
+        segment.setAttribute('aria-hidden','true');segment.title=count+' '+label.toLowerCase();track.append(segment);
+      }
+      if(remaining>0){const segment=document.createElement('span');segment.className='daily-fact-segment daily-fact-unclassified';segment.style.width=(100*remaining/denominator)+'%';segment.setAttribute('aria-hidden','true');segment.title=remaining+' earlier answers without a saved result';track.append(segment);}
+      track.setAttribute('role','progressbar');track.setAttribute('aria-label','Facts practised today');track.setAttribute('aria-valuemin','0');track.setAttribute('aria-valuemax',String(snapshot.goal));track.setAttribute('aria-valuenow',String(Math.min(snapshot.facts,snapshot.goal)));
+      track.setAttribute('aria-valuetext',snapshot.facts+' of '+snapshot.goal+' facts practised today: '+snapshot.clean+' first try, '+snapshot.assisted+' with help, '+snapshot.missed+' missed');
+    }
+    function renderDailyFactsLegend(host,snapshot){
+      if(!host)return;host.replaceChildren();
+      for(const[key,label]of [['clean','First try'],['assisted','With help'],['missed','Missed']]){
+        const item=document.createElement('span');item.className='daily-fact-key daily-fact-key-'+key;
+        const dot=document.createElement('i');dot.setAttribute('aria-hidden','true');item.append(dot,document.createTextNode(snapshot[key]+' '+label.toLowerCase()));host.append(item);
+      }
+    }
     function renderDailyGoalUI() {
       const snapshot = dailyGoalSnapshot();
-      if (dailyGoalTitle) dailyGoalTitle.textContent = `${snapshot.facts} / ${snapshot.goal} facts`;
+      if (dailyGoalTitle) dailyGoalTitle.textContent = `${snapshot.facts} / ${snapshot.goal} facts practised`;
       if (dailyGoalMeta) dailyGoalMeta.textContent = dailyGoalStatusText(snapshot);
-      if (dailyGoalFill) {
-        dailyGoalFill.style.width = `${snapshot.progress * 100}%`;
-        const track = dailyGoalFill.parentElement;
-        if (track) {
-          track.setAttribute("aria-valuemax", String(snapshot.goal));
-          track.setAttribute("aria-valuenow", String(Math.min(snapshot.facts, snapshot.goal)));
-          track.setAttribute("aria-valuetext", `${snapshot.facts} of ${snapshot.goal} facts`);
-        }
-      }
-      if (dailyGoalBreakdown) dailyGoalBreakdown.textContent = `${snapshot.clean} first try · ${snapshot.assisted} with help · ${snapshot.missed} missed`;
+      renderDailyFactsBar(dailyGoalFill,snapshot);
+      renderDailyFactsLegend(dailyGoalBreakdown,snapshot);
       if (dailyGoalSelect) dailyGoalSelect.value = String(snapshot.goal);
       if (dailyStreakValue) dailyStreakValue.textContent = String(snapshot.streak);
       if (dailyStreakLabel) dailyStreakLabel.textContent = "day streak";
       dailyGoalCard?.classList.toggle("complete", snapshot.complete);
 
-      if (masteryDailyValue) masteryDailyValue.textContent = `${snapshot.facts} / ${snapshot.goal} facts`;
+      if (masteryDailyValue) masteryDailyValue.textContent = `${snapshot.facts} / ${snapshot.goal} facts practised`;
       if (masteryDailyStreak) {
         masteryDailyStreak.textContent = `${snapshot.streak} day${snapshot.streak === 1 ? "" : "s"} streak` +
           (snapshot.longestStreak > snapshot.streak ? ` · best ${snapshot.longestStreak}` : "");
       }
-      if (masteryDailyFill) {
-        masteryDailyFill.style.width = `${snapshot.progress * 100}%`;
-        const track = masteryDailyFill.parentElement;
-        if (track) {
-          track.setAttribute("aria-valuemax", String(snapshot.goal));
-          track.setAttribute("aria-valuenow", String(Math.min(snapshot.facts, snapshot.goal)));
-          track.setAttribute("aria-valuetext", `${snapshot.facts} of ${snapshot.goal} facts`);
-        }
-      }
-      if (masteryDailyMeta) masteryDailyMeta.textContent = `${snapshot.clean} first try · ${snapshot.assisted} with help · ${snapshot.missed} missed`;
+      renderDailyFactsBar(masteryDailyFill,snapshot);
+      renderDailyFactsLegend(masteryDailyMeta,snapshot);
       return snapshot;
     }
 
@@ -18350,13 +18337,14 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
         countries: session.sprint?.enabled ? metrics.total : totalCountries,
         correct: metrics.correct,
         total: metrics.total,
-        dailyKey: session.dailyChallenge?.key || null
+        dailyKey: session.dailyChallenge?.key || session.launchPreset?.dailyKey || null,
+        points:session.interaction==="detective"?Number(session.detective?.score)||0:null
       };
       sessionHistory = [entry, ...sessionHistory.filter(item => item.id !== entry.id)].slice(0, 50);
       saveSessionHistory();
       session.historyArchivedAt = endedAt;
 
-      if (entry.dailyKey && !dailyChallengeProgress?.days?.[entry.dailyKey]) {
+      if (session.dailyChallenge?.key && !dailyChallengeProgress?.days?.[entry.dailyKey]) {
         if (!dailyChallengeProgress || typeof dailyChallengeProgress !== "object") dailyChallengeProgress = { days: {} };
         if (!dailyChallengeProgress.days || typeof dailyChallengeProgress.days !== "object") dailyChallengeProgress.days = {};
         const previous = dailyChallengeProgress.days[entry.dailyKey] || {};
@@ -19004,6 +18992,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
     }
 
     function updateCountrySetOptions() {
+      updateAdditionalPlaceDescriptions();
       countrySetPicker?.querySelectorAll("[data-country-set]").forEach(button => {
         const set = button.dataset.countrySet;
         const active = set === selectedCountrySet;
@@ -25921,7 +25910,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
       }
     }
 
-    // v0.56.85: the browser owns touch scrolling and momentum. Pointer events
+    // v0.56.94: the browser owns touch scrolling and momentum. Pointer events
     // only distinguish a tap from a swipe; never prevent or emulate scrolling.
     function beginMatchingRailSwipe(event, strip) {
       if (!strip) return;
@@ -29606,6 +29595,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
     }
 
     function masteryFieldLabel(field) {
+      const friendly={capital:'Capital cities',country:'Country names',flag:'Flags',capitalLocation:'Capital cities on a map',capitalMapLocation:'Capital cities on a map',capitalDots:'Capital cities on a map',largestCity:'Largest cities',currency:'Currencies'};if(friendly[field])return friendly[field];
       if (GAME_MASTERY_META[field]?.label) return GAME_MASTERY_META[field].label;
       if (STAGE_META[field]?.name) return STAGE_META[field].name;
       if (MATCHING_FIELD_META[field]?.label) return MATCHING_FIELD_META[field].label;
@@ -29723,7 +29713,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
       });
       const fields = [...directFields, ...gameFields]
         .sort((a, b) => a.cleanAccuracy - b.cleanAccuracy || a.accuracy - b.accuracy || b.attempts - a.attempts)
-        .slice(0, 9);
+;
 
       return { studied, fresh, correct, total, recall, due, dueFacts, weakCountries, fields };
     }
@@ -29909,62 +29899,137 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
       return modeDisplayName(entry?.interaction || "standard");
     }
 
-    function renderMasteryHistory() {
-      if (!masteryHistoryList || !masteryHistorySummary) return;
-      masteryHistoryList.replaceChildren();
-      const history = Array.isArray(sessionHistory) ? sessionHistory : [];
-      const weekAgo = Date.now() - 7 * 86400000;
-      const recent = history.filter(item => Number(item.endedAt) >= weekAgo && Number(item.total) > 0);
-      const recentCorrect = recent.reduce((sum,item) => sum + (Number(item.correct) || 0), 0);
-      const recentTotal = recent.reduce((sum,item) => sum + (Number(item.total) || 0), 0);
-      const previous = history.filter(item => Number(item.endedAt) >= weekAgo - 7 * 86400000 && Number(item.endedAt) < weekAgo && Number(item.total) > 0);
-      const previousCorrect = previous.reduce((sum,item) => sum + (Number(item.correct) || 0), 0);
-      const previousTotal = previous.reduce((sum,item) => sum + (Number(item.total) || 0), 0);
-      if (recentTotal) {
-        const recentPct = Math.round(recentCorrect / recentTotal * 100);
-        const previousPct = previousTotal ? Math.round(previousCorrect / previousTotal * 100) : null;
-        const change = previousPct == null ? null : recentPct - previousPct;
-        const trend = change == null ? "" : change === 0
-          ? " Same as the previous week."
-          : ` ${change > 0 ? "Up" : "Down"} ${Math.abs(change)} point${Math.abs(change) === 1 ? "" : "s"} from the previous week.`;
-        masteryHistorySummary.textContent = `Last 7 days: ${recentPct}% across ${recentTotal} answers in ${recent.length} session${recent.length === 1 ? "" : "s"}.${trend}`;
-      } else {
-        masteryHistorySummary.textContent = "Your completed sessions will appear here.";
-      }
+    function renderMasteryHistory(){renderProgressActivity();}
 
-      if (!history.length) {
-        const empty = document.createElement("div");
-        empty.className = "mastery-empty";
-        empty.textContent = "Complete a session and it will be saved here.";
-        masteryHistoryList.appendChild(empty);
-        return;
-      }
+    // Progress presentation reads existing learning and game records separately.
+    function progressNode(tag,text,className){const el=document.createElement(tag);if(text!=null)el.textContent=text;if(className)el.className=className;return el;}
+    function installProgressOverview(){
+      const panel=masteryOverlay.querySelector('.mastery-panel');if(panel.querySelector('#progressRecommendation'))return;
+      const recommendation=progressNode('section',null,'progress-recommendation');recommendation.id='progressRecommendation';
+      recommendation.setAttribute('aria-labelledby','progressRecommendationTitle');
+      const title=progressNode('h3','Your next step');title.id='progressRecommendationTitle';
+      recommendation.append(title,masteryNextReview,masteryReviewNowBtn);panel.querySelector('.mastery-head').after(recommendation);
+      const coverage=panel.querySelector('.mastery-coverage'),stats=panel.querySelector('.mastery-stats');recommendation.after(coverage);coverage.after(stats);
+      const map=document.getElementById('masteryMapFromProgressBtn');stats.after(map);
+      const mapIcon=progressNode('span',null,'progress-map-icon');mapIcon.setAttribute('aria-hidden','true');
+      mapIcon.innerHTML='<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M6 11.5 18 7l12 4 12-4v29.5L30 41l-12-4-12 4V11.5Z"/><path d="M18 7v30M30 11v30"/><path d="M24 16c-3.1 0-5.5 2.4-5.5 5.4 0 4.1 5.5 10.1 5.5 10.1s5.5-6 5.5-10.1c0-3-2.4-5.4-5.5-5.4Z"/><circle cx="24" cy="21.5" r="1.5" fill="currentColor" stroke="none"/></svg>';
+      const mapCopy=progressNode('span',null,'progress-map-copy');while(map.firstChild)mapCopy.append(map.firstChild);map.append(mapIcon,mapCopy);
+      coverage.querySelector('.mastery-daily')?.remove();
+      map.querySelector('.mastery-map-feature-title').textContent='See your learning map';map.querySelector('.mastery-map-feature-copy').textContent='Explore what you know, place by place.';
+      document.getElementById('masteryStudied').closest('.mastery-stat').hidden=true;document.getElementById('masteryFresh').closest('.mastery-stat').hidden=true;
+      masteryRecall.nextElementSibling.textContent='Correct first time';masteryDue.nextElementSibling.textContent='Facts ready to review';
+      coverage.querySelector('.mastery-coverage-copy span').textContent='Places explored';
+      const note=progressNode('p','Explored means you’ve practised a place—not that you’ve mastered it. See those places on your learning map.','progress-explanation');coverage.querySelector('.mastery-progress-track').after(note);
+      const track=coverage.querySelector('.mastery-progress-track');track.removeAttribute('aria-hidden');track.setAttribute('role','progressbar');track.setAttribute('aria-label','Places explored');
+      const details=progressNode('details',null,'progress-method');details.append(progressNode('summary','What do these numbers mean?'),progressNode('p','Correct first time counts recorded learning answers without retries or help. Game skill scores are shown separately. Needs practice combines learning and game results to suggest where to focus. Places explored counts places you have practised; it does not mean you know every topic. Reviews use your existing learning schedule.'));stats.after(details);details.after(map);
+      stats.hidden=true;details.remove();
+      const weak=panel.querySelector('[aria-labelledby="masteryWeakTitle"]'),disclosure=progressNode('details',null,'mastery-section progress-practice-disclosure'),summary=progressNode('summary','Needs practice');disclosure.append(summary);weak.before(disclosure);disclosure.append(document.getElementById('masteryWeakCountries'));weak.remove();
+      const grid=panel.querySelector('.mastery-grid');
+      const strengths=progressNode('section',null,'mastery-section mastery-section-wide progress-strengths');strengths.innerHTML='<h3>What’s going well</h3><p class="progress-explanation">Strong topics from at least 5 attempts—not a mastery badge.</p><div id="progressStrengths"></div>';grid.prepend(strengths);
 
-      const fmt = new Intl.DateTimeFormat("en", { month: "short", day: "numeric" });
-      for (const item of history.slice(0, 8)) {
-        const row = document.createElement("div");
-        row.className = "mastery-history-row";
-        const copy = document.createElement("div");
-        const title = document.createElement("div");
-        title.className = "mastery-history-title";
-        const strategy = countryPoolDisplayName(item.pool || "random");
-        title.textContent = item.dailyKey ? "Daily GeoDen" : `${sessionHistoryModeLabel(item)} · ${strategy}`;
-        const meta = document.createElement("div");
-        meta.className = "mastery-history-meta";
-        const set = countrySetDisplayName(item.countrySet || "world");
-        const units = Number(item.countries) || 0;
-        meta.textContent = `${fmt.format(new Date(Number(item.endedAt) || Date.now()))} · ${set}${units ? ` · ${units} ${sessionUnitLabel(item.interaction || "standard", units)}` : ""}`;
-        copy.append(title, meta);
-        const score = document.createElement("div");
-        score.className = "mastery-history-score";
-        const total = Number(item.total) || 0;
-        score.textContent = total ? `${Math.round((Number(item.correct) || 0) / total * 100)}%` : "—";
-        row.append(copy, score);
-        masteryHistoryList.appendChild(row);
+      document.getElementById('masteryFieldsTitle').textContent='Learning by topic';document.getElementById('masteryFieldsTitle').nextElementSibling.textContent='Correct first time';
+      const achievements=progressNode('section',null,'mastery-section mastery-section-wide progress-achievements');achievements.innerHTML='<h3>Game achievements</h3><p class="progress-explanation">Country-region challenges and saved game results. Separate from learning accuracy.</p><div id="progressChallengeCards"></div><div id="progressPersonalBests"></div><details class="progress-method"><summary>Game skills</summary><p class="progress-explanation">Average performance from recorded games. Some assisted results count partially; these are not quiz accuracy percentages.</p><div id="progressGameSkills"></div></details>';
+      grid.querySelector('[aria-labelledby="masteryConfusionsTitle"]').after(achievements);
+      document.getElementById('masteryHistoryTitle').textContent='Recent activity';
+      for(const section of [...grid.children]){
+        if(section.matches('details.progress-section-disclosure'))continue;
+        if(section.matches('details')){
+          section.classList.add('progress-section-disclosure');
+          const body=progressNode('div',null,'progress-disclosure-body');while(section.children.length>1)body.append(section.children[1]);section.append(body);continue;
+        }
+        const disclosure=progressNode('details',null,section.className+' progress-section-disclosure');
+        if(section.hasAttribute('aria-labelledby'))disclosure.setAttribute('aria-labelledby',section.getAttribute('aria-labelledby'));
+        const summary=progressNode('summary'),head=section.querySelector(':scope > .mastery-section-head'),heading=section.querySelector(':scope > h3');
+        if(head)summary.append(head);else if(heading)summary.append(heading);
+        const body=progressNode('div',null,'progress-disclosure-body');while(section.firstChild)body.append(section.firstChild);
+        disclosure.append(summary,body);section.replaceWith(disclosure);
       }
+      // The map is the visual companion to the places-explored count.
+      coverage.append(map);
+    }
+    function progressPracticeTitle(field){const topics={capital:'Practise remembering capital cities',capitalLocation:'Practise finding capital cities on a map',capitalMapLocation:'Practise finding capital cities on a map',capitalDots:'Practise finding capital cities on a map',borderlessCapital:'Practise pinpointing capital cities',country:'Practise recognising countries',flag:'Practise recognising flags',flagRecognition:'Practise recognising flags',mapLocation:'Practise finding countries on a map',location:'Practise finding countries on a map',capitalToPlace:'Match capital cities to their countries',currency:'Practise remembering currencies',largestCity:'Get to know the biggest cities'};return topics[field]||'Let’s practise a topic you’ve found tricky';}
+    function progressRecommendation(snapshot){
+      const plan=reviewPlanForStudySet('world','standard');
+      if(plan.dueFacts>0&&plan.indices.length)return{kind:'review',title:'Time for a quick refresher',copy:'You’ve practised these answers before. Revisiting them now can help you remember them for longer.',action:'Review '+plan.dueFacts+' answers →'};
+      const field=snapshot.fields.find(item=>item.field!=='historyFacts'&&item.cleanAccuracy<.8&&masteryFieldPracticePlan(item.field).indices.length);
+      if(field)return{kind:'topic',field,title:progressPracticeTitle(field.field),copy:'Try a few questions about places you’ve found tricky. You can take your time.',action:'Practise this topic →'};
+      if(plan.indices.length)return{kind:'review',title:'Keep building your confidence',copy:'Revisit '+plan.indices.length+' suggested places in a review session.',action:'Set up practice →'};
+      return{kind:'explore',title:snapshot.studied?'Ready for something new?':'Start exploring',copy:snapshot.dueFacts?'Some answers you’ve practised are ready for another look, but their topics are switched off. Turn those topics on in the learning setup to review them.':'Choose a few places and topics to learn next.',action:'Choose what to learn →'};
+    }
+    function startProgressRecommendation(){
+      const plan=progressRecommendation(masterySnapshot());
+      if(plan.kind==='topic'){
+        if(!homeConfirmReplace('study',masteryReviewNowBtn))return;
+        const practice=masteryFieldPracticePlan(plan.field.field);masteryOverlay.classList.remove('open');startFocusedMasteryPractice(practice.indices,practice.factFocus,masteryFieldLabel(plan.field.field)+' practice');return;
+      }
+      masteryOverlay.classList.remove('open');openStartOverlay(!!studySession&&studySession.active!==false,true);homeOpenMode('standard');
+      if(plan.kind==='review'){selectedCountryPool='review';selectedCountrySet='world';selectSessionChoice('finite',5);updateSessionChoiceUI();}
+    }
+    function progressLearningRows(host,items,game=false){
+      host.replaceChildren();
+      if(!items.length){host.append(progressNode('p',game?'Your recorded game skills will appear here.':'Your topic results will appear after you practise.','mastery-empty'));return;}
+      for(const item of items){const practice=masteryFieldPracticePlan(item.field),score=Math.round(item.cleanAccuracy*100);renderMasteryRow(host,masteryFieldLabel(item.field),game?item.attempts+' game results · average score':item.cleanCorrect+' of '+item.attempts+' correct first time',score+'%',practice.indices.length?{actionLabel:'Practise',onPractice:()=>startFocusedMasteryPractice(practice.indices,practice.factFocus,masteryFieldLabel(item.field)+' practice')}:{});}
+    }
+    function renderProgressOverview(snapshot){
+      const plan=progressRecommendation(snapshot);document.getElementById('progressRecommendationTitle').textContent=plan.title;masteryNextReview.textContent=plan.copy;masteryReviewNowBtn.textContent=plan.action;masteryReviewNowBtn.disabled=false;delete masteryReviewNowBtn.dataset.replaceUntil;
+      const universe=countrySetIndices('world').length,track=masteryOverlay.querySelector('.mastery-progress-track');masteryCoverageText.textContent=snapshot.studied+' of '+universe;
+      track.setAttribute('aria-valuemin','0');track.setAttribute('aria-valuemax',String(universe));track.setAttribute('aria-valuenow',String(snapshot.studied));track.setAttribute('aria-valuetext',snapshot.studied+' of '+universe+' places explored');
+      const direct=snapshot.fields.filter(item=>item.kind==='direct'&&item.field!=='historyFacts'),games=snapshot.fields.filter(item=>item.kind==='game');
+      progressLearningRows(masteryFieldStats,direct);progressLearningRows(document.getElementById('progressGameSkills'),games,true);
+      const strengths=document.getElementById('progressStrengths');strengths.replaceChildren();
+      const strong=direct.filter(item=>item.attempts>=5&&item.cleanAccuracy>=.8).sort((a,b)=>b.cleanAccuracy-a.cleanAccuracy||b.attempts-a.attempts).slice(0,3);
+      if(!strong.length)strengths.append(progressNode('p','Keep practising—topics with at least 80% correct first time across 5 or more attempts will appear here.','mastery-empty'));
+      for(const item of strong)renderMasteryRow(strengths,masteryFieldLabel(item.field),item.cleanCorrect+' of '+item.attempts+' correct first time',Math.round(item.cleanAccuracy*100)+'%');
+      const cards=document.getElementById('progressChallengeCards');cards.replaceChildren();
+      for(const [mode,name,detail]of [['maphunt','Map Hunt','Country shapes & capital dots'],['borderless','Borderless countries','Country-location challenges'],['chain','Map Crawl','Connected challenges']]){
+        const ids=Object.keys(HOME_MAP_VARIANTS[mode]).flatMap(variant=>HOME_MAP_REGIONS.map(region=>homeChallengeId(mode,variant,region))),records=ids.map(id=>homeRecords.challenges[id]).filter(record=>record?.best),perfect=records.filter(record=>record.best.score===100).length;
+        const card=progressNode('div',null,'progress-game-card'),heading=progressNode('h4',name);heading.prepend(gameIcon(mode));card.append(heading,progressNode('small',detail),progressNode('strong',records.length+' / '+ids.length+' completed'),progressNode('span',perfect+' perfect'));
+        const bar=document.createElement('progress');bar.max=ids.length;bar.value=records.length;bar.setAttribute('aria-label',name+' country-region challenges completed');card.append(bar);cards.append(card);
+      }
+      const bests=document.getElementById('progressPersonalBests');bests.replaceChildren();
+      const saved=Object.entries(homeRecords.challenges).filter(([,r])=>r?.best).sort((a,b)=>b[1].best.completedAt-a[1].best.completedAt).slice(0,3);
+      if(saved.length){bests.append(progressNode('h4','Recent challenge achievements'));for(const [id,r]of saved){const spec=homeChallengeSpec(id);if(!spec)continue;renderMasteryRow(bests,modeDisplayName(spec.mode)+' · '+countrySetDisplayName(spec.region),HOME_MAP_VARIANTS[spec.mode][spec.variant]+' · personal best · '+homeTime(r.best.elapsedMs),r.best.score+'%');}}
+      const capitalRuns=progressActivityRows().filter(r=>r.mode==='borderless'&&r.target==='capital'&&r.total>0),groups=new Map();
+      for(const row of capitalRuns){const key=row.dailyKey?'daily':row.set+':'+row.total+':'+(row.clue||'country');const prior=groups.get(key);if(!prior||row.points/row.total>prior.points/prior.total)groups.set(key,row);}
+      if(groups.size){bests.append(progressNode('h4','Borderless capitals · personal bests'));for(const row of [...groups.values()].sort((a,b)=>b.at-a.at).slice(0,3))renderMasteryRow(bests,row.dailyKey?'Daily · 5 capitals':countrySetDisplayName(row.set)+' · '+row.total+' capitals',(row.dailyKey?'Across saved daily puzzles':'Clues: '+promptParts(row.clue||'country').map(k=>({country:'country name',capital:'capital name',flag:'flag'})[k]).join(' + ')),row.points+' / '+row.total*100+' pts');}
+      bests.append(progressNode('p','Best results use saved records; older custom games may not have a saved result.','progress-explanation'));
+    }
+    function archiveBorderlessProgress(s){
+      if(!s||s.dailyKey||s.challenge||!s.codes?.length||s.index!==s.codes.length||s.progressArchivedAt)return;
+      const at=Date.now();s.progressArchivedAt=at;
+      const entry={id:'borderless:'+at+':'+Math.random().toString(36).slice(2),interaction:'borderless',target:s.target,clue:s.clue,countrySet:s.set,total:s.codes.length,correct:s.results.filter(r=>r.score===100&&!r.revealed).length,points:s.results.reduce((n,r)=>n+r.score,0),endedAt:at,elapsedMs:s.elapsedMs};
+      sessionHistory=[entry,...sessionHistory].slice(0,50);saveSessionHistory();
+    }
+    function progressActivityRows(){
+      const rows=[],num=x=>Math.max(0,Number(x)||0),add=row=>{if(Number.isFinite(row.at)&&row.at>0)rows.push(row);};
+      for(const [key,r]of Object.entries(homeRecords.dailies||{})){const type=key.split(':').at(-1),borderless=type.startsWith('borderless-'),mode=borderless?'borderless':type;add({id:'daily:'+key,dailyKey:key,mode,target:borderless?type.slice(11):null,title:'Daily '+(borderless?type==='borderless-capital'?'Borderless Capitals':'Borderless Countries':modeDisplayName(mode)),set:'world',at:num(r.completedAt),total:num(r.total),correct:num(r.correct),score:num(r.score),points:num(r.points??(borderless?r.score*r.total:r.score)),elapsedMs:num(r.elapsedMs)});}
+      for(const [key,r]of Object.entries(dailyChallengeProgress.days||{}))add({id:'daily:'+key,dailyKey:key,mode:'rapid',title:'Daily Quiz',set:'world',at:num(r.completedAt),correct:num(r.correct),total:num(r.total),elapsedMs:num(r.elapsedMs)});
+      for(const [id,r]of Object.entries(homeRecords.challenges||{})){const spec=homeChallengeSpec(id);if(!spec||!r.last)continue;add({id:'challenge:'+id,mode:spec.mode,title:modeDisplayName(spec.mode)+' · '+HOME_MAP_VARIANTS[spec.mode][spec.variant],set:spec.region,at:num(r.last.completedAt),score:num(r.last.score),total:num(r.last.total),correct:num(r.last.correct),elapsedMs:num(r.last.elapsedMs),challenge:true});}
+      for(const item of sessionHistory||[]){const mode=item.interaction||'standard';if(item.dailyKey&&rows.some(r=>r.dailyKey===item.dailyKey))continue;
+        // Older Matching/Detective history omitted its daily key. Avoid showing the same recorded finish twice.
+        if(!item.dailyKey&&['matching','detective'].includes(mode)&&rows.some(r=>r.dailyKey&&r.mode===mode&&Math.abs(r.at-num(item.endedAt))<1500&&r.total===num(item.total)&&r.correct===num(item.correct)))continue;
+        add({id:item.id,mode,title:item.dailyKey?'Daily '+modeDisplayName(mode):mode==='borderless'?'Borderless '+(item.target==='capital'?'Capitals':'Countries'):sessionHistoryModeLabel(item),target:item.target,set:item.countrySet||'world',clue:item.clue,at:num(item.endedAt),total:num(item.total),correct:num(item.correct),points:item.points==null?null:num(item.points),elapsedMs:num(item.elapsedMs),dailyKey:item.dailyKey});
+      }
+      return rows.sort((a,b)=>b.at-a.at);
+    }
+    function progressActivityScore(row){
+      if(row.mode==='borderless'&&row.target==='capital')return row.points+' / '+row.total*100+' pts';
+      if(row.mode==='detective')return row.correct+' / '+row.total+' solved'+(row.points==null?'':' · '+row.points+' pts');
+      if(row.mode==='ranking')return row.score+'% order score';
+      if(row.challenge)return row.score+'% '+(row.mode==='chain'?'unassisted':'first try');
+      if(row.mode==='borderless')return row.correct+' / '+row.total+' first try';
+      return row.correct+' / '+row.total+' '+(row.mode==='sprint'?'correct':row.mode==='matching'?'first try':'correct');
+    }
+    function renderProgressActivity(){
+      masteryHistoryList.replaceChildren();const rows=progressActivityRows(),recent=rows.filter(r=>r.at>=Date.now()-7*86400000);
+      masteryHistorySummary.textContent=recent.length?recent.length+' saved results in the last 7 days · scores stay specific to each mode':'Completed learning sessions, daily games and saved challenges.';
+      if(!rows.length){masteryHistoryList.append(progressNode('p','Complete a session and it will be saved here.','mastery-empty'));return;}
+      const fmt=new Intl.DateTimeFormat('en',{month:'short',day:'numeric'});
+      for(const row of rows.slice(0,12)){const el=progressNode('div',null,'mastery-history-row'),copy=progressNode('div'),title=progressNode('div',row.title,'mastery-history-title');title.prepend(gameIcon(row.mode));copy.append(title,progressNode('div',fmt.format(new Date(row.at))+' · '+countrySetDisplayName(row.set)+(row.elapsedMs?' · '+homeTime(row.elapsedMs):''),'mastery-history-meta'));el.append(copy,progressNode('div',progressActivityScore(row),'mastery-history-score'));masteryHistoryList.append(el);}
     }
 
     function renderMastery() {
+      installProgressOverview();
       renderDailyGoalUI();
       const snapshot = masterySnapshot();
       masteryStudied.textContent = `${snapshot.studied}`;
@@ -30003,13 +30068,13 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
       if (!snapshot.weakCountries.length) {
         const empty = document.createElement("div");
         empty.className = "mastery-empty";
-        empty.textContent = "Study some countries and your weakest ones will appear here.";
+        empty.textContent = "Places worth another practice will appear here.";
         masteryWeakCountries.appendChild(empty);
       } else {
         for (const item of snapshot.weakCountries) {
           const score = item.accuracy == null ? "—" : `${Math.round(item.accuracy * 100)}%`;
-          const attemptText = `${item.attempts} evidence point${item.attempts === 1 ? "" : "s"}`;
-          const weakText = item.weakestField ? ` · weakest: ${masteryFieldLabel(item.weakestField)}` : "";
+          const attemptText = `${item.attempts} recorded attempt${item.attempts === 1 ? "" : "s"}`;
+          const weakText = item.weakestField ? ` · revisit ${masteryFieldLabel(item.weakestField)}` : "";
           renderMasteryRow(
             masteryWeakCountries,
             item.country.name,
@@ -30058,6 +30123,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
 
       renderMasteryConfusions();
       renderMasteryHistory();
+      renderProgressOverview(snapshot);
     }
 
     function openMastery() {
@@ -36999,7 +37065,7 @@ function scaleCapitalHistory(parent,scale){parent.selectAll('circle').attr('r',4
       const reveal=document.createElement('button');reveal.type='button';reveal.className='borderless-reveal';reveal.textContent='Reveal location';reveal.disabled=true;
       content.append(progress,clue,host,feedback,reveal);borderlessProgress(s,content);
       let finished=false;
-      function complete(result,api){if(finished||token!==borderlessRenderToken)return;finished=true;pauseBorderlessClock();api.reveal(result.geo,result);s.results.push({code:c.code,...result,tries:Math.min(3,s.misses+1)});s.index++;s.misses=0;borderlessRecordChallenge(s);borderlessRecordDaily(s);saveBorderlessRun();borderlessProgress(s,content);const current=s.target==='country'?host.querySelector('.borderless-marks path'):null;if(current)current.setAttribute('fill',borderlessResultColor(result));reveal.remove();feedback.textContent=`${c.name} · ${s.target==='capital'?mapHuntCapitalCities(c).map(p=>p.name).join(' / ')+' · ':''}${result.revealed?'Location revealed':borderlessResultText(result,s.target)}`;
+      function complete(result,api){if(finished||token!==borderlessRenderToken)return;finished=true;pauseBorderlessClock();api.reveal(result.geo,result);s.results.push({code:c.code,...result,tries:Math.min(3,s.misses+1)});s.index++;s.misses=0;borderlessRecordChallenge(s);borderlessRecordDaily(s);archiveBorderlessProgress(s);saveBorderlessRun();borderlessProgress(s,content);const current=s.target==='country'?host.querySelector('.borderless-marks path'):null;if(current)current.setAttribute('fill',borderlessResultColor(result));reveal.remove();feedback.textContent=`${c.name} · ${s.target==='capital'?mapHuntCapitalCities(c).map(p=>p.name).join(' / ')+' · ':''}${result.revealed?'Location revealed':borderlessResultText(result,s.target)}`;
         const next=document.createElement('button');next.type='button';next.className='borderless-primary';next.textContent=s.index===s.codes.length?'See results →':'Next place →';next.onclick=renderBorderlessRound;content.append(next);if(s.index<s.codes.length)setTimeout(()=>{if(token===borderlessRenderToken&&document.getElementById('borderlessOverlay').classList.contains('open'))renderBorderlessRound();},s.target==='capital'?2200:1100);}
       const map=await createBorderlessMap(host,c,s.target,{reuse:true,set:s.set,results:s.mapProgress==='blind'?[]:s.results,view:s.mapView,onView:view=>{s.mapView=view;},isCurrent:()=>token===borderlessRenderToken&&document.getElementById('borderlessOverlay').classList.contains('open'),onGuess:(r,api)=>{
         if(finished)return;if(s.target==='country'&&s.mapProgress!=='blind'&&s.results.some(result=>result.code===r.clickedCode)){feedback.textContent=r.clickedName+' · already filled';return;}if(s.target==='capital'){complete(r,api);return;}if(r.correct){r.score=s.misses===0?100:0;complete(r,api);return;}
@@ -37658,7 +37724,7 @@ function studyCapitalPrompt(host,c,stage){if(!capitalPromptDetails||studySession
     });
 
     dailyGoalSelect?.addEventListener("change", () => setDailyGoal(dailyGoalSelect.value));
-    masteryReviewNowBtn.addEventListener("click", startSmartReviewSession);
+    masteryReviewNowBtn.addEventListener("click", startProgressRecommendation);
     todayFocusBtn?.addEventListener("click", startTodayFocusSession);
     dailyChallengeBtn?.addEventListener("click", handleDailyChallengeButton);
     masteryOpenBtn.addEventListener("click", openMastery);
@@ -37961,7 +38027,21 @@ function studyCapitalPrompt(host,c,stage){if(!capitalPromptDetails||studySession
       return ios && !otherIosBrowser;
     }
 
+    function additionalPlacesDescription(set){
+      const custom=set==='custom'?new Set(customCountryCodes):null;
+      const territories=custom?countries.filter(c=>custom.has(c.code)&&c.isTerritory).length:new Set(TERRITORY_SET_CODES[set]||[]).size;
+      const disputed=custom?countries.filter(c=>custom.has(c.code)&&c.isAdditionalPlace).length:new Set(ADDITIONAL_PLACE_SET_CODES[set]||[]).size;
+      return territories+' territories/dependencies + '+disputed+' major disputed '+(disputed===1?'place':'places')+(set==='custom'?' in your custom set':' in '+countrySetDisplayName(set));
+    }
+    function updateAdditionalPlaceDescriptions(){
+      for(const [id,getSet]of [['sessionTerritoriesToggle',()=>selectedCountrySet],['chainTerritoriesToggle',()=>chainSet],['mapHuntTerritoriesToggle',()=>mapHuntSet],['rankingTerritoriesToggle',()=>rankingSet]]){
+        let set;try{set=getSet();}catch(error){if(error instanceof ReferenceError)continue;throw error;}
+        const input=document.getElementById(id),row=input?.closest('.territory-inline-toggle');if(!row)continue;
+        row.hidden=!!SUB_SET_MEMBERS[set];const meta=row.querySelector('.territory-inline-toggle-meta');if(meta)meta.textContent=additionalPlacesDescription(set);
+      }
+    }
     function syncTerritoryPreferenceControls() {
+      updateAdditionalPlaceDescriptions();
       [
         settingsTerritoriesToggle,
         document.getElementById("sessionTerritoriesToggle"),
@@ -37990,7 +38070,7 @@ function studyCapitalPrompt(host,c,stage){if(!capitalPromptDetails||studySession
 
     function updatePolishSettingsUI() {
       const languageToggle = document.getElementById("settingsLanguageClueToggle");
-      if (languageToggle) languageToggle.checked = !!polishPrefs.hideLanguageClueNames;
+      if (languageToggle) languageToggle.checked = !polishPrefs.hideLanguageClueNames;
       syncTerritoryPreferenceControls();
       if (settingsHapticsToggle) {
         settingsHapticsToggle.checked = !!polishPrefs.haptics;
@@ -38128,7 +38208,7 @@ function studyCapitalPrompt(host,c,stage){if(!capitalPromptDetails||studySession
     settingsHapticsToggle?.addEventListener("change", () => setHapticsEnabled(settingsHapticsToggle.checked));
     settingsGiveawayToggle?.addEventListener("change", () => setGiveawayPromptsEnabled(settingsGiveawayToggle.checked));
     document.getElementById("settingsLanguageClueToggle")?.addEventListener("change", event => {
-      polishPrefs.hideLanguageClueNames = event.target.checked;
+      polishPrefs.hideLanguageClueNames = !event.target.checked;
       savePolishPrefs();
       if (studySession?.interaction === "interactive") { normalizeCurrentStage(); resetNavigationHistory(); render(); }
       updatePlayModePicker();
@@ -38817,6 +38897,7 @@ function studyCapitalPrompt(host,c,stage){if(!capitalPromptDetails||studySession
     let chainCanvasDrawRaf = 0;
 
     function updateChainSetupHelp() {
+      updateAdditionalPlaceDescriptions();
       if (chainAnswerHelp) {
         chainAnswerHelp.textContent = chainAnswerMode === "capital"
           ? "Enter the capital of any available place."
@@ -40921,6 +41002,7 @@ function studyCapitalPrompt(host,c,stage){if(!capitalPromptDetails||studySession
     }
 
     function updateMapHuntSetupHelp() {
+      updateAdditionalPlaceDescriptions();
       setSpecialOptionActive(document.getElementById('mapHuntTargetOptions'), 'data-map-hunt-target', mapHuntTargetMode);
       if (mapHuntPromptHelp) {
         mapHuntPromptHelp.textContent = mapHuntPromptMode === "flag"
@@ -42458,6 +42540,7 @@ function studyCapitalPrompt(host,c,stage){if(!capitalPromptDetails||studySession
     let rankingBuildToken = 0;
 
     function updateRankingSetupHelp() {
+      updateAdditionalPlaceDescriptions();
       if (rankingRandomMetricToggle) rankingRandomMetricToggle.checked = rankingRandomMetric;
       rankingMetricOptions?.querySelectorAll("[data-ranking-metric]").forEach(button => {
         button.disabled = rankingRandomMetric;
@@ -45187,7 +45270,7 @@ function rankingTargetValues() {
     function homeProgressCard(title,p,action,topic=null){
       const done=p.completed===p.total,state=done?'completed':p.completed?'active':'unplayed';
       const b=homeButton(title,`${p.completed} of ${p.total} challenges completed`,action);
-      if(p.total===14){const grouping=document.createElement('small');grouping.className='challenge-count-detail';grouping.textContent='7 country regions + 7 state / province sets';b.firstChild.append(grouping);}
+      if(p.total===10){const grouping=document.createElement('small');grouping.className='challenge-count-detail';grouping.textContent='7 country regions + 3 state / province sets';b.firstChild.append(grouping);}
       b.classList.add('challenge-collection');b.dataset.challengeState=state;
       b.firstChild.prepend(homeStatusBadge(state,done?'All completed':p.completed?'Keep going':'Ready to explore'));
       const bar=document.createElement('span');bar.className='discovery-progress';bar.setAttribute('role','progressbar');
@@ -45666,7 +45749,7 @@ function subChallengeCard(mode,clue,target,set){
  const card=homeButton(SUB_SETS[set].name,best?`${best.score}% best accuracy · ${homeTime(best.elapsedMs)}`:'Three guesses per place · first-try accuracy',()=>active?subResume():subOpenSetup(mode,SUB_SETS[set].parent,{set,clue,target,challenge:id}));
  card.classList.add('sub-challenge','challenge-region');card.dataset.subChallenge=id;card.dataset.challengeState=active?'active':best?'completed':'unplayed';card.firstChild.prepend(homeStatusBadge(active?'active':best?'completed':'unplayed',active?'Resume':best?'Completed':'Not played'));return card;
 }
-function subChallengeProgress(mode,variant,parent=subSetup?.parent){if(!['US','AU','CA'].includes(parent)||!['maphunt','borderless'].includes(mode))return {completed:0,total:0};const variants=variant?[variant]:Object.keys(HOME_MAP_VARIANTS[mode]);const ids=variants.flatMap(v=>Object.keys(SUB_SETS).filter(set=>SUB_SETS[set].parent===parent).map(set=>['sub1',mode,v.replace('city-','').replace('country','name'),v.startsWith('city-')?'capitalLocation':'location',set].join(':')));return {completed:ids.filter(id=>subStore.challenges[id]?.best).length,total:ids.length};}
+function subChallengeProgress(mode,variant,parent=subSetup?.parent){if(!['US','AU','CA'].includes(parent)||!['maphunt','borderless'].includes(mode))return {completed:0,total:0};const variants=variant?[variant]:Object.keys(HOME_MAP_VARIANTS[mode]);const ids=variants.flatMap(v=>Object.keys(SUB_SETS).filter(set=>SUB_SETS[set].parent===parent&&(!set.startsWith('us-')||set==='us-states')).map(set=>['sub1',mode,v.replace('city-','').replace('country','name'),v.startsWith('city-')?'capitalLocation':'location',set].join(':')));return {completed:ids.filter(id=>subStore.challenges[id]?.best).length,total:ids.length};}
 function subEnsureHost(){if(subHost)return subHost;subHost=subEl('section',undefined,'sub-overlay');subHost.id='subdivisionOverlay';subHost.setAttribute('role','dialog');subHost.setAttribute('aria-modal','true');subHost.setAttribute('aria-label','Subdivision game');document.body.append(subHost);subHost.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();subClose();}});return subHost;}
 function subShow(){mapHuntOverlay?.classList.remove('open');document.getElementById('borderlessOverlay')?.classList.remove('open');subEnsureHost().classList.add('open');startOverlay.classList.remove('open');subTickAt=performance.now();}
 function subClose(){subToken++;subBusy=false;subTick();subHost?.classList.remove('open');if(subHost)subHost.dataset.play='false';if(subStore.run)subSave();openStartOverlay(false);homeSetSection('games');if(subStore.run)noteResumableMode('subdivision');updateActiveSessionResumeCard();}
@@ -45682,13 +45765,13 @@ function subRenderSetup(){
  const c=subSetup,panel=subFrame(SUB_MODES[c.mode]+' · '+subLabel(c.parent)),fixed=!!c.challenge;panel.append(subButton('← Study regions',()=>subReturnToRegions(c),'sub-region-back'));panel.append(subEl('p',fixed?'Scored challenge · complete this set. First-try accuracy, then time.':'Choose your study set and topics. Your country settings stay unchanged.','sub-intro'));
  if(['maphunt','borderless'].includes(c.mode)&&!fixed&&!c.custom){
   const grid=subEl('div',undefined,'discovery-grid');panel.append(grid);
-  if(c.chooseRegion){panel.insertBefore(subButton('← Topics',()=>subOpenSetup(c.mode,c.parent)),grid);panel.insertBefore(subEl('h3',(c.clue==='name'?'Names':SUB_TOPICS[c.clue])+' · '+(c.target==='location'?'Find the '+subNoun(c.parent):'Capital city dots')),grid);for(const [set,meta]of Object.entries(SUB_SETS).filter(([,x])=>x.parent===c.parent))grid.append(subChallengeCard(c.mode,c.clue,c.target,set));}
+  if(c.chooseRegion){panel.insertBefore(subButton('← Topics',()=>subOpenSetup(c.mode,c.parent)),grid);panel.insertBefore(subEl('h3',(c.clue==='name'?'Names':SUB_TOPICS[c.clue])+' · '+(c.target==='location'?'Find the '+subNoun(c.parent):'Capital city dots')),grid);for(const [set,meta]of Object.entries(SUB_SETS).filter(([id,x])=>x.parent===c.parent&&(!id.startsWith('us-')||id==='us-states')))grid.append(subChallengeCard(c.mode,c.clue,c.target,set));}
   else for(const target of c.mode==='maphunt'?['location','capitalLocation']:['location']){grid.append(subEl('h4',target==='location'?(c.mode==='borderless'?'Locations · no borders':'Locations · tap the shapes'):'Capital city locations · tap the dots','hunt-challenge-group'));for(const clue of ['name','flag','capital']){const variant=(target==='capitalLocation'?'city-':'')+(clue==='name'?'country':clue),progress=subChallengeProgress(c.mode,variant);grid.append(homeProgressCard(clue==='name'?(c.parent==='US'?'State names':c.parent==='AU'?'State & territory names':'Province & territory names'):SUB_TOPICS[clue]+'s',{...progress,percent:Math.round(100*progress.completed/progress.total)},()=>subOpenSetup(c.mode,c.parent,{clue,target,chooseRegion:true}),clue==='name'?'country':clue));}}
   if(c.mode==='borderless'&&!c.chooseRegion)panel.append(homeButton('Pinpoint the capitals','Short distance-scoring runs · choose 5, 10 or all',()=>subOpenSetup(c.mode,c.parent,{custom:true,target:'capitalLocation'})));
   const custom=subEl('section',undefined,'discovery-custom-section');const b=homeButton('Custom game','Choose your clue, map target and length',()=>subOpenSetup(c.mode,c.parent,{custom:true}));b.classList.add('discovery-custom-card');custom.append(b);panel.append(custom);return;
  }
  const form=subEl('form',undefined,'sub-setup');panel.append(form);
- const set=subSelect(form,'Study set',Object.entries(SUB_SETS).filter(([,v])=>v.parent===c.parent).map(([id,v])=>[id,v.name]),c.set);set.disabled=fixed;
+ const set=subSelect(form,'Study set',Object.entries(SUB_SETS).filter(([id,v])=>v.parent===c.parent&&(!id.startsWith('us-')||id==='us-states')).map(([id,v])=>[id,v.name]),c.set);set.disabled=fixed;
  const clue=subSelect(form,'Clue',[['name',c.parent==='US'?'State name':c.parent==='AU'?'State / territory name':'Province / territory name'],['flag','Flag'],['capital','Capital name'],...(!['maphunt','borderless'].includes(c.mode)?[['silhouette','Outline']]:[])],c.clue);clue.disabled=fixed;if(!fixed&&['maphunt','borderless'].includes(c.mode)){if(validPrompt(c.clue,true)&&!Array.from(clue.options).some(o=>o.value===c.clue)){const o=subEl('option',c.clue);o.value=c.clue;clue.append(o);}clue.value=c.clue;multiPromptPicker(clue,true);}
  let target=null,style=null,answer=null,length=null,mapProgress=null,topics=[];
  if(['maphunt','borderless'].includes(c.mode))target=subSelect(form,'Find on the map',[['location',c.parent==='US'?'State location':c.parent==='AU'?'State / territory location':'Province / territory location'],['capitalLocation',c.mode==='borderless'?'Pinpoint the capital · distance score':'Capital city dots']],c.target),target.disabled=fixed;
@@ -45812,10 +45895,10 @@ function subDecorateSetup(){
 function subDecorateDiscovery(){
  subDecorateHome();const mode=subMode(homeMode),landing=document.getElementById('discoveryLanding');if(!landing||!['maphunt','borderless'].includes(mode)||!homeVariant)return;
  const grid=landing.querySelector('.discovery-grid'),clue=homeVariant.replace('city-','').replace('country','name'),target=homeVariant.startsWith('city-')?'capitalLocation':'location';
- if(!homeStateRegions){const card=homeButton('States & provinces','7 challenges · United States, Australia & Canada',()=>{homeStateRegions=true;renderHomeDiscovery();document.getElementById('discoveryHeading')?.focus({preventScroll:true});});card.classList.add('sub-states-entry');card.dataset.stateRegions='true';grid.append(card);return;}
+ if(!homeStateRegions){const card=homeButton('States & provinces','3 challenges · United States, Australia & Canada',()=>{homeStateRegions=true;renderHomeDiscovery();document.getElementById('discoveryHeading')?.focus({preventScroll:true});});card.classList.add('sub-states-entry');card.dataset.stateRegions='true';grid.append(card);return;}
  grid.replaceChildren();landing.querySelector('#discoveryHeading').textContent=SUB_MODES[mode]+' · States & provinces · '+(target==='capitalLocation'?'City locations · ':'')+(clue==='name'?'Names':clue==='flag'?'Flags':'Capitals');landing.querySelector('.discovery-description').textContent='Choose a state or province challenge. These runs stay separate from country challenges.';const back=landing.querySelector('.discovery-back');back.textContent='← Regions';back.onclick=()=>{homeStateRegions=false;renderHomeDiscovery();};
  for(const[parent,name,detail,set]of SUB_PARENT_CHOICES){const card=subChallengeCard(mode,clue,target,set);card.querySelector('strong').textContent=name;const info=subEl('span',detail,'sub-region-detail');card.firstChild.append(info);grid.append(card);}
- const regional=subEl('details',undefined,'sub-extra-regions');regional.append(subEl('summary','US regional challenges'));const regionalCards=subEl('div',undefined,'discovery-grid');for(const set of ['us-northeast','us-south','us-midwest','us-west'])regionalCards.append(subChallengeCard(mode,clue,target,set));regional.append(regionalCards);grid.append(regional);
+
  const custom=landing.querySelector('.discovery-custom-section');if(custom)custom.replaceChildren(subEl('h4','Custom state / province game'),subStudyRegionChoices(mode,{custom:true,clue,target}));
 }
 function subReturnToRegions(c){
@@ -45934,5 +46017,33 @@ html.geoden-light body #startOverlay #studyDomainSwitcher{padding:0!important;ma
 <style id="local-state-regions-v77">.sub-study-regions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0;padding:12px;border:1px solid #d1c6af;border-radius:14px;background:#eee7d8}.sub-study-regions .country-set-button{display:grid;gap:5px;text-align:left;min-height:60px;padding:12px;border:1px solid #c9c8b6;border-radius:12px;background:#fffdf7;color:#394637}.sub-study-regions .country-set-name{font-weight:800}.sub-study-regions .country-set-meta{font-size:12px;color:#6b6f5d}.sub-study-region-entry[aria-expanded=true]{background:#eee7d8!important;border-color:#ad9770!important}.sub-extra-regions{grid-column:1/-1;margin:14px 0;padding:14px;border:1px solid #d1c6af;border-radius:14px;background:#f3eee3}.sub-extra-regions>summary{cursor:pointer;font-weight:750;color:#6a5b40;min-height:28px}.sub-extra-regions>.discovery-grid{margin-top:14px}.sub-region-detail{font-size:12px;color:inherit}.sub-region-back{background:transparent!important;border:0!important;color:#62583f!important;padding-left:0!important}#discoveryLanding .sub-states-entry{background:#eee7d8!important;color:#5c513d!important;border-color:#c8b895!important}@media(max-width:520px){.sub-study-regions{grid-template-columns:1fr}}</style>
 <style>.borderless-field[hidden],.sub-field[hidden]{display:none!important}.borderless-field small,.sub-field small{font-size:13px;line-height:1.5;font-weight:400;color:#686b5b}</style>
 <style>.city-map-country{fill:#c2c8b5!important;stroke:#a8af98!important}#cityMap,.rapid-location-map svg{background:#e5e4d3;border-radius:18px}.borderless-feedback:not(:empty){padding:12px 18px;background:#eee8d8;border:1px solid #d1c5ac;border-radius:24px;text-align:center;font-size:14px;font-weight:750;line-height:1.4}.interactive-city-feedback{background:#eee8d8!important;border-color:#d1c5ac!important;color:#504b3a!important}.borderless-map .city-location-line{fill:none!important}</style><style>.capital-prompt-settings{margin-top:16px;padding-top:12px;border-top:1px solid #d1c6af}.capital-prompt-settings>label{display:flex;gap:8px;align-items:center;font-weight:700}.capital-prompt-settings small{display:block;color:#696958;font-size:12px;line-height:1.5}.combined-study-prompt{font-size:20px;font-weight:800;padding:12px;text-align:center}.multi-prompt-picker[hidden]{display:none!important}.sub-clue .combined-sub-prompt strong{display:inline;font-size:22px}.combined-sub-prompt strong+strong:before{content:", "}.sub-clue .combined-sub-prompt img{display:inline-block;vertical-align:middle;max-width:66px;max-height:40px;margin:0 0 0 10px}html body .borderless-primary{background:#476c79;border-color:#476c79}</style><style>.multi-prompt-picker{border:1px solid #d1c6af;border-radius:14px;padding:14px;margin:16px 0;background:#f2edde}.multi-prompt-picker legend{font-size:14px;font-weight:750;color:#65573d}.multi-prompt-picker label{display:inline-flex;align-items:center;gap:7px;margin:6px 14px 6px 0;cursor:pointer}.multi-prompt-picker input{accent-color:#476c54;width:18px;height:18px}.combined-prompt-flag{display:inline-block!important;width:auto!important;max-width:66px!important;max-height:40px!important;vertical-align:middle;margin:0 0 0 10px!important}.sub-clue>strong+strong:before{content:', '}</style>
-<style>.capital-points-bar{display:flex;width:100%;height:12px;border-radius:999px;overflow:hidden;background:#dcd8cb;margin:8px 0}.capital-points-chunk{display:block;height:100%;flex:none;box-sizing:border-box;border-right:1px solid #f4efdf}.capital-points-chunk:last-child{border-right:0}</style><style id="full-page-games">html body :is(#startOverlay,#matchingOverlay,#detectiveOverlay,#rapidOverlay,#sprintOverlay,#chainFillOverlay,#mapHuntOverlay,#rankingOverlay,#borderlessOverlay,#subdivisionOverlay){inset:0!important;padding:0!important;background:#f7f4eb!important;backdrop-filter:none!important;align-items:flex-start!important;justify-content:center!important;overflow:auto!important;overscroll-behavior:contain;animation:none!important}html body :is(#startOverlay,#matchingOverlay,#detectiveOverlay,#rapidOverlay,#sprintOverlay,#chainFillOverlay,#mapHuntOverlay,#rankingOverlay,#borderlessOverlay,#subdivisionOverlay)> :is(.start-panel,.matching-panel,.detective-panel,.rapid-panel,.chain-panel,.map-hunt-panel,.ranking-panel,.borderless-panel,.sub-panel){width:min(1120px,100%)!important;max-width:1120px!important;min-height:100dvh!important;max-height:none!important;margin:0 auto!important;border:0!important;border-radius:0!important;box-shadow:none!important;transform:none!important;animation:none!important;padding:max(18px,env(safe-area-inset-top)) max(18px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left))!important;box-sizing:border-box;background:#f7f4eb!important}body.game-page-open{overflow:hidden}@media(max-width:600px){html body :is(#startOverlay,#matchingOverlay,#detectiveOverlay,#rapidOverlay,#sprintOverlay,#chainFillOverlay,#mapHuntOverlay,#rankingOverlay,#borderlessOverlay,#subdivisionOverlay)> :is(.start-panel,.matching-panel,.detective-panel,.rapid-panel,.chain-panel,.map-hunt-panel,.ranking-panel,.borderless-panel,.sub-panel){padding: max(12px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(18px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))!important}}</style><script>(()=>{const ids=["startOverlay","matchingOverlay","detectiveOverlay","rapidOverlay","sprintOverlay","chainFillOverlay","mapHuntOverlay","rankingOverlay","borderlessOverlay","subdivisionOverlay"],pages=()=>ids.map(id=>document.getElementById(id)).filter(Boolean),watched=new WeakSet();let previous=new Set(pages().filter(e=>e.classList.contains('open')));function sync(records=[]){const all=pages();for(const page of all)if(!watched.has(page)){observer.observe(page,{attributes:true,attributeFilter:['class']});watched.add(page);}const opened=[...all.filter(e=>!previous.has(e)&&e.classList.contains('open')),...records.map(r=>r.target).filter(e=>ids.includes(e.id)&&e.classList.contains('open')&&!previous.has(e))];const winner=opened.at(-1);if(winner)for(const page of all)if(page!==winner&&page.classList.contains('open')){if(page.id==='borderlessOverlay')pauseBorderlessClock();page.classList.remove('open');}previous=new Set(all.filter(e=>e.classList.contains('open')));document.body.classList.toggle('game-page-open',previous.size>0);const shell=document.querySelector('main.shell');if(shell)shell.inert=previous.size>0;}const observer=new MutationObserver(sync);observer.observe(document.body,{childList:true});sync();})();</script><style id="daily-status-contrast">html body #startOverlay #homeDailyPicks .daily-mode-card :is(.daily-mode-description,small,.daily-play-action){color:#fffaf0!important;opacity:1!important;font-size:11px!important;line-height:1.45!important}html body #startOverlay #homeDailyPicks .daily-mode-card .challenge-status{color:#294235!important;background:#f1eddc!important;border-radius:6px;padding:4px 7px!important;font-size:11px!important;font-weight:800!important;line-height:1.35!important;flex-basis:auto!important;width:fit-content;max-width:100%;margin:2px 0!important;opacity:1!important}html body #startOverlay #homeDailyPicks .daily-mode-card .challenge-status :is(span,.challenge-status-icon){color:inherit!important;opacity:1!important}</style><style>#discoveryLanding .discovery-grid:has(>.borderless-path-card){grid-auto-rows:1fr}.borderless-path-card .challenge-topic-title{font-size:inherit!important;min-width:0}.borderless-path-card .challenge-topic-icon{flex-shrink:0}</style><style>html body #startOverlay #discoveryLanding .borderless-path-card{background:#436975!important;color:#fffaf0!important;border:1px solid #89a5a5!important;min-height:205px;padding:24px;border-radius:20px;align-items:stretch}html body #startOverlay #discoveryLanding .borderless-path-card[data-borderless-path=capitals]{background:#78623d!important;border-color:#b6a27f!important}.borderless-path-card>span:first-child{display:flex!important;flex-direction:column;gap:14px}.borderless-path-card strong{display:flex!important;align-items:center;gap:12px;font-size:25px!important;color:inherit!important}.borderless-path-card small{color:inherit!important;line-height:1.5!important;font-size:15px!important}.borderless-path-detail{font-size:12px;font-weight:750;margin-top:auto;padding-top:10px;border-top:1px solid #fffaf040}.borderless-path-card .game-icon{font-size:25px;flex-shrink:0}@media(max-width:580px){.borderless-path-card strong{font-size:21px!important}html body #startOverlay #discoveryLanding .borderless-path-card{min-height:180px;padding:20px}}</style><style>.capital-prompt-settings[hidden],.capital-prompt-settings [hidden]{display:none!important}.challenge-count-detail{font-size:12px!important;line-height:1.5!important;margin-top:8px}.crawl-style-card strong{font-size:23px!important}.crawl-style-card .game-icon{background:#fffaf020!important;color:#fffaf0!important}.crawl-style-card .game-icon::before{display:none!important}</style></body>
+<style>.capital-points-bar{display:flex;width:100%;height:12px;border-radius:999px;overflow:hidden;background:#dcd8cb;margin:8px 0}.capital-points-chunk{display:block;height:100%;flex:none;box-sizing:border-box;border-right:1px solid #f4efdf}.capital-points-chunk:last-child{border-right:0}</style><style id="full-page-games">html body :is(#startOverlay,#matchingOverlay,#detectiveOverlay,#rapidOverlay,#sprintOverlay,#chainFillOverlay,#mapHuntOverlay,#rankingOverlay,#borderlessOverlay,#subdivisionOverlay){inset:0!important;padding:0!important;background:#f7f4eb!important;backdrop-filter:none!important;align-items:flex-start!important;justify-content:center!important;overflow:auto!important;overscroll-behavior:contain;animation:none!important}html body :is(#startOverlay,#matchingOverlay,#detectiveOverlay,#rapidOverlay,#sprintOverlay,#chainFillOverlay,#mapHuntOverlay,#rankingOverlay,#borderlessOverlay,#subdivisionOverlay)> :is(.start-panel,.matching-panel,.detective-panel,.rapid-panel,.chain-panel,.map-hunt-panel,.ranking-panel,.borderless-panel,.sub-panel){width:min(1120px,100%)!important;max-width:1120px!important;min-height:100dvh!important;max-height:none!important;margin:0 auto!important;border:0!important;border-radius:0!important;box-shadow:none!important;transform:none!important;animation:none!important;padding:max(18px,env(safe-area-inset-top)) max(18px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left))!important;box-sizing:border-box;background:#f7f4eb!important}body.game-page-open{overflow:hidden}@media(max-width:600px){html body :is(#startOverlay,#matchingOverlay,#detectiveOverlay,#rapidOverlay,#sprintOverlay,#chainFillOverlay,#mapHuntOverlay,#rankingOverlay,#borderlessOverlay,#subdivisionOverlay)> :is(.start-panel,.matching-panel,.detective-panel,.rapid-panel,.chain-panel,.map-hunt-panel,.ranking-panel,.borderless-panel,.sub-panel){padding: max(12px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(18px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))!important}}</style><script>(()=>{const ids=["startOverlay","matchingOverlay","detectiveOverlay","rapidOverlay","sprintOverlay","chainFillOverlay","mapHuntOverlay","rankingOverlay","borderlessOverlay","subdivisionOverlay"],pages=()=>ids.map(id=>document.getElementById(id)).filter(Boolean),watched=new WeakSet();let previous=new Set(pages().filter(e=>e.classList.contains('open')));function sync(records=[]){const all=pages();for(const page of all)if(!watched.has(page)){observer.observe(page,{attributes:true,attributeFilter:['class']});watched.add(page);}const opened=[...all.filter(e=>!previous.has(e)&&e.classList.contains('open')),...records.map(r=>r.target).filter(e=>ids.includes(e.id)&&e.classList.contains('open')&&!previous.has(e))];const winner=opened.at(-1);if(winner)for(const page of all)if(page!==winner&&page.classList.contains('open')){if(page.id==='borderlessOverlay')pauseBorderlessClock();page.classList.remove('open');}previous=new Set(all.filter(e=>e.classList.contains('open')));document.body.classList.toggle('game-page-open',previous.size>0);const shell=document.querySelector('main.shell');if(shell)shell.inert=previous.size>0;}const observer=new MutationObserver(sync);observer.observe(document.body,{childList:true});sync();})();</script><style id="daily-status-contrast">html body #startOverlay #homeDailyPicks .daily-mode-card :is(.daily-mode-description,small,.daily-play-action){color:#fffaf0!important;opacity:1!important;font-size:11px!important;line-height:1.45!important}html body #startOverlay #homeDailyPicks .daily-mode-card .challenge-status{color:#294235!important;background:#f1eddc!important;border-radius:6px;padding:4px 7px!important;font-size:11px!important;font-weight:800!important;line-height:1.35!important;flex-basis:auto!important;width:fit-content;max-width:100%;margin:2px 0!important;opacity:1!important}html body #startOverlay #homeDailyPicks .daily-mode-card .challenge-status :is(span,.challenge-status-icon){color:inherit!important;opacity:1!important}</style><style>#discoveryLanding .discovery-grid:has(>.borderless-path-card){grid-auto-rows:1fr}.borderless-path-card .challenge-topic-title{font-size:inherit!important;min-width:0}.borderless-path-card .challenge-topic-icon{flex-shrink:0}</style><style>html body #startOverlay #discoveryLanding .borderless-path-card{background:#436975!important;color:#fffaf0!important;border:1px solid #89a5a5!important;min-height:205px;padding:24px;border-radius:20px;align-items:stretch}html body #startOverlay #discoveryLanding .borderless-path-card[data-borderless-path=capitals]{background:#78623d!important;border-color:#b6a27f!important}.borderless-path-card>span:first-child{display:flex!important;flex-direction:column;gap:14px}.borderless-path-card strong{display:flex!important;align-items:center;gap:12px;font-size:25px!important;color:inherit!important}.borderless-path-card small{color:inherit!important;line-height:1.5!important;font-size:15px!important}.borderless-path-detail{font-size:12px;font-weight:750;margin-top:auto;padding-top:10px;border-top:1px solid #fffaf040}.borderless-path-card .game-icon{font-size:25px;flex-shrink:0}@media(max-width:580px){.borderless-path-card strong{font-size:21px!important}html body #startOverlay #discoveryLanding .borderless-path-card{min-height:180px;padding:20px}}</style><style>.capital-prompt-settings[hidden],.capital-prompt-settings [hidden]{display:none!important}.challenge-count-detail{font-size:12px!important;line-height:1.5!important;margin-top:8px}.crawl-style-card strong{font-size:23px!important}.crawl-style-card .game-icon{background:#fffaf020!important;color:#fffaf0!important}.crawl-style-card .game-icon::before{display:none!important}</style><style>
+#masteryOverlay .mastery-stat[hidden]{display:none!important}
+#masteryOverlay .mastery-stats{grid-template-columns:repeat(2,minmax(0,1fr));margin:12px 0}
+#masteryOverlay .mastery-stat-label{font-size:12px;text-transform:none;letter-spacing:0;line-height:1.4}
+.progress-recommendation{padding:18px;background:#e5ecdf;border:1px solid #b9c7ae;border-radius:18px;margin-bottom:16px;color:#304335}
+.progress-recommendation h3{font-size:20px;margin:0 0 8px;line-height:1.3}
+.progress-recommendation .mastery-next-review{text-align:left;font-size:14px;line-height:1.5;margin:0 0 14px;color:#52614e}
+.progress-recommendation .mastery-review-now{margin:0;background:#466c53!important;color:#fffaf0!important;min-height:48px;white-space:normal}
+#masteryOverlay .mastery-map-feature{padding:14px 16px;margin:14px 0;background:#eee8d8!important;border-color:#cbbd9d!important;box-shadow:none}
+#masteryOverlay .mastery-map-feature-title{font-size:19px}
+#masteryOverlay .mastery-map-feature-copy{font-size:13px;line-height:1.4}
+#masteryOverlay .mastery-map-feature-eyebrow{display:none}
+.progress-explanation{font-size:12px;line-height:1.5;color:#656456;margin:8px 0 12px}
+.progress-method{font-size:13px;line-height:1.5;color:#56584d;margin:10px 0}.progress-method summary{cursor:pointer;font-weight:750;min-height:36px;display:list-item;padding:7px 0}.progress-method p{margin:6px 0 12px}
+.progress-strengths{background:#edf0e5!important;border-color:#c1ccb4!important}
+.progress-strengths h3,.progress-achievements h3{font-size:19px;margin:0 0 8px}
+.progress-strengths .mastery-row-score{color:#3d6946!important}
+#progressChallengeCards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.progress-game-card{padding:14px;border-radius:14px;background:#e4eae6;border:1px solid #b4c0b6;display:flex;flex-direction:column;gap:8px;min-width:0;color:#33493c}
+.progress-game-card:nth-child(2){background:#efe5d5;border-color:#cdbaa0;color:#655134}.progress-game-card:nth-child(3){background:#e9e4da;border-color:#c1bba8;color:#525944}
+.progress-game-card h4{margin:0;font-size:16px;display:flex;align-items:center;gap:4px}.progress-game-card small{font-size:12px;line-height:1.4;min-height:34px}.progress-game-card strong{font-size:15px}.progress-game-card span{font-size:12px}.progress-game-card progress{width:100%;height:10px;accent-color:#52755a;margin-top:auto}
+#progressPersonalBests h4{margin:20px 0 8px;font-size:15px}
+#masteryOverlay .mastery-row-meta{font-size:12px;line-height:1.5}#masteryOverlay .mastery-section-note{text-align:left;line-height:1.4}#masteryOverlay .mastery-section-head{flex-wrap:wrap}
+#masteryOverlay .mastery-history-title{display:flex;align-items:center;gap:5px;line-height:1.4}#masteryOverlay .mastery-history-score{font-size:13px;white-space:normal;text-align:right;max-width:160px;line-height:1.4}#masteryOverlay .mastery-history-meta{line-height:1.5}
+@media(max-width:600px){#progressChallengeCards{grid-template-columns:1fr}.progress-game-card small{min-height:0}#masteryOverlay .mastery-history-row{align-items:flex-start;flex-wrap:wrap}#masteryOverlay .mastery-history-score{max-width:none;text-align:left}#masteryOverlay .mastery-row{flex-wrap:wrap}.progress-recommendation{padding:16px}}
+</style><style>
+#masteryOverlay .mastery-stats[hidden]{display:none!important}.progress-practice-disclosure>summary{display:list-item;cursor:pointer;font-weight:800;font-size:17px;padding:8px 4px;min-height:44px;box-sizing:border-box;color:#425749}.progress-practice-disclosure[open]>summary{margin-bottom:12px}.progress-practice-disclosure{align-self:start}.progress-practice-disclosure summary:focus-visible{outline:3px solid #a77d49;outline-offset:3px;border-radius:8px}
+html body #startOverlay button.discovery-back{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 16px!important;border:1px solid #c3bda9!important;border-radius:12px!important;background:#ede8db!important;color:#475d50!important;font-size:15px!important;font-weight:750;line-height:1.35;margin-bottom:18px;box-shadow:0 2px 3px #4037230a;max-width:100%}html body #startOverlay button.discovery-back:hover{background:#e1e5d8!important}html body #startOverlay button.discovery-back:focus-visible{outline:3px solid #a77d49;outline-offset:3px}
+</style><style id="progress-single-column">#masteryOverlay .mastery-grid{grid-template-columns:minmax(0,1fr)!important;gap:14px;align-items:start}#masteryOverlay .mastery-grid>.mastery-section{grid-column:1 / -1;min-width:0;width:100%;box-sizing:border-box}.obvious-clues-settings{border:1px solid #c9c5b5;border-radius:16px;background:#f2eee3;padding:14px;margin:12px 0}.obvious-clues-settings>summary{display:list-item;font-size:17px;font-weight:800;cursor:pointer;min-height:44px;padding:10px 4px;box-sizing:border-box;color:#485b4b}.obvious-clues-settings>p{font-size:14px;line-height:1.5;color:#646455;margin:8px 0 14px}.obvious-clues-settings>.experience-setting-row{margin:10px 0 0}.obvious-clues-settings>summary:focus-visible{outline:3px solid #a77d49;outline-offset:3px;border-radius:8px}</style><style id="daily-fact-progress">.daily-goal-track{display:flex;align-items:stretch;gap:0;height:11px!important;background:#dedfd7!important;overflow:hidden;border-radius:999px}.daily-goal-card-compact .daily-goal-track{height:9px!important}.daily-goal-track .daily-fact-segment{height:100%;flex:none;min-width:0;box-sizing:border-box;border-right:1px solid #f7f4eb;transition:width 220ms ease}.daily-goal-track .daily-fact-segment:last-child{border-right:0}.daily-fact-unclassified{background:#73766e}.daily-goal-breakdown,.mastery-daily-meta{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center}.daily-fact-key{display:inline-flex;gap:5px;align-items:center;white-space:nowrap}.daily-fact-key i{width:8px;height:8px;display:inline-block;border-radius:50%;background:#39784e}.daily-fact-key-assisted i{background:#b08a39}.daily-fact-key-missed i{background:#995347}</style><style id="progress-map-feature">#masteryOverlay .mastery-map-feature{display:flex!important;align-items:center;gap:16px;min-height:120px!important;padding:18px!important;background:linear-gradient(135deg,#f5e7b8 0%,#ead18a 100%)!important;border:1px solid #c8a865!important;color:#4f3a0e!important;box-shadow:0 8px 24px #7958181a!important}#masteryOverlay .mastery-map-feature:hover{background:linear-gradient(135deg,#f8ecc8 0%,#e8cb78 100%)!important;border-color:#b38a39!important}#masteryOverlay .progress-map-icon{display:grid;place-items:center;width:66px;height:66px;flex:none;border-radius:18px;background:#8c662f;color:#fff9eb;box-shadow:inset 0 1px 0 #ffffff4d}#masteryOverlay .progress-map-icon svg{width:43px;height:43px}#masteryOverlay .progress-map-copy{display:flex;flex-direction:column;align-items:flex-start;gap:7px;min-width:0}#masteryOverlay .mastery-map-feature-title{color:#4f3a0e!important;font-size:clamp(21px,3vw,27px)!important;line-height:1.15!important}#masteryOverlay .mastery-map-feature-copy{color:#6e5725!important;font-size:14px!important;line-height:1.45!important;max-width:38ch}@media(max-width:480px){#masteryOverlay .progress-map-icon{width:56px;height:56px;border-radius:15px}#masteryOverlay .progress-map-icon svg{width:35px;height:35px}#masteryOverlay .mastery-map-feature{gap:12px;padding:14px!important}#masteryOverlay .mastery-map-feature-title{font-size:20px!important}}</style><style id="progress-collapsible-sections">#masteryOverlay .progress-section-disclosure{padding:0!important;overflow:hidden;align-self:start}#masteryOverlay .progress-section-disclosure>summary{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:68px;box-sizing:border-box;padding:15px 20px!important;margin:0!important;cursor:pointer;list-style:none;color:#374f3f;font-size:19px!important;font-weight:850;line-height:1.25}#masteryOverlay .progress-section-disclosure>summary::-webkit-details-marker{display:none}#masteryOverlay .progress-section-disclosure>summary::after{content:'';width:10px;height:10px;border-right:2.5px solid currentColor;border-bottom:2.5px solid currentColor;transform:rotate(45deg);flex:none;margin:0 4px 5px 0;transition:transform 160ms ease}#masteryOverlay .progress-section-disclosure[open]>summary::after{transform:rotate(225deg);margin:6px 4px 0 0}#masteryOverlay .progress-section-disclosure[open]>summary{border-bottom:1px solid #dcdcd2}#masteryOverlay .progress-section-disclosure>summary:hover{background:#edece3}#masteryOverlay .progress-section-disclosure>summary:focus-visible{outline:3px solid #a77d49;outline-offset:-5px;border-radius:12px}#masteryOverlay .progress-section-disclosure>summary .mastery-section-head{flex:1;min-width:0;margin:0;align-items:center}#masteryOverlay .progress-section-disclosure>summary .mastery-section-title,#masteryOverlay .progress-section-disclosure>summary h3{margin:0;font-size:19px;line-height:1.3;font-weight:850;color:inherit}#masteryOverlay .progress-section-disclosure>summary .mastery-section-note{font-size:12px;line-height:1.35;max-width:36ch;text-align:right}#masteryOverlay .progress-disclosure-body{padding:16px 20px 20px;min-width:0}#masteryOverlay .progress-disclosure-body>.progress-explanation:first-child{margin-top:0}@media(max-width:520px){#masteryOverlay .progress-section-disclosure>summary{padding:14px 16px!important;min-height:62px;font-size:17px!important}#masteryOverlay .progress-section-disclosure>summary .mastery-section-title,#masteryOverlay .progress-section-disclosure>summary h3{font-size:17px}#masteryOverlay .progress-section-disclosure>summary .mastery-section-note{font-size:11px;max-width:13ch}#masteryOverlay .progress-disclosure-body{padding:14px 16px 18px}}</style><style id="progress-unified-places">#masteryOverlay .mastery-coverage{margin-top:16px!important;padding:20px!important;border:1px solid #d4d7ca!important;border-radius:22px!important;background:#faf9f4!important}#masteryOverlay .mastery-coverage-copy{font-size:20px!important;line-height:1.25!important;margin-bottom:12px!important;color:#2d392f}#masteryOverlay .mastery-coverage-copy span:last-child{font-size:18px;font-weight:800;color:#59645a}#masteryOverlay .mastery-progress-track{height:10px!important}#masteryOverlay .mastery-coverage>.progress-explanation{margin:12px 0 0!important;font-size:14px!important;line-height:1.45!important}#masteryOverlay .mastery-coverage>.mastery-map-feature{margin:18px 0 0!important}@media(max-width:520px){#masteryOverlay .mastery-coverage{padding:16px!important}#masteryOverlay .mastery-coverage-copy{font-size:18px!important}#masteryOverlay .mastery-coverage-copy span:last-child{font-size:15px}}</style></body>
 </html>
