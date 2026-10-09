@@ -1,0 +1,671 @@
+{
+  "retrieved": "2026-10-09",
+  "sources": [
+    {
+      "id": "natural-earth-admin1",
+      "url": "https://github.com/nvkelso/natural-earth-vector/blob/ca96624a56bd078437bca8184e78163e5039ad19/geojson/ne_10m_admin_1_states_provinces.geojson",
+      "license": "Public domain",
+      "sha256": "22d0e3ad85eb3e27f17cabf8ba2d50e554fbc27a87796ff891d958185da62fb5"
+    },
+    {
+      "id": "natural-earth-populated-places",
+      "url": "https://github.com/nvkelso/natural-earth-vector/blob/ca96624a56bd078437bca8184e78163e5039ad19/geojson/ne_10m_populated_places.geojson",
+      "license": "Public domain",
+      "sha256": "9b8e3de09048ef00dfc70357dbb9fa324493f214b5e0ae4daf1aa79a8d10116b"
+    },
+    {
+      "id": "us-capital-names",
+      "url": "https://www.govinfo.gov/content/pkg/GPO-STYLEMANUAL-2016/pdf/GPO-STYLEMANUAL-2016-20.pdf"
+    },
+    {
+      "id": "canada-capital-names",
+      "url": "https://www.canada.ca/en/immigration-refugees-citizenship/corporate/publications-manuals/discover-canada/read-online/canadas-regions.html"
+    },
+    {
+      "id": "us-identifiers",
+      "url": "https://www.census.gov/library/reference/code-lists/ansi/ansi-codes-for-states.html"
+    },
+    {
+      "id": "australia-names-and-capitals",
+      "url": "https://immi.homeaffairs.gov.au/citizenship/test-and-interview/listen-to-podcast/transcript-episode-2"
+    },
+    {
+      "id": "tasmania-macquarie-island",
+      "url": "https://parks.tas.gov.au/explore-our-parks/macquarie-island-world-heritage-area"
+    }
+  ],
+  "flags": [
+    {
+      "id": "CA-AB",
+      "path": "ca-ab.svg",
+      "title": "File:Flag of Alberta.svg",
+      "source": "https://commons.wikimedia.org/wiki/File:Flag_of_Alberta.svg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/f/f5/Flag_of_Alberta.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "license": "Public domain",
+      "licenseUrl": null,
+      "artist": "<a href=\"//commons.wikimedia.org/w/index.php?title=User:Kooma&amp;action=edit&amp;redlink=1\" class=\"new\" title=\"User:Kooma (page does not exist)\">Kooma</a> (original)",
+      "credit": "<a rel=\"nofollow\" class=\"external text\" href=\"http://www.qp.alberta.ca/documents/Acts/E06.pdf\">Emblems of Alberta Act</a>",
+      "copyright": "False",
+      "attributionRequired": "false"
+    },
+    {
+      "id": "CA-BC",
+      "path": "ca-bc.svg",
+      "title": "File:Flag of British Columbia.svg",
+      "source": "https://commons.wikimedia.org/wiki/File:Flag_of_British_Columbia.svg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/b/b8/Flag_of_British_Columbia.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "license": "Public domain",
+      "licenseUrl": null,
+      "artist": "<a href=\"//commons.wikimedia.org/w/index.php?title=User:Kooma&amp;action=edit&amp;redlink=1\" class=\"new\" title=\"User:Kooma (page does not exist)\">Kooma</a> (original) <br> <a href=\"//commons.wikimedia.org/wiki/User:Sshu94\" title=\"User:Sshu94\">Sshu94</a> (current)",
+      "credit": "<p>Government of British Columbia <a rel=\"nofollow\" class=\"external autonumber\" href=\"https://www2.gov.bc.ca/assets/gov/british-columbians-our-governments/celebrating-british-columbia/symbols-of-bc/bc-emblems-set.pdf\">[1]</a>\n31 March 1906 (shield and motto) &amp; 15 October 1987 (crest and supporters) <a rel=\"nofollow\" class=\"external autonumber\" href=\"http://reg.gg.ca/heraldry/pub-reg/project.asp?lang=e&amp;ProjectID=1406&amp;ShowAll=1\">[2]</a>\n</p>\nOriginal concepts of Arthur John Beanlands; Ambrose Lee, York Herald (1906); and Conrad Swan, York Herald (1987), College of Arms, London. <a rel=\"nofollow\" class=\"external autonumber\" href=\"http://reg.gg.ca/heraldry/pub-reg/project.asp?lang=e&amp;ProjectID=1406&amp;ShowAll=1\">[3]</a>",
+      "copyright": "False",
+      "attributionRequired": "false"
+    },
+    {
+      "id": "CA-MB",
+      "path": "ca-mb.svg",
+      "title": "File:Flag of Manitoba.svg",
+      "source": "https://commons.wikimedia.org/wiki/File:Flag_of_Manitoba.svg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/c/c4/Flag_of_Manitoba.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "license": "Public domain",
+      "licenseUrl": null,
+      "artist": "<a href=\"//commons.wikimedia.org/w/index.php?title=User:Kooma&amp;action=edit&amp;redlink=1\" class=\"new\" title=\"User:Kooma (page does not exist)\">Kooma</a> (original) <br> <a href=\"//commons.wikimedia.org/wiki/User:Echando_una_mano\" title=\"User:Echando una mano\">Echando una mano</a> (current)",
+      "credit": "<p><span typeof=\"mw:File\"><a href=\"//commons.wikimedia.org/wiki/File:Flag-of-Manitoba.jpg\" class=\"mw-file-description\"><img src=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c5/Flag-of-Manitoba.jpg/250px-Flag-of-Manitoba.jpg?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail\" decoding=\"async\" loading=\"lazy\" width=\"200\" height=\"133\" class=\"mw-file-element\" srcset=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c5/Flag-of-Manitoba.jpg/500px-Flag-of-Manitoba.jpg?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail 2x\" data-file-width=\"4272\" data-file-height=\"2848\"></a></span> <br>\n</p>\n<a rel=\"nofollow\" class=\"external text\" href=\"https://web.archive.org/web/20050316094017/http://www.sodipodi.com/index.php3?section=clipart/flags&amp;area=flags&amp;n=49\">Sodipodi's Clipart Gallery</a> (through Wayback Machine)",
+      "copyright": "False",
+      "attributionRequired": "false"
+    },
+    {
+      "id": "CA-NB",
+      "path": "ca-nb.svg",
+      "title": "File:Flag of New Brunswick.svg",
+      "source": "https://commons.wikimedia.org/wiki/File:Flag_of_New_Brunswick.svg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/f/fb/Flag_of_New_Brunswick.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "license": "Public domain",
+      "licenseUrl": null,
+      "artist": "<a href=\"//commons.wikimedia.org/wiki/User:Dbenbenn\" title=\"User:Dbenbenn\">Dbenbenn</a> (original) <br> <a href=\"//commons.wikimedia.org/wiki/User:E_Pluribus_Anthony~commonswiki\" title=\"User:E Pluribus Anthony~commonswiki\">E Pluribus Anthony</a> (current)",
+      "credit": "<p><a rel=\"nofollow\" class=\"external text\" href=\"https://web.archive.org/web/20100818053604/http://www.gnb.ca:80/cnb/logos/logos/flag-e.asp\">Government of New Brunswick, Communications New Brunswick: Logos/Symbols</a>.\n</p>\nAdapted by <a href=\"//commons.wikimedia.org/w/index.php?title=User:E_Pluribus_Anthony&amp;action=edit&amp;redlink=1\" class=\"new\" title=\"User:E Pluribus Anthony (page does not exist)\">E Pluribus Anthony</a>.",
+      "copyright": "False",
+      "attributionRequired": "false"
+    },
+    {
+      "id": "CA-NL",
+      "path": "ca-nl.svg",
+      "title": "File:Flag of Newfoundland and Labrador.svg",
+      "source": "https://commons.wikimedia.org/wiki/File:Flag_of_Newfoundland_and_Labrador.svg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/d/dd/Flag_of_Newfoundland_and_Labrador.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "license": "Public domain",
+      "licenseUrl": null,
+      "artist": "Original 2005 upload was created by Robert Crosbie and uploaded by <a href=\"//commons.wikimedia.org/w/index.php?title=User:Kooma&amp;action=edit&amp;redlink=1\" class=\"new\" title=\"User:Kooma (page does not exist)\">Kooma</a>.  Entire flag redrawn/recoded from scratch by <a href=\"//commons.wikimedia.org/wiki/User:MapGrid\" title=\"User:MapGrid\">MapGrid</a> in 2019.  Colors changed by <a href=\"//commons.wikimedia.org/wiki/User:Great_Brightstar\" title=\"User:Great Brightstar\">Great Brightstar</a> in 2019.",
+      "credit": "<p><a href=\"//commons.wikimedia.org/wiki/File:Flag_of_Newfoundland_and_Labrador_(construction_sheet).svg\" title=\"File:Flag of Newfoundland and Labrador (construction sheet).svg\">File:Flag of Newfoundland and Labrador (construction sheet).svg</a>\n</p>\n<span typeof=\"mw:File\"><a href=\"//commons.wikimedia.org/wiki/File:Flag_of_Newfoundland_and_Labrador_(construction_sheet).svg\" class=\"mw-file-description\"><img src=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9b/Flag_of_Newfoundland_and_Labrador_%28construction_sheet%29.svg/250px-Flag_of_Newfoundland_and_Labrador_%28construction_sheet%29.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail\" decoding=\"async\" loading=\"lazy\" width=\"150\" height=\"80\" class=\"mw-file-element\" srcset=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9b/Flag_of_Newfoundland_and_Labrador_%28construction_sheet%29.svg/330px-Flag_of_Newfoundland_and_Labrador_%28construction_sheet%29.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail 2x\" data-file-width=\"1293\" data-file-height=\"692\"></a></span>",
+      "copyright": "False",
+      "attributionRequired": "false"
+    },
+    {
+      "id": "CA-NS",
+      "path": "ca-ns.svg",
+      "title": "File:Flag of Nova Scotia.svg",
+      "source": "https://commons.wikimedia.org/wiki/File:Flag_of_Nova_Scotia.svg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/c/c0/Flag_of_Nova_Scotia.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "license": "Public domain",
+      "licenseUrl": null,
+      "artist": "<div style=\"display:inline-block;padding:0 3px;background-color:#CCF\">Original:</div> <div style=\"display:inline-block;padding:3px 0;\">Unknown author</div> <div style=\"display:inline-block;padding:0 3px;background-color:#CCF\">Vector: </div> <div style=\"display:inline-block;\"><a href=\"//commons.wikimedia.org/w/index.php?title=User:Kooma&amp;action=edit&amp;redlink=1\" class=\"new\" title=\"User:Kooma (page does not exist)\">Kooma</a>, <a href=\"//commons.wikimedia.org/w/index.php?title=User:FJDEACKB&amp;action=edit&amp;redlink=1\" class=\"new\" title=\"User:FJDEACKB (page does not exist)\">FJDEACKB</a>, <a href=\"//commons.wikimedia.org/wiki/User:Zscout370\" title=\"User:Zscout370\">Zscout370</a> and <a href=\"//commons.wikimedia.org/wiki/User:Denelson83\" title=\"User:Denelson83\">Denelson83</a></div>",
+      "credit": "<a rel=\"nofollow\" class=\"external autonumber\" href=\"http://www.gov.ns.ca/cmns/flagspublic.asp\">[1]</a> (dead link)",
+      "copyright": "False",
+      "attributionRequired": "false"
+    },
+    {
+      "id": "CA-NT",
+      "path": "ca-nt.svg",
+      "title": "File:Flag of the Northwest Territories.svg",
+      "source": "https://commons.wikimedia.org/wiki/File:Flag_of_the_Northwest_Territories.svg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/c/c1/Flag_of_the_Northwest_Territories.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "license": "Public domain",
+      "licenseUrl": null,
+      "artist": "The original uploader was <a href=\"//commons.wikimedia.org/w/index.php?title=User:Kooma&amp;action=edit&amp;redlink=1\" class=\"new\" title=\"User:Kooma (page does not exist)\">Kooma</a> at <a href=\"//commons.wikimedia.org/wiki/Main_Page\" title=\"Main Page\"> Wikimedia Commons</a>.  Updated image created and uploaded by <a href=\"//commons.wikimedia.org/wiki/User:MapGrid\" title=\"User:MapGrid\">MapGrid</a>",
+      "credit": "modeled from diagrams and images in <a rel=\"nofollow\" class=\"external autonumber\" href=\"https://www.eia.gov.nt.ca/sites/eia/files/content/2018_gnwt_vip_guide_2.2_web_0.pdf\">[1]</a>.",
+      "copyright": "False",
+      "attributionRequired": "false"
+    },
+    {
+      "id": "CA-NU",
+      "path": "ca-nu.svg",
+      "title": "File:Flag of Nunavut.svg",
+      "source": "https://commons.wikimedia.org/wiki/File:Flag_of_Nunavut.svg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/9/90/Flag_of_Nunavut.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "license": "Public domain",
+      "licenseUrl": null,
+      "artist": "<a href=\"//commons.wikimedia.org/w/index.php?title=User:Kooma&amp;action=edit&amp;redlink=1\" class=\"new\" title=\"User:Kooma (page does not exist)\">Kooma</a> (original)",
+      "credit": "",
+      "copyright": "False",
+      "attributionRequired": "false"
+    },
+    {
+      "id": "CA-ON",
+      "path": "ca-on.svg",
+      "title": "File:Flag of Ontario.svg",
+      "source": "https://commons.wikimedia.org/wiki/File:Flag_of_Ontario.svg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/8/88/Flag_of_Ontario.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "license": "Public domain",
+      "licenseUrl": null,
+      "artist": "<a href=\"//commons.wikimedia.org/wiki/User_talk:Kooma\" title=\"User talk:Kooma\">Kooma</a>",
+      "credit": "<a rel=\"nofollow\" class=\"external text\" href=\"https://web.archive.org/web/20070310230404rn_1/www.gov.on.ca/ont/portal/!ut/p/.cmd/cs/.ce/7_0_A/.s/7_0_252/_s.7_0_A/7_0_252/_l/en?docid=004172\">Government of Ontario, About Ontario: Emblems and Symbols</a> (bad link)",
+      "copyright": "False",
+      "attributionRequired": "false"
+    },
+    {
+      "id": "CA-PE",
+      "path": "ca-pe.svg",
+      "title": "File:Flag of Prince Edward Island.svg",
+      "source": "https://commons.wikimedia.org/wiki/File:Flag_of_Prince_Edward_Island.svg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/d/d7/Flag_of_Prince_Edward_Island.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "license": "Public domain",
+      "licenseUrl": null,
+      "artist": "<a href=\"//commons.wikimedia.org/wiki/User:E_Pluribus_Anthony~commonswiki\" title=\"User:E Pluribus Anthony~commonswiki\">E Pluribus Anthony</a>",
+      "credit": "<p><a rel=\"nofollow\" class=\"external text\" href=\"http://www.gov.pe.ca/infopei/onelisting.php3?number=1599\">Government of Prince Edward Island, InfoPEI: Provincial Symbols</a>.\n</p>\nAdapted by <a href=\"//commons.wikimedia.org/w/index.php?title=User:E_Pluribus_Anthony&amp;action=edit&amp;redlink=1\" class=\"new\" title=\"User:E Pluribus Anthony (page does not exist)\">E Pluribus Anthony</a>.",
+      "copyright": "False",
+      "attributionRequired": "false"
+    },
+    {
+      "id": "CA-QC",
+      "path": "ca-qc.svg",
+      "title": "File:Flag of Quebec.svg",
+      "source": "https://commons.wikimedia.org/wiki/File:Flag_of_Quebec.svg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/5/5f/Flag_of_Quebec.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "license": "Public domain",
+      "licenseUrl": null,
+      "artist": "<div style=\"display:inline-block;padding:0 3px;background-color:#CCF\">Original:</div> <div style=\"display:inline-block;padding:3px 0;\">René Chaloult</div> <div style=\"display:inline-block;padding:0 3px;background-color:#CCF\">Vector: </div> <div style=\"display:inline-block;\"><a href=\"//commons.wikimedia.org/wiki/User:Krun\" title=\"User:Krun\">Krun</a></div>",
+      "credit": "Government of Quebec",
+      "copyright": "False",
+      "attributionRequired": "false"
+    },
+    {
+      "id": "CA-SK",
+      "path": "ca-sk.svg",
+      "title": "File:Flag of Saskatchewan.svg",
+      "source": "https://commons.wikimedia.org/wiki/File:Flag_of_Saskatchewan.svg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/b/bb/Flag_of_Saskatchewan.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "license": "Public domain",
+      "licenseUrl": null,
+      "artist": "<a href=\"//commons.wikimedia.org/w/index.php?title=User:Kooma&amp;action=edit&amp;redlink=1\" class=\"new\" title=\"User:Kooma (page does not exist)\">Kooma</a>",
+      "credit": "<a rel=\"nofollow\" class=\"external text\" href=\"http://www.openclipart.org/cgi-bin/navigate/signs_and_symbols/flags/america/canada\">Open Clip Art Library</a>",
+      "copyright": "False",
+      "attributionRequired": "false"
+    },
+    {
+      "id": "CA-YT",
+      "path": "ca-yt.svg",
+      "title": "File:Flag of Yukon.svg",
+      "source": "https://commons.wikimedia.org/wiki/File:Flag_of_Yukon.svg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/6/69/Flag_of_Yukon.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "license": "Public domain",
+      "licenseUrl": null,
+      "artist": "<a href=\"//commons.wikimedia.org/w/index.php?title=User:Kooma&amp;action=edit&amp;redlink=1\" class=\"new\" title=\"User:Kooma (page does not exist)\">Kooma</a> (original)",
+      "credit": "<a rel=\"nofollow\" class=\"external text\" href=\"http://www.openclipart.org/cgi-bin/navigate/signs_and_symbols/flags/america/canada\">Open Clip Art Library</a>",
+      "copyright": "False",
+      "attributionRequired": "false"
+    },
+    {
+      "id": "US-AK",
+      "path": "us-ak.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-AL",
+      "path": "us-al.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-AR",
+      "path": "us-ar.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-AZ",
+      "path": "us-az.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-CA",
+      "path": "us-ca.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-CO",
+      "path": "us-co.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-CT",
+      "path": "us-ct.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-DE",
+      "path": "us-de.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-FL",
+      "path": "us-fl.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-GA",
+      "path": "us-ga.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-HI",
+      "path": "us-hi.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-IA",
+      "path": "us-ia.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-ID",
+      "path": "us-id.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-IL",
+      "path": "us-il.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-IN",
+      "path": "us-in.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-KS",
+      "path": "us-ks.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-KY",
+      "path": "us-ky.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-LA",
+      "path": "us-la.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-MA",
+      "path": "us-ma.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-MD",
+      "path": "us-md.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-ME",
+      "path": "us-me.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-MI",
+      "path": "us-mi.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-MN",
+      "path": "us-mn.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-MO",
+      "path": "us-mo.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-MS",
+      "path": "us-ms.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-MT",
+      "path": "us-mt.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-NC",
+      "path": "us-nc.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-ND",
+      "path": "us-nd.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-NE",
+      "path": "us-ne.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-NH",
+      "path": "us-nh.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-NJ",
+      "path": "us-nj.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-NM",
+      "path": "us-nm.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-NV",
+      "path": "us-nv.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-NY",
+      "path": "us-ny.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-OH",
+      "path": "us-oh.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-OK",
+      "path": "us-ok.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-OR",
+      "path": "us-or.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-PA",
+      "path": "us-pa.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-RI",
+      "path": "us-ri.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-SC",
+      "path": "us-sc.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-SD",
+      "path": "us-sd.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-TN",
+      "path": "us-tn.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-TX",
+      "path": "us-tx.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-UT",
+      "path": "us-ut.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-VA",
+      "path": "us-va.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-VT",
+      "path": "us-vt.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-WA",
+      "path": "us-wa.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-WI",
+      "path": "us-wi.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-WV",
+      "path": "us-wv.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "US-WY",
+      "path": "us-wy.svg",
+      "source": "https://flagpedia.net/us-states/download",
+      "license": "Public domain",
+      "url": "https://flagcdn.com/us-svg.zip"
+    },
+    {
+      "id": "AU-ACT",
+      "path": "au-act.svg",
+      "title": "File:Flag of the Australian Capital Territory.svg",
+      "source": "https://commons.wikimedia.org/wiki/File:Flag_of_the_Australian_Capital_Territory.svg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/8/8c/Flag_of_the_Australian_Capital_Territory.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "license": "Public domain",
+      "licenseUrl": null,
+      "artist": "Ivo Ostyn (Original Designer)",
+      "credit": "<a href=\"//commons.wikimedia.org/wiki/File:Australian_Capital_Territory_Flag.jpg\" title=\"File:Australian Capital Territory Flag.jpg\">File:Australian Capital Territory Flag.jpg</a> (email from the ACT Government)",
+      "copyright": "False",
+      "attributionRequired": "false"
+    },
+    {
+      "id": "AU-NSW",
+      "path": "au-nsw.svg",
+      "title": "File:Flag of New South Wales.svg",
+      "source": "https://commons.wikimedia.org/wiki/File:Flag_of_New_South_Wales.svg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/0/00/Flag_of_New_South_Wales.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "license": "Public domain",
+      "licenseUrl": null,
+      "artist": "<a href=\"//commons.wikimedia.org/wiki/User:Denelson83\" title=\"User:Denelson83\">Denelson83</a> (original)",
+      "credit": "<p>xrmap flag collection 2.9.  Modifications by <a href=\"//commons.wikimedia.org/wiki/User:Denelson83\" title=\"User:Denelson83\">Denelson83</a> and <a href=\"//commons.wikimedia.org/w/index.php?title=User:Greentubing&amp;action=edit&amp;redlink=1\" class=\"new\" title=\"User:Greentubing (page does not exist)\">User:Greentubing</a> (original)\n</p>\nOfficial colour specifications from government <a rel=\"nofollow\" class=\"external text\" href=\"https://static.nsw.gov.au/siteassets/Uploads/flag-and-emblems-book-15sept2015-interactive.pdf\">booklet</a>:",
+      "copyright": "False",
+      "attributionRequired": "false"
+    },
+    {
+      "id": "AU-NT",
+      "path": "au-nt.svg",
+      "title": "File:Flag of the Northern Territory.svg",
+      "source": "https://commons.wikimedia.org/wiki/File:Flag_of_the_Northern_Territory.svg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/b/b7/Flag_of_the_Northern_Territory.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "license": "Public domain",
+      "licenseUrl": null,
+      "artist": "<a href=\"https://en.wikipedia.org/wiki/en:Robert_Ingpen\" class=\"extiw\" title=\"w:en:Robert Ingpen\">Robert Ingpen</a>",
+      "credit": "<a rel=\"nofollow\" class=\"external text\" href=\"https://nt.gov.au/__data/assets/pdf_file/0005/389336/nt-flag-specifications.pdf\">NT flag specifications</a>",
+      "copyright": "False",
+      "attributionRequired": "false"
+    },
+    {
+      "id": "AU-QLD",
+      "path": "au-qld.svg",
+      "title": "File:Flag of Queensland.svg",
+      "source": "https://commons.wikimedia.org/wiki/File:Flag_of_Queensland.svg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/0/04/Flag_of_Queensland.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "license": "Public domain",
+      "licenseUrl": null,
+      "artist": "Government of Queensland",
+      "credit": "This SVG flag includes elements  from this flag:",
+      "copyright": "False",
+      "attributionRequired": "false"
+    },
+    {
+      "id": "AU-SA",
+      "path": "au-sa.svg",
+      "title": "File:Flag of South Australia.svg",
+      "source": "https://commons.wikimedia.org/wiki/File:Flag_of_South_Australia.svg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/f/fd/Flag_of_South_Australia.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "license": "Public domain",
+      "licenseUrl": null,
+      "artist": "<em>Robert Craig (Likely Original Designer)</em>",
+      "credit": "Xrmap Flag Collection 2.9.",
+      "copyright": "False",
+      "attributionRequired": "false"
+    },
+    {
+      "id": "AU-TAS",
+      "path": "au-tas.svg",
+      "title": "File:Flag of Tasmania.svg",
+      "source": "https://commons.wikimedia.org/wiki/File:Flag_of_Tasmania.svg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/4/46/Flag_of_Tasmania.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "license": "Public domain",
+      "licenseUrl": null,
+      "artist": "Unknown author <em>(Proclaimed by Sir Frederick Weld)</em>",
+      "credit": "<ul><li>Background and base from <a href=\"//commons.wikimedia.org/wiki/File:Flag_of_Australia_(converted).svg\" title=\"File:Flag of Australia (converted).svg\">File:Flag of Australia (converted).svg</a> (Public domain)</li>\n<li>Lion badge from <span class=\"url\"><a rel=\"nofollow\" class=\"external text\" href=\"http://www.vector-images.com/\">vector-images.com</a></span></li>\n<li>Specification from <span class=\"url\"><a rel=\"nofollow\" class=\"external text\" href=\"https://www.dpac.tas.gov.au/divisions/office_of_the_secretary/Executive_Services/protocol_office/flags/tasmanian_flag\">dpac.tas.gov.au/divisions/office of the secretary/Executive Services/protocol office/flags/tasmanian flag</a></span></li>\n<li>Composition and modifications by <a href=\"//commons.wikimedia.org/wiki/User:Denelson83\" title=\"User:Denelson83\">Denelson83</a></li></ul>",
+      "copyright": "False",
+      "attributionRequired": "false"
+    },
+    {
+      "id": "AU-VIC",
+      "path": "au-vic.svg",
+      "title": "File:Flag of Victoria (Australia).svg",
+      "source": "https://commons.wikimedia.org/wiki/File:Flag_of_Victoria_(Australia).svg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/0/08/Flag_of_Victoria_%28Australia%29.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "license": "Public domain",
+      "licenseUrl": null,
+      "artist": "<a href=\"//commons.wikimedia.org/wiki/User:Denelson83\" title=\"User:Denelson83\">Denelson83</a> (original)",
+      "credit": "xrmap flag collection 2.9. (original)",
+      "copyright": "False",
+      "attributionRequired": "false"
+    },
+    {
+      "id": "AU-WA",
+      "path": "au-wa.svg",
+      "title": "File:Flag of Western Australia.svg",
+      "source": "https://commons.wikimedia.org/wiki/File:Flag_of_Western_Australia.svg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/a/a5/Flag_of_Western_Australia.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "license": "Public domain",
+      "licenseUrl": null,
+      "artist": "<div style=\"display:inline-block;padding:0 3px;background-color:#CCF\">Original:</div> <div style=\"display:inline-block;padding:3px 0;\">Frederick Weld</div> <div style=\"display:inline-block;padding:0 3px;background-color:#CCF\">Vector: </div> <div style=\"display:inline-block;\"><a href=\"//commons.wikimedia.org/wiki/User:Denelson83\" title=\"User:Denelson83\">Denelson83</a></div>",
+      "credit": "Own work using: <a href=\"//commons.wikimedia.org/wiki/File:Government_Ensign_of_the_United_Kingdom.svg\" title=\"File:Government Ensign of the United Kingdom.svg\">Government Ensign of the United Kingdom.svg</a>",
+      "copyright": "False",
+      "attributionRequired": "false"
+    }
+  ],
+  "transforms": [
+    "Selected 50 US states and 13 Canadian provinces/territories; DC and US territories excluded.",
+    "Map coordinates rounded to four decimal places; rings oriented for D3 spherical geometry.",
+    "Adjacency derived from matching boundary segments; zero-length and point-only contacts excluded.",
+    "Capital city centres are representative coordinates, not capitol-building positions.",
+    "No population or largest-city claims are derived from the historical Natural Earth city data.",
+    "Australia: six states plus ACT and NT; Jervis Bay and external territories are not separate study targets. Lord Howe Island merged into NSW; Macquarie Island merged into Tasmania.",
+    "0.56.75: subdivision files moved into the flat assets folder; data and geometry unchanged."
+  ]
+}

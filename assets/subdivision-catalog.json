@@ -1,0 +1,5076 @@
+{
+  "schema": 1,
+  "version": "2026-10-09",
+  "enabledInGames": false,
+  "adjacencyPolicy": "Shared boundary segments in Natural Earth; point-only contacts excluded; not a claim of traversable land borders.",
+  "entities": [
+    {
+      "id": "CA-AB",
+      "kind": "subdivision",
+      "parentCountryId": "CA",
+      "type": "province",
+      "name": "Alberta",
+      "postalCode": "AB",
+      "aliases": [
+        "Alta."
+      ],
+      "group": "ca-prairies",
+      "capital": {
+        "name": "Edmonton",
+        "aliases": [],
+        "coordinates": [
+          -113.501928,
+          53.551971
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159151455
+      },
+      "labelPoint": [
+        -115,
+        55.2816
+      ],
+      "bounds": [
+        [
+          -120.001,
+          48.9925
+        ],
+        [
+          -109.9993,
+          60.000469136234614
+        ]
+      ],
+      "neighborIds": [
+        "CA-BC",
+        "CA-NT",
+        "CA-SK",
+        "US-MT"
+      ],
+      "identifiers": {
+        "iso3166_2": "CA-AB",
+        "fips": null,
+        "wikidata": "Q1951",
+        "naturalEarth": "CAN-632"
+      },
+      "geometry": {
+        "featureId": "CA-AB",
+        "asset": "subdivision-maps-ca.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "ca-ab.svg",
+        "title": "File:Flag of Alberta.svg",
+        "source": "https://commons.wikimedia.org/wiki/File:Flag_of_Alberta.svg",
+        "url": "https://upload.wikimedia.org/wikipedia/commons/f/f5/Flag_of_Alberta.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+        "license": "Public domain",
+        "licenseUrl": null,
+        "artist": "<a href=\"//commons.wikimedia.org/w/index.php?title=User:Kooma&amp;action=edit&amp;redlink=1\" class=\"new\" title=\"User:Kooma (page does not exist)\">Kooma</a> (original)",
+        "credit": "<a rel=\"nofollow\" class=\"external text\" href=\"http://www.qp.alberta.ca/documents/Acts/E06.pdf\">Emblems of Alberta Act</a>",
+        "copyright": "False",
+        "attributionRequired": "false"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "CA-BC",
+      "kind": "subdivision",
+      "parentCountryId": "CA",
+      "type": "province",
+      "name": "British Columbia",
+      "postalCode": "BC",
+      "aliases": [
+        "Colombie britannique",
+        "New Caledonia"
+      ],
+      "group": "ca-west-coast",
+      "capital": {
+        "name": "Victoria",
+        "aliases": [],
+        "coordinates": [
+          -123.350001,
+          48.433283
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159151039
+      },
+      "labelPoint": [
+        -124.662,
+        54.6943
+      ],
+      "bounds": [
+        [
+          -139.0602,
+          48.3061
+        ],
+        [
+          -114.0375,
+          60.00031539430042
+        ]
+      ],
+      "neighborIds": [
+        "CA-AB",
+        "CA-NT",
+        "CA-YT",
+        "US-AK",
+        "US-ID",
+        "US-MT",
+        "US-WA"
+      ],
+      "identifiers": {
+        "iso3166_2": "CA-BC",
+        "fips": null,
+        "wikidata": "Q1974",
+        "naturalEarth": "CAN-633"
+      },
+      "geometry": {
+        "featureId": "CA-BC",
+        "asset": "subdivision-maps-ca.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "ca-bc.svg",
+        "title": "File:Flag of British Columbia.svg",
+        "source": "https://commons.wikimedia.org/wiki/File:Flag_of_British_Columbia.svg",
+        "url": "https://upload.wikimedia.org/wikipedia/commons/b/b8/Flag_of_British_Columbia.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+        "license": "Public domain",
+        "licenseUrl": null,
+        "artist": "<a href=\"//commons.wikimedia.org/w/index.php?title=User:Kooma&amp;action=edit&amp;redlink=1\" class=\"new\" title=\"User:Kooma (page does not exist)\">Kooma</a> (original) <br> <a href=\"//commons.wikimedia.org/wiki/User:Sshu94\" title=\"User:Sshu94\">Sshu94</a> (current)",
+        "credit": "<p>Government of British Columbia <a rel=\"nofollow\" class=\"external autonumber\" href=\"https://www2.gov.bc.ca/assets/gov/british-columbians-our-governments/celebrating-british-columbia/symbols-of-bc/bc-emblems-set.pdf\">[1]</a>\n31 March 1906 (shield and motto) &amp; 15 October 1987 (crest and supporters) <a rel=\"nofollow\" class=\"external autonumber\" href=\"http://reg.gg.ca/heraldry/pub-reg/project.asp?lang=e&amp;ProjectID=1406&amp;ShowAll=1\">[2]</a>\n</p>\nOriginal concepts of Arthur John Beanlands; Ambrose Lee, York Herald (1906); and Conrad Swan, York Herald (1987), College of Arms, London. <a rel=\"nofollow\" class=\"external autonumber\" href=\"http://reg.gg.ca/heraldry/pub-reg/project.asp?lang=e&amp;ProjectID=1406&amp;ShowAll=1\">[3]</a>",
+        "copyright": "False",
+        "attributionRequired": "false"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "CA-MB",
+      "kind": "subdivision",
+      "parentCountryId": "CA",
+      "type": "province",
+      "name": "Manitoba",
+      "postalCode": "MB",
+      "aliases": [
+        "Man."
+      ],
+      "group": "ca-prairies",
+      "capital": {
+        "name": "Winnipeg",
+        "aliases": [],
+        "coordinates": [
+          -97.165992,
+          49.882987
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159151025
+      },
+      "labelPoint": [
+        -97.3828,
+        54.85
+      ],
+      "bounds": [
+        [
+          -102.0016,
+          48.9927
+        ],
+        [
+          -88.947,
+          60.00029138392031
+        ]
+      ],
+      "neighborIds": [
+        "CA-NU",
+        "CA-ON",
+        "CA-SK",
+        "US-MN",
+        "US-ND"
+      ],
+      "identifiers": {
+        "iso3166_2": "CA-MB",
+        "fips": null,
+        "wikidata": "Q1948",
+        "naturalEarth": "CAN-630"
+      },
+      "geometry": {
+        "featureId": "CA-MB",
+        "asset": "subdivision-maps-ca.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "ca-mb.svg",
+        "title": "File:Flag of Manitoba.svg",
+        "source": "https://commons.wikimedia.org/wiki/File:Flag_of_Manitoba.svg",
+        "url": "https://upload.wikimedia.org/wikipedia/commons/c/c4/Flag_of_Manitoba.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+        "license": "Public domain",
+        "licenseUrl": null,
+        "artist": "<a href=\"//commons.wikimedia.org/w/index.php?title=User:Kooma&amp;action=edit&amp;redlink=1\" class=\"new\" title=\"User:Kooma (page does not exist)\">Kooma</a> (original) <br> <a href=\"//commons.wikimedia.org/wiki/User:Echando_una_mano\" title=\"User:Echando una mano\">Echando una mano</a> (current)",
+        "credit": "<p><span typeof=\"mw:File\"><a href=\"//commons.wikimedia.org/wiki/File:Flag-of-Manitoba.jpg\" class=\"mw-file-description\"><img src=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c5/Flag-of-Manitoba.jpg/250px-Flag-of-Manitoba.jpg?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail\" decoding=\"async\" loading=\"lazy\" width=\"200\" height=\"133\" class=\"mw-file-element\" srcset=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c5/Flag-of-Manitoba.jpg/500px-Flag-of-Manitoba.jpg?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail 2x\" data-file-width=\"4272\" data-file-height=\"2848\"></a></span> <br>\n</p>\n<a rel=\"nofollow\" class=\"external text\" href=\"https://web.archive.org/web/20050316094017/http://www.sodipodi.com/index.php3?section=clipart/flags&amp;area=flags&amp;n=49\">Sodipodi's Clipart Gallery</a> (through Wayback Machine)",
+        "copyright": "False",
+        "attributionRequired": "false"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "CA-NB",
+      "kind": "subdivision",
+      "parentCountryId": "CA",
+      "type": "province",
+      "name": "New Brunswick",
+      "postalCode": "NB",
+      "aliases": [
+        "Nouveau-Brunswick",
+        "Acadia"
+      ],
+      "group": "ca-atlantic",
+      "capital": {
+        "name": "Fredericton",
+        "aliases": [],
+        "coordinates": [
+          -66.633308,
+          45.949998
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159148929
+      },
+      "labelPoint": [
+        -66.4558,
+        46.5822
+      ],
+      "bounds": [
+        [
+          -69.0636,
+          44.6028
+        ],
+        [
+          -63.7711,
+          48.0751
+        ]
+      ],
+      "neighborIds": [
+        "CA-NS",
+        "CA-QC",
+        "US-ME"
+      ],
+      "identifiers": {
+        "iso3166_2": "CA-NB",
+        "fips": null,
+        "wikidata": "Q1965",
+        "naturalEarth": "CAN-684"
+      },
+      "geometry": {
+        "featureId": "CA-NB",
+        "asset": "subdivision-maps-ca.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "ca-nb.svg",
+        "title": "File:Flag of New Brunswick.svg",
+        "source": "https://commons.wikimedia.org/wiki/File:Flag_of_New_Brunswick.svg",
+        "url": "https://upload.wikimedia.org/wikipedia/commons/f/fb/Flag_of_New_Brunswick.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+        "license": "Public domain",
+        "licenseUrl": null,
+        "artist": "<a href=\"//commons.wikimedia.org/wiki/User:Dbenbenn\" title=\"User:Dbenbenn\">Dbenbenn</a> (original) <br> <a href=\"//commons.wikimedia.org/wiki/User:E_Pluribus_Anthony~commonswiki\" title=\"User:E Pluribus Anthony~commonswiki\">E Pluribus Anthony</a> (current)",
+        "credit": "<p><a rel=\"nofollow\" class=\"external text\" href=\"https://web.archive.org/web/20100818053604/http://www.gnb.ca:80/cnb/logos/logos/flag-e.asp\">Government of New Brunswick, Communications New Brunswick: Logos/Symbols</a>.\n</p>\nAdapted by <a href=\"//commons.wikimedia.org/w/index.php?title=User:E_Pluribus_Anthony&amp;action=edit&amp;redlink=1\" class=\"new\" title=\"User:E Pluribus Anthony (page does not exist)\">E Pluribus Anthony</a>.",
+        "copyright": "False",
+        "attributionRequired": "false"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "CA-NL",
+      "kind": "subdivision",
+      "parentCountryId": "CA",
+      "type": "province",
+      "name": "Newfoundland and Labrador",
+      "postalCode": "NL",
+      "aliases": [
+        "Newfoundland",
+        "Terre-Neuve",
+        "Terre-Neuve-et-Labrador",
+        "Newfoundland & Labrador"
+      ],
+      "group": "ca-atlantic",
+      "capital": {
+        "name": "St. John's",
+        "aliases": [],
+        "coordinates": [
+          -52.681007,
+          47.584988
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159151071
+      },
+      "labelPoint": [
+        -56.2169,
+        48.6598
+      ],
+      "bounds": [
+        [
+          -67.8081,
+          46.6184
+        ],
+        [
+          -52.6166,
+          60.3727
+        ]
+      ],
+      "neighborIds": [
+        "CA-NU",
+        "CA-QC"
+      ],
+      "identifiers": {
+        "iso3166_2": "CA-NL",
+        "fips": null,
+        "wikidata": "Q2003",
+        "naturalEarth": "CAN-686"
+      },
+      "geometry": {
+        "featureId": "CA-NL",
+        "asset": "subdivision-maps-ca.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "ca-nl.svg",
+        "title": "File:Flag of Newfoundland and Labrador.svg",
+        "source": "https://commons.wikimedia.org/wiki/File:Flag_of_Newfoundland_and_Labrador.svg",
+        "url": "https://upload.wikimedia.org/wikipedia/commons/d/dd/Flag_of_Newfoundland_and_Labrador.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+        "license": "Public domain",
+        "licenseUrl": null,
+        "artist": "Original 2005 upload was created by Robert Crosbie and uploaded by <a href=\"//commons.wikimedia.org/w/index.php?title=User:Kooma&amp;action=edit&amp;redlink=1\" class=\"new\" title=\"User:Kooma (page does not exist)\">Kooma</a>.  Entire flag redrawn/recoded from scratch by <a href=\"//commons.wikimedia.org/wiki/User:MapGrid\" title=\"User:MapGrid\">MapGrid</a> in 2019.  Colors changed by <a href=\"//commons.wikimedia.org/wiki/User:Great_Brightstar\" title=\"User:Great Brightstar\">Great Brightstar</a> in 2019.",
+        "credit": "<p><a href=\"//commons.wikimedia.org/wiki/File:Flag_of_Newfoundland_and_Labrador_(construction_sheet).svg\" title=\"File:Flag of Newfoundland and Labrador (construction sheet).svg\">File:Flag of Newfoundland and Labrador (construction sheet).svg</a>\n</p>\n<span typeof=\"mw:File\"><a href=\"//commons.wikimedia.org/wiki/File:Flag_of_Newfoundland_and_Labrador_(construction_sheet).svg\" class=\"mw-file-description\"><img src=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9b/Flag_of_Newfoundland_and_Labrador_%28construction_sheet%29.svg/250px-Flag_of_Newfoundland_and_Labrador_%28construction_sheet%29.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail\" decoding=\"async\" loading=\"lazy\" width=\"150\" height=\"80\" class=\"mw-file-element\" srcset=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9b/Flag_of_Newfoundland_and_Labrador_%28construction_sheet%29.svg/330px-Flag_of_Newfoundland_and_Labrador_%28construction_sheet%29.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail 2x\" data-file-width=\"1293\" data-file-height=\"692\"></a></span>",
+        "copyright": "False",
+        "attributionRequired": "false"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "CA-NS",
+      "kind": "subdivision",
+      "parentCountryId": "CA",
+      "type": "province",
+      "name": "Nova Scotia",
+      "postalCode": "NS",
+      "aliases": [
+        "Acadia",
+        "Nouvelle-Écosse"
+      ],
+      "group": "ca-atlantic",
+      "capital": {
+        "name": "Halifax",
+        "aliases": [],
+        "coordinates": [
+          -63.600004,
+          44.650025
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159151069
+      },
+      "labelPoint": [
+        -62.8113,
+        45.2293
+      ],
+      "bounds": [
+        [
+          -66.3277,
+          43.4221
+        ],
+        [
+          -59.6886,
+          47.0348
+        ]
+      ],
+      "neighborIds": [
+        "CA-NB"
+      ],
+      "identifiers": {
+        "iso3166_2": "CA-NS",
+        "fips": null,
+        "wikidata": "Q1952",
+        "naturalEarth": "CAN-685"
+      },
+      "geometry": {
+        "featureId": "CA-NS",
+        "asset": "subdivision-maps-ca.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "ca-ns.svg",
+        "title": "File:Flag of Nova Scotia.svg",
+        "source": "https://commons.wikimedia.org/wiki/File:Flag_of_Nova_Scotia.svg",
+        "url": "https://upload.wikimedia.org/wikipedia/commons/c/c0/Flag_of_Nova_Scotia.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+        "license": "Public domain",
+        "licenseUrl": null,
+        "artist": "<div style=\"display:inline-block;padding:0 3px;background-color:#CCF\">Original:</div> <div style=\"display:inline-block;padding:3px 0;\">Unknown author</div> <div style=\"display:inline-block;padding:0 3px;background-color:#CCF\">Vector: </div> <div style=\"display:inline-block;\"><a href=\"//commons.wikimedia.org/w/index.php?title=User:Kooma&amp;action=edit&amp;redlink=1\" class=\"new\" title=\"User:Kooma (page does not exist)\">Kooma</a>, <a href=\"//commons.wikimedia.org/w/index.php?title=User:FJDEACKB&amp;action=edit&amp;redlink=1\" class=\"new\" title=\"User:FJDEACKB (page does not exist)\">FJDEACKB</a>, <a href=\"//commons.wikimedia.org/wiki/User:Zscout370\" title=\"User:Zscout370\">Zscout370</a> and <a href=\"//commons.wikimedia.org/wiki/User:Denelson83\" title=\"User:Denelson83\">Denelson83</a></div>",
+        "credit": "<a rel=\"nofollow\" class=\"external autonumber\" href=\"http://www.gov.ns.ca/cmns/flagspublic.asp\">[1]</a> (dead link)",
+        "copyright": "False",
+        "attributionRequired": "false"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "CA-NT",
+      "kind": "subdivision",
+      "parentCountryId": "CA",
+      "type": "territory",
+      "name": "Northwest Territories",
+      "postalCode": "NT",
+      "aliases": [
+        "Territoires du Nord-Ouest",
+        "N.W.T.",
+        "NWT"
+      ],
+      "group": "ca-north",
+      "capital": {
+        "name": "Yellowknife",
+        "aliases": [],
+        "coordinates": [
+          -114.396981,
+          62.442014
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159151047
+      },
+      "labelPoint": [
+        -119.942,
+        64.0831
+      ],
+      "bounds": [
+        [
+          -136.4454,
+          60.0001
+        ],
+        [
+          -101.9866,
+          78.7663
+        ]
+      ],
+      "neighborIds": [
+        "CA-AB",
+        "CA-BC",
+        "CA-NU",
+        "CA-SK",
+        "CA-YT"
+      ],
+      "identifiers": {
+        "iso3166_2": "CA-NT",
+        "fips": null,
+        "wikidata": "Q2007",
+        "naturalEarth": "CAN-635"
+      },
+      "geometry": {
+        "featureId": "CA-NT",
+        "asset": "subdivision-maps-ca.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "ca-nt.svg",
+        "title": "File:Flag of the Northwest Territories.svg",
+        "source": "https://commons.wikimedia.org/wiki/File:Flag_of_the_Northwest_Territories.svg",
+        "url": "https://upload.wikimedia.org/wikipedia/commons/c/c1/Flag_of_the_Northwest_Territories.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+        "license": "Public domain",
+        "licenseUrl": null,
+        "artist": "The original uploader was <a href=\"//commons.wikimedia.org/w/index.php?title=User:Kooma&amp;action=edit&amp;redlink=1\" class=\"new\" title=\"User:Kooma (page does not exist)\">Kooma</a> at <a href=\"//commons.wikimedia.org/wiki/Main_Page\" title=\"Main Page\"> Wikimedia Commons</a>.  Updated image created and uploaded by <a href=\"//commons.wikimedia.org/wiki/User:MapGrid\" title=\"User:MapGrid\">MapGrid</a>",
+        "credit": "modeled from diagrams and images in <a rel=\"nofollow\" class=\"external autonumber\" href=\"https://www.eia.gov.nt.ca/sites/eia/files/content/2018_gnwt_vip_guide_2.2_web_0.pdf\">[1]</a>.",
+        "copyright": "False",
+        "attributionRequired": "false"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "CA-NU",
+      "kind": "subdivision",
+      "parentCountryId": "CA",
+      "type": "territory",
+      "name": "Nunavut",
+      "postalCode": "NU",
+      "aliases": [
+        "Nun."
+      ],
+      "group": "ca-north",
+      "capital": {
+        "name": "Iqaluit",
+        "aliases": [],
+        "coordinates": [
+          -68.500192,
+          63.750459
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159150241
+      },
+      "labelPoint": [
+        -97.1443,
+        64.3853
+      ],
+      "bounds": [
+        [
+          -120.6808,
+          51.9186
+        ],
+        [
+          -61.0855,
+          83.1165
+        ]
+      ],
+      "neighborIds": [
+        "CA-MB",
+        "CA-NL",
+        "CA-NT"
+      ],
+      "identifiers": {
+        "iso3166_2": "CA-NU",
+        "fips": null,
+        "wikidata": "Q2023",
+        "naturalEarth": "CAN-634"
+      },
+      "geometry": {
+        "featureId": "CA-NU",
+        "asset": "subdivision-maps-ca.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "ca-nu.svg",
+        "title": "File:Flag of Nunavut.svg",
+        "source": "https://commons.wikimedia.org/wiki/File:Flag_of_Nunavut.svg",
+        "url": "https://upload.wikimedia.org/wikipedia/commons/9/90/Flag_of_Nunavut.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+        "license": "Public domain",
+        "licenseUrl": null,
+        "artist": "<a href=\"//commons.wikimedia.org/w/index.php?title=User:Kooma&amp;action=edit&amp;redlink=1\" class=\"new\" title=\"User:Kooma (page does not exist)\">Kooma</a> (original)",
+        "credit": "",
+        "copyright": "False",
+        "attributionRequired": "false"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "CA-ON",
+      "kind": "subdivision",
+      "parentCountryId": "CA",
+      "type": "province",
+      "name": "Ontario",
+      "postalCode": "ON",
+      "aliases": [
+        "Upper Canada",
+        "Ont."
+      ],
+      "group": "ca-central",
+      "capital": {
+        "name": "Toronto",
+        "aliases": [],
+        "coordinates": [
+          -79.389459,
+          43.664645
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159151557
+      },
+      "labelPoint": [
+        -84.7943,
+        50.5244
+      ],
+      "bounds": [
+        [
+          -95.1612,
+          41.6691
+        ],
+        [
+          -74.3462,
+          56.8613
+        ]
+      ],
+      "neighborIds": [
+        "CA-MB",
+        "CA-QC",
+        "US-MI",
+        "US-MN",
+        "US-NY",
+        "US-OH",
+        "US-PA"
+      ],
+      "identifiers": {
+        "iso3166_2": "CA-ON",
+        "fips": null,
+        "wikidata": "Q1904",
+        "naturalEarth": "CAN-682"
+      },
+      "geometry": {
+        "featureId": "CA-ON",
+        "asset": "subdivision-maps-ca.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "ca-on.svg",
+        "title": "File:Flag of Ontario.svg",
+        "source": "https://commons.wikimedia.org/wiki/File:Flag_of_Ontario.svg",
+        "url": "https://upload.wikimedia.org/wikipedia/commons/8/88/Flag_of_Ontario.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+        "license": "Public domain",
+        "licenseUrl": null,
+        "artist": "<a href=\"//commons.wikimedia.org/wiki/User_talk:Kooma\" title=\"User talk:Kooma\">Kooma</a>",
+        "credit": "<a rel=\"nofollow\" class=\"external text\" href=\"https://web.archive.org/web/20070310230404rn_1/www.gov.on.ca/ont/portal/!ut/p/.cmd/cs/.ce/7_0_A/.s/7_0_252/_s.7_0_A/7_0_252/_l/en?docid=004172\">Government of Ontario, About Ontario: Emblems and Symbols</a> (bad link)",
+        "copyright": "False",
+        "attributionRequired": "false"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "CA-PE",
+      "kind": "subdivision",
+      "parentCountryId": "CA",
+      "type": "province",
+      "name": "Prince Edward Island",
+      "postalCode": "PE",
+      "aliases": [
+        "Île de Saint-Jean",
+        "Île du Prince-Édouard",
+        "P.E.I.",
+        "PEI"
+      ],
+      "group": "ca-atlantic",
+      "capital": {
+        "name": "Charlottetown",
+        "aliases": [],
+        "coordinates": [
+          -63.131325,
+          46.249282
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159151075
+      },
+      "labelPoint": [
+        -63.3862,
+        46.3417
+      ],
+      "bounds": [
+        [
+          -64.4168,
+          45.9508
+        ],
+        [
+          -61.977,
+          47.0673
+        ]
+      ],
+      "neighborIds": [],
+      "identifiers": {
+        "iso3166_2": "CA-PE",
+        "fips": null,
+        "wikidata": "Q1979",
+        "naturalEarth": "CAN-687"
+      },
+      "geometry": {
+        "featureId": "CA-PE",
+        "asset": "subdivision-maps-ca.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "ca-pe.svg",
+        "title": "File:Flag of Prince Edward Island.svg",
+        "source": "https://commons.wikimedia.org/wiki/File:Flag_of_Prince_Edward_Island.svg",
+        "url": "https://upload.wikimedia.org/wikipedia/commons/d/d7/Flag_of_Prince_Edward_Island.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+        "license": "Public domain",
+        "licenseUrl": null,
+        "artist": "<a href=\"//commons.wikimedia.org/wiki/User:E_Pluribus_Anthony~commonswiki\" title=\"User:E Pluribus Anthony~commonswiki\">E Pluribus Anthony</a>",
+        "credit": "<p><a rel=\"nofollow\" class=\"external text\" href=\"http://www.gov.pe.ca/infopei/onelisting.php3?number=1599\">Government of Prince Edward Island, InfoPEI: Provincial Symbols</a>.\n</p>\nAdapted by <a href=\"//commons.wikimedia.org/w/index.php?title=User:E_Pluribus_Anthony&amp;action=edit&amp;redlink=1\" class=\"new\" title=\"User:E Pluribus Anthony (page does not exist)\">E Pluribus Anthony</a>.",
+        "copyright": "False",
+        "attributionRequired": "false"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "CA-QC",
+      "kind": "subdivision",
+      "parentCountryId": "CA",
+      "type": "province",
+      "name": "Quebec",
+      "postalCode": "QC",
+      "aliases": [
+        "Lower Canada",
+        "Que.",
+        "Québec"
+      ],
+      "group": "ca-central",
+      "capital": {
+        "name": "Québec City",
+        "aliases": [
+          "Québec",
+          "Quebec",
+          "Quebec City"
+        ],
+        "coordinates": [
+          -71.24561,
+          46.839969
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159151065
+      },
+      "labelPoint": [
+        -73.7168,
+        52.2593
+      ],
+      "bounds": [
+        [
+          -79.7656,
+          44.998
+        ],
+        [
+          -57.1003,
+          62.5938
+        ]
+      ],
+      "neighborIds": [
+        "CA-NB",
+        "CA-NL",
+        "CA-ON",
+        "US-ME",
+        "US-NH",
+        "US-NY",
+        "US-VT"
+      ],
+      "identifiers": {
+        "iso3166_2": "CA-QC",
+        "fips": null,
+        "wikidata": "Q176",
+        "naturalEarth": "CAN-683"
+      },
+      "geometry": {
+        "featureId": "CA-QC",
+        "asset": "subdivision-maps-ca.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "ca-qc.svg",
+        "title": "File:Flag of Quebec.svg",
+        "source": "https://commons.wikimedia.org/wiki/File:Flag_of_Quebec.svg",
+        "url": "https://upload.wikimedia.org/wikipedia/commons/5/5f/Flag_of_Quebec.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+        "license": "Public domain",
+        "licenseUrl": null,
+        "artist": "<div style=\"display:inline-block;padding:0 3px;background-color:#CCF\">Original:</div> <div style=\"display:inline-block;padding:3px 0;\">René Chaloult</div> <div style=\"display:inline-block;padding:0 3px;background-color:#CCF\">Vector: </div> <div style=\"display:inline-block;\"><a href=\"//commons.wikimedia.org/wiki/User:Krun\" title=\"User:Krun\">Krun</a></div>",
+        "credit": "Government of Quebec",
+        "copyright": "False",
+        "attributionRequired": "false"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "CA-SK",
+      "kind": "subdivision",
+      "parentCountryId": "CA",
+      "type": "province",
+      "name": "Saskatchewan",
+      "postalCode": "SK",
+      "aliases": [
+        "Sask."
+      ],
+      "group": "ca-prairies",
+      "capital": {
+        "name": "Regina",
+        "aliases": [],
+        "coordinates": [
+          -104.61701,
+          50.450033
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159151029
+      },
+      "labelPoint": [
+        -105.682,
+        54.4965
+      ],
+      "bounds": [
+        [
+          -110,
+          48.9926
+        ],
+        [
+          -101.3643,
+          60.00033617150364
+        ]
+      ],
+      "neighborIds": [
+        "CA-AB",
+        "CA-MB",
+        "CA-NT",
+        "US-MT",
+        "US-ND"
+      ],
+      "identifiers": {
+        "iso3166_2": "CA-SK",
+        "fips": null,
+        "wikidata": "Q1989",
+        "naturalEarth": "CAN-631"
+      },
+      "geometry": {
+        "featureId": "CA-SK",
+        "asset": "subdivision-maps-ca.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "ca-sk.svg",
+        "title": "File:Flag of Saskatchewan.svg",
+        "source": "https://commons.wikimedia.org/wiki/File:Flag_of_Saskatchewan.svg",
+        "url": "https://upload.wikimedia.org/wikipedia/commons/b/bb/Flag_of_Saskatchewan.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+        "license": "Public domain",
+        "licenseUrl": null,
+        "artist": "<a href=\"//commons.wikimedia.org/w/index.php?title=User:Kooma&amp;action=edit&amp;redlink=1\" class=\"new\" title=\"User:Kooma (page does not exist)\">Kooma</a>",
+        "credit": "<a rel=\"nofollow\" class=\"external text\" href=\"http://www.openclipart.org/cgi-bin/navigate/signs_and_symbols/flags/america/canada\">Open Clip Art Library</a>",
+        "copyright": "False",
+        "attributionRequired": "false"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "CA-YT",
+      "kind": "subdivision",
+      "parentCountryId": "CA",
+      "type": "territory",
+      "name": "Yukon",
+      "postalCode": "YT",
+      "aliases": [
+        "Yukon Territory",
+        "Territoire du Yukon",
+        "Yuk¢n",
+        "Yuk."
+      ],
+      "group": "ca-north",
+      "capital": {
+        "name": "Whitehorse",
+        "aliases": [],
+        "coordinates": [
+          -135.049984,
+          60.716719
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159151053
+      },
+      "labelPoint": [
+        -135.7,
+        63.6088
+      ],
+      "bounds": [
+        [
+          -141.0056,
+          60.0001
+        ],
+        [
+          -123.8191,
+          69.6542
+        ]
+      ],
+      "neighborIds": [
+        "CA-BC",
+        "CA-NT",
+        "US-AK"
+      ],
+      "identifiers": {
+        "iso3166_2": "CA-YT",
+        "fips": null,
+        "wikidata": "Q2009",
+        "naturalEarth": "CAN-636"
+      },
+      "geometry": {
+        "featureId": "CA-YT",
+        "asset": "subdivision-maps-ca.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "ca-yt.svg",
+        "title": "File:Flag of Yukon.svg",
+        "source": "https://commons.wikimedia.org/wiki/File:Flag_of_Yukon.svg",
+        "url": "https://upload.wikimedia.org/wikipedia/commons/6/69/Flag_of_Yukon.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+        "license": "Public domain",
+        "licenseUrl": null,
+        "artist": "<a href=\"//commons.wikimedia.org/w/index.php?title=User:Kooma&amp;action=edit&amp;redlink=1\" class=\"new\" title=\"User:Kooma (page does not exist)\">Kooma</a> (original)",
+        "credit": "<a rel=\"nofollow\" class=\"external text\" href=\"http://www.openclipart.org/cgi-bin/navigate/signs_and_symbols/flags/america/canada\">Open Clip Art Library</a>",
+        "copyright": "False",
+        "attributionRequired": "false"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-AK",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "Alaska",
+      "postalCode": "AK",
+      "aliases": [],
+      "group": "us-west",
+      "capital": {
+        "name": "Juneau",
+        "aliases": [],
+        "coordinates": [
+          -134.400712,
+          58.303386
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159150555
+      },
+      "labelPoint": [
+        -151.604,
+        65.3609
+      ],
+      "bounds": [
+        [
+          172.4761,
+          51.2154
+        ],
+        [
+          -129.9892,
+          71.4125
+        ]
+      ],
+      "neighborIds": [
+        "CA-BC",
+        "CA-YT"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-AK",
+        "fips": "02",
+        "wikidata": "Q797",
+        "naturalEarth": "USA-3563"
+      },
+      "geometry": {
+        "featureId": "US-AK",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-ak.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-AL",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "Alabama",
+      "postalCode": "AL",
+      "aliases": [
+        "Ala."
+      ],
+      "group": "us-south",
+      "capital": {
+        "name": "Montgomery",
+        "aliases": [],
+        "coordinates": [
+          -86.279189,
+          32.361602
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159149275
+      },
+      "labelPoint": [
+        -86.7184,
+        32.8551
+      ],
+      "bounds": [
+        [
+          -88.4862,
+          30.2236
+        ],
+        [
+          -84.8979,
+          35.009700128596705
+        ]
+      ],
+      "neighborIds": [
+        "US-FL",
+        "US-GA",
+        "US-MS",
+        "US-TN"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-AL",
+        "fips": "01",
+        "wikidata": "Q173",
+        "naturalEarth": "USA-3541"
+      },
+      "geometry": {
+        "featureId": "US-AL",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-al.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-AR",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "Arkansas",
+      "postalCode": "AR",
+      "aliases": [
+        "Ark."
+      ],
+      "group": "us-south",
+      "capital": {
+        "name": "Little Rock",
+        "aliases": [],
+        "coordinates": [
+          -92.331093,
+          34.736083
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159146223
+      },
+      "labelPoint": [
+        -92.1428,
+        34.7563
+      ],
+      "bounds": [
+        [
+          -94.6183,
+          33.0109
+        ],
+        [
+          -89.6673,
+          36.49987843109368
+        ]
+      ],
+      "neighborIds": [
+        "US-LA",
+        "US-MO",
+        "US-MS",
+        "US-OK",
+        "US-TN",
+        "US-TX"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-AR",
+        "fips": "05",
+        "wikidata": "Q1612",
+        "naturalEarth": "USA-3528"
+      },
+      "geometry": {
+        "featureId": "US-AR",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-ar.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-AZ",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "Arizona",
+      "postalCode": "AZ",
+      "aliases": [
+        "Ariz."
+      ],
+      "group": "us-west",
+      "capital": {
+        "name": "Phoenix",
+        "aliases": [],
+        "coordinates": [
+          -112.067365,
+          33.448322
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159151225
+      },
+      "labelPoint": [
+        -111.935,
+        34.3046
+      ],
+      "bounds": [
+        [
+          -114.8221,
+          31.3272
+        ],
+        [
+          -109.0466,
+          37.003100011908955
+        ]
+      ],
+      "neighborIds": [
+        "US-CA",
+        "US-NM",
+        "US-NV",
+        "US-UT"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-AZ",
+        "fips": "04",
+        "wikidata": "Q816",
+        "naturalEarth": "USA-3520"
+      },
+      "geometry": {
+        "featureId": "US-AZ",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-az.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-CA",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "California",
+      "postalCode": "CA",
+      "aliases": [
+        "Calif."
+      ],
+      "group": "us-west",
+      "capital": {
+        "name": "Sacramento",
+        "aliases": [],
+        "coordinates": [
+          -121.471984,
+          38.576967
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159150481
+      },
+      "labelPoint": [
+        -119.591,
+        36.7496
+      ],
+      "bounds": [
+        [
+          -124.4092,
+          32.5317
+        ],
+        [
+          -114.1191,
+          41.99957424152017
+        ]
+      ],
+      "neighborIds": [
+        "US-AZ",
+        "US-NV",
+        "US-OR"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-CA",
+        "fips": "06",
+        "wikidata": "Q99",
+        "naturalEarth": "USA-3521"
+      },
+      "geometry": {
+        "featureId": "US-CA",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-ca.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-CO",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "Colorado",
+      "postalCode": "CO",
+      "aliases": [
+        "Colo."
+      ],
+      "group": "us-west",
+      "capital": {
+        "name": "Denver",
+        "aliases": [],
+        "coordinates": [
+          -104.985962,
+          39.741134
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159151483
+      },
+      "labelPoint": [
+        -105.543,
+        38.9998
+      ],
+      "bounds": [
+        [
+          -109.0466,
+          36.9998
+        ],
+        [
+          -102.0396,
+          40.99982666013113
+        ]
+      ],
+      "neighborIds": [
+        "US-KS",
+        "US-NE",
+        "US-NM",
+        "US-OK",
+        "US-UT",
+        "US-WY"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-CO",
+        "fips": "08",
+        "wikidata": "Q1261",
+        "naturalEarth": "USA-3522"
+      },
+      "geometry": {
+        "featureId": "US-CO",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-co.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-CT",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "Connecticut",
+      "postalCode": "CT",
+      "aliases": [
+        "Conn."
+      ],
+      "group": "us-northeast",
+      "capital": {
+        "name": "Hartford",
+        "aliases": [],
+        "coordinates": [
+          -72.681913,
+          41.771966
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159146255
+      },
+      "labelPoint": [
+        -72.7594,
+        41.6486
+      ],
+      "bounds": [
+        [
+          -73.723,
+          41.0011
+        ],
+        [
+          -71.7957,
+          42.0545
+        ]
+      ],
+      "neighborIds": [
+        "US-MA",
+        "US-NY",
+        "US-RI"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-CT",
+        "fips": "09",
+        "wikidata": "Q779",
+        "naturalEarth": "USA-3537"
+      },
+      "geometry": {
+        "featureId": "US-CT",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-ct.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-DE",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "Delaware",
+      "postalCode": "DE",
+      "aliases": [
+        "Del."
+      ],
+      "group": "us-south",
+      "capital": {
+        "name": "Dover",
+        "aliases": [],
+        "coordinates": [
+          -75.524703,
+          39.158087
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159125621
+      },
+      "labelPoint": [
+        -75.4112,
+        38.8657
+      ],
+      "bounds": [
+        [
+          -75.7886,
+          38.4533
+        ],
+        [
+          -75.044,
+          39.8386
+        ]
+      ],
+      "neighborIds": [
+        "US-MD",
+        "US-PA"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-DE",
+        "fips": "10",
+        "wikidata": "Q1393",
+        "naturalEarth": "USA-3555"
+      },
+      "geometry": {
+        "featureId": "US-DE",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-de.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-FL",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "Florida",
+      "postalCode": "FL",
+      "aliases": [
+        "Fla."
+      ],
+      "group": "us-south",
+      "capital": {
+        "name": "Tallahassee",
+        "aliases": [],
+        "coordinates": [
+          -84.280034,
+          30.449988
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159149277
+      },
+      "labelPoint": [
+        -81.6228,
+        28.1568
+      ],
+      "bounds": [
+        [
+          -87.6269,
+          24.5425
+        ],
+        [
+          -80.0324,
+          31.000124318744312
+        ]
+      ],
+      "neighborIds": [
+        "US-AL",
+        "US-GA"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-FL",
+        "fips": "12",
+        "wikidata": "Q812",
+        "naturalEarth": "USA-3542"
+      },
+      "geometry": {
+        "featureId": "US-FL",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-fl.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-GA",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "Georgia",
+      "postalCode": "GA",
+      "aliases": [],
+      "group": "us-south",
+      "capital": {
+        "name": "Atlanta",
+        "aliases": [],
+        "coordinates": [
+          -84.367642,
+          33.739457
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159151489
+      },
+      "labelPoint": [
+        -83.4078,
+        32.8547
+      ],
+      "bounds": [
+        [
+          -85.6057,
+          30.3627
+        ],
+        [
+          -80.8357,
+          35.0004
+        ]
+      ],
+      "neighborIds": [
+        "US-AL",
+        "US-FL",
+        "US-NC",
+        "US-SC",
+        "US-TN"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-GA",
+        "fips": "13",
+        "wikidata": "Q1428",
+        "naturalEarth": "USA-3543"
+      },
+      "geometry": {
+        "featureId": "US-GA",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-ga.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-HI",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "Hawaii",
+      "postalCode": "HI",
+      "aliases": [],
+      "group": "us-west",
+      "capital": {
+        "name": "Honolulu",
+        "aliases": [],
+        "coordinates": [
+          -157.858301,
+          21.303429
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159151221
+      },
+      "labelPoint": [
+        -157.999,
+        21.4919
+      ],
+      "bounds": [
+        [
+          -178.3044,
+          18.9061
+        ],
+        [
+          -154.8141,
+          28.4017
+        ]
+      ],
+      "neighborIds": [],
+      "identifiers": {
+        "iso3166_2": "US-HI",
+        "fips": "15",
+        "wikidata": "Q782",
+        "naturalEarth": "USA-3517"
+      },
+      "geometry": {
+        "featureId": "US-HI",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-hi.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-IA",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "Iowa",
+      "postalCode": "IA",
+      "aliases": [],
+      "group": "us-midwest",
+      "capital": {
+        "name": "Des Moines",
+        "aliases": [],
+        "coordinates": [
+          -93.619981,
+          41.57998
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159150495
+      },
+      "labelPoint": [
+        -93.3891,
+        42.0423
+      ],
+      "bounds": [
+        [
+          -96.638,
+          40.3795
+        ],
+        [
+          -90.1403,
+          43.50107069586903
+        ]
+      ],
+      "neighborIds": [
+        "US-IL",
+        "US-MN",
+        "US-MO",
+        "US-NE",
+        "US-SD",
+        "US-WI"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-IA",
+        "fips": "19",
+        "wikidata": "Q1546",
+        "naturalEarth": "USA-3529"
+      },
+      "geometry": {
+        "featureId": "US-IA",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-ia.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-ID",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "Idaho",
+      "postalCode": "ID",
+      "aliases": [],
+      "group": "us-west",
+      "capital": {
+        "name": "Boise",
+        "aliases": [],
+        "coordinates": [
+          -116.22749,
+          43.60859
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159150477
+      },
+      "labelPoint": [
+        -114.133,
+        43.7825
+      ],
+      "bounds": [
+        [
+          -117.2154,
+          41.9995
+        ],
+        [
+          -111.0502,
+          48.99255218932902
+        ]
+      ],
+      "neighborIds": [
+        "CA-BC",
+        "US-MT",
+        "US-NV",
+        "US-OR",
+        "US-UT",
+        "US-WA",
+        "US-WY"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-ID",
+        "fips": "16",
+        "wikidata": "Q1221",
+        "naturalEarth": "USA-3518"
+      },
+      "geometry": {
+        "featureId": "US-ID",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-id.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-IL",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "Illinois",
+      "postalCode": "IL",
+      "aliases": [
+        "Ill."
+      ],
+      "group": "us-midwest",
+      "capital": {
+        "name": "Springfield",
+        "aliases": [],
+        "coordinates": [
+          -89.637126,
+          39.788247
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159146271
+      },
+      "labelPoint": [
+        -89.1991,
+        39.946
+      ],
+      "bounds": [
+        [
+          -91.5189,
+          36.9783
+        ],
+        [
+          -87.0188,
+          42.51180000010424
+        ]
+      ],
+      "neighborIds": [
+        "US-IA",
+        "US-IN",
+        "US-KY",
+        "US-MI",
+        "US-MO",
+        "US-WI"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-IL",
+        "fips": "17",
+        "wikidata": "Q1204",
+        "naturalEarth": "USA-3546"
+      },
+      "geometry": {
+        "featureId": "US-IL",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-il.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-IN",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "Indiana",
+      "postalCode": "IN",
+      "aliases": [
+        "Ind."
+      ],
+      "group": "us-midwest",
+      "capital": {
+        "name": "Indianapolis",
+        "aliases": [],
+        "coordinates": [
+          -86.171994,
+          39.751934
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159149289
+      },
+      "labelPoint": [
+        -86.1396,
+        39.8874
+      ],
+      "bounds": [
+        [
+          -88.1119,
+          37.7819
+        ],
+        [
+          -84.784,
+          41.759720581259636
+        ]
+      ],
+      "neighborIds": [
+        "US-IL",
+        "US-KY",
+        "US-MI",
+        "US-OH"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-IN",
+        "fips": "18",
+        "wikidata": "Q1415",
+        "naturalEarth": "USA-3547"
+      },
+      "geometry": {
+        "featureId": "US-IN",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-in.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-KS",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "Kansas",
+      "postalCode": "KS",
+      "aliases": [
+        "Kans."
+      ],
+      "group": "us-midwest",
+      "capital": {
+        "name": "Topeka",
+        "aliases": [],
+        "coordinates": [
+          -95.669985,
+          39.050005
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159149243
+      },
+      "labelPoint": [
+        -98.3309,
+        38.5
+      ],
+      "bounds": [
+        [
+          -102.0513,
+          36.9998
+        ],
+        [
+          -94.6105,
+          40.00016008579201
+        ]
+      ],
+      "neighborIds": [
+        "US-CO",
+        "US-MO",
+        "US-NE",
+        "US-OK"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-KS",
+        "fips": "20",
+        "wikidata": "Q1558",
+        "naturalEarth": "USA-3530"
+      },
+      "geometry": {
+        "featureId": "US-KS",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-ks.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-KY",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "Kentucky",
+      "postalCode": "KY",
+      "aliases": [
+        "Commonwealth of Kentucky"
+      ],
+      "group": "us-south",
+      "capital": {
+        "name": "Frankfort",
+        "aliases": [],
+        "coordinates": [
+          -84.873357,
+          38.200806
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159146273
+      },
+      "labelPoint": [
+        -85.5729,
+        37.3994
+      ],
+      "bounds": [
+        [
+          -89.5779,
+          36.4986
+        ],
+        [
+          -81.9652,
+          39.1462
+        ]
+      ],
+      "neighborIds": [
+        "US-IL",
+        "US-IN",
+        "US-MO",
+        "US-OH",
+        "US-TN",
+        "US-VA",
+        "US-WV"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-KY",
+        "fips": "21",
+        "wikidata": "Q1603",
+        "naturalEarth": "USA-3548"
+      },
+      "geometry": {
+        "featureId": "US-KY",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-ky.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-LA",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "Louisiana",
+      "postalCode": "LA",
+      "aliases": [],
+      "group": "us-south",
+      "capital": {
+        "name": "Baton Rouge",
+        "aliases": [],
+        "coordinates": [
+          -91.140158,
+          30.457946
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159149255
+      },
+      "labelPoint": [
+        -91.9991,
+        30.5274
+      ],
+      "bounds": [
+        [
+          -94.0432,
+          28.9284
+        ],
+        [
+          -88.8109,
+          33.0143
+        ]
+      ],
+      "neighborIds": [
+        "US-AR",
+        "US-MS",
+        "US-TX"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-LA",
+        "fips": "22",
+        "wikidata": "Q1588",
+        "naturalEarth": "USA-3535"
+      },
+      "geometry": {
+        "featureId": "US-LA",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-la.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-MA",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "Massachusetts",
+      "postalCode": "MA",
+      "aliases": [
+        "Commonwealth of Massachusetts",
+        "Mass."
+      ],
+      "group": "us-northeast",
+      "capital": {
+        "name": "Boston",
+        "aliases": [],
+        "coordinates": [
+          -71.07196,
+          42.331906
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159151239
+      },
+      "labelPoint": [
+        -71.9993,
+        42.3739
+      ],
+      "bounds": [
+        [
+          -73.5072,
+          41.2393
+        ],
+        [
+          -69.9247,
+          42.8868
+        ]
+      ],
+      "neighborIds": [
+        "US-CT",
+        "US-NH",
+        "US-NY",
+        "US-RI",
+        "US-VT"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-MA",
+        "fips": "25",
+        "wikidata": "Q771",
+        "naturalEarth": "USA-3513"
+      },
+      "geometry": {
+        "featureId": "US-MA",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-ma.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-MD",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "Maryland",
+      "postalCode": "MD",
+      "aliases": [],
+      "group": "us-south",
+      "capital": {
+        "name": "Annapolis",
+        "aliases": [],
+        "coordinates": [
+          -76.492499,
+          38.97833
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159125647
+      },
+      "labelPoint": [
+        -77.0454,
+        39.3874
+      ],
+      "bounds": [
+        [
+          -79.4879,
+          37.9311
+        ],
+        [
+          -75.044,
+          39.72181425616694
+        ]
+      ],
+      "neighborIds": [
+        "US-DE",
+        "US-PA",
+        "US-VA",
+        "US-WV"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-MD",
+        "fips": "24",
+        "wikidata": "Q1391",
+        "naturalEarth": "USA-3557"
+      },
+      "geometry": {
+        "featureId": "US-MD",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-md.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-ME",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "Maine",
+      "postalCode": "ME",
+      "aliases": [],
+      "group": "us-northeast",
+      "capital": {
+        "name": "Augusta",
+        "aliases": [],
+        "coordinates": [
+          -69.779989,
+          44.310563
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159149309
+      },
+      "labelPoint": [
+        -69.1973,
+        45.148
+      ],
+      "bounds": [
+        [
+          -71.085,
+          43.0838
+        ],
+        [
+          -66.9773,
+          47.4597
+        ]
+      ],
+      "neighborIds": [
+        "CA-NB",
+        "CA-QC",
+        "US-NH"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-ME",
+        "fips": "23",
+        "wikidata": "Q724",
+        "naturalEarth": "USA-3561"
+      },
+      "geometry": {
+        "featureId": "US-ME",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-me.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-MI",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "Michigan",
+      "postalCode": "MI",
+      "aliases": [
+        "Mich."
+      ],
+      "group": "us-midwest",
+      "capital": {
+        "name": "Lansing",
+        "aliases": [],
+        "coordinates": [
+          -84.546736,
+          42.733527
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159146293
+      },
+      "labelPoint": [
+        -84.9479,
+        43.4343
+      ],
+      "bounds": [
+        [
+          -90.4125,
+          41.6968
+        ],
+        [
+          -82.1454,
+          48.3051
+        ]
+      ],
+      "neighborIds": [
+        "CA-ON",
+        "US-IL",
+        "US-IN",
+        "US-MN",
+        "US-OH",
+        "US-WI"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-MI",
+        "fips": "26",
+        "wikidata": "Q1166",
+        "naturalEarth": "USA-3562"
+      },
+      "geometry": {
+        "featureId": "US-MI",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-mi.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-MN",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "Minnesota",
+      "postalCode": "MN",
+      "aliases": [
+        "Minn."
+      ],
+      "group": "us-midwest",
+      "capital": {
+        "name": "Saint Paul",
+        "aliases": [
+          "St. Paul"
+        ],
+        "coordinates": [
+          -93.084975,
+          44.943987
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159149197
+      },
+      "labelPoint": [
+        -93.364,
+        46.0592
+      ],
+      "bounds": [
+        [
+          -97.2292,
+          43.5001
+        ],
+        [
+          -89.499,
+          49.3695
+        ]
+      ],
+      "neighborIds": [
+        "CA-MB",
+        "CA-ON",
+        "US-IA",
+        "US-MI",
+        "US-ND",
+        "US-SD",
+        "US-WI"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-MN",
+        "fips": "27",
+        "wikidata": "Q1527",
+        "naturalEarth": "USA-3514"
+      },
+      "geometry": {
+        "featureId": "US-MN",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-mn.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-MO",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "Missouri",
+      "postalCode": "MO",
+      "aliases": [],
+      "group": "us-midwest",
+      "capital": {
+        "name": "Jefferson City",
+        "aliases": [],
+        "coordinates": [
+          -92.173325,
+          38.576623
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159146229
+      },
+      "labelPoint": [
+        -92.446,
+        38.5487
+      ],
+      "bounds": [
+        [
+          -95.773,
+          35.9862
+        ],
+        [
+          -89.1189,
+          40.6188
+        ]
+      ],
+      "neighborIds": [
+        "US-AR",
+        "US-IA",
+        "US-IL",
+        "US-KS",
+        "US-KY",
+        "US-NE",
+        "US-OK",
+        "US-TN"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-MO",
+        "fips": "29",
+        "wikidata": "Q1581",
+        "naturalEarth": "USA-3531"
+      },
+      "geometry": {
+        "featureId": "US-MO",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-mo.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-MS",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "Mississippi",
+      "postalCode": "MS",
+      "aliases": [
+        "Miss."
+      ],
+      "group": "us-south",
+      "capital": {
+        "name": "Jackson",
+        "aliases": [],
+        "coordinates": [
+          -90.184997,
+          32.298815
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159150511
+      },
+      "labelPoint": [
+        -89.7189,
+        32.8657
+      ],
+      "bounds": [
+        [
+          -91.6573,
+          30.1815
+        ],
+        [
+          -88.0882,
+          35.0001
+        ]
+      ],
+      "neighborIds": [
+        "US-AL",
+        "US-AR",
+        "US-LA",
+        "US-TN"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-MS",
+        "fips": "28",
+        "wikidata": "Q1494",
+        "naturalEarth": "USA-3544"
+      },
+      "geometry": {
+        "featureId": "US-MS",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-ms.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-MT",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "Montana",
+      "postalCode": "MT",
+      "aliases": [
+        "Mont."
+      ],
+      "group": "us-west",
+      "capital": {
+        "name": "Helena",
+        "aliases": [],
+        "coordinates": [
+          -112.035291,
+          46.592749
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159150471
+      },
+      "labelPoint": [
+        -110.044,
+        46.9965
+      ],
+      "bounds": [
+        [
+          -116.0489,
+          44.3766
+        ],
+        [
+          -104.0386,
+          48.99265754369591
+        ]
+      ],
+      "neighborIds": [
+        "CA-AB",
+        "CA-BC",
+        "CA-SK",
+        "US-ID",
+        "US-ND",
+        "US-SD",
+        "US-WY"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-MT",
+        "fips": "30",
+        "wikidata": "Q1212",
+        "naturalEarth": "USA-3515"
+      },
+      "geometry": {
+        "featureId": "US-MT",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-mt.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-NC",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "North Carolina",
+      "postalCode": "NC",
+      "aliases": [],
+      "group": "us-south",
+      "capital": {
+        "name": "Raleigh",
+        "aliases": [],
+        "coordinates": [
+          -78.647035,
+          35.772696
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159150513
+      },
+      "labelPoint": [
+        -78.866,
+        35.6152
+      ],
+      "bounds": [
+        [
+          -84.3246,
+          33.848
+        ],
+        [
+          -75.4518,
+          36.6095
+        ]
+      ],
+      "neighborIds": [
+        "US-GA",
+        "US-SC",
+        "US-TN",
+        "US-VA"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-NC",
+        "fips": "37",
+        "wikidata": "Q1454",
+        "naturalEarth": "USA-3549"
+      },
+      "geometry": {
+        "featureId": "US-NC",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-nc.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-ND",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "North Dakota",
+      "postalCode": "ND",
+      "aliases": [],
+      "group": "us-midwest",
+      "capital": {
+        "name": "Bismarck",
+        "aliases": [],
+        "coordinates": [
+          -100.783316,
+          46.808317
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159150475
+      },
+      "labelPoint": [
+        -100.302,
+        47.4675
+      ],
+      "bounds": [
+        [
+          -104.0476,
+          45.9418
+        ],
+        [
+          -96.5563,
+          48.99275223677644
+        ]
+      ],
+      "neighborIds": [
+        "CA-MB",
+        "CA-SK",
+        "US-MN",
+        "US-MT",
+        "US-SD"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-ND",
+        "fips": "38",
+        "wikidata": "Q1207",
+        "naturalEarth": "USA-3516"
+      },
+      "geometry": {
+        "featureId": "US-ND",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-nd.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-NE",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "Nebraska",
+      "postalCode": "NE",
+      "aliases": [
+        "Nebr."
+      ],
+      "group": "us-midwest",
+      "capital": {
+        "name": "Lincoln",
+        "aliases": [],
+        "coordinates": [
+          -96.680001,
+          40.819975
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159147389
+      },
+      "labelPoint": [
+        -99.6855,
+        41.5002
+      ],
+      "bounds": [
+        [
+          -104.0537,
+          40.0001
+        ],
+        [
+          -95.3173,
+          43.00044120828082
+        ]
+      ],
+      "neighborIds": [
+        "US-CO",
+        "US-IA",
+        "US-KS",
+        "US-MO",
+        "US-SD",
+        "US-WY"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-NE",
+        "fips": "31",
+        "wikidata": "Q1553",
+        "naturalEarth": "USA-3532"
+      },
+      "geometry": {
+        "featureId": "US-NE",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-ne.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-NH",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "New Hampshire",
+      "postalCode": "NH",
+      "aliases": [],
+      "group": "us-northeast",
+      "capital": {
+        "name": "Concord",
+        "aliases": [],
+        "coordinates": [
+          -71.538047,
+          43.208072
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159147405
+      },
+      "labelPoint": [
+        -71.6301,
+        43.5993
+      ],
+      "bounds": [
+        [
+          -72.5562,
+          42.7009
+        ],
+        [
+          -70.7042,
+          45.3043
+        ]
+      ],
+      "neighborIds": [
+        "CA-QC",
+        "US-MA",
+        "US-ME",
+        "US-VT"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-NH",
+        "fips": "33",
+        "wikidata": "Q759",
+        "naturalEarth": "USA-3538"
+      },
+      "geometry": {
+        "featureId": "US-NH",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-nh.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-NJ",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "New Jersey",
+      "postalCode": "NJ",
+      "aliases": [],
+      "group": "us-northeast",
+      "capital": {
+        "name": "Trenton",
+        "aliases": [],
+        "coordinates": [
+          -74.743355,
+          40.216963
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159146287
+      },
+      "labelPoint": [
+        -74.4653,
+        40.0449
+      ],
+      "bounds": [
+        [
+          -75.5582,
+          38.9244
+        ],
+        [
+          -73.9071,
+          41.3563
+        ]
+      ],
+      "neighborIds": [
+        "US-NY",
+        "US-PA"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-NJ",
+        "fips": "34",
+        "wikidata": "Q1408",
+        "naturalEarth": "USA-3558"
+      },
+      "geometry": {
+        "featureId": "US-NJ",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-nj.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-NM",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "New Mexico",
+      "postalCode": "NM",
+      "aliases": [],
+      "group": "us-west",
+      "capital": {
+        "name": "Santa Fe",
+        "aliases": [],
+        "coordinates": [
+          -105.937239,
+          35.686929
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159150485
+      },
+      "labelPoint": [
+        -106.024,
+        34.5002
+      ],
+      "bounds": [
+        [
+          -109.0474,
+          31.3274
+        ],
+        [
+          -103.0002,
+          36.99983745605582
+        ]
+      ],
+      "neighborIds": [
+        "US-AZ",
+        "US-CO",
+        "US-OK",
+        "US-TX"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-NM",
+        "fips": "35",
+        "wikidata": "Q1522",
+        "naturalEarth": "USA-3524"
+      },
+      "geometry": {
+        "featureId": "US-NM",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-nm.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-NV",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "Nevada",
+      "postalCode": "NV",
+      "aliases": [
+        "Nev."
+      ],
+      "group": "us-west",
+      "capital": {
+        "name": "Carson City",
+        "aliases": [],
+        "coordinates": [
+          -119.766395,
+          39.163849
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159146205
+      },
+      "labelPoint": [
+        -117.02,
+        39.4299
+      ],
+      "bounds": [
+        [
+          -120.0008,
+          35.0036
+        ],
+        [
+          -114.0402,
+          42.00010416186107
+        ]
+      ],
+      "neighborIds": [
+        "US-AZ",
+        "US-CA",
+        "US-ID",
+        "US-OR",
+        "US-UT"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-NV",
+        "fips": "32",
+        "wikidata": "Q1227",
+        "naturalEarth": "USA-3523"
+      },
+      "geometry": {
+        "featureId": "US-NV",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-nv.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-NY",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "New York",
+      "postalCode": "NY",
+      "aliases": [
+        "New York State"
+      ],
+      "group": "us-northeast",
+      "capital": {
+        "name": "Albany",
+        "aliases": [],
+        "coordinates": [
+          -73.757553,
+          42.653744
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159147463
+      },
+      "labelPoint": [
+        -75.3242,
+        43.1988
+      ],
+      "bounds": [
+        [
+          -79.763,
+          40.4994
+        ],
+        [
+          -71.8574,
+          45.0101
+        ]
+      ],
+      "neighborIds": [
+        "CA-ON",
+        "CA-QC",
+        "US-CT",
+        "US-MA",
+        "US-NJ",
+        "US-PA",
+        "US-VT"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-NY",
+        "fips": "36",
+        "wikidata": "Q1384",
+        "naturalEarth": "USA-3559"
+      },
+      "geometry": {
+        "featureId": "US-NY",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-ny.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-OH",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "Ohio",
+      "postalCode": "OH",
+      "aliases": [],
+      "group": "us-midwest",
+      "capital": {
+        "name": "Columbus",
+        "aliases": [],
+        "coordinates": [
+          -82.991956,
+          39.98192
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159147453
+      },
+      "labelPoint": [
+        -82.6719,
+        40.0924
+      ],
+      "bounds": [
+        [
+          -84.8235,
+          38.4055
+        ],
+        [
+          -80.5202,
+          42.3238
+        ]
+      ],
+      "neighborIds": [
+        "CA-ON",
+        "US-IN",
+        "US-KY",
+        "US-MI",
+        "US-PA",
+        "US-WV"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-OH",
+        "fips": "39",
+        "wikidata": "Q1397",
+        "naturalEarth": "USA-3550"
+      },
+      "geometry": {
+        "featureId": "US-OH",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-oh.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-OK",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "Oklahoma",
+      "postalCode": "OK",
+      "aliases": [
+        "Okla."
+      ],
+      "group": "us-south",
+      "capital": {
+        "name": "Oklahoma City",
+        "aliases": [],
+        "coordinates": [
+          -97.520629,
+          35.471989
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159150499
+      },
+      "labelPoint": [
+        -97.1309,
+        35.452
+      ],
+      "bounds": [
+        [
+          -103.0008,
+          33.6474
+        ],
+        [
+          -94.4391,
+          36.99986974311743
+        ]
+      ],
+      "neighborIds": [
+        "US-AR",
+        "US-CO",
+        "US-KS",
+        "US-MO",
+        "US-NM",
+        "US-TX"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-OK",
+        "fips": "40",
+        "wikidata": "Q1649",
+        "naturalEarth": "USA-3533"
+      },
+      "geometry": {
+        "featureId": "US-OK",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-ok.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-OR",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "Oregon",
+      "postalCode": "OR",
+      "aliases": [
+        "Ore."
+      ],
+      "group": "us-west",
+      "capital": {
+        "name": "Salem",
+        "aliases": [],
+        "coordinates": [
+          -123.023897,
+          44.92807
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159149239
+      },
+      "labelPoint": [
+        -120.386,
+        43.8333
+      ],
+      "bounds": [
+        [
+          -124.5668,
+          41.9995
+        ],
+        [
+          -116.455,
+          46.2559
+        ]
+      ],
+      "neighborIds": [
+        "US-CA",
+        "US-ID",
+        "US-NV",
+        "US-WA"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-OR",
+        "fips": "41",
+        "wikidata": "Q824",
+        "naturalEarth": "USA-3525"
+      },
+      "geometry": {
+        "featureId": "US-OR",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-or.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-PA",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "Pennsylvania",
+      "postalCode": "PA",
+      "aliases": [
+        "Commonwealth of Pennsylvania"
+      ],
+      "group": "us-northeast",
+      "capital": {
+        "name": "Harrisburg",
+        "aliases": [],
+        "coordinates": [
+          -76.884749,
+          40.2736
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159147469
+      },
+      "labelPoint": [
+        -77.6094,
+        40.8601
+      ],
+      "bounds": [
+        [
+          -80.5202,
+          39.721
+        ],
+        [
+          -74.6986,
+          42.5377
+        ]
+      ],
+      "neighborIds": [
+        "CA-ON",
+        "US-DE",
+        "US-MD",
+        "US-NJ",
+        "US-NY",
+        "US-OH",
+        "US-WV"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-PA",
+        "fips": "42",
+        "wikidata": "Q1400",
+        "naturalEarth": "USA-3560"
+      },
+      "geometry": {
+        "featureId": "US-PA",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-pa.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-RI",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "Rhode Island",
+      "postalCode": "RI",
+      "aliases": [
+        "State of Rhode Island and Providence Plantations"
+      ],
+      "group": "us-northeast",
+      "capital": {
+        "name": "Providence",
+        "aliases": [],
+        "coordinates": [
+          -71.416926,
+          41.823048
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159146257
+      },
+      "labelPoint": [
+        -71.5082,
+        41.6242
+      ],
+      "bounds": [
+        [
+          -71.8779,
+          41.1458
+        ],
+        [
+          -71.1219,
+          42.0164
+        ]
+      ],
+      "neighborIds": [
+        "US-CT",
+        "US-MA"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-RI",
+        "fips": "44",
+        "wikidata": "Q1387",
+        "naturalEarth": "USA-3539"
+      },
+      "geometry": {
+        "featureId": "US-RI",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-ri.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-SC",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "South Carolina",
+      "postalCode": "SC",
+      "aliases": [],
+      "group": "us-south",
+      "capital": {
+        "name": "Columbia",
+        "aliases": [],
+        "coordinates": [
+          -81.031262,
+          33.996861
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159149287
+      },
+      "labelPoint": [
+        -80.6471,
+        33.8578
+      ],
+      "bounds": [
+        [
+          -83.3555,
+          32.0325
+        ],
+        [
+          -78.5732,
+          35.2183
+        ]
+      ],
+      "neighborIds": [
+        "US-GA",
+        "US-NC"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-SC",
+        "fips": "45",
+        "wikidata": "Q1456",
+        "naturalEarth": "USA-3545"
+      },
+      "geometry": {
+        "featureId": "US-SC",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-sc.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-SD",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "South Dakota",
+      "postalCode": "SD",
+      "aliases": [],
+      "group": "us-midwest",
+      "capital": {
+        "name": "Pierre",
+        "aliases": [],
+        "coordinates": [
+          -100.350552,
+          44.368337
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159150501
+      },
+      "labelPoint": [
+        -100.255,
+        44.4711
+      ],
+      "bounds": [
+        [
+          -104.0567,
+          42.5183
+        ],
+        [
+          -96.4536,
+          45.942077605871596
+        ]
+      ],
+      "neighborIds": [
+        "US-IA",
+        "US-MN",
+        "US-MT",
+        "US-ND",
+        "US-NE",
+        "US-WY"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-SD",
+        "fips": "46",
+        "wikidata": "Q1211",
+        "naturalEarth": "USA-3534"
+      },
+      "geometry": {
+        "featureId": "US-SD",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-sd.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-TN",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "Tennessee",
+      "postalCode": "TN",
+      "aliases": [
+        "Tenn."
+      ],
+      "group": "us-south",
+      "capital": {
+        "name": "Nashville",
+        "aliases": [],
+        "coordinates": [
+          -86.781931,
+          36.17192
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159150519
+      },
+      "labelPoint": [
+        -86.3415,
+        35.7514
+      ],
+      "bounds": [
+        [
+          -90.3127,
+          34.9836
+        ],
+        [
+          -81.6589,
+          36.6897
+        ]
+      ],
+      "neighborIds": [
+        "US-AL",
+        "US-AR",
+        "US-GA",
+        "US-KY",
+        "US-MO",
+        "US-MS",
+        "US-NC",
+        "US-VA"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-TN",
+        "fips": "47",
+        "wikidata": "Q1509",
+        "naturalEarth": "USA-3551"
+      },
+      "geometry": {
+        "featureId": "US-TN",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-tn.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-TX",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "Texas",
+      "postalCode": "TX",
+      "aliases": [
+        "Tex."
+      ],
+      "group": "us-south",
+      "capital": {
+        "name": "Austin",
+        "aliases": [],
+        "coordinates": [
+          -97.744724,
+          30.268895
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159149261
+      },
+      "labelPoint": [
+        -98.7607,
+        31.131
+      ],
+      "bounds": [
+        [
+          -106.6622,
+          25.8439
+        ],
+        [
+          -93.5148,
+          36.5002780314868
+        ]
+      ],
+      "neighborIds": [
+        "US-AR",
+        "US-LA",
+        "US-NM",
+        "US-OK"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-TX",
+        "fips": "48",
+        "wikidata": "Q1439",
+        "naturalEarth": "USA-3536"
+      },
+      "geometry": {
+        "featureId": "US-TX",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-tx.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-UT",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "Utah",
+      "postalCode": "UT",
+      "aliases": [],
+      "group": "us-west",
+      "capital": {
+        "name": "Salt Lake City",
+        "aliases": [],
+        "coordinates": [
+          -111.931998,
+          40.776962
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159150489
+      },
+      "labelPoint": [
+        -111.544,
+        39.5007
+      ],
+      "bounds": [
+        [
+          -114.0425,
+          36.9998
+        ],
+        [
+          -109.0463,
+          42.00013793633171
+        ]
+      ],
+      "neighborIds": [
+        "US-AZ",
+        "US-CO",
+        "US-ID",
+        "US-NV",
+        "US-WY"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-UT",
+        "fips": "49",
+        "wikidata": "Q829",
+        "naturalEarth": "USA-3526"
+      },
+      "geometry": {
+        "featureId": "US-UT",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-ut.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-VA",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "Virginia",
+      "postalCode": "VA",
+      "aliases": [],
+      "group": "us-south",
+      "capital": {
+        "name": "Richmond",
+        "aliases": [],
+        "coordinates": [
+          -77.451932,
+          37.551965
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159149295
+      },
+      "labelPoint": [
+        -78.2431,
+        37.7403
+      ],
+      "bounds": [
+        [
+          -83.6675,
+          36.5398
+        ],
+        [
+          -75.2433,
+          39.4508
+        ]
+      ],
+      "neighborIds": [
+        "US-KY",
+        "US-MD",
+        "US-NC",
+        "US-TN",
+        "US-WV"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-VA",
+        "fips": "51",
+        "wikidata": "Q1370",
+        "naturalEarth": "USA-3552"
+      },
+      "geometry": {
+        "featureId": "US-VA",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-va.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-VT",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "Vermont",
+      "postalCode": "VT",
+      "aliases": [],
+      "group": "us-northeast",
+      "capital": {
+        "name": "Montpelier",
+        "aliases": [],
+        "coordinates": [
+          -72.575813,
+          44.259971
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159124647
+      },
+      "labelPoint": [
+        -72.7317,
+        44.0886
+      ],
+      "bounds": [
+        [
+          -73.4385,
+          42.7293
+        ],
+        [
+          -71.5057,
+          45.0137
+        ]
+      ],
+      "neighborIds": [
+        "CA-QC",
+        "US-MA",
+        "US-NH",
+        "US-NY"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-VT",
+        "fips": "50",
+        "wikidata": "Q16551",
+        "naturalEarth": "USA-3540"
+      },
+      "geometry": {
+        "featureId": "US-VT",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-vt.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-WA",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "Washington",
+      "postalCode": "WA",
+      "aliases": [
+        "Wash.",
+        "Washington State"
+      ],
+      "group": "us-west",
+      "capital": {
+        "name": "Olympia",
+        "aliases": [],
+        "coordinates": [
+          -122.899434,
+          47.038045
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159149211
+      },
+      "labelPoint": [
+        -120.361,
+        47.4865
+      ],
+      "bounds": [
+        [
+          -124.7346,
+          45.5663
+        ],
+        [
+          -116.8788,
+          48.99255223682802
+        ]
+      ],
+      "neighborIds": [
+        "CA-BC",
+        "US-ID",
+        "US-OR"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-WA",
+        "fips": "53",
+        "wikidata": "Q1223",
+        "naturalEarth": "USA-3519"
+      },
+      "geometry": {
+        "featureId": "US-WA",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-wa.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-WI",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "Wisconsin",
+      "postalCode": "WI",
+      "aliases": [
+        "Wis."
+      ],
+      "group": "us-midwest",
+      "capital": {
+        "name": "Madison",
+        "aliases": [],
+        "coordinates": [
+          -89.401117,
+          43.073016
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159146283
+      },
+      "labelPoint": [
+        -89.5831,
+        44.3709
+      ],
+      "bounds": [
+        [
+          -92.9017,
+          42.4918
+        ],
+        [
+          -86.2506,
+          47.3081
+        ]
+      ],
+      "neighborIds": [
+        "US-IA",
+        "US-IL",
+        "US-MI",
+        "US-MN"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-WI",
+        "fips": "55",
+        "wikidata": "Q1537",
+        "naturalEarth": "USA-3553"
+      },
+      "geometry": {
+        "featureId": "US-WI",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-wi.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-WV",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "West Virginia",
+      "postalCode": "WV",
+      "aliases": [
+        "W.Va."
+      ],
+      "group": "us-south",
+      "capital": {
+        "name": "Charleston",
+        "aliases": [],
+        "coordinates": [
+          -81.632728,
+          38.349738
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159149297
+      },
+      "labelPoint": [
+        -80.7128,
+        38.6422
+      ],
+      "bounds": [
+        [
+          -82.6374,
+          37.2048
+        ],
+        [
+          -77.7347,
+          40.6468
+        ]
+      ],
+      "neighborIds": [
+        "US-KY",
+        "US-MD",
+        "US-OH",
+        "US-PA",
+        "US-VA"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-WV",
+        "fips": "54",
+        "wikidata": "Q1371",
+        "naturalEarth": "USA-3554"
+      },
+      "geometry": {
+        "featureId": "US-WV",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-wv.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "US-WY",
+      "kind": "subdivision",
+      "parentCountryId": "US",
+      "type": "state",
+      "name": "Wyoming",
+      "postalCode": "WY",
+      "aliases": [
+        "Wyo."
+      ],
+      "group": "us-west",
+      "capital": {
+        "name": "Cheyenne",
+        "aliases": [],
+        "coordinates": [
+          -104.819711,
+          41.140007
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159150493
+      },
+      "labelPoint": [
+        -107.552,
+        42.9999
+      ],
+      "bounds": [
+        [
+          -111.0514,
+          40.9998
+        ],
+        [
+          -104.0524,
+          45.00011293639313
+        ]
+      ],
+      "neighborIds": [
+        "US-CO",
+        "US-ID",
+        "US-MT",
+        "US-NE",
+        "US-SD",
+        "US-UT"
+      ],
+      "identifiers": {
+        "iso3166_2": "US-WY",
+        "fips": "56",
+        "wikidata": "Q1214",
+        "naturalEarth": "USA-3527"
+      },
+      "geometry": {
+        "featureId": "US-WY",
+        "asset": "subdivision-maps-us.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "us-wy.svg",
+        "source": "https://flagpedia.net/us-states/download",
+        "license": "Public domain",
+        "url": "https://flagcdn.com/us-svg.zip"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "AU-ACT",
+      "kind": "subdivision",
+      "parentCountryId": "AU",
+      "type": "territory",
+      "name": "Australian Capital Territory",
+      "postalCode": "ACT",
+      "aliases": [
+        "ACT",
+        "A.C.T."
+      ],
+      "group": "australia",
+      "capital": {
+        "name": "Canberra",
+        "aliases": [],
+        "coordinates": [
+          149.129026,
+          -35.283029
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159151161
+      },
+      "labelPoint": [
+        148.983,
+        -35.4618
+      ],
+      "bounds": [
+        [
+          148.7695,
+          -35.9196
+        ],
+        [
+          149.4044,
+          -35.1395
+        ]
+      ],
+      "neighborIds": [
+        "AU-NSW"
+      ],
+      "identifiers": {
+        "iso3166_2": "AU-ACT",
+        "fips": null,
+        "wikidata": "Q3258",
+        "naturalEarth": "AUS-2653"
+      },
+      "geometry": {
+        "featureId": "AU-ACT",
+        "asset": "subdivision-maps-au.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "au-act.svg",
+        "title": "File:Flag of the Australian Capital Territory.svg",
+        "source": "https://commons.wikimedia.org/wiki/File:Flag_of_the_Australian_Capital_Territory.svg",
+        "url": "https://upload.wikimedia.org/wikipedia/commons/8/8c/Flag_of_the_Australian_Capital_Territory.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+        "license": "Public domain",
+        "licenseUrl": null,
+        "artist": "Ivo Ostyn (Original Designer)",
+        "credit": "<a href=\"//commons.wikimedia.org/wiki/File:Australian_Capital_Territory_Flag.jpg\" title=\"File:Australian Capital Territory Flag.jpg\">File:Australian Capital Territory Flag.jpg</a> (email from the ACT Government)",
+        "copyright": "False",
+        "attributionRequired": "false"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "AU-NSW",
+      "kind": "subdivision",
+      "parentCountryId": "AU",
+      "type": "state",
+      "name": "New South Wales",
+      "postalCode": "NSW",
+      "aliases": [],
+      "group": "australia",
+      "capital": {
+        "name": "Sydney",
+        "aliases": [],
+        "coordinates": [
+          151.212548,
+          -33.871373
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159151623
+      },
+      "labelPoint": [
+        146.781,
+        -32.4751
+      ],
+      "bounds": [
+        [
+          141.0001,
+          -37.5103
+        ],
+        [
+          159.1065,
+          -28.1493
+        ]
+      ],
+      "neighborIds": [
+        "AU-ACT",
+        "AU-QLD",
+        "AU-SA",
+        "AU-VIC"
+      ],
+      "identifiers": {
+        "iso3166_2": "AU-NSW",
+        "fips": null,
+        "wikidata": "Q3224",
+        "naturalEarth": "AUS-2654"
+      },
+      "geometry": {
+        "featureId": "AU-NSW",
+        "asset": "subdivision-maps-au.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "au-nsw.svg",
+        "title": "File:Flag of New South Wales.svg",
+        "source": "https://commons.wikimedia.org/wiki/File:Flag_of_New_South_Wales.svg",
+        "url": "https://upload.wikimedia.org/wikipedia/commons/0/00/Flag_of_New_South_Wales.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+        "license": "Public domain",
+        "licenseUrl": null,
+        "artist": "<a href=\"//commons.wikimedia.org/wiki/User:Denelson83\" title=\"User:Denelson83\">Denelson83</a> (original)",
+        "credit": "<p>xrmap flag collection 2.9.  Modifications by <a href=\"//commons.wikimedia.org/wiki/User:Denelson83\" title=\"User:Denelson83\">Denelson83</a> and <a href=\"//commons.wikimedia.org/w/index.php?title=User:Greentubing&amp;action=edit&amp;redlink=1\" class=\"new\" title=\"User:Greentubing (page does not exist)\">User:Greentubing</a> (original)\n</p>\nOfficial colour specifications from government <a rel=\"nofollow\" class=\"external text\" href=\"https://static.nsw.gov.au/siteassets/Uploads/flag-and-emblems-book-15sept2015-interactive.pdf\">booklet</a>:",
+        "copyright": "False",
+        "attributionRequired": "false"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "AU-NT",
+      "kind": "subdivision",
+      "parentCountryId": "AU",
+      "type": "territory",
+      "name": "Northern Territory",
+      "postalCode": "NT",
+      "aliases": [],
+      "group": "australia",
+      "capital": {
+        "name": "Darwin",
+        "aliases": [],
+        "coordinates": [
+          130.850039,
+          -12.425354
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159151155
+      },
+      "labelPoint": [
+        133.78,
+        -20.1026
+      ],
+      "bounds": [
+        [
+          129.0001,
+          -25.99996801875068
+        ],
+        [
+          138.0002,
+          -10.9684
+        ]
+      ],
+      "neighborIds": [
+        "AU-QLD",
+        "AU-SA",
+        "AU-WA"
+      ],
+      "identifiers": {
+        "iso3166_2": "AU-NT",
+        "fips": null,
+        "wikidata": "Q3235",
+        "naturalEarth": "AUS-2650"
+      },
+      "geometry": {
+        "featureId": "AU-NT",
+        "asset": "subdivision-maps-au.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "au-nt.svg",
+        "title": "File:Flag of the Northern Territory.svg",
+        "source": "https://commons.wikimedia.org/wiki/File:Flag_of_the_Northern_Territory.svg",
+        "url": "https://upload.wikimedia.org/wikipedia/commons/b/b7/Flag_of_the_Northern_Territory.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+        "license": "Public domain",
+        "licenseUrl": null,
+        "artist": "<a href=\"https://en.wikipedia.org/wiki/en:Robert_Ingpen\" class=\"extiw\" title=\"w:en:Robert Ingpen\">Robert Ingpen</a>",
+        "credit": "<a rel=\"nofollow\" class=\"external text\" href=\"https://nt.gov.au/__data/assets/pdf_file/0005/389336/nt-flag-specifications.pdf\">NT flag specifications</a>",
+        "copyright": "False",
+        "attributionRequired": "false"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "AU-QLD",
+      "kind": "subdivision",
+      "parentCountryId": "AU",
+      "type": "state",
+      "name": "Queensland",
+      "postalCode": "QLD",
+      "aliases": [],
+      "group": "australia",
+      "capital": {
+        "name": "Brisbane",
+        "aliases": [],
+        "coordinates": [
+          153.033147,
+          -27.453085
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159151169
+      },
+      "labelPoint": [
+        144.778,
+        -23.1364
+      ],
+      "bounds": [
+        [
+          138.0002,
+          -29.1706
+        ],
+        [
+          153.5488,
+          -9.2402
+        ]
+      ],
+      "neighborIds": [
+        "AU-NSW",
+        "AU-NT",
+        "AU-SA"
+      ],
+      "identifiers": {
+        "iso3166_2": "AU-QLD",
+        "fips": null,
+        "wikidata": "Q36074",
+        "naturalEarth": "AUS-2657"
+      },
+      "geometry": {
+        "featureId": "AU-QLD",
+        "asset": "subdivision-maps-au.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "au-qld.svg",
+        "title": "File:Flag of Queensland.svg",
+        "source": "https://commons.wikimedia.org/wiki/File:Flag_of_Queensland.svg",
+        "url": "https://upload.wikimedia.org/wikipedia/commons/0/04/Flag_of_Queensland.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+        "license": "Public domain",
+        "licenseUrl": null,
+        "artist": "Government of Queensland",
+        "credit": "This SVG flag includes elements  from this flag:",
+        "copyright": "False",
+        "attributionRequired": "false"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "AU-SA",
+      "kind": "subdivision",
+      "parentCountryId": "AU",
+      "type": "state",
+      "name": "South Australia",
+      "postalCode": "SA",
+      "aliases": [],
+      "group": "australia",
+      "capital": {
+        "name": "Adelaide",
+        "aliases": [],
+        "coordinates": [
+          138.598059,
+          -34.933042
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159151165
+      },
+      "labelPoint": [
+        135.783,
+        -29.6504
+      ],
+      "bounds": [
+        [
+          129.0001,
+          -38.0706
+        ],
+        [
+          141.0001,
+          -25.9999
+        ]
+      ],
+      "neighborIds": [
+        "AU-NSW",
+        "AU-NT",
+        "AU-QLD",
+        "AU-VIC",
+        "AU-WA"
+      ],
+      "identifiers": {
+        "iso3166_2": "AU-SA",
+        "fips": null,
+        "wikidata": "Q35715",
+        "naturalEarth": "AUS-2655"
+      },
+      "geometry": {
+        "featureId": "AU-SA",
+        "asset": "subdivision-maps-au.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "au-sa.svg",
+        "title": "File:Flag of South Australia.svg",
+        "source": "https://commons.wikimedia.org/wiki/File:Flag_of_South_Australia.svg",
+        "url": "https://upload.wikimedia.org/wikipedia/commons/f/fd/Flag_of_South_Australia.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+        "license": "Public domain",
+        "licenseUrl": null,
+        "artist": "<em>Robert Craig (Likely Original Designer)</em>",
+        "credit": "Xrmap Flag Collection 2.9.",
+        "copyright": "False",
+        "attributionRequired": "false"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "AU-TAS",
+      "kind": "subdivision",
+      "parentCountryId": "AU",
+      "type": "state",
+      "name": "Tasmania",
+      "postalCode": "TAS",
+      "aliases": [],
+      "group": "australia",
+      "capital": {
+        "name": "Hobart",
+        "aliases": [],
+        "coordinates": [
+          147.29503,
+          -42.850009
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159151171
+      },
+      "labelPoint": [
+        146.603,
+        -42.1383
+      ],
+      "bounds": [
+        [
+          143.8372,
+          -54.7504
+        ],
+        [
+          158.9632,
+          -39.5715
+        ]
+      ],
+      "neighborIds": [],
+      "identifiers": {
+        "iso3166_2": "AU-TAS",
+        "fips": null,
+        "wikidata": "Q34366",
+        "naturalEarth": "AUS-2660"
+      },
+      "geometry": {
+        "featureId": "AU-TAS",
+        "asset": "subdivision-maps-au.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "au-tas.svg",
+        "title": "File:Flag of Tasmania.svg",
+        "source": "https://commons.wikimedia.org/wiki/File:Flag_of_Tasmania.svg",
+        "url": "https://upload.wikimedia.org/wikipedia/commons/4/46/Flag_of_Tasmania.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+        "license": "Public domain",
+        "licenseUrl": null,
+        "artist": "Unknown author <em>(Proclaimed by Sir Frederick Weld)</em>",
+        "credit": "<ul><li>Background and base from <a href=\"//commons.wikimedia.org/wiki/File:Flag_of_Australia_(converted).svg\" title=\"File:Flag of Australia (converted).svg\">File:Flag of Australia (converted).svg</a> (Public domain)</li>\n<li>Lion badge from <span class=\"url\"><a rel=\"nofollow\" class=\"external text\" href=\"http://www.vector-images.com/\">vector-images.com</a></span></li>\n<li>Specification from <span class=\"url\"><a rel=\"nofollow\" class=\"external text\" href=\"https://www.dpac.tas.gov.au/divisions/office_of_the_secretary/Executive_Services/protocol_office/flags/tasmanian_flag\">dpac.tas.gov.au/divisions/office of the secretary/Executive Services/protocol office/flags/tasmanian flag</a></span></li>\n<li>Composition and modifications by <a href=\"//commons.wikimedia.org/wiki/User:Denelson83\" title=\"User:Denelson83\">Denelson83</a></li></ul>",
+        "copyright": "False",
+        "attributionRequired": "false"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "AU-VIC",
+      "kind": "subdivision",
+      "parentCountryId": "AU",
+      "type": "state",
+      "name": "Victoria",
+      "postalCode": "VIC",
+      "aliases": [],
+      "group": "australia",
+      "capital": {
+        "name": "Melbourne",
+        "aliases": [],
+        "coordinates": [
+          144.97307,
+          -37.818086
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159151565
+      },
+      "labelPoint": [
+        144.75,
+        -37.0082
+      ],
+      "bounds": [
+        [
+          140.9671,
+          -39.145
+        ],
+        [
+          149.9721,
+          -33.9865
+        ]
+      ],
+      "neighborIds": [
+        "AU-NSW",
+        "AU-SA"
+      ],
+      "identifiers": {
+        "iso3166_2": "AU-VIC",
+        "fips": null,
+        "wikidata": "Q36687",
+        "naturalEarth": "AUS-2656"
+      },
+      "geometry": {
+        "featureId": "AU-VIC",
+        "asset": "subdivision-maps-au.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "au-vic.svg",
+        "title": "File:Flag of Victoria (Australia).svg",
+        "source": "https://commons.wikimedia.org/wiki/File:Flag_of_Victoria_(Australia).svg",
+        "url": "https://upload.wikimedia.org/wikipedia/commons/0/08/Flag_of_Victoria_%28Australia%29.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+        "license": "Public domain",
+        "licenseUrl": null,
+        "artist": "<a href=\"//commons.wikimedia.org/wiki/User:Denelson83\" title=\"User:Denelson83\">Denelson83</a> (original)",
+        "credit": "xrmap flag collection 2.9. (original)",
+        "copyright": "False",
+        "attributionRequired": "false"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    },
+    {
+      "id": "AU-WA",
+      "kind": "subdivision",
+      "parentCountryId": "AU",
+      "type": "state",
+      "name": "Western Australia",
+      "postalCode": "WA",
+      "aliases": [],
+      "group": "australia",
+      "capital": {
+        "name": "Perth",
+        "aliases": [],
+        "coordinates": [
+          115.838053,
+          -31.953069
+        ],
+        "sourceId": "natural-earth-populated-places",
+        "sourceFeatureId": 1159151475
+      },
+      "labelPoint": [
+        121.646,
+        -25.8483
+      ],
+      "bounds": [
+        [
+          112.9194,
+          -35.1379
+        ],
+        [
+          129.0001,
+          -13.7236
+        ]
+      ],
+      "neighborIds": [
+        "AU-NT",
+        "AU-SA"
+      ],
+      "identifiers": {
+        "iso3166_2": "AU-WA",
+        "fips": null,
+        "wikidata": "Q3206",
+        "naturalEarth": "AUS-2651"
+      },
+      "geometry": {
+        "featureId": "AU-WA",
+        "asset": "subdivision-maps-au.js",
+        "sourceId": "natural-earth-admin1"
+      },
+      "flag": {
+        "path": "au-wa.svg",
+        "title": "File:Flag of Western Australia.svg",
+        "source": "https://commons.wikimedia.org/wiki/File:Flag_of_Western_Australia.svg",
+        "url": "https://upload.wikimedia.org/wikipedia/commons/a/a5/Flag_of_Western_Australia.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+        "license": "Public domain",
+        "licenseUrl": null,
+        "artist": "<div style=\"display:inline-block;padding:0 3px;background-color:#CCF\">Original:</div> <div style=\"display:inline-block;padding:3px 0;\">Frederick Weld</div> <div style=\"display:inline-block;padding:0 3px;background-color:#CCF\">Vector: </div> <div style=\"display:inline-block;\"><a href=\"//commons.wikimedia.org/wiki/User:Denelson83\" title=\"User:Denelson83\">Denelson83</a></div>",
+        "credit": "Own work using: <a href=\"//commons.wikimedia.org/wiki/File:Government_Ensign_of_the_United_Kingdom.svg\" title=\"File:Government Ensign of the United Kingdom.svg\">Government Ensign of the United Kingdom.svg</a>",
+        "copyright": "False",
+        "attributionRequired": "false"
+      },
+      "facts": {
+        "population": null,
+        "areaKm2": null,
+        "largestCity": null,
+        "languages": null,
+        "currency": null
+      }
+    }
+  ],
+  "sets": [
+    {
+      "id": "us-states",
+      "name": "US states",
+      "ids": [
+        "US-AK",
+        "US-AL",
+        "US-AR",
+        "US-AZ",
+        "US-CA",
+        "US-CO",
+        "US-CT",
+        "US-DE",
+        "US-FL",
+        "US-GA",
+        "US-HI",
+        "US-IA",
+        "US-ID",
+        "US-IL",
+        "US-IN",
+        "US-KS",
+        "US-KY",
+        "US-LA",
+        "US-MA",
+        "US-MD",
+        "US-ME",
+        "US-MI",
+        "US-MN",
+        "US-MO",
+        "US-MS",
+        "US-MT",
+        "US-NC",
+        "US-ND",
+        "US-NE",
+        "US-NH",
+        "US-NJ",
+        "US-NM",
+        "US-NV",
+        "US-NY",
+        "US-OH",
+        "US-OK",
+        "US-OR",
+        "US-PA",
+        "US-RI",
+        "US-SC",
+        "US-SD",
+        "US-TN",
+        "US-TX",
+        "US-UT",
+        "US-VA",
+        "US-VT",
+        "US-WA",
+        "US-WI",
+        "US-WV",
+        "US-WY"
+      ]
+    },
+    {
+      "id": "canada-provinces-territories",
+      "name": "Canadian provinces and territories",
+      "ids": [
+        "CA-AB",
+        "CA-BC",
+        "CA-MB",
+        "CA-NB",
+        "CA-NL",
+        "CA-NS",
+        "CA-NT",
+        "CA-NU",
+        "CA-ON",
+        "CA-PE",
+        "CA-QC",
+        "CA-SK",
+        "CA-YT"
+      ]
+    },
+    {
+      "id": "canada-provinces",
+      "name": "Canadian provinces",
+      "ids": [
+        "CA-AB",
+        "CA-BC",
+        "CA-MB",
+        "CA-NB",
+        "CA-NL",
+        "CA-NS",
+        "CA-ON",
+        "CA-PE",
+        "CA-QC",
+        "CA-SK"
+      ]
+    },
+    {
+      "id": "canada-territories",
+      "name": "Canadian territories",
+      "ids": [
+        "CA-NT",
+        "CA-NU",
+        "CA-YT"
+      ]
+    },
+    {
+      "id": "ca-prairies",
+      "name": "ca-prairies",
+      "ids": [
+        "CA-AB",
+        "CA-MB",
+        "CA-SK"
+      ]
+    },
+    {
+      "id": "ca-west-coast",
+      "name": "ca-west-coast",
+      "ids": [
+        "CA-BC"
+      ]
+    },
+    {
+      "id": "ca-atlantic",
+      "name": "ca-atlantic",
+      "ids": [
+        "CA-NB",
+        "CA-NL",
+        "CA-NS",
+        "CA-PE"
+      ]
+    },
+    {
+      "id": "ca-north",
+      "name": "ca-north",
+      "ids": [
+        "CA-NT",
+        "CA-NU",
+        "CA-YT"
+      ]
+    },
+    {
+      "id": "ca-central",
+      "name": "ca-central",
+      "ids": [
+        "CA-ON",
+        "CA-QC"
+      ]
+    },
+    {
+      "id": "us-west",
+      "name": "us-west",
+      "ids": [
+        "US-AK",
+        "US-AZ",
+        "US-CA",
+        "US-CO",
+        "US-HI",
+        "US-ID",
+        "US-MT",
+        "US-NM",
+        "US-NV",
+        "US-OR",
+        "US-UT",
+        "US-WA",
+        "US-WY"
+      ]
+    },
+    {
+      "id": "us-south",
+      "name": "us-south",
+      "ids": [
+        "US-AL",
+        "US-AR",
+        "US-DE",
+        "US-FL",
+        "US-GA",
+        "US-KY",
+        "US-LA",
+        "US-MD",
+        "US-MS",
+        "US-NC",
+        "US-OK",
+        "US-SC",
+        "US-TN",
+        "US-TX",
+        "US-VA",
+        "US-WV"
+      ]
+    },
+    {
+      "id": "us-northeast",
+      "name": "us-northeast",
+      "ids": [
+        "US-CT",
+        "US-MA",
+        "US-ME",
+        "US-NH",
+        "US-NJ",
+        "US-NY",
+        "US-PA",
+        "US-RI",
+        "US-VT"
+      ]
+    },
+    {
+      "id": "us-midwest",
+      "name": "us-midwest",
+      "ids": [
+        "US-IA",
+        "US-IL",
+        "US-IN",
+        "US-KS",
+        "US-MI",
+        "US-MN",
+        "US-MO",
+        "US-ND",
+        "US-NE",
+        "US-OH",
+        "US-SD",
+        "US-WI"
+      ]
+    },
+    {
+      "id": "australia-states-territories",
+      "name": "Australian states and territories",
+      "ids": [
+        "AU-ACT",
+        "AU-NSW",
+        "AU-NT",
+        "AU-QLD",
+        "AU-SA",
+        "AU-TAS",
+        "AU-VIC",
+        "AU-WA"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "id": "natural-earth-admin1",
+      "url": "https://github.com/nvkelso/natural-earth-vector/blob/ca96624a56bd078437bca8184e78163e5039ad19/geojson/ne_10m_admin_1_states_provinces.geojson",
+      "license": "Public domain",
+      "sha256": "22d0e3ad85eb3e27f17cabf8ba2d50e554fbc27a87796ff891d958185da62fb5"
+    },
+    {
+      "id": "natural-earth-populated-places",
+      "url": "https://github.com/nvkelso/natural-earth-vector/blob/ca96624a56bd078437bca8184e78163e5039ad19/geojson/ne_10m_populated_places.geojson",
+      "license": "Public domain",
+      "sha256": "9b8e3de09048ef00dfc70357dbb9fa324493f214b5e0ae4daf1aa79a8d10116b"
+    },
+    {
+      "id": "us-capital-names",
+      "url": "https://www.govinfo.gov/content/pkg/GPO-STYLEMANUAL-2016/pdf/GPO-STYLEMANUAL-2016-20.pdf"
+    },
+    {
+      "id": "canada-capital-names",
+      "url": "https://www.canada.ca/en/immigration-refugees-citizenship/corporate/publications-manuals/discover-canada/read-online/canadas-regions.html"
+    },
+    {
+      "id": "us-identifiers",
+      "url": "https://www.census.gov/library/reference/code-lists/ansi/ansi-codes-for-states.html"
+    },
+    {
+      "id": "australia-names-and-capitals",
+      "url": "https://immi.homeaffairs.gov.au/citizenship/test-and-interview/listen-to-podcast/transcript-episode-2"
+    },
+    {
+      "id": "tasmania-macquarie-island",
+      "url": "https://parks.tas.gov.au/explore-our-parks/macquarie-island-world-heritage-area"
+    }
+  ]
+}

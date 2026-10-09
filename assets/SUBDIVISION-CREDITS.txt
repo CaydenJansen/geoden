@@ -1,0 +1,32 @@
+US and Canadian subdivision data — retrieved 9 October 2026
+
+Boundary geometry and representative capital coordinates: Natural Earth,
+public-domain data. Inputs are pinned to natural-earth-vector commit
+ca96624a56bd078437bca8184e78163e5039ad19.
+https://www.naturalearthdata.com/about/terms-of-use/
+
+Transforms: selected only 50 US states and 13 Canadian provinces/territories;
+rounded map coordinates to four decimal places; oriented rings for D3 spherical
+geometry; retained geographic islands and actual world coordinates; derived
+shared-boundary adjacency. Capital names were checked against US GPO and Canadian
+government reference lists. Source URLs and source file hashes are in SUBDIVISION-SOURCES.json.
+
+US flag SVGs: Flagpedia / FlagCDN state flag bundle, described by its provider
+as public domain, based on Wikimedia Commons. The bundle includes the updated
+Minnesota and Utah designs, visually checked during this build.
+https://flagpedia.net/us-states/download
+https://flagcdn.com/us-svg.zip
+
+Canadian flag SVGs: Wikimedia Commons, fetched individually. Each file's returned
+licensing metadata identifies it as public domain. Exact file pages, original
+download URLs, author/credit text and licensing metadata are retained per flag
+in SUBDIVISION-SOURCES.json. Preserve that file when redistributing the assets.
+
+These notes describe source copyright metadata, not a grant to imply endorsement
+or an assessment of separate restrictions on official insignia and emblems.
+The map data is generalized educational cartography, not legal boundary evidence.
+No population, land area or largest-city facts were inferred from older map data.
+
+Australia additions: eight public-domain flags from Wikimedia Commons (per-file metadata in SUBDIVISION-SOURCES.json). Names and capitals checked against Australian Home Affairs citizenship material. Natural Earth boundaries use the same pinned source as US/Canada. Includes Lord Howe Island in NSW and Macquarie Island in Tasmania; external territories and Jervis Bay are not separate targets.
+
+Files now live directly in assets/; no subdivision or flag subfolders are required.
