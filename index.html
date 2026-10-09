@@ -16344,7 +16344,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
   <script src="assets/geography.js"></script>
 
   <script>
-    const GEODEN_VERSION = "0.56.94";
+    const GEODEN_VERSION = "0.56.95";
     // v0.56.28 — blank-surface audit: guarded silhouettes/location maps and Matching visual preflight.
     // v0.56.18 — private-beta problem reporting with diagnostic state, recent actions, errors, copy/download/share.
     // v0.56.17 — tester-facing automatic failure reporting with screenshot/copy instructions.
@@ -18357,6 +18357,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
           completedAt: endedAt,
           date:entry.dailyKey.slice(0,10),
           assisted:Math.max(0,session.rapid?.assisted||0),
+          outcomes:Array.isArray(session.rapid?.outcomes)?session.rapid.outcomes.slice(0,metrics.total):null,
           elapsedMs:Math.max(0,session.homeElapsedMs||0)
         };
         saveDailyChallengeProgress();
@@ -20016,22 +20017,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
         return;
       }
 
-      if (hasActiveStudyRun()) {
-        const now = Date.now();
-        if (now > dailyChallengeArmedUntil) {
-          dailyChallengeArmedUntil = now + 7000;
-          dailyChallengeCard.dataset.state = "confirm";
-          dailyChallengeBtn.textContent = "Replace session";
-          dailyChallengeMeta.textContent = "This replaces your unfinished session. Tap again to confirm.";
-          if (dailyChallengeDisarmTimer) window.clearTimeout(dailyChallengeDisarmTimer);
-          dailyChallengeDisarmTimer = window.setTimeout(() => {
-            dailyChallengeArmedUntil = 0;
-            renderDailyChallengeCard();
-          }, 7000);
-          hapticFeedback?.("warning");
-          return;
-        }
-      }
+      if (hasActiveStudyRun() && !window.confirm('Start today’s quiz? This will replace your unfinished run.')) return;
       startDailyChallengeSession();
     }
 
@@ -25486,7 +25472,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
         clearMatchingSelection();
         renderMatchingDrawer();
         const label = MATCHING_FIELD_META[field]?.label || field;
-        setMatchingFeedback(`Showing ${label} cards — choose one, then tap the matching slot.`, "near");
+        setMatchingFeedback(`Choose a ${label.toLowerCase()} card below, then tap its empty space on the board.`, "near");
         geoDenDiagnosticLog("matching-field-opened", { field });
         requestAnimationFrame(() => matchingDrawerCards?.scrollIntoView?.({ block:"nearest", behavior:"smooth" }));
       }
@@ -25837,9 +25823,10 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
 
       if(studySession?.launchPreset?.mode === "matching"){studySession.active=false;studySession.revisionQueue=[];saveStudySession();}
       refreshMatchingCompletionUi(state);
-      if(studySession?.launchPreset?.dailyKey)homeShowFinishedDaily("matching",matchingFeedback.parentElement);
+      const dailyMatching=!!studySession?.launchPreset?.dailyKey;if(dailyMatching)homeShowFinishedDaily("matching",matchingFeedback.parentElement);
       matchingNewRoundBtn.classList.remove("hidden");
-      ensureProgressionActionVisible(matchingNewRoundBtn, matchingOverlay?.querySelector(".matching-panel"));
+      if(dailyMatching)requestAnimationFrame(()=>matchingFeedback.parentElement.querySelector('.daily-share-report')?.scrollIntoView({block:'end',behavior:'smooth'}));
+      else ensureProgressionActionVisible(matchingNewRoundBtn, matchingOverlay?.querySelector(".matching-panel"));
       saveMatchingRun();
     }
 
@@ -25910,7 +25897,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
       }
     }
 
-    // v0.56.94: the browser owns touch scrolling and momentum. Pointer events
+    // v0.56.95: the browser owns touch scrolling and momentum. Pointer events
     // only distinguish a tap from a swipe; never prevent or emulate scrolling.
     function beginMatchingRailSwipe(event, strip) {
       if (!strip) return;
@@ -29941,7 +29928,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
         if(section.hasAttribute('aria-labelledby'))disclosure.setAttribute('aria-labelledby',section.getAttribute('aria-labelledby'));
         const summary=progressNode('summary'),head=section.querySelector(':scope > .mastery-section-head'),heading=section.querySelector(':scope > h3');
         if(head)summary.append(head);else if(heading)summary.append(heading);
-        const body=progressNode('div',null,'progress-disclosure-body');while(section.firstChild)body.append(section.firstChild);
+        const body=progressNode('div',null,'progress-disclosure-body');while(section.firstChild)body.append(section.firstChild);const note=summary.querySelector('.mastery-section-note');if(note)body.prepend(note);
         disclosure.append(summary,body);section.replaceWith(disclosure);
       }
       // The map is the visual companion to the places-explored count.
@@ -29968,7 +29955,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
     function progressLearningRows(host,items,game=false){
       host.replaceChildren();
       if(!items.length){host.append(progressNode('p',game?'Your recorded game skills will appear here.':'Your topic results will appear after you practise.','mastery-empty'));return;}
-      for(const item of items){const practice=masteryFieldPracticePlan(item.field),score=Math.round(item.cleanAccuracy*100);renderMasteryRow(host,masteryFieldLabel(item.field),game?item.attempts+' game results · average score':item.cleanCorrect+' of '+item.attempts+' correct first time',score+'%',practice.indices.length?{actionLabel:'Practise',onPractice:()=>startFocusedMasteryPractice(practice.indices,practice.factFocus,masteryFieldLabel(item.field)+' practice')}:{});}
+      for(const item of items){const practice=masteryFieldPracticePlan(item.field),score=Math.round(item.cleanAccuracy*100);renderMasteryRow(host,masteryFieldLabel(item.field),game?item.attempts+' game results · average score':item.cleanCorrect+' of '+item.attempts+' correct first time',score+'%',practice.indices.length?{actionLabel:'Practise',onPractice:()=>startFocusedMasteryPractice(practice.indices,practice.factFocus,masteryFieldLabel(item.field)+' practice')}:{});if(!game){const row=host.lastElementChild,track=progressNode('span',null,'progress-topic-track'),fill=progressNode('span',null,'progress-topic-fill');fill.style.width=score+'%';fill.style.background=score>=80?'#4f8559':score>=50?'#b48a42':'#aa6755';track.append(fill);row.querySelector('.mastery-row-main').append(track);}}
     }
     function renderProgressOverview(snapshot){
       const plan=progressRecommendation(snapshot);document.getElementById('progressRecommendationTitle').textContent=plan.title;masteryNextReview.textContent=plan.copy;masteryReviewNowBtn.textContent=plan.action;masteryReviewNowBtn.disabled=false;delete masteryReviewNowBtn.dataset.replaceUntil;
@@ -31631,7 +31618,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
       };
 
       const zoom = d3.zoom()
-        .scaleExtent([1, 16])
+        .scaleExtent([1, 2048])
         .extent([[0, 0], [420, 320]])
         .translateExtent([[0, 0], [420, 320]])
         .filter(event => {
@@ -34535,15 +34522,15 @@ Answer: ${answer}`;
 
       if (["countryCapital", "countryCapitalLocation", "flagCapital"].includes(round.type)) {
         return matchingCapital
-          ? `${matchingCapital} is also the largest city`
-          : `Capital · largest city is ${largest}`;
+          ? `${matchingCapital} is both the capital and largest city`
+          : `${capitalText} is the capital; ${largest} is the largest city`;
       }
 
       if (round.type === "capitalCountry") {
         const cue = round.cueValue || capitals[0] || "";
         return normalizeCityName(cue) === largestNorm
-          ? `${cue} is also the largest city`
-          : `Capital · largest city is ${largest}`;
+          ? `${cue} is both the capital and largest city`
+          : `${cue} is the capital; ${largest} is the largest city`;
       }
 
       return "";
@@ -35425,6 +35412,7 @@ Answer: ${answer}`;
       round.answerLabel = label || rapidAnswerLabel(round, c);
       round.resultMeta = meta || "";
       state.total += 1;
+      if (isDailyChallengeSession()) { if (!Array.isArray(state.outcomes)) state.outcomes=[]; state.outcomes.push(!!correct); }
       const misses = Math.max(0, Number(round.misses) || 0);
       const assisted = !!correct && (Math.max(0, Number(round.hintsUsed) || 0) > 0 || round.usedSuggestion === true);
       const clean = !!correct && !assisted && misses === 0;
@@ -36836,7 +36824,7 @@ function multiPromptPicker(select,sub=false,initialValue=select.value){const wra
       if(homeLaunching||homeDailyResult(mode))return;
       const resume=borderlessRun?.dailyKey===homeDailyId(mode)&&borderlessRun.index<borderlessRun.codes.length;
       if(resume)return openBorderless(true);
-      if(borderlessRun&&borderlessRun.index<borderlessRun.codes.length&&(Number(button?.dataset.replaceUntil)||0)<=Date.now()){button.dataset.replaceUntil=String(Date.now()+8000);button.querySelector('small').textContent='Replace unfinished run? Tap again';return;}
+      if(!homeConfirmReplace('borderless',button,resume))return;
       homeLaunching=true;
       try{
         const features=await loadBorderlessMapFeatures(),codes=borderlessDailyCodes(mode);
@@ -36877,9 +36865,7 @@ function multiPromptPicker(select,sub=false,initialValue=select.value){const wra
     async function launchBorderlessChallenge(spec,button){
       if(homeLaunching)return;
       const resume=borderlessRun?.challenge?.id===spec.id&&borderlessRun.index<borderlessRun.codes.length;
-      if(borderlessRun&&borderlessRun.index<borderlessRun.codes.length&&!resume&&(Number(button?.dataset.replaceUntil)||0)<=Date.now()){
-        button.dataset.replaceUntil=String(Date.now()+8000);button.textContent='Replace unfinished Borderless run? Tap to confirm';return;
-      }
+      if(!homeConfirmReplace('borderless',button,resume))return;
       homeLaunching=true;
       try{
         if(resume){await openBorderless(true);return;}
@@ -37066,7 +37052,7 @@ function scaleCapitalHistory(parent,scale){parent.selectAll('circle').attr('r',4
       content.append(progress,clue,host,feedback,reveal);borderlessProgress(s,content);
       let finished=false;
       function complete(result,api){if(finished||token!==borderlessRenderToken)return;finished=true;pauseBorderlessClock();api.reveal(result.geo,result);s.results.push({code:c.code,...result,tries:Math.min(3,s.misses+1)});s.index++;s.misses=0;borderlessRecordChallenge(s);borderlessRecordDaily(s);archiveBorderlessProgress(s);saveBorderlessRun();borderlessProgress(s,content);const current=s.target==='country'?host.querySelector('.borderless-marks path'):null;if(current)current.setAttribute('fill',borderlessResultColor(result));reveal.remove();feedback.textContent=`${c.name} · ${s.target==='capital'?mapHuntCapitalCities(c).map(p=>p.name).join(' / ')+' · ':''}${result.revealed?'Location revealed':borderlessResultText(result,s.target)}`;
-        const next=document.createElement('button');next.type='button';next.className='borderless-primary';next.textContent=s.index===s.codes.length?'See results →':'Next place →';next.onclick=renderBorderlessRound;content.append(next);if(s.index<s.codes.length)setTimeout(()=>{if(token===borderlessRenderToken&&document.getElementById('borderlessOverlay').classList.contains('open'))renderBorderlessRound();},s.target==='capital'?2200:1100);}
+        const next=document.createElement('button');next.type='button';next.className='borderless-primary borderless-next';next.textContent=s.index===s.codes.length?'See results →':'Next place →';next.onclick=renderBorderlessRound;content.append(next);if(s.index<s.codes.length)setTimeout(()=>{if(token===borderlessRenderToken&&document.getElementById('borderlessOverlay').classList.contains('open'))renderBorderlessRound();},s.target==='capital'?2200:1100);}
       const map=await createBorderlessMap(host,c,s.target,{reuse:true,set:s.set,results:s.mapProgress==='blind'?[]:s.results,view:s.mapView,onView:view=>{s.mapView=view;},isCurrent:()=>token===borderlessRenderToken&&document.getElementById('borderlessOverlay').classList.contains('open'),onGuess:(r,api)=>{
         if(finished)return;if(s.target==='country'&&s.mapProgress!=='blind'&&s.results.some(result=>result.code===r.clickedCode)){feedback.textContent=r.clickedName+' · already filled';return;}if(s.target==='capital'){complete(r,api);return;}if(r.correct){r.score=s.misses===0?100:0;complete(r,api);return;}
         s.misses++;saveBorderlessRun();if(s.misses>=3)complete({...r,score:0,revealed:true},api);else feedback.textContent=`${r.clickedName} · try again · ${3-s.misses} guesses left`;
@@ -37175,7 +37161,7 @@ function studyCapitalPrompt(host,c,stage){if(!capitalPromptDetails||studySession
           event.preventDefault(); event.stopPropagation(); options.onChoose?.(p,api);
         }
         dots.on('click',choose).on('keydown',choose);
-        const zoom = d3.zoom().scaleExtent([1,40]).extent([[0,0],[width,height]])
+        const zoom = d3.zoom().scaleExtent([1,2048]).extent([[0,0],[width,height]])
           .translateExtent([[-30,-30],[width+30,height+30]]).on('zoom',event=>{
             transform=event.transform; layer.attr('transform',transform);
             const pixels=Math.max(.1,svg.node().getBoundingClientRect().width/width)*transform.k;
@@ -37381,7 +37367,7 @@ function studyCapitalPrompt(host,c,stage){if(!capitalPromptDetails||studySession
       if (!state?.svg || !state?.root || !window.d3) return;
       const { width, height } = state;
       const zoom = d3.zoom()
-        .scaleExtent([1, 14])
+        .scaleExtent([1, 2048])
         .extent([[0,0],[width,height]])
         // Keep north/south bounded, but east/west intentionally has no edge.
         .translateExtent([[-1e9,0],[1e9,height]])
@@ -37418,7 +37404,7 @@ function studyCapitalPrompt(host,c,stage){if(!capitalPromptDetails||studySession
       activeStudyWorldMapTransform = d3.zoomIdentity;
       activeStudyWorldMapWrapPeriod = state.wrapPeriod || null;
       activeStudyWorldMapSize = { width, height };
-      state.svg.call(zoom.transform, d3.zoomIdentity);
+      state.svg.call(zoom.transform, d3.zoomIdentity.translate(width/2,height/2).scale(1.25).translate(-width/2,-height/2));
       updateCanonicalStudyMapZoomButtons();
     }
 
@@ -39490,7 +39476,7 @@ function studyCapitalPrompt(host,c,stage){if(!capitalPromptDetails||studySession
     // Keep the two full-map games on one interaction model. Both can zoom from
     // the whole-world overview (1×) to 64×, and both treat the fitted playable
     // area as their Home/Reset view.
-    const BIG_MAP_MAX_ZOOM = 64;
+    const BIG_MAP_MAX_ZOOM = 2048;
     const BIG_MAP_ZOOM_STEP = 1.6;
 
     function bigMapAutoFitCodes(setKey, codes) {
@@ -45474,7 +45460,7 @@ function rankingTargetValues() {
     function homeDailyTopicPlan(mode, date = dailyDateKey()) {
       const day = Math.floor(Date.parse(date + 'T00:00:00Z') / 86400000);
       const index = size => ((Number.isFinite(day) ? day : 0) % size + size) % size;
-      const topicSets = [['flag','capital','largestCity'],['silhouette','largestCity','currency'],['currency','capital','flag'],['flag','silhouette','capital'],['largestCity','flag','silhouette'],['silhouette','currency','capital'],['capital','largestCity','currency'],['flag','currency','silhouette']];
+      const topicSets = [['flag','capital','largestCity'],['silhouette','largestCity','flag'],['capital','flag','silhouette'],['flag','silhouette','capital'],['largestCity','flag','silhouette'],['silhouette','capital','largestCity'],['capital','largestCity','flag'],['flag','capital','silhouette']];
       if (mode === 'matching') return {fields:['country',...topicSets[index(topicSets.length)]]};
       if (mode === 'ranking') return {metric:['borders','population','area','density'][index(4)]};
       return {};
@@ -45525,9 +45511,8 @@ function rankingTargetValues() {
     }
     function renderHomePicks(){const modes=['quiz','detective','matching','ranking','borderless-country','borderless-capital'],host=document.getElementById('homeDailyPicks');if(host)host.replaceChildren(...modes.map(mode=>{const card=homeDailyButton(mode),description=card.querySelector('.daily-mode-description');description.textContent=mode==='borderless-country'?'Find 5 mainland countries':mode==='borderless-capital'?'Pinpoint 5 mainland capitals':mode==='quiz'?'10 questions':mode==='detective'?'A country mystery':mode==='matching'?homeTopicDescription(mode).replace('Match five countries · ',''):'Rank by '+homeTopicDescription(mode).replace('Order five countries by ','');return card;}));const count=document.getElementById('dailyPlayedCount');if(count)count.textContent=`${modes.filter(mode=>homeDailyResult(mode)).length} of 6 played today · Same puzzles for everyone`;}
     function homeConfirmReplace(kind,button,resume=false){
-      const active=kind==='study'?hasActiveStudyRun():kind==='maphunt'?mapHuntState&&!mapHuntState.finished:kind==='chain'?chainState&&!chainState.finishedAt:rankingState&&!rankingState.revealed;
-      if(!active||resume)return true;if(Number(button?.dataset.replaceUntil)>Date.now())return true;
-      if(button){button.dataset.replaceUntil=String(Date.now()+8000);(button.querySelector('small')||button).textContent='Replaces your unfinished run. Tap again to confirm.';}return false;
+      const active=kind==='study'?hasActiveStudyRun():kind==='maphunt'?mapHuntState&&!mapHuntState.finished:kind==='chain'?chainState&&!chainState.finishedAt:kind==='borderless'?borderlessRun&&borderlessRun.index<borderlessRun.codes.length:rankingState&&!rankingState.revealed;
+      if(!active||resume)return true;return window.confirm('Start a new game? This will replace your unfinished run.');
     }
     async function homeLaunchMap(spec,button){
       if(spec.mode==='borderless')return launchBorderlessChallenge(spec,button);
@@ -45563,7 +45548,7 @@ function rankingTargetValues() {
       if(new Set(items.map(x=>x.value)).size<2)throw new Error('not-enough-distinct-values');
       return homeSeededOrder(items,String(preset.seed)+':order');
     }
-    function homeDailyDetectiveClues(c){return [{key:'continent',label:'Continent',value:detectiveContinent(c)},{key:'capitalLength',label:'Capital name length',value:detectiveNameShape(detectivePrimaryCapital(c))},{key:'currency',label:'Currency',value:detectiveCurrencies(c).join(' · ')},{key:'languages',label:'Languages',value:detectiveLanguages(c).join(' · ')},{key:'capital',label:'Capital city',value:detectiveCapital(c)}].filter(x=>x.value);}
+    function homeDailyDetectiveClues(c){return [{key:'continent',label:'Continent',value:detectiveContinent(c)},{key:'capitalLength',label:'Capital name length',value:detectiveNameShape(detectivePrimaryCapital(c))},{key:'hemisphere',label:'Hemisphere',value:c.lat>=0?'Northern Hemisphere':'Southern Hemisphere'},{key:'languages',label:'Languages',value:detectiveLanguages(c).filter(name=>!textObviouslyNamesCountry(name,c)).join(' · ')},{key:'capital',label:'Capital city',value:detectiveCapital(c)}].filter(x=>x.value);}
     function homeRecordDaily(preset,score,elapsedMs,details={}){
       if(!preset?.dailyKey||homeRecords.dailies[preset.dailyKey])return;
       homeRecords.dailies[preset.dailyKey]={score:Math.round(Math.max(0,Math.min(100,score))),elapsedMs:Math.max(0,elapsedMs),completedAt:Date.now(),date:preset.dailyKey.slice(0,10),...(preset.mode==='matching'?{fields:homeMatchingPresetFields(preset)}:preset.mode==='ranking'?{metric:RANKING_METRIC_KEYS.includes(preset.metric)?preset.metric:'borders'}:{}),...details};saveHomeRecords();
@@ -45596,7 +45581,7 @@ function rankingTargetValues() {
       const score=mode==='quiz'?Math.round(100*r.correct/Math.max(1,r.total)):r.score;
       const total=mode==='detective'?5:Math.min(10,Math.max(1,r.total||5));
       const green=mode==='detective'?(r.correct?1:0):Math.round(total*score/100);
-      const tiles=mode==='detective'?'🔎'.repeat(Math.min(5,r.clues||1))+(r.correct?' ✅':' ⬜'):'🟩'.repeat(green)+'⬜'.repeat(total-green);
+      const tiles=mode==='detective'?'🔎'.repeat(Math.min(5,r.clues||1))+(r.correct?' ✅':' ⬜'):mode==='quiz'&&Array.isArray(r.outcomes)&&r.outcomes.length===total?r.outcomes.map(value=>value?'🟩':'⬜').join(''):'🟩'.repeat(green)+'⬜'.repeat(total-green);
       const grid=mode!=='detective'&&total>5?[...tiles].slice(0,5).join('')+'\n'+[...tiles].slice(5).join(''):tiles;
       const result=mode==='quiz'?`${r.correct}/${r.total} correct`:mode==='detective'?`${r.correct?'Solved':'Revealed'} · ${score} points`:mode==='ranking'?`${score}% first check`:`${score}% first-try accuracy`;
       const time=Number.isFinite(r.elapsedMs)?` · ⏱ ${homeTime(r.elapsedMs)}`:'';
@@ -45617,7 +45602,7 @@ function rankingTargetValues() {
     }
     function homeShowFinishedDaily(mode,host,result=null){
       if(!host)return;host.querySelectorAll('.daily-share-report').forEach(el=>el.remove());
-      const r=result||homeDailyResult(mode);if(r){const report=homeDailyReport(mode,r);if(mode==='matching'||mode==='ranking')host.prepend(report);else host.append(report);if(mode==='matching')host.classList.add('has-daily-report');}
+      const r=result||homeDailyResult(mode);if(r){const report=homeDailyReport(mode,r);host.append(report);if(mode==='matching')host.classList.add('has-daily-report');}
     }
     function installHomeSectionDisclosures() {
       for(const group of playModePicker.querySelectorAll('.mode-discovery-group')){
@@ -45646,7 +45631,7 @@ function rankingTargetValues() {
       for(const [i,copy] of [[0,'Build your knowledge, one place at a time.'],[1,'Play, explore and complete challenges.']]){const heading=groups[i].previousElementSibling;heading.querySelector('.mode-discovery-title').setAttribute('role','heading');heading.querySelector('.mode-discovery-title').setAttribute('aria-level','2');const intro=document.createElement('p');intro.className='mode-section-intro';intro.textContent=copy;heading.append(intro);}
       document.getElementById('modeGroupStudy').textContent='Learn';document.getElementById('modeGroupGames').textContent='Games';playModePicker.querySelector('[data-play-mode="standard"] .play-mode-name').textContent='Flash cards';document.getElementById('sprintModeBtn').querySelector('.play-mode-meta').textContent='60-second practice';
       const landing=document.createElement('div');landing.id='discoveryLanding';landing.className='hidden';browser.append(landing);
-      const today=document.createElement('details');today.className='discovery-today';today.setAttribute('aria-labelledby','dailyHeroTitle');today.open=localStorage.getItem(DAILY_PICKS_COLLAPSED_KEY)!=='true';
+      const today=document.createElement('details');today.className='discovery-today';today.id='homeDailySection';today.setAttribute('aria-labelledby','dailyHeroTitle');today.open=localStorage.getItem(DAILY_PICKS_COLLAPSED_KEY)!=='true';
       const heading=document.createElement('summary');heading.className='daily-hero-head';heading.innerHTML='<h3 id="dailyHeroTitle">Today’s picks</h3><span class="daily-collapse-action"><span class="daily-collapse-label"></span><svg class="daily-collapse-chevron" viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 7.5 10 12.5 15 7.5"/></svg></span>';
       const syncDailyDisclosure=()=>{heading.setAttribute('aria-expanded',String(today.open));heading.querySelector('.daily-collapse-label').textContent=today.open?'Hide':'Show';};
       syncDailyDisclosure();today.addEventListener('toggle',()=>{syncDailyDisclosure();localStorage.setItem(DAILY_PICKS_COLLAPSED_KEY,String(!today.open));});
@@ -45861,7 +45846,7 @@ async function subCreateMap(host,token){
  const shapes=layer.append('g').selectAll('path').data(features).join('path').attr('d',path).attr('data-sub-id',f=>f.id).attr('vector-effect','non-scaling-stroke');
  const dots=layer.append('g'),history=layer.append('g').attr('class','sub-capital-history'),marks=layer.append('g');let transform=d3.zoomIdentity,focus=[w/2,h/2];
  const cross=svg.append('path').attr('d','M-10 0H10M0-10V10').attr('stroke','#65482f').attr('stroke-width',2).style('display','none').attr('pointer-events','none');
- const zoom=d3.zoom().extent([[0,0],[w,h]]).scaleExtent([1,100]).on('zoom',e=>{transform=e.transform;layer.attr('transform',transform);r.view={k:transform.k,x:transform.x,y:transform.y};rescale();});svg.call(zoom).on('dblclick.zoom',null);
+ const zoom=d3.zoom().extent([[0,0],[w,h]]).scaleExtent([1,2048]).on('zoom',e=>{transform=e.transform;layer.attr('transform',transform);r.view={k:transform.k,x:transform.x,y:transform.y};rescale();});svg.call(zoom).on('dblclick.zoom',null);
  function rescale(){const k=transform.k*(svg.node().getBoundingClientRect().width/w);scaleCapitalHistory(history,Math.max(k,.01));dots.selectAll('circle').attr('r',6/Math.max(k,.01));marks.selectAll('circle').attr('r',5/Math.max(k,.01));}
  function update(){marks.selectAll('*').remove();history.selectAll('*').remove();if(r.mode==='borderless')for(const result of r.results.filter(x=>x.topic==='capitalLocation')){const capital=subData.get(result.id).capital;drawCapitalHistory(history,projection,[{name:capital.name,lng:capital.coordinates[0],lat:capital.coordinates[1]}],result);}const q=subCurrent(),borderless=r.mode==='borderless',done=new Map(r.results.map(x=>[x.id,x]));shapes.attr('fill',f=>done.has(f.id)?done.get(f.id).score===100?'#47734f':'#b38c48':r.ids.includes(f.id)?'#a4ae99':'#c3c5b7').attr('stroke',borderless?null:'#faf5e9').attr('stroke-width',borderless?0:1);if(borderless)shapes.attr('fill',f=>r.mapProgress!=='blind'&&done.has(f.id)&&q?.topic!=='capitalLocation'?(done.get(f.id).score===100?'#47734f':'#b38c48'):'#c2c8b5');dots.selectAll('*').remove();if(q?.topic==='capitalLocation'&&!borderless){dots.selectAll('circle').data(subData.list({set:r.set})).join('circle').attr('cx',d=>projection(d.capital.coordinates)[0]).attr('cy',d=>projection(d.capital.coordinates)[1]).attr('fill',d=>done.has(d.id)?'#47734f':'#78623d').attr('stroke','#fff9ee').attr('stroke-width',2).attr('vector-effect','non-scaling-stroke').attr('data-capital-id',d=>d.id);}rescale();}
  function reveal(guess){marks.selectAll('*').remove();const q=subCurrent();if(!q)return;const record=subData.get(q.id),geo=q.topic==='capitalLocation'?record.capital.coordinates:record.labelPoint;if(q.topic==='location')shapes.filter(f=>f.id===q.id).attr('fill','#47734f').attr('stroke','#fff9ee').attr('stroke-width',2);const actual=projection(geo);marks.append('circle').attr('cx',actual[0]).attr('cy',actual[1]).attr('fill','#47734f').attr('stroke','#fff9ee').attr('stroke-width',2).attr('vector-effect','non-scaling-stroke');if(guess){const pt=projection(guess);drawCapitalConnector(marks,projection,geo,guess);marks.append('circle').attr('cx',pt[0]).attr('cy',pt[1]).attr('fill',borderlessResultColor(r.pending||{score:0})).attr('stroke','#fff9ee').attr('stroke-width',2).attr('vector-effect','non-scaling-stroke');}rescale();}
@@ -46045,5 +46030,5 @@ html.geoden-light body #startOverlay #studyDomainSwitcher{padding:0!important;ma
 </style><style>
 #masteryOverlay .mastery-stats[hidden]{display:none!important}.progress-practice-disclosure>summary{display:list-item;cursor:pointer;font-weight:800;font-size:17px;padding:8px 4px;min-height:44px;box-sizing:border-box;color:#425749}.progress-practice-disclosure[open]>summary{margin-bottom:12px}.progress-practice-disclosure{align-self:start}.progress-practice-disclosure summary:focus-visible{outline:3px solid #a77d49;outline-offset:3px;border-radius:8px}
 html body #startOverlay button.discovery-back{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 16px!important;border:1px solid #c3bda9!important;border-radius:12px!important;background:#ede8db!important;color:#475d50!important;font-size:15px!important;font-weight:750;line-height:1.35;margin-bottom:18px;box-shadow:0 2px 3px #4037230a;max-width:100%}html body #startOverlay button.discovery-back:hover{background:#e1e5d8!important}html body #startOverlay button.discovery-back:focus-visible{outline:3px solid #a77d49;outline-offset:3px}
-</style><style id="progress-single-column">#masteryOverlay .mastery-grid{grid-template-columns:minmax(0,1fr)!important;gap:14px;align-items:start}#masteryOverlay .mastery-grid>.mastery-section{grid-column:1 / -1;min-width:0;width:100%;box-sizing:border-box}.obvious-clues-settings{border:1px solid #c9c5b5;border-radius:16px;background:#f2eee3;padding:14px;margin:12px 0}.obvious-clues-settings>summary{display:list-item;font-size:17px;font-weight:800;cursor:pointer;min-height:44px;padding:10px 4px;box-sizing:border-box;color:#485b4b}.obvious-clues-settings>p{font-size:14px;line-height:1.5;color:#646455;margin:8px 0 14px}.obvious-clues-settings>.experience-setting-row{margin:10px 0 0}.obvious-clues-settings>summary:focus-visible{outline:3px solid #a77d49;outline-offset:3px;border-radius:8px}</style><style id="daily-fact-progress">.daily-goal-track{display:flex;align-items:stretch;gap:0;height:11px!important;background:#dedfd7!important;overflow:hidden;border-radius:999px}.daily-goal-card-compact .daily-goal-track{height:9px!important}.daily-goal-track .daily-fact-segment{height:100%;flex:none;min-width:0;box-sizing:border-box;border-right:1px solid #f7f4eb;transition:width 220ms ease}.daily-goal-track .daily-fact-segment:last-child{border-right:0}.daily-fact-unclassified{background:#73766e}.daily-goal-breakdown,.mastery-daily-meta{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center}.daily-fact-key{display:inline-flex;gap:5px;align-items:center;white-space:nowrap}.daily-fact-key i{width:8px;height:8px;display:inline-block;border-radius:50%;background:#39784e}.daily-fact-key-assisted i{background:#b08a39}.daily-fact-key-missed i{background:#995347}</style><style id="progress-map-feature">#masteryOverlay .mastery-map-feature{display:flex!important;align-items:center;gap:16px;min-height:120px!important;padding:18px!important;background:linear-gradient(135deg,#f5e7b8 0%,#ead18a 100%)!important;border:1px solid #c8a865!important;color:#4f3a0e!important;box-shadow:0 8px 24px #7958181a!important}#masteryOverlay .mastery-map-feature:hover{background:linear-gradient(135deg,#f8ecc8 0%,#e8cb78 100%)!important;border-color:#b38a39!important}#masteryOverlay .progress-map-icon{display:grid;place-items:center;width:66px;height:66px;flex:none;border-radius:18px;background:#8c662f;color:#fff9eb;box-shadow:inset 0 1px 0 #ffffff4d}#masteryOverlay .progress-map-icon svg{width:43px;height:43px}#masteryOverlay .progress-map-copy{display:flex;flex-direction:column;align-items:flex-start;gap:7px;min-width:0}#masteryOverlay .mastery-map-feature-title{color:#4f3a0e!important;font-size:clamp(21px,3vw,27px)!important;line-height:1.15!important}#masteryOverlay .mastery-map-feature-copy{color:#6e5725!important;font-size:14px!important;line-height:1.45!important;max-width:38ch}@media(max-width:480px){#masteryOverlay .progress-map-icon{width:56px;height:56px;border-radius:15px}#masteryOverlay .progress-map-icon svg{width:35px;height:35px}#masteryOverlay .mastery-map-feature{gap:12px;padding:14px!important}#masteryOverlay .mastery-map-feature-title{font-size:20px!important}}</style><style id="progress-collapsible-sections">#masteryOverlay .progress-section-disclosure{padding:0!important;overflow:hidden;align-self:start}#masteryOverlay .progress-section-disclosure>summary{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:68px;box-sizing:border-box;padding:15px 20px!important;margin:0!important;cursor:pointer;list-style:none;color:#374f3f;font-size:19px!important;font-weight:850;line-height:1.25}#masteryOverlay .progress-section-disclosure>summary::-webkit-details-marker{display:none}#masteryOverlay .progress-section-disclosure>summary::after{content:'';width:10px;height:10px;border-right:2.5px solid currentColor;border-bottom:2.5px solid currentColor;transform:rotate(45deg);flex:none;margin:0 4px 5px 0;transition:transform 160ms ease}#masteryOverlay .progress-section-disclosure[open]>summary::after{transform:rotate(225deg);margin:6px 4px 0 0}#masteryOverlay .progress-section-disclosure[open]>summary{border-bottom:1px solid #dcdcd2}#masteryOverlay .progress-section-disclosure>summary:hover{background:#edece3}#masteryOverlay .progress-section-disclosure>summary:focus-visible{outline:3px solid #a77d49;outline-offset:-5px;border-radius:12px}#masteryOverlay .progress-section-disclosure>summary .mastery-section-head{flex:1;min-width:0;margin:0;align-items:center}#masteryOverlay .progress-section-disclosure>summary .mastery-section-title,#masteryOverlay .progress-section-disclosure>summary h3{margin:0;font-size:19px;line-height:1.3;font-weight:850;color:inherit}#masteryOverlay .progress-section-disclosure>summary .mastery-section-note{font-size:12px;line-height:1.35;max-width:36ch;text-align:right}#masteryOverlay .progress-disclosure-body{padding:16px 20px 20px;min-width:0}#masteryOverlay .progress-disclosure-body>.progress-explanation:first-child{margin-top:0}@media(max-width:520px){#masteryOverlay .progress-section-disclosure>summary{padding:14px 16px!important;min-height:62px;font-size:17px!important}#masteryOverlay .progress-section-disclosure>summary .mastery-section-title,#masteryOverlay .progress-section-disclosure>summary h3{font-size:17px}#masteryOverlay .progress-section-disclosure>summary .mastery-section-note{font-size:11px;max-width:13ch}#masteryOverlay .progress-disclosure-body{padding:14px 16px 18px}}</style><style id="progress-unified-places">#masteryOverlay .mastery-coverage{margin-top:16px!important;padding:20px!important;border:1px solid #d4d7ca!important;border-radius:22px!important;background:#faf9f4!important}#masteryOverlay .mastery-coverage-copy{font-size:20px!important;line-height:1.25!important;margin-bottom:12px!important;color:#2d392f}#masteryOverlay .mastery-coverage-copy span:last-child{font-size:18px;font-weight:800;color:#59645a}#masteryOverlay .mastery-progress-track{height:10px!important}#masteryOverlay .mastery-coverage>.progress-explanation{margin:12px 0 0!important;font-size:14px!important;line-height:1.45!important}#masteryOverlay .mastery-coverage>.mastery-map-feature{margin:18px 0 0!important}@media(max-width:520px){#masteryOverlay .mastery-coverage{padding:16px!important}#masteryOverlay .mastery-coverage-copy{font-size:18px!important}#masteryOverlay .mastery-coverage-copy span:last-child{font-size:15px}}</style></body>
+</style><style id="progress-single-column">#masteryOverlay .mastery-grid{grid-template-columns:minmax(0,1fr)!important;gap:14px;align-items:start}#masteryOverlay .mastery-grid>.mastery-section{grid-column:1 / -1;min-width:0;width:100%;box-sizing:border-box}.obvious-clues-settings{border:1px solid #c9c5b5;border-radius:16px;background:#f2eee3;padding:14px;margin:12px 0}.obvious-clues-settings>summary{display:list-item;font-size:17px;font-weight:800;cursor:pointer;min-height:44px;padding:10px 4px;box-sizing:border-box;color:#485b4b}.obvious-clues-settings>p{font-size:14px;line-height:1.5;color:#646455;margin:8px 0 14px}.obvious-clues-settings>.experience-setting-row{margin:10px 0 0}.obvious-clues-settings>summary:focus-visible{outline:3px solid #a77d49;outline-offset:3px;border-radius:8px}</style><style id="daily-fact-progress">.daily-goal-track{display:flex;align-items:stretch;gap:0;height:11px!important;background:#dedfd7!important;overflow:hidden;border-radius:999px}.daily-goal-card-compact .daily-goal-track{height:9px!important}.daily-goal-track .daily-fact-segment{height:100%;flex:none;min-width:0;box-sizing:border-box;border-right:1px solid #f7f4eb;transition:width 220ms ease}.daily-goal-track .daily-fact-segment:last-child{border-right:0}.daily-fact-unclassified{background:#73766e}.daily-goal-breakdown,.mastery-daily-meta{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center}.daily-fact-key{display:inline-flex;gap:5px;align-items:center;white-space:nowrap}.daily-fact-key i{width:8px;height:8px;display:inline-block;border-radius:50%;background:#39784e}.daily-fact-key-assisted i{background:#b08a39}.daily-fact-key-missed i{background:#995347}</style><style id="progress-map-feature">#masteryOverlay .mastery-map-feature{display:flex!important;align-items:center;gap:16px;min-height:120px!important;padding:18px!important;background:linear-gradient(135deg,#f5e7b8 0%,#ead18a 100%)!important;border:1px solid #c8a865!important;color:#4f3a0e!important;box-shadow:0 8px 24px #7958181a!important}#masteryOverlay .mastery-map-feature:hover{background:linear-gradient(135deg,#f8ecc8 0%,#e8cb78 100%)!important;border-color:#b38a39!important}#masteryOverlay .progress-map-icon{display:grid;place-items:center;width:66px;height:66px;flex:none;border-radius:18px;background:#8c662f;color:#fff9eb;box-shadow:inset 0 1px 0 #ffffff4d}#masteryOverlay .progress-map-icon svg{width:43px;height:43px}#masteryOverlay .progress-map-copy{display:flex;flex-direction:column;align-items:flex-start;gap:7px;min-width:0}#masteryOverlay .mastery-map-feature-title{color:#4f3a0e!important;font-size:clamp(21px,3vw,27px)!important;line-height:1.15!important}#masteryOverlay .mastery-map-feature-copy{color:#6e5725!important;font-size:14px!important;line-height:1.45!important;max-width:38ch}@media(max-width:480px){#masteryOverlay .progress-map-icon{width:56px;height:56px;border-radius:15px}#masteryOverlay .progress-map-icon svg{width:35px;height:35px}#masteryOverlay .mastery-map-feature{gap:12px;padding:14px!important}#masteryOverlay .mastery-map-feature-title{font-size:20px!important}}</style><style id="progress-collapsible-sections">#masteryOverlay .progress-section-disclosure{padding:0!important;overflow:hidden;align-self:start}#masteryOverlay .progress-section-disclosure>summary{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:68px;box-sizing:border-box;padding:15px 20px!important;margin:0!important;cursor:pointer;list-style:none;color:#374f3f;font-size:19px!important;font-weight:850;line-height:1.25}#masteryOverlay .progress-section-disclosure>summary::-webkit-details-marker{display:none}#masteryOverlay .progress-section-disclosure>summary::after{content:'';width:10px;height:10px;border-right:2.5px solid currentColor;border-bottom:2.5px solid currentColor;transform:rotate(45deg);flex:none;margin:0 4px 5px 0;transition:transform 160ms ease}#masteryOverlay .progress-section-disclosure[open]>summary::after{transform:rotate(225deg);margin:6px 4px 0 0}#masteryOverlay .progress-section-disclosure[open]>summary{border-bottom:1px solid #dcdcd2}#masteryOverlay .progress-section-disclosure>summary:hover{background:#edece3}#masteryOverlay .progress-section-disclosure>summary:focus-visible{outline:3px solid #a77d49;outline-offset:-5px;border-radius:12px}#masteryOverlay .progress-section-disclosure>summary .mastery-section-head{flex:1;min-width:0;margin:0;align-items:center}#masteryOverlay .progress-section-disclosure>summary .mastery-section-title,#masteryOverlay .progress-section-disclosure>summary h3{margin:0;font-size:19px;line-height:1.3;font-weight:850;color:inherit}#masteryOverlay .progress-section-disclosure>summary .mastery-section-note{font-size:12px;line-height:1.35;max-width:36ch;text-align:right}#masteryOverlay .progress-disclosure-body{padding:16px 20px 20px;min-width:0}#masteryOverlay .progress-disclosure-body>.progress-explanation:first-child{margin-top:0}@media(max-width:520px){#masteryOverlay .progress-section-disclosure>summary{padding:14px 16px!important;min-height:62px;font-size:17px!important}#masteryOverlay .progress-section-disclosure>summary .mastery-section-title,#masteryOverlay .progress-section-disclosure>summary h3{font-size:17px}#masteryOverlay .progress-section-disclosure>summary .mastery-section-note{font-size:11px;max-width:13ch}#masteryOverlay .progress-disclosure-body{padding:14px 16px 18px}}</style><style id="progress-unified-places">#masteryOverlay .mastery-coverage{margin-top:16px!important;padding:20px!important;border:1px solid #d4d7ca!important;border-radius:22px!important;background:#faf9f4!important}#masteryOverlay .mastery-coverage-copy{font-size:20px!important;line-height:1.25!important;margin-bottom:12px!important;color:#2d392f}#masteryOverlay .mastery-coverage-copy span:last-child{font-size:18px;font-weight:800;color:#59645a}#masteryOverlay .mastery-progress-track{height:10px!important}#masteryOverlay .mastery-coverage>.progress-explanation{margin:12px 0 0!important;font-size:14px!important;line-height:1.45!important}#masteryOverlay .mastery-coverage>.mastery-map-feature{margin:18px 0 0!important}@media(max-width:520px){#masteryOverlay .mastery-coverage{padding:16px!important}#masteryOverlay .mastery-coverage-copy{font-size:18px!important}#masteryOverlay .mastery-coverage-copy span:last-child{font-size:15px}}</style><style id="geoden-polish-95">html body :is([class*="zoom-controls"],[class*="zoom-button"],.capital-dot-controls){display:none!important}#borderlessOverlay .borderless-next{position:fixed;z-index:10;left:50%;bottom:max(10px,env(safe-area-inset-bottom));transform:translateX(-50%);width:min(900px,calc(100vw - 28px));margin:0!important;box-shadow:0 8px 28px #27271e55}#borderlessOverlay #borderlessContent:has(.borderless-next){padding-bottom:68px}#masteryOverlay .progress-topic-track{display:block;width:100%;height:8px;margin-top:10px;border-radius:999px;background:#e2e3da;overflow:hidden}#masteryOverlay .progress-topic-fill{display:block;height:100%;border-radius:inherit}#masteryOverlay .progress-disclosure-body>.mastery-section-note{display:block;margin:0 0 12px;color:#657064;font-size:13px;text-align:left;max-width:none}#rankingOverlay .ranking-actions .ranking-verify{grid-column:2;grid-row:1}#rankingOverlay .ranking-actions .ranking-reveal{grid-column:1;grid-row:1}#rankingOverlay .special-game-head #rankingNewBtn{min-height:44px;padding:8px 12px;border-radius:12px;background:#eee9df;color:#43524a;font-size:13px;font-weight:800}#rankingOverlay:has(#rankingSetup:not(.hidden)) .special-game-head #rankingNewBtn{display:none}#rankingOverlay .special-game-head{align-items:flex-start}#rankingOverlay .special-game-head #rankingCloseBtn{margin-left:auto}</style><script>document.querySelector('#rankingOverlay .special-game-head')?.append(document.getElementById('rankingNewBtn'));</script><style id="geoden-ranking-header-95">#rankingOverlay .special-game-head{display:grid!important;grid-template-columns:minmax(0,1fr) auto auto!important;gap:6px!important}#rankingOverlay .special-game-head>div:first-child{min-width:0}#rankingOverlay .special-game-head #rankingNewBtn{width:auto!important;min-width:0!important;max-width:112px;white-space:nowrap;font-size:12px!important;padding:8px!important}#rankingOverlay .special-game-head #rankingCloseBtn{margin-left:0!important}@media(max-width:520px){#rankingOverlay .special-game-subtitle{font-size:11px;line-height:1.2}}</style><style id="geoden-home-alignment-95">#startOverlay[data-home-view="home"]{--home-content-inset:19px}#startOverlay[data-home-view="home"] :is(.home-header,#dailyGoalCard,#activeSessionResumeBtn,#todayFocusCard,.discovery-today){padding-left:var(--home-content-inset)!important;padding-right:var(--home-content-inset)!important;box-sizing:border-box}#startOverlay[data-home-view="home"] .home-header{width:100%}#startOverlay[data-home-view="home"] #dailyGoalCard .daily-goal-track{width:100%}@media(max-width:520px){#startOverlay[data-home-view="home"]{--home-content-inset:15px}}</style><style id="geoden-home-edge-tune-95">html.geoden-light body #startOverlay[data-home-view="home"] #activeSessionResumeBtn{padding-left:calc(var(--home-content-inset) - 4px)!important;padding-right:calc(var(--home-content-inset) - 1px)!important}html.geoden-light body #startOverlay[data-home-view="home"] #homeDailySection{padding-left:calc(var(--home-content-inset) - 1px)!important;padding-right:calc(var(--home-content-inset) - 1px)!important}</style></body>
 </html>
