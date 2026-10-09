@@ -16366,7 +16366,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
   <script src="assets/geography.js"></script>
 
   <script>
-    const GEODEN_VERSION = "0.56.78";
+    const GEODEN_VERSION = "0.56.83";
     // v0.56.28 — blank-surface audit: guarded silhouettes/location maps and Matching visual preflight.
     // v0.56.18 — private-beta problem reporting with diagnostic state, recent actions, errors, copy/download/share.
     // v0.56.17 — tester-facing automatic failure reporting with screenshot/copy instructions.
@@ -25920,7 +25920,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
       }
     }
 
-    // v0.56.78: the browser owns touch scrolling and momentum. Pointer events
+    // v0.56.83: the browser owns touch scrolling and momentum. Pointer events
     // only distinguish a tap from a swipe; never prevent or emulate scrolling.
     function beginMatchingRailSwipe(event, strip) {
       if (!strip) return;
@@ -31685,6 +31685,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
         .attr("pointer-events", "none");
     }
 
+    function drawCapitalConnector(surface,projection,targetGeo,guessGeo){surface.append('path').datum({type:'LineString',coordinates:[guessGeo,targetGeo]}).attr('d',d3.geoPath(projection)).attr('class','city-location-line').attr('fill','none').attr('stroke','#7b7869').attr('stroke-width',1.5).attr('stroke-dasharray','4 4').attr('vector-effect','non-scaling-stroke').attr('pointer-events','none');}
     function drawLocationQuizResult(surface, projection, target, guessGeo = null, options = {}) {
       if (!surface || !projection || !target) return;
       if (options.clear !== false) clearLocationQuizMarks(surface);
@@ -31693,17 +31694,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
       if (!targetPoint) return;
 
       if (guessPoint) {
-        surface.append("line")
-          .attr("class", "city-location-line")
-          .attr("x1", guessPoint[0])
-          .attr("y1", guessPoint[1])
-          .attr("x2", targetPoint[0])
-          .attr("y2", targetPoint[1])
-          .attr("stroke", "rgba(23,23,23,.45)")
-          .attr("stroke-width", 1.5)
-          .attr("stroke-dasharray", "4 4")
-          .attr("vector-effect", "non-scaling-stroke")
-          .attr("pointer-events", "none");
+        drawCapitalConnector(surface,projection,[target.lng,target.lat],guessGeo);
 
         surface.append("circle")
           .attr("class", "city-location-guess")
@@ -31711,7 +31702,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
           .attr("cy", guessPoint[1])
           .attr("data-location-base-r", 6)
           .attr("r", 6)
-          .attr("fill", "#e4ab42")
+          .attr("fill", borderlessResultColor({score:locationGuessMetrics(projection,guessPoint,target)?.score||0}))
           .attr("stroke", "white")
           .attr("stroke-width", 2)
           .attr("vector-effect", "non-scaling-stroke")
@@ -31724,7 +31715,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
         .attr("cy", targetPoint[1])
         .attr("data-location-base-r", 6.5)
         .attr("r", 6.5)
-        .attr("fill", "#436975")
+        .attr("fill", "#39784e")
         .attr("stroke", "white")
         .attr("stroke-width", 2.2)
         .attr("vector-effect", "non-scaling-stroke")
@@ -31774,6 +31765,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
           ? (protectCountryName ? "Tap the location of the capital" : `Tap the location of the capital of ${c.name}`)
           : (protectCountryName ? "Tap the location of the largest city" : `Tap the location of the largest city in ${c.name}`));
       }
+      if(capitalLocation)studyCapitalPrompt(promptQuestion,c,state.stage);
     }
 
     async function renderInteractiveCityLocationPrompt(stage, c, token) {
@@ -35095,6 +35087,7 @@ Answer: ${answer}`;
       rapidCue.classList.remove("location-mode");
       const type = RAPID_TYPES[round.type];
       const cue = type.cue;
+      if(capitalPromptDetails&&!studySession?.launchPreset?.dailyKey&&['capitalDots','capitalLocation','borderlessCapital'].includes(type.target)){combinedPrompt(rapidCue,c,capitalPromptDetails);return true;}
       if (cue === "country" || cue === "capital") {
         const text = document.createElement("div");
         text.className = "rapid-cue-text";
@@ -36766,6 +36759,12 @@ Answer: ${answer}`;
       if(result||active){b.dataset.challengeState=result?'completed':'active';b.firstChild.prepend(homeStatusBadge(result?'completed':'active',result?'Played today':'In progress'));}
       return homeDailyDecorateCard(b,mode);
     }
+
+function promptParts(value){return String(value||'country').split('+');}
+function validPrompt(value,sub=false){const p=promptParts(value),allowed=sub?['name','capital','flag']:['country','capital','flag'];return typeof value==='string'&&p.length>0&&p.length<=3&&new Set(p).size===p.length&&p.every(x=>allowed.includes(x));}
+function combinedPrompt(host,c,value){host.replaceChildren();const p=promptParts(value),text=[p.includes('capital')?capitalNamesForCountry(c).join(' / '):'',p.includes('country')?c.name:''].filter(Boolean).join(', ');if(text){const span=document.createElement('span');span.textContent=text;host.append(span);}if(p.includes('flag')){const img=document.createElement('img');img.className='combined-prompt-flag';setQuizFlag(img,c,'Flag clue',()=>{img.remove();if(!text)host.textContent=c.name;});host.append(img);}}
+function multiPromptPicker(select,sub=false,initialValue=select.value){const wrap=select.parentElement,box=document.createElement('fieldset');box.className='multi-prompt-picker';const legend=document.createElement('legend');legend.textContent='Show in the prompt · choose one or more';box.append(legend);const keys=sub?['name','capital','flag']:['country','capital','flag'];for(let mask=1;mask<8;mask++){const value=keys.filter((_,i)=>mask&(1<<i)).join('+');if(!Array.from(select.options).some(o=>o.value===value)){const o=document.createElement('option');o.value=value;o.textContent=value;select.append(o);}}select.value=initialValue;const initial=promptParts(select.value);for(const key of keys){const label=document.createElement('label'),input=document.createElement('input');input.type='checkbox';input.value=key;input.checked=initial.includes(key);label.append(input,document.createTextNode(key==='flag'?'Flag':key==='capital'?'Capital name':sub?'State / province name':'Country name'));box.append(label);input.onchange=()=>{const values=[...box.querySelectorAll('input:checked')].map(e=>e.value);if(!values.length){input.checked=true;return;}select.value=values.join('+');select.dispatchEvent(new Event('change'));};}select.addEventListener('change',()=>box.querySelectorAll('input').forEach(e=>e.checked=promptParts(select.value).includes(e.value)));wrap.hidden=true;wrap.after(box);return box;}
+
     async function launchBorderlessDaily(mode,button){
       if(homeLaunching||homeDailyResult(mode))return;
       const resume=borderlessRun?.dailyKey===homeDailyId(mode)&&borderlessRun.index<borderlessRun.codes.length;
@@ -36775,7 +36774,7 @@ Answer: ${answer}`;
       try{
         const features=await loadBorderlessMapFeatures(),codes=borderlessDailyCodes(mode);
         if(codes.length!==5||codes.some(code=>!canonicalWorldTargetFeature(countryByCode(code),features)))throw Error('Map unavailable');
-        pauseBorderlessClock();borderlessRun={target:mode==='borderless-country'?'country':'capital',clue:'country',set:'world',codes,index:0,results:[],misses:0,elapsedMs:0,dailyKey:homeDailyId(mode)};saveBorderlessRun();await openBorderless(true);
+        pauseBorderlessClock();borderlessRun={target:mode==='borderless-country'?'country':'capital',clue:mode==='borderless-capital'?'country+capital':'country',set:'world',codes,index:0,results:[],misses:0,elapsedMs:0,dailyKey:homeDailyId(mode)};saveBorderlessRun();await openBorderless(true);
       }catch(e){button.querySelector('small').textContent='Map unavailable · try again';}finally{homeLaunching=false;}
     }
     function borderlessRecordDaily(s){
@@ -36790,13 +36789,15 @@ Answer: ${answer}`;
     async function openBorderlessCapitalSetup(){await openBorderless();const target=document.getElementById('borderlessTarget');target.value='capital';target.dispatchEvent(new Event('change'));}
 
     function borderlessResultColor(r){return r.revealed?'#995347':r.score===100?'#39784e':r.score>=50||r.correct?'#88a75b':'#c09b3d';}
+    function renderCapitalPointsBar(bar,results,total){const max=total*100,points=results.reduce((sum,r)=>sum+r.score,0);bar.className='capital-points-bar';bar.setAttribute('role','progressbar');bar.setAttribute('aria-label','Capital points earned');bar.setAttribute('aria-valuemin','0');bar.setAttribute('aria-valuemax',String(max));bar.setAttribute('aria-valuenow',String(points));bar.setAttribute('aria-valuetext',points+' out of '+max+' points');bar.replaceChildren();for(const [i,r]of results.entries()){const chunk=document.createElement('span');chunk.className='capital-points-chunk';chunk.style.width=(max?100*r.score/max:0)+'%';chunk.style.background=r.revealed||r.score<35?'#995347':r.score<60?'#c09b3d':r.score<90?'#88a75b':'#39784e';chunk.style.display=r.score>0?'block':'none';chunk.title='Guess '+(i+1)+': '+r.score+'/100';chunk.setAttribute('aria-hidden','true');bar.append(chunk);}}
     function borderlessProgress(s,host){
       const existing=host.querySelector('.borderless-run-progress');if(existing)existing.remove();
       const box=document.createElement('div');box.className='borderless-run-progress';
       const label=document.createElement('p');label.textContent=s.target==='capital'?`${s.index} of ${s.codes.length} capitals · ${s.results.reduce((n,r)=>n+r.score,0)} / ${s.codes.length*100} points`:`${s.index} of ${s.codes.length} places filled · ${Math.round(100*s.index/s.codes.length)}% complete`;
-      const bar=document.createElement('progress');bar.max=s.codes.length;bar.value=s.index;bar.setAttribute('aria-label','Map completion');
+      const bar=document.createElement(s.target==='capital'?'div':'progress'),points=s.results.reduce((sum,result)=>sum+result.score,0);bar.max=s.target==='capital'?s.codes.length*100:s.codes.length;bar.value=s.target==='capital'?points:s.index;bar.setAttribute('aria-label',s.target==='capital'?'Capital points earned':'Map completion');bar.setAttribute('aria-valuetext',s.target==='capital'?points+' out of '+bar.max+' points':s.index+' out of '+s.codes.length+' places');
+      if(s.target==='capital')renderCapitalPointsBar(bar,s.results,s.codes.length);
       const legend=document.createElement('p');legend.className='borderless-legend';for(const [label,color]of(s.target==='country'?[['First try','#39784e'],['Later try','#88a75b'],['Revealed','#995347']]:[['100%','#39784e'],['50–99%','#88a75b'],['Below 50%','#c09b3d'],['Revealed','#995347']])){const item=document.createElement('span'),dot=document.createElement('i');dot.style.background=color;item.append(dot,document.createTextNode(label));legend.append(item);}
-      box.append(label,bar,legend);host.querySelector('header')?.after(box);if(!box.isConnected)host.prepend(box);
+      box.append(label,bar);host.querySelector('header')?.after(box);if(!box.isConnected)host.prepend(box);
     }
     function borderlessRecordChallenge(s){
       if(!s.challenge||s.challengeRecorded||s.index!==s.codes.length)return;
@@ -36842,6 +36843,12 @@ Answer: ${answer}`;
       if(!targets.length)return null;
       const km=targets[0].km;return {correct:km<=25,score:borderlessCapitalScore(km),km,geo};
     }
+function drawCapitalHistory(parent,projection,cities,result,overview=false){if(result.guess)result={...result,revealed:false};const group=parent.append('g').attr('class','capital-history').attr('opacity',overview?.8:.45).attr('pointer-events','none'),geo=result.geo||result.guess;
+if(geo&&cities.length){const nearest=[...cities].sort((a,b)=>d3.geoDistance(geo,[a.lng,a.lat])-d3.geoDistance(geo,[b.lng,b.lat]))[0];drawCapitalConnector(group,projection,[nearest.lng,nearest.lat],geo);group.select('.city-location-line').attr('stroke',borderlessResultColor(result));}group.append('title').text((cities.map(c=>c.name).join(' / '))+' · '+(result.revealed?'Revealed':result.score+'/100'));
+function dot(coordinates,color,name){const p=projection(coordinates);if(!p?.every(Number.isFinite))return;const marker=group.append('g').attr('transform',`translate(${p})`);marker.append('circle').attr('fill',color).attr('stroke','#fff9ee').attr('stroke-width',1.5).attr('vector-effect','non-scaling-stroke');if(name)marker.append('text').attr('class','borderless-map-label').attr('text-anchor','middle').text(name);}
+for(const city of cities)dot([city.lng,city.lat],'#39784e',city.name);if(geo)dot(geo,borderlessResultColor(result));return group;}
+function scaleCapitalHistory(parent,scale){parent.selectAll('circle').attr('r',4/scale);parent.selectAll('text').attr('font-size',12/scale).attr('dy',-10/scale).style('stroke-width',3/scale);}
+
     async function createBorderlessMap(host,c,target,options={}) {
       if(options.reuse&&host.borderlessMap)return host.borderlessMap.setQuestion(c,target,options);
       host.classList.add('borderless-map');
@@ -36860,7 +36867,7 @@ Answer: ${answer}`;
         layer.selectAll('path').data(features.map(canonicalWorldDrawableFeature).filter(Boolean)).join('path').attr('d',path)
           .attr('fill','#c2c8b5').attr('stroke','#c2c8b5').attr('stroke-width',.7).attr('vector-effect','non-scaling-stroke');
         const completed=layer.append('g').attr('class','borderless-completed');
-        function drawCompleted(){completed.selectAll('*').remove();for(const r of options.results||[]){const country=countryByCode(r.code),feature=canonicalWorldTargetFeature(country,features);if(!feature)continue;if(target==='country')completed.append('path').datum(feature).attr('d',path).attr('data-code',r.code).attr('fill',borderlessResultColor(r)).attr('stroke','#fff9ee').attr('stroke-width',1).attr('vector-effect','non-scaling-stroke');if(target==='capital')for(const city of mapHuntCapitalCities(country)){const xy=projection([city.lng,city.lat]);completed.append('circle').attr('cx',xy[0]).attr('cy',xy[1]).attr('fill',borderlessResultColor(r)).attr('stroke','#fff9ee').attr('stroke-width',1.5).attr('vector-effect','non-scaling-stroke');}}
+        function drawCompleted(){completed.selectAll('*').remove();for(const r of options.results||[]){const country=countryByCode(r.code),feature=canonicalWorldTargetFeature(country,features);if(!feature)continue;if(target==='country')completed.append('path').datum(feature).attr('d',path).attr('data-code',r.code).attr('fill',borderlessResultColor(r)).attr('stroke','#fff9ee').attr('stroke-width',1).attr('vector-effect','non-scaling-stroke');else drawCapitalHistory(completed,projection,mapHuntCapitalCities(country),r,options.overview);}
         }drawCompleted();
         const marks=layer.append('g').attr('class','borderless-marks');
         let transform=d3.zoomIdentity,locked=!!options.revealed;
@@ -36868,7 +36875,7 @@ Answer: ${answer}`;
         crosshair.append('path').attr('d','M-10 0H10M0-10V10').attr('stroke','#65482f').attr('stroke-width',2).attr('vector-effect','non-scaling-stroke');
         let cursor=[width/2,height/2];
         const scale=()=>Math.max(.1,svg.node().getBoundingClientRect().width/width)*transform.k;
-        function rescale(){completed.selectAll('circle').attr('r',4/scale());marks.selectAll('circle').attr('r',5/scale());marks.selectAll('text').attr('font-size',13/scale()).attr('dy',-11/scale());}
+        function rescale(){scaleCapitalHistory(completed,scale());marks.selectAll('circle').attr('r',5/scale());marks.selectAll('text').attr('font-size',13/scale()).attr('dy',-11/scale()).style('stroke-width',3/scale());}
         const zoom=d3.zoom().scaleExtent([1,2048]).extent([[0,0],[width,height]]).translateExtent([[-20,-20],[width+20,height+20]])
           .on('zoom',event=>{transform=event.transform;layer.attr('transform',transform);rescale();options.onView?.({x:transform.x,y:transform.y,k:transform.k,height});});
         svg.call(zoom).on('dblclick.zoom',null);
@@ -36891,11 +36898,11 @@ Answer: ${answer}`;
           g.append('circle').attr('fill',color).attr('stroke','#fff9ee').attr('stroke-width',2).attr('vector-effect','non-scaling-stroke');
           if(label)g.append('text').attr('text-anchor','middle').attr('class','borderless-map-label').text(label);rescale();
         }
-        function reveal(geo=null){
+        function reveal(geo=null,result=null){
           locked=true;marks.selectAll('*').remove();
           if(target==='country')marks.append('path').datum(targetFeature).attr('d',path).attr('fill','#4b7955').attr('stroke','#fff9ee').attr('stroke-width',1.5).attr('vector-effect','non-scaling-stroke');
-          else mapHuntCapitalCities(c).forEach(city=>marker([city.lng,city.lat],'#3f744f',options.hideNames?'Capital':city.name));
-          if(geo)marker(geo,'#9b5744');
+          else {const cities=mapHuntCapitalCities(c);if(geo){const nearest=[...cities].sort((a,b)=>d3.geoDistance(geo,[a.lng,a.lat])-d3.geoDistance(geo,[b.lng,b.lat]))[0];drawCapitalConnector(marks,projection,[nearest.lng,nearest.lat],geo);}cities.forEach(city=>marker([city.lng,city.lat],'#39784e',options.hideNames?'Capital':city.name));}
+          if(geo)marker(geo,borderlessResultColor(result||borderlessEvaluate(c,target,geo,targetFeature))); 
         }
         function guess(point){
           if(locked||options.isCurrent?.()===false)return;
@@ -36904,7 +36911,7 @@ Answer: ${answer}`;
           const forward=transform.apply(projection(geo));if(Math.hypot(forward[0]-point[0],forward[1]-point[1])>1)return;
           const result=borderlessEvaluate(c,target,geo,targetFeature);if(!result)return;
           const clicked=pool.find(p=>d3.geoContains(p.feature,geo))?.country;result.clickedName=clicked?.name||'Ocean';result.clickedCode=clicked?.code;
-          marks.selectAll('*').remove();marker(geo,'#9b5744');options.onGuess?.(result,api);
+          marks.selectAll('*').remove();marker(geo,borderlessResultColor(result));options.onGuess?.(result,api);
         }
         svg.on('click.guess',event=>{if(event.defaultPrevented)return;guess(d3.pointer(event,svg.node()));})
           .on('keydown.guess',event=>{if(['+','=','-','_'].includes(event.key)){event.preventDefault();svg.call(zoom.scaleBy,['-','_'].includes(event.key)?1/1.5:1.5);return;}
@@ -36915,10 +36922,11 @@ Answer: ${answer}`;
         if(options.revealed&&!options.overview)reveal(options.geo);if(options.overview)status.textContent='Your completed map · pinch or scroll to explore';return api;
       }catch(error){if(host.isConnected)status.textContent='Map unavailable. Please retry; this will not count against your score.';return null;}
     }
-    function borderlessResultText(result,target){return target==='capital'?`${result.score}% accuracy · ${Math.round(result.km).toLocaleString()} km away`:result.correct?'Correct country!':`${result.clickedName} · not the target country`;}
+    function borderlessResultText(result,target){return target==='capital'?`${locationAccuracyLabel(result.score)} · ${result.score}/100 · ${Math.round(result.km).toLocaleString()} km away`:result.correct?'Correct country!':`${result.clickedName} · not the target country`;}
     async function renderStudyBorderless(stage,c,revealed=false){
       document.getElementById('studyBorderless')?.remove();const host=document.createElement('div');host.id='studyBorderless';interactiveAnswer.before(host);
       const target=stage==='borderlessCountry'?'country':'capital',interactive=isInteractiveGameplay(),history=isBrowsingHistory();
+      if(target==='capital')studyCapitalPrompt(host,c,stage);
       const current=()=>host.isConnected&&currentStage===stage&&currentCountry()?.code===c.code;
       promptQuestion.classList.remove('hidden');promptQuestion.textContent=interactiveShouldPreserveCountryIdentity(stage,c)?`Find ${target==='country'?'this place':'a capital of this place'} without borders.`:`${target==='country'?'Find':'Locate a capital of'} ${c.name} without borders.`;
       promptNote.textContent=target==='country'?'Tap within the country.':'Get as close to the capital as you can.';
@@ -36945,7 +36953,7 @@ Answer: ${answer}`;
 
     function validateBorderlessRun(s){
       const codes=Array.isArray(s?.codes)&&s.codes.length>0&&s.codes.length<=countries.length&&new Set(s.codes).size===s.codes.length&&s.codes.every(code=>countryByCode(code));
-      if(!s||!codes||!['country','capital'].includes(s.target)||!['country','flag','capital'].includes(s.clue)||!Object.hasOwn(COUNTRY_SET_LABELS,s.set)||!Number.isSafeInteger(s.index)||s.index<0||s.index>s.codes.length||!Array.isArray(s.results)||s.results.length!==s.index||s.results.some(r=>!Number.isFinite(r.score)||r.score<0||r.score>100)||!Number.isFinite(s.elapsedMs)||s.elapsedMs<0||!Number.isInteger(s.misses)||s.misses<0||s.misses>3)throw Error('Invalid Borderless save');
+      if(!s||!codes||!['country','capital'].includes(s.target)||!validPrompt(s.clue)||!Object.hasOwn(COUNTRY_SET_LABELS,s.set)||!Number.isSafeInteger(s.index)||s.index<0||s.index>s.codes.length||!Array.isArray(s.results)||s.results.length!==s.index||s.results.some(r=>!Number.isFinite(r.score)||r.score<0||r.score>100)||!Number.isFinite(s.elapsedMs)||s.elapsedMs<0||!Number.isInteger(s.misses)||s.misses<0||s.misses>3)throw Error('Invalid Borderless save');
       if(s.mapProgress!=null&&(!['fill','blind'].includes(s.mapProgress)||(s.mapProgress==='blind'&&(s.target!=='country'||s.challenge||s.dailyKey))))throw Error('Invalid Borderless map memory');
       if(s.results.some((r,i)=>r.code!==s.codes[i]||typeof r.correct!=='boolean'||(r.km!=null&&(!Number.isFinite(r.km)||r.km<0))||(r.geo!=null&&(!Array.isArray(r.geo)||r.geo.length!==2||!r.geo.every(Number.isFinite)||Math.abs(r.geo[0])>180||Math.abs(r.geo[1])>90))))throw Error('Invalid Borderless result');
       if(s.challenge&&(!homeChallengeSpec(s.challenge.id)||homeChallengeSpec(s.challenge.id).mode!=='borderless'))throw Error('Invalid Borderless challenge');
@@ -36965,16 +36973,17 @@ Answer: ${answer}`;
       function select(label,id,items,value){const wrap=document.createElement('label');wrap.className='borderless-field';const name=document.createElement('span');name.textContent=label;const input=document.createElement('select');input.id=id;for(const [key,title]of items){const o=document.createElement('option');o.value=key;o.textContent=title;input.append(o);}input.value=value;wrap.append(name,input);content.append(wrap);return input;}
       const target=select('Find','borderlessTarget',[['country','Countries · tap inside'],['capital','Capitals · closest guess']],borderlessRun?.target||'country');
       const clue=select('Clue','borderlessClue',[['country','Country name'],['flag','Flag'],['capital','Capital name']],borderlessRun?.clue||'country');
+      multiPromptPicker(clue,false,borderlessRun?.clue||'country');
       const progress=select('Map memory','borderlessMapProgress',[['fill','Fill the map'],['blind','Keep each country blind']],borderlessRun?.mapProgress||'fill');const memoryHelp=document.createElement('small');memoryHelp.textContent='Fill: completed countries stay visible. Blind: previous answers disappear before the next country. Your map position stays the same.';progress.parentElement.append(memoryHelp);
       const regions=Object.entries(COUNTRY_SET_LABELS).filter(([key])=>key!=='custom'||countrySetIndices('custom').length);
-      const region=select('Study set','borderlessRegion',regions,borderlessRun?.set||'world');const stateGroup=document.createElement('optgroup');stateGroup.label='States & provinces';for(const[parent,name,detail]of SUB_PARENT_CHOICES){const option=document.createElement('option');option.value='sub:'+parent;option.textContent=name+' · '+detail;stateGroup.append(option);}region.append(stateGroup);region.addEventListener('change',()=>{if(region.value.startsWith('sub:'))subOpenSetup('borderless',region.value.slice(4),{custom:true,target:target.value==='capital'?'capitalLocation':'location',clue:clue.value==='country'?'name':clue.value,mapProgress:progress.value});});
+      const region=select('Study set','borderlessRegion',regions,borderlessRun?.set||'world');const stateGroup=document.createElement('optgroup');stateGroup.label='States & provinces';for(const[parent,name,detail]of SUB_PARENT_CHOICES){const option=document.createElement('option');option.value='sub:'+parent;option.textContent=name+' · '+detail;stateGroup.append(option);}region.append(stateGroup);region.addEventListener('change',()=>{if(region.value.startsWith('sub:'))subOpenSetup('borderless',region.value.slice(4),{custom:true,target:target.value==='capital'?'capitalLocation':'location',clue:clue.value.replace('country','name'),mapProgress:progress.value});});
       const lengthLabel=document.createElement('label');lengthLabel.className='borderless-field';lengthLabel.textContent='Number of capitals';const length=document.createElement('input');length.id='borderlessLength';length.type='number';length.min='1';length.max='50';length.step='1';length.value='5';lengthLabel.append(length);content.append(lengthLabel);const syncLength=()=>{lengthLabel.hidden=target.value!=='capital';progress.parentElement.hidden=target.value!=='country';};target.addEventListener('change',syncLength);syncLength();
       const help=document.createElement('p');help.className='borderless-help';help.textContent='Countries: 3 tries, scored by first-try accuracy. Capitals: 1 guess, 100% within 25 km, then a gradually decreasing distance score. Country runs cover the full set. Capital runs sample your chosen number of places (up to the size of the set).';content.append(help);
       const start=document.createElement('button');start.type='button';start.className='borderless-primary';start.textContent='Start Borderless →';content.append(start);
       if(borderlessRun&&borderlessRun.index<borderlessRun.codes.length){const b=document.createElement('button');b.type='button';b.className='borderless-secondary';b.textContent='Resume current Borderless run';b.onclick=()=>openBorderless(true);content.append(b);}
       start.onclick=async()=>{if(target.value==='capital'&&!length.reportValidity())return;start.disabled=true;const token=++borderlessRenderToken;try{
         const features=await loadBorderlessMapFeatures();if(token!==borderlessRenderToken)return;
-        const codes=countrySetIndices(region.value).map(i=>countries[i]).filter(c=>canonicalWorldTargetFeature(c,features)&&(target.value!=='capital'||mapHuntCapitalCities(c).length)&&(clue.value!=='capital'||capitalNamesForCountry(c).length)).map(c=>c.code);
+        const codes=countrySetIndices(region.value).map(i=>countries[i]).filter(c=>canonicalWorldTargetFeature(c,features)&&(target.value!=='capital'||mapHuntCapitalCities(c).length)&&(!promptParts(clue.value).includes('capital')||capitalNamesForCountry(c).length)).map(c=>c.code);
         if(!codes.length)throw Error('No map data for this set');
         borderlessRun={target:target.value,mapProgress:target.value==='country'?progress.value:'fill',clue:clue.value,set:region.value,codes:interactiveShuffle(codes).slice(0,target.value==='capital'?Number(length.value):codes.length),index:0,results:[],misses:0,elapsedMs:0};saveBorderlessRun();await renderBorderlessRound();
       }catch(e){help.textContent='The map could not load. Please try again.';start.disabled=false;}};
@@ -36984,13 +36993,12 @@ Answer: ${answer}`;
       if(s.index>=s.codes.length){await renderBorderlessFinish(content,s,token);return;}
       const c=countryByCode(s.codes[s.index]);const progress=document.createElement('p');progress.className='borderless-progress';progress.textContent=`${s.target==='capital'?'Capital locations':'Country locations'} · ${s.index+1} of ${s.codes.length} · ${countrySetDisplayName(s.set)}`;
       const clue=document.createElement('div');clue.className='borderless-clue';
-      if(s.clue==='flag'){const img=document.createElement('img');setQuizFlag(img,c,'Flag clue',()=>{if(token===borderlessRenderToken){clue.textContent=c.name;clue.append(document.createTextNode(' · flag unavailable'));}});clue.append(img);}
-      else clue.textContent=s.clue==='capital'?capitalNamesForCountry(c).join(' / '):c.name;
+      combinedPrompt(clue,c,s.dailyKey?.endsWith(':borderless-capital')?'country+capital':s.clue);
       const host=existingMap||document.createElement('div'),feedback=document.createElement('p');feedback.className='borderless-feedback';feedback.setAttribute('role','status');
       const reveal=document.createElement('button');reveal.type='button';reveal.className='borderless-reveal';reveal.textContent='Reveal location';reveal.disabled=true;
       content.append(progress,clue,host,feedback,reveal);borderlessProgress(s,content);
       let finished=false;
-      function complete(result,api){if(finished||token!==borderlessRenderToken)return;finished=true;pauseBorderlessClock();api.reveal(result.geo);s.results.push({code:c.code,...result,tries:Math.min(3,s.misses+1)});s.index++;s.misses=0;borderlessRecordChallenge(s);borderlessRecordDaily(s);saveBorderlessRun();borderlessProgress(s,content);const current=host.querySelector('.borderless-marks path');if(current)current.setAttribute('fill',borderlessResultColor(result));reveal.remove();feedback.textContent=`${c.name} · ${s.target==='capital'?mapHuntCapitalCities(c).map(p=>p.name).join(' / ')+' · ':''}${result.revealed?'Location revealed':borderlessResultText(result,s.target)}`;
+      function complete(result,api){if(finished||token!==borderlessRenderToken)return;finished=true;pauseBorderlessClock();api.reveal(result.geo,result);s.results.push({code:c.code,...result,tries:Math.min(3,s.misses+1)});s.index++;s.misses=0;borderlessRecordChallenge(s);borderlessRecordDaily(s);saveBorderlessRun();borderlessProgress(s,content);const current=s.target==='country'?host.querySelector('.borderless-marks path'):null;if(current)current.setAttribute('fill',borderlessResultColor(result));reveal.remove();feedback.textContent=`${c.name} · ${s.target==='capital'?mapHuntCapitalCities(c).map(p=>p.name).join(' / ')+' · ':''}${result.revealed?'Location revealed':borderlessResultText(result,s.target)}`;
         const next=document.createElement('button');next.type='button';next.className='borderless-primary';next.textContent=s.index===s.codes.length?'See results →':'Next place →';next.onclick=renderBorderlessRound;content.append(next);if(s.index<s.codes.length)setTimeout(()=>{if(token===borderlessRenderToken&&document.getElementById('borderlessOverlay').classList.contains('open'))renderBorderlessRound();},s.target==='capital'?2200:1100);}
       const map=await createBorderlessMap(host,c,s.target,{reuse:true,set:s.set,results:s.mapProgress==='blind'?[]:s.results,view:s.mapView,onView:view=>{s.mapView=view;},isCurrent:()=>token===borderlessRenderToken&&document.getElementById('borderlessOverlay').classList.contains('open'),onGuess:(r,api)=>{
         if(finished)return;if(s.target==='country'&&s.mapProgress!=='blind'&&s.results.some(result=>result.code===r.clickedCode)){feedback.textContent=r.clickedName+' · already filled';return;}if(s.target==='capital'){complete(r,api);return;}if(r.correct){r.score=s.misses===0?100:0;complete(r,api);return;}
@@ -37000,6 +37008,10 @@ Answer: ${answer}`;
       if(!map){reveal.textContent='Retry map';reveal.disabled=false;reveal.onclick=renderBorderlessRound;return;}
       borderlessTick=document.hidden?0:Date.now();reveal.disabled=false;reveal.onclick=()=>complete({correct:false,score:0,revealed:true},map);
     }
+
+function capitalPromptSettings(parent){const wrap=document.createElement('section');wrap.className='capital-prompt-settings';const label=document.createElement('label'),enable=document.createElement('input');enable.type='checkbox';enable.checked=!!capitalPromptDetails;label.append(enable,document.createTextNode('Choose clues for capital-location questions'));wrap.append(label);const field=document.createElement('label'),select=document.createElement('select');field.append(select);wrap.append(field);parent.append(wrap);const picker=multiPromptPicker(select,false,capitalPromptDetails||'country');picker.hidden=!enable.checked;const note=document.createElement('small');note.textContent='Applies to capital maps in Quiz and Flash cards. Deep dive still hides names needed for later questions. Daily quizzes keep their fixed clues.';wrap.append(note);const save=()=>{capitalPromptDetails=enable.checked?select.value:null;picker.hidden=!enable.checked;saveSpecialGamePrefs();};enable.onchange=save;select.onchange=save;}
+function studyCapitalPrompt(host,c,stage){if(!capitalPromptDetails||studySession?.launchPreset?.dailyKey)return;const fields=promptParts(capitalPromptDetails).filter(k=>!(k==='capital'&&interactiveShouldPreserveCapitalIdentity(stage,c))&&!(['country','flag'].includes(k)&&interactiveShouldPreserveCountryIdentity(stage,c)));if(!fields.length)return;const prompt=document.createElement('div');prompt.className='combined-study-prompt';combinedPrompt(prompt,c,fields.join('+'));host.prepend(prompt);}
+
     function installBorderlessGame(){
       // Self-test workers clone the live DOM before booting their isolated app.
       document.querySelectorAll('#borderlessOverlay,#borderlessModeBtn').forEach(el=>el.remove());
@@ -37123,6 +37135,7 @@ Answer: ${answer}`;
     async function renderStudyCapitalDots(c, revealed=false) {
       document.getElementById('studyCapitalDots')?.remove();
       const host=document.createElement('div'); host.id='studyCapitalDots'; interactiveAnswer.before(host);
+      studyCapitalPrompt(host,c,'capitalMap');
       const interactive=isInteractiveGameplay(), history=isBrowsingHistory();
       const isCurrent=()=>host.isConnected && currentCountry()?.code===c.code && currentStage==='capitalMap';
       const protectCountry=interactiveShouldPreserveCountryIdentity('capitalMap',c),protectCapital=interactiveShouldPreserveCapitalIdentity('capitalMap',c);
@@ -38776,13 +38789,14 @@ Answer: ${answer}`;
       try {
         localStorage.setItem(SPECIAL_GAME_PREFS_KEY, JSON.stringify({
           chainSet, chainAnswerMode, chainRuleMode, chainAutocompleteEnabled,
-          mapHuntSet, mapHuntPromptMode, mapHuntTargetMode,
+          mapHuntSet, mapHuntPromptMode, mapHuntTargetMode, capitalPromptDetails,
           rankingMetric, rankingRandomMetric, rankingLastRandomMetric, rankingCount, rankingSet, rankingLastRoundCodes
         }));
       } catch (_) {}
     }
 
     const specialGamePrefs = loadSpecialGamePrefs();
+    let capitalPromptDetails=validPrompt(specialGamePrefs.capitalPromptDetails)?specialGamePrefs.capitalPromptDetails:null;
     const chainSetChoices = new Set(["world", "europe", "africa", "asia", "northAmerica", "southAmerica", "oceania", "caribbean"]);
     let chainSet = chainSetChoices.has(specialGamePrefs.chainSet) ? specialGamePrefs.chainSet : "world";
     let chainAnswerMode = ["country", "capital", "both"].includes(specialGamePrefs.chainAnswerMode) ? specialGamePrefs.chainAnswerMode : "country";
@@ -40868,7 +40882,7 @@ Answer: ${answer}`;
     const mapHuntChangeBtn = document.getElementById("mapHuntChangeBtn");
 
     let mapHuntSet = chainSetChoices.has(specialGamePrefs.mapHuntSet) ? specialGamePrefs.mapHuntSet : "world";
-    let mapHuntPromptMode = ["country", "flag", "capital"].includes(specialGamePrefs.mapHuntPromptMode)
+    let mapHuntPromptMode = validPrompt(specialGamePrefs.mapHuntPromptMode)
       ? specialGamePrefs.mapHuntPromptMode
       : "country";
     let mapHuntTargetMode = specialGamePrefs.mapHuntTargetMode === "capital" ? "capital" : "country";
@@ -40910,7 +40924,7 @@ Answer: ${answer}`;
       }
       if(mapHuntTargetMode==='capital'&&mapHuntPromptHelp)mapHuntPromptHelp.textContent='Tap a capital-city dot, not the country shape. Zoom in for nearby cities. For countries with several capitals, any listed capital counts.';
       setSpecialOptionActive(mapHuntSetOptions, "data-map-hunt-set", mapHuntSet);
-      setSpecialOptionActive(mapHuntPromptOptions, "data-map-hunt-prompt", mapHuntPromptMode);
+      for(const button of mapHuntPromptOptions?.querySelectorAll('[data-map-hunt-prompt]')||[]){const active=promptParts(mapHuntPromptMode).includes(button.dataset.mapHuntPrompt);button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));}if(mapHuntPromptHelp)mapHuntPromptHelp.textContent+=' Choose one or more prompt details.';
     }
 
     function mapHuntResultClass(code) {
@@ -40979,7 +40993,8 @@ Answer: ${answer}`;
         mapHuntRoundMeta.textContent+=' · Tap a city dot';
       }
       mapHuntState.promptFallbackToName = false;
-      if (mapHuntPromptMode === "flag") {
+      if(promptParts(mapHuntPromptMode).length>1){mapHuntState.locked=false;mapHuntPromptFlag?.classList.add('hidden');mapHuntPromptText.classList.remove('hidden');combinedPrompt(mapHuntPromptText,c,mapHuntPromptMode);mapHuntPromptKicker.textContent=mapHuntIsCapitalCityMode()?'Find this capital city':'Find this place';if(mapHuntFeedback)mapHuntFeedback.textContent='';}
+      else if (mapHuntPromptMode === "flag") {
         mapHuntPromptText?.classList.add("hidden");
         mapHuntPromptFlag?.classList.remove("hidden");
         if (mapHuntPromptFlag) {
@@ -42382,7 +42397,7 @@ Answer: ${answer}`;
     mapHuntPromptOptions?.addEventListener("click", event => {
       const button = event.target.closest("[data-map-hunt-prompt]");
       if (!button) return;
-      mapHuntPromptMode = button.dataset.mapHuntPrompt;
+      const values=new Set(promptParts(mapHuntPromptMode)),key=button.dataset.mapHuntPrompt;if(values.has(key)){if(values.size>1)values.delete(key);}else values.add(key);mapHuntPromptMode=['country','capital','flag'].filter(k=>values.has(k)).join('+');
       saveSpecialGamePrefs();
       updateMapHuntSetupHelp();
       updateStartMenuSummary();
@@ -44959,7 +44974,7 @@ function rankingTargetValues() {
         if (!codes(s.allCodes)||!codes(s.roundCodes)||s.roundCodes.some(c=>!s.allCodes.includes(c))||!(s.results instanceof Map)||
             !integer(s.cursor)||s.cursor>s.roundCodes.length||!integer(s.misses)||s.misses>3||
             !['awaitingRevealClick','revision','finished'].every(key=>typeof s[key]==='boolean')||
-            !['country','name','flag','capital'].includes(s.promptMode)||(s.targetMode!==undefined&&!['country','capital'].includes(s.targetMode))||
+            !(s.promptMode==='name'||validPrompt(s.promptMode))||(s.targetMode!==undefined&&!['country','capital'].includes(s.targetMode))||
             [...s.results].some(([c,r])=>!s.roundCodes.includes(c)||!r||!Number.isInteger(r.tries)||r.tries<1||r.tries>4)) throw new Error('Invalid Map Hunt save');
       }
       if (saved.ranking) {
@@ -45615,7 +45630,7 @@ function subValidateStore(v){
  for(const [key,value]of Object.entries(v.challenges)){if(!subChallengeParts(key)||!obj(value)||!Number.isInteger(value.plays)||value.plays<1||!result(value.best)||!result(value.last))fail();}
  for(const [key,value]of Object.entries(v.learning)){const [id,topic]=key.split(':');if(!ids.has(id)||!['name','capital','flag','silhouette','location','capitalLocation'].includes(topic)||!obj(value)||!Number.isInteger(value.attempts)||value.attempts<0||!Number.isInteger(value.correct)||value.correct<0||value.correct>value.attempts)fail();}
  const r=v.run;if(r!==null){
-  if(!obj(r)||!['maphunt','borderless','standard','quiz','matching'].includes(r.mode)||!['US','CA','AU'].includes(r.parent)||!SUB_SET_IDENTITIES.includes(r.set)||!Array.isArray(r.ids)||!r.ids.length||r.ids.length>SUBDIVISION_IDENTITIES.length||new Set(r.ids).size!==r.ids.length||!r.ids.every(id=>ids.has(id)&&id.startsWith(r.parent+'-'))||!Array.isArray(r.queue)||!r.queue.length||r.queue.length>400||!r.queue.every(q=>obj(q)&&r.ids.includes(q.id)&&['name','capital','flag','silhouette','location','capitalLocation'].includes(q.topic)&&['name','capital','flag','silhouette'].includes(q.clue)&&q.topic!==q.clue)||!Number.isInteger(r.index)||r.index<0||r.index>r.queue.length||!Array.isArray(r.results)||r.results.length!==r.index||!r.results.every((x,i)=>obj(x)&&x.id===r.queue[i].id&&x.topic===r.queue[i].topic&&num(x.score)&&x.score<=100&&Number.isInteger(x.tries)&&x.tries>=1&&x.tries<=3&&typeof x.revealed==='boolean')||!num(r.elapsedMs)||!num(r.updatedAt)||!Array.isArray(r.misses)||!r.misses.every(id=>ids.has(id))||typeof r.finished!=='boolean'||(r.finished&&r.index!==r.queue.length)||!['mixed','deep'].includes(r.style)||!['choices','typing'].includes(r.answer))fail();
+  if(!obj(r)||!['maphunt','borderless','standard','quiz','matching'].includes(r.mode)||!['US','CA','AU'].includes(r.parent)||!SUB_SET_IDENTITIES.includes(r.set)||!Array.isArray(r.ids)||!r.ids.length||r.ids.length>SUBDIVISION_IDENTITIES.length||new Set(r.ids).size!==r.ids.length||!r.ids.every(id=>ids.has(id)&&id.startsWith(r.parent+'-'))||!Array.isArray(r.queue)||!r.queue.length||r.queue.length>400||!r.queue.every(q=>obj(q)&&r.ids.includes(q.id)&&['name','capital','flag','silhouette','location','capitalLocation'].includes(q.topic)&&(q.clue==='silhouette'||validPrompt(q.clue,true))&&q.topic!==q.clue)||!Number.isInteger(r.index)||r.index<0||r.index>r.queue.length||!Array.isArray(r.results)||r.results.length!==r.index||!r.results.every((x,i)=>obj(x)&&x.id===r.queue[i].id&&x.topic===r.queue[i].topic&&num(x.score)&&x.score<=100&&Number.isInteger(x.tries)&&x.tries>=1&&x.tries<=3&&typeof x.revealed==='boolean')||!num(r.elapsedMs)||!num(r.updatedAt)||!Array.isArray(r.misses)||!r.misses.every(id=>ids.has(id))||typeof r.finished!=='boolean'||(r.finished&&r.index!==r.queue.length)||!['mixed','deep'].includes(r.style)||!['choices','typing'].includes(r.answer))fail();
   if(r.mapProgress!=null&&(!['fill','blind'].includes(r.mapProgress)||(r.mapProgress==='blind'&&(r.mode!=='borderless'||r.challenge||r.queue.some(q=>q.topic!=='location')))))fail();
   if(r.challenge&&!subChallengeParts(r.challenge))fail();
   if(!r.ids.every(id=>SUB_SET_MEMBERS[r.set].includes(id))||typeof r.recorded!=='boolean'||typeof r.feedback!=='string'||r.feedback.length>2048||r.misses.length>2)fail();
@@ -45662,7 +45677,7 @@ function subRenderSetup(){
  }
  const form=subEl('form',undefined,'sub-setup');panel.append(form);
  const set=subSelect(form,'Study set',Object.entries(SUB_SETS).filter(([,v])=>v.parent===c.parent).map(([id,v])=>[id,v.name]),c.set);set.disabled=fixed;
- const clue=subSelect(form,'Clue',[['name',c.parent==='US'?'State name':c.parent==='AU'?'State / territory name':'Province / territory name'],['flag','Flag'],['capital','Capital name'],...(!['maphunt','borderless'].includes(c.mode)?[['silhouette','Outline']]:[])],c.clue);clue.disabled=fixed;
+ const clue=subSelect(form,'Clue',[['name',c.parent==='US'?'State name':c.parent==='AU'?'State / territory name':'Province / territory name'],['flag','Flag'],['capital','Capital name'],...(!['maphunt','borderless'].includes(c.mode)?[['silhouette','Outline']]:[])],c.clue);clue.disabled=fixed;if(!fixed&&['maphunt','borderless'].includes(c.mode)){if(validPrompt(c.clue,true)&&!Array.from(clue.options).some(o=>o.value===c.clue)){const o=subEl('option',c.clue);o.value=c.clue;clue.append(o);}clue.value=c.clue;multiPromptPicker(clue,true);}
  let target=null,style=null,answer=null,length=null,mapProgress=null,topics=[];
  if(['maphunt','borderless'].includes(c.mode))target=subSelect(form,'Find on the map',[['location',c.parent==='US'?'State location':c.parent==='AU'?'State / territory location':'Province / territory location'],['capitalLocation',c.mode==='borderless'?'Pinpoint the capital · distance score':'Capital city dots']],c.target),target.disabled=fixed;
  else{
@@ -45674,6 +45689,7 @@ function subRenderSetup(){
  }
  if(c.mode==='borderless'&&!fixed){mapProgress=subSelect(form,'Map memory',[['fill','Fill the map'],['blind','Keep each place blind']],c.mapProgress||'fill');mapProgress.id='subMapProgress';mapProgress.parentElement.append(subEl('small','Fill: completed places stay visible. Blind: previous answers disappear before the next place. Your map position stays the same.'));const syncMemory=()=>{mapProgress.parentElement.hidden=target.value!=='location';};target.addEventListener('change',syncMemory);syncMemory();}
  if(!fixed){length=subSelect(form,c.mode==='quiz'?'Places per session':c.mode==='matching'?'Places on the board':'Places per run',[['5','5'],['10','10'],['all','All in this set']],c.mode==='maphunt'?'all':'5');if(c.mode==='matching')length.querySelector('[value="all"]').remove();}
+ if(['quiz','standard'].includes(c.mode))capitalPromptSettings(form);
  const help=subEl('p',undefined,'sub-status');help.setAttribute('role','status');form.append(help);
  const start=subButton(fixed?'Start challenge →':'Start '+SUB_MODES[c.mode]+' →',null,'sub-primary');start.type='submit';form.append(start);start.disabled=true;setTimeout(()=>{if(start.isConnected)start.disabled=false;},350);
  form.onsubmit=async e=>{e.preventDefault();if(subBusy)return;const selected=topics.filter(x=>x.checked&&!x.disabled).map(x=>x.value);if(topics.length&&!selected.length){help.textContent='Choose at least one answer topic.';return;}if(c.mode==='matching'&&selected.length>3){help.textContent='Choose up to three matching topics.';return;}if(subStore.run&&!subStore.run.finished&&start.dataset.confirm!=='yes'){start.dataset.confirm='yes';help.textContent='Starting this replaces your unfinished subdivision session. Country sessions are kept.';start.textContent='Replace session & start →';return;}subBusy=true;start.disabled=true;try{await subStart({...c,set:set.value,clue:clue.value,target:target?.value,topics:selected,style:style?.value||'mixed',answer:answer?.value||'choices',count:fixed?'all':length.value,mapProgress:mapProgress&&target.value==='location'?mapProgress.value:'fill'});}catch(err){help.textContent='Could not start: '+err.message;start.disabled=false;}finally{subBusy=false;}};
@@ -45699,15 +45715,15 @@ function subFinish(){const r=subStore.run;if(r.recorded)return;r.finished=true;r
 async function subValue(id,topic){const r=subData.get(id);if(topic==='name')return subEl('strong',r.name);if(topic==='capital')return subEl('strong',r.capital.name);if(topic==='flag'){const image=document.createElement('img');image.src=subData.flagUrl(id);image.alt='Flag to identify';image.className='sub-flag';return image;}if(topic==='silhouette'){const shape=await subData.silhouette(id);const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('viewBox',shape.viewBox);svg.setAttribute('preserveAspectRatio','xMidYMid meet');svg.setAttribute('aria-label','Outline to identify');svg.setAttribute('role','img');svg.classList.add('sub-outline');const path=document.createElementNS(svg.namespaceURI,'path');path.setAttribute('d',shape.path);svg.append(path);return svg;}return subEl('span',SUB_TOPICS[topic]);}
 async function subRenderRun(){
  const token=++subToken,r=subStore.run;if(!r)return;subShow();subHost.dataset.play='true';subHost.dataset.screen='run';const panel=subFrame(SUB_MODES[r.mode]+' · '+subLabel(r.parent));
- const progress=subEl('p','', 'sub-run-progress');progress.id='subRunProgress';panel.append(progress);const bar=subEl('progress');bar.id='subProgress';bar.max=r.queue.length;bar.value=r.index;bar.setAttribute('aria-label','Session completion');panel.append(bar);
+ const progress=subEl('p','', 'sub-run-progress');progress.id='subRunProgress';panel.append(progress);const bar=subEl(r.mode==='borderless'&&r.queue[0].topic==='capitalLocation'?'div':'progress');bar.id='subProgress';bar.max=r.queue.length;bar.value=r.index;bar.setAttribute('aria-label','Session completion');panel.append(bar);
  const stage=subEl('section',undefined,'sub-stage');stage.id='subStage';panel.append(stage);
  if(r.index===r.queue.length){subFinish();subRenderFinish(stage);return;}if(r.mode==='matching'){await subRenderMatching(stage,token);return;}await subRenderQuestion(stage,token);
 }
-function subUpdateProgress(){const r=subStore.run,e=document.getElementById('subRunProgress'),p=document.getElementById('subProgress'),done=r.match?.locked.length??r.index;if(e)e.textContent=SUB_SETS[r.set].name+' · '+done+' of '+r.queue.length+(r.mode==='borderless'&&r.queue[0].topic==='capitalLocation'?' · '+r.results.reduce((s,x)=>s+x.score,0)+' / '+r.queue.length*100+' points':'');if(p)p.value=done;}
+function subUpdateProgress(){const r=subStore.run,e=document.getElementById('subRunProgress'),p=document.getElementById('subProgress'),done=r.match?.locked.length??r.index;if(e)e.textContent=SUB_SETS[r.set].name+' · '+done+' of '+r.queue.length+(r.mode==='borderless'&&r.queue[0].topic==='capitalLocation'?' · '+r.results.reduce((s,x)=>s+x.score,0)+' / '+r.queue.length*100+' points':'');if(p){const capitals=r.mode==='borderless'&&r.queue[0].topic==='capitalLocation';p.max=r.queue.length*(capitals?100:1);p.value=capitals?r.results.reduce((sum,result)=>sum+result.score,0):done;p.setAttribute('aria-label',capitals?'Capital points earned':'Session completion');p.setAttribute('aria-valuetext',p.value+' out of '+p.max+(capitals?' points':' answers'));if(capitals)renderCapitalPointsBar(p,r.results,r.queue.length);}}
 async function subRenderQuestion(stage,token=subToken){
  const r=subStore.run,q=subCurrent();subUpdateProgress();if(!q){subFinish();subRenderFinish(stage);return;}const mapTopic=['location','capitalLocation'].includes(q.topic);
  let map=stage.querySelector('.sub-map');const oldMap=mapTopic&&['maphunt','borderless'].includes(r.mode)?map:null;if(oldMap)oldMap.remove();stage.replaceChildren();
- const clue=subEl('div',undefined,'sub-clue');clue.append(subEl('small',SUB_TOPICS[q.clue]+' → '+SUB_TOPICS[q.topic]));clue.append(await subValue(q.id,q.clue));if(token!==subToken)return;stage.append(clue);
+ const clue=subEl('div',undefined,'sub-clue');const clueValue=q.topic==='capitalLocation'&&['quiz','standard'].includes(r.mode)&&capitalPromptDetails&&r.style!=='deep'?capitalPromptDetails.replace('country','name'):q.clue;clue.append(subEl('small',promptParts(clueValue).map(k=>SUB_TOPICS[k]).join(' + ')+' → '+SUB_TOPICS[q.topic]));const clueBody=subEl('div',undefined,promptParts(clueValue).length>1?'combined-sub-prompt':'');for(const key of ['capital','name','flag','silhouette'].filter(k=>promptParts(clueValue).includes(k)))clueBody.append(await subValue(q.id,key));clue.append(clueBody);if(token!==subToken)return;stage.append(clue);
  const title=subEl('h3',r.mode==='standard'?'Can you recall the '+SUB_TOPICS[q.topic].toLowerCase()+'?':q.topic==='location'?'Tap the '+subNoun(r.parent)+'.':q.topic==='capitalLocation'?(r.mode==='borderless'?'Pinpoint the capital.':'Tap the capital city.'):'Which '+SUB_TOPICS[q.topic].toLowerCase()+' matches this clue?');stage.append(title);
  const status=subEl('div',r.feedback||'', 'sub-feedback');status.id='subFeedback';status.setAttribute('role','status');
  if(mapTopic){map=oldMap||subEl('div',undefined,'sub-map');stage.append(map);if(!oldMap){try{await subCreateMap(map,token);}catch(err){if(token!==subToken)return;map.replaceChildren(subEl('p','Map unavailable. No answer has been scored.'),subButton('Retry map',()=>subRenderRun()));return;}}else map.subMap.update();}
@@ -45725,7 +45741,7 @@ function subAnswer(correct,clicked,stage,reveal=false,extra={}){
  const mapGame=['maphunt','borderless'].includes(r.mode),capitalDistance=r.mode==='borderless'&&q.topic==='capitalLocation';
  if(mapGame&&!capitalDistance&&!correct&&!reveal&&r.misses.length<2){if(clicked&&r.misses.includes(clicked))return;r.misses.push(clicked||q.id);r.feedback=(clicked?subData.get(clicked)?.name+' · ':'')+'Not this one. '+(3-r.misses.length)+' guesses left.';const e=document.getElementById('subFeedback');if(e)e.textContent=r.feedback;subSave();return;}
  const score=capitalDistance?(extra.score||0):correct&&!r.misses.length&&!reveal?100:0;
- r.pending={correct,score,clicked,revealed:reveal||!correct,...extra};subSave();subShowAnswer(stage,r.pending);
+ r.pending={correct,score,clicked,revealed:reveal||(!correct&&!capitalDistance),...extra};subSave();subShowAnswer(stage,r.pending);
 }
 async function subShowAnswer(stage,pending){
  const r=subStore.run,q=subCurrent();if(!q)return;stage.querySelectorAll('.sub-options button,.sub-answer-form input,.sub-answer-form button,.sub-give-up').forEach(b=>b.disabled=true);
@@ -45748,12 +45764,12 @@ async function subCreateMap(host,token){
  const svg=d3.select(host).append('svg').attr('viewBox',`0 0 ${w} ${h}`).attr('preserveAspectRatio','xMidYMid meet').attr('tabindex',0).attr('role','application').attr('aria-label','Map. Pinch or scroll to zoom. Arrow keys move the crosshair; Enter guesses. Plus and minus zoom.');
  const layer=svg.append('g'),background=layer.append('g');background.selectAll('path').data(world.map(canonicalWorldDrawableFeature).filter(Boolean)).join('path').attr('d',path).attr('fill','#d0d0bf').attr('stroke','#d0d0bf').attr('stroke-width',.5);
  const shapes=layer.append('g').selectAll('path').data(features).join('path').attr('d',path).attr('data-sub-id',f=>f.id).attr('vector-effect','non-scaling-stroke');
- const dots=layer.append('g'),marks=layer.append('g');let transform=d3.zoomIdentity,focus=[w/2,h/2];
+ const dots=layer.append('g'),history=layer.append('g').attr('class','sub-capital-history'),marks=layer.append('g');let transform=d3.zoomIdentity,focus=[w/2,h/2];
  const cross=svg.append('path').attr('d','M-10 0H10M0-10V10').attr('stroke','#65482f').attr('stroke-width',2).style('display','none').attr('pointer-events','none');
  const zoom=d3.zoom().extent([[0,0],[w,h]]).scaleExtent([1,100]).on('zoom',e=>{transform=e.transform;layer.attr('transform',transform);r.view={k:transform.k,x:transform.x,y:transform.y};rescale();});svg.call(zoom).on('dblclick.zoom',null);
- function rescale(){const k=transform.k*(svg.node().getBoundingClientRect().width/w);dots.selectAll('circle').attr('r',6/Math.max(k,.01));marks.selectAll('circle').attr('r',5/Math.max(k,.01));}
- function update(){marks.selectAll('*').remove();const q=subCurrent(),borderless=r.mode==='borderless',done=new Map(r.results.map(x=>[x.id,x]));shapes.attr('fill',f=>done.has(f.id)?done.get(f.id).score===100?'#47734f':'#b38c48':r.ids.includes(f.id)?'#a4ae99':'#c3c5b7').attr('stroke',borderless?null:'#faf5e9').attr('stroke-width',borderless?0:1);if(borderless)shapes.attr('fill',f=>r.mapProgress!=='blind'&&done.has(f.id)&&q?.topic!=='capitalLocation'?(done.get(f.id).score===100?'#47734f':'#b38c48'):'#c2c8b5');dots.selectAll('*').remove();if(q?.topic==='capitalLocation'&&!borderless){dots.selectAll('circle').data(subData.list({set:r.set})).join('circle').attr('cx',d=>projection(d.capital.coordinates)[0]).attr('cy',d=>projection(d.capital.coordinates)[1]).attr('fill',d=>done.has(d.id)?'#47734f':'#78623d').attr('stroke','#fff9ee').attr('stroke-width',2).attr('vector-effect','non-scaling-stroke').attr('data-capital-id',d=>d.id);}rescale();}
- function reveal(guess){const q=subCurrent();if(!q)return;const record=subData.get(q.id),geo=q.topic==='capitalLocation'?record.capital.coordinates:record.labelPoint;if(q.topic==='location')shapes.filter(f=>f.id===q.id).attr('fill','#47734f').attr('stroke','#fff9ee').attr('stroke-width',2);const actual=projection(geo);marks.append('circle').attr('cx',actual[0]).attr('cy',actual[1]).attr('fill','#47734f').attr('stroke','#fff9ee').attr('stroke-width',2).attr('vector-effect','non-scaling-stroke');if(guess){const pt=projection(guess);marks.append('path').attr('d',`M${pt}L${actual}`).attr('stroke','#975d4b').attr('stroke-width',2).attr('vector-effect','non-scaling-stroke');marks.append('circle').attr('cx',pt[0]).attr('cy',pt[1]).attr('fill','#975d4b');}rescale();}
+ function rescale(){const k=transform.k*(svg.node().getBoundingClientRect().width/w);scaleCapitalHistory(history,Math.max(k,.01));dots.selectAll('circle').attr('r',6/Math.max(k,.01));marks.selectAll('circle').attr('r',5/Math.max(k,.01));}
+ function update(){marks.selectAll('*').remove();history.selectAll('*').remove();if(r.mode==='borderless')for(const result of r.results.filter(x=>x.topic==='capitalLocation')){const capital=subData.get(result.id).capital;drawCapitalHistory(history,projection,[{name:capital.name,lng:capital.coordinates[0],lat:capital.coordinates[1]}],result);}const q=subCurrent(),borderless=r.mode==='borderless',done=new Map(r.results.map(x=>[x.id,x]));shapes.attr('fill',f=>done.has(f.id)?done.get(f.id).score===100?'#47734f':'#b38c48':r.ids.includes(f.id)?'#a4ae99':'#c3c5b7').attr('stroke',borderless?null:'#faf5e9').attr('stroke-width',borderless?0:1);if(borderless)shapes.attr('fill',f=>r.mapProgress!=='blind'&&done.has(f.id)&&q?.topic!=='capitalLocation'?(done.get(f.id).score===100?'#47734f':'#b38c48'):'#c2c8b5');dots.selectAll('*').remove();if(q?.topic==='capitalLocation'&&!borderless){dots.selectAll('circle').data(subData.list({set:r.set})).join('circle').attr('cx',d=>projection(d.capital.coordinates)[0]).attr('cy',d=>projection(d.capital.coordinates)[1]).attr('fill',d=>done.has(d.id)?'#47734f':'#78623d').attr('stroke','#fff9ee').attr('stroke-width',2).attr('vector-effect','non-scaling-stroke').attr('data-capital-id',d=>d.id);}rescale();}
+ function reveal(guess){marks.selectAll('*').remove();const q=subCurrent();if(!q)return;const record=subData.get(q.id),geo=q.topic==='capitalLocation'?record.capital.coordinates:record.labelPoint;if(q.topic==='location')shapes.filter(f=>f.id===q.id).attr('fill','#47734f').attr('stroke','#fff9ee').attr('stroke-width',2);const actual=projection(geo);marks.append('circle').attr('cx',actual[0]).attr('cy',actual[1]).attr('fill','#47734f').attr('stroke','#fff9ee').attr('stroke-width',2).attr('vector-effect','non-scaling-stroke');if(guess){const pt=projection(guess);drawCapitalConnector(marks,projection,geo,guess);marks.append('circle').attr('cx',pt[0]).attr('cy',pt[1]).attr('fill',borderlessResultColor(r.pending||{score:0})).attr('stroke','#fff9ee').attr('stroke-width',2).attr('vector-effect','non-scaling-stroke');}rescale();}
  function guess(xy){const q=subCurrent();if(!q||r.mode==='standard'||r.pending||r.finished)return;const point=transform.invert(xy),geo=projection.invert(point);if(!geo||!geo.every(Number.isFinite)||Math.abs(geo[1])>90)return;const record=subData.get(q.id),stage=host.parentElement;
   if(r.mode==='borderless'&&q.topic==='capitalLocation'){const km=d3.geoDistance(geo,record.capital.coordinates)*6371,score=Math.round(100*Math.exp(-km/500));subAnswer(km<=25,null,stage,false,{km,score,guess:geo});return;}
   let hit=null;if(q.topic==='capitalLocation'){const screenScale=svg.node().getBoundingClientRect().width/w;const targets=subData.list({set:r.set}).map(d=>({id:d.id,distance:Math.hypot(...projection(d.capital.coordinates).map((v,i)=>v-point[i]))*transform.k*screenScale})).sort((a,b)=>a.distance-b.distance);if(targets[0]?.distance<=22)hit=targets[0].id;}else hit=features.find(f=>d3.geoContains(f,geo))?.id;
@@ -45796,9 +45812,10 @@ function subReturnToRegions(c){
  else{if(c.mode==='quiz')homeQuizSetup(c.style==='deep'?'interactive':'rapid');document.getElementById('countrySetDisclosure').open=true;document.getElementById('subStudyRegionButton')?.click();document.getElementById('subStudyRegionButton')?.scrollIntoView({block:'center'});}
 }
 function subInstallCustomMapRegions(){
- const hunt=document.getElementById('mapHuntSetOptions');if(hunt&&!document.getElementById('subHuntRegions')){const more=subEl('details',undefined,'sub-extra-regions');more.id='subHuntRegions';more.append(subEl('summary','States & provinces'));const choices=subStudyRegionChoices('maphunt');for(const button of choices.querySelectorAll('[data-sub-parent]'))button.onclick=()=>subOpenSetup('maphunt',button.dataset.subParent,{custom:true,clue:mapHuntPromptMode==='country'?'name':mapHuntPromptMode,target:mapHuntTargetMode==='capital'?'capitalLocation':'location'});more.append(choices);hunt.after(more);}
+ const hunt=document.getElementById('mapHuntSetOptions');if(hunt&&!document.getElementById('subHuntRegions')){const more=subEl('details',undefined,'sub-extra-regions');more.id='subHuntRegions';more.append(subEl('summary','States & provinces'));const choices=subStudyRegionChoices('maphunt');for(const button of choices.querySelectorAll('[data-sub-parent]'))button.onclick=()=>subOpenSetup('maphunt',button.dataset.subParent,{custom:true,clue:mapHuntPromptMode.replace('country','name'),target:mapHuntTargetMode==='capital'?'capitalLocation':'location'});more.append(choices);hunt.after(more);}
 }
 
+    capitalPromptSettings(document.querySelector('.challenge-step-body'));
     installSubdivisionPlay();
     subInstallCustomMapRegions();
     installCapitalHuntSetup();
@@ -45903,5 +45920,6 @@ html.geoden-light body #startOverlay #studyDomainSwitcher{padding:0!important;ma
 </style>
 <style id="local-state-regions-v77">.sub-study-regions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0;padding:12px;border:1px solid #d1c6af;border-radius:14px;background:#eee7d8}.sub-study-regions .country-set-button{display:grid;gap:5px;text-align:left;min-height:60px;padding:12px;border:1px solid #c9c8b6;border-radius:12px;background:#fffdf7;color:#394637}.sub-study-regions .country-set-name{font-weight:800}.sub-study-regions .country-set-meta{font-size:12px;color:#6b6f5d}.sub-study-region-entry[aria-expanded=true]{background:#eee7d8!important;border-color:#ad9770!important}.sub-extra-regions{grid-column:1/-1;margin:14px 0;padding:14px;border:1px solid #d1c6af;border-radius:14px;background:#f3eee3}.sub-extra-regions>summary{cursor:pointer;font-weight:750;color:#6a5b40;min-height:28px}.sub-extra-regions>.discovery-grid{margin-top:14px}.sub-region-detail{font-size:12px;color:inherit}.sub-region-back{background:transparent!important;border:0!important;color:#62583f!important;padding-left:0!important}#discoveryLanding .sub-states-entry{background:#eee7d8!important;color:#5c513d!important;border-color:#c8b895!important}@media(max-width:520px){.sub-study-regions{grid-template-columns:1fr}}</style>
 <style>.borderless-field[hidden],.sub-field[hidden]{display:none!important}.borderless-field small,.sub-field small{font-size:13px;line-height:1.5;font-weight:400;color:#686b5b}</style>
-</body>
+<style>.city-map-country{fill:#c2c8b5!important;stroke:#a8af98!important}#cityMap,.rapid-location-map svg{background:#e5e4d3;border-radius:18px}.borderless-feedback:not(:empty){padding:12px 18px;background:#eee8d8;border:1px solid #d1c5ac;border-radius:24px;text-align:center;font-size:14px;font-weight:750;line-height:1.4}.interactive-city-feedback{background:#eee8d8!important;border-color:#d1c5ac!important;color:#504b3a!important}.borderless-map .city-location-line{fill:none!important}</style><style>.capital-prompt-settings{margin-top:16px;padding-top:12px;border-top:1px solid #d1c6af}.capital-prompt-settings>label{display:flex;gap:8px;align-items:center;font-weight:700}.capital-prompt-settings small{display:block;color:#696958;font-size:12px;line-height:1.5}.combined-study-prompt{font-size:20px;font-weight:800;padding:12px;text-align:center}.multi-prompt-picker[hidden]{display:none!important}.sub-clue .combined-sub-prompt strong{display:inline;font-size:22px}.combined-sub-prompt strong+strong:before{content:", "}.sub-clue .combined-sub-prompt img{display:inline-block;vertical-align:middle;max-width:66px;max-height:40px;margin:0 0 0 10px}html body .borderless-primary{background:#476c79;border-color:#476c79}</style><style>.multi-prompt-picker{border:1px solid #d1c6af;border-radius:14px;padding:14px;margin:16px 0;background:#f2edde}.multi-prompt-picker legend{font-size:14px;font-weight:750;color:#65573d}.multi-prompt-picker label{display:inline-flex;align-items:center;gap:7px;margin:6px 14px 6px 0;cursor:pointer}.multi-prompt-picker input{accent-color:#476c54;width:18px;height:18px}.combined-prompt-flag{display:inline-block!important;width:auto!important;max-width:66px!important;max-height:40px!important;vertical-align:middle;margin:0 0 0 10px!important}.sub-clue>strong+strong:before{content:', '}</style>
+<style>.capital-points-bar{display:flex;width:100%;height:12px;border-radius:999px;overflow:hidden;background:#dcd8cb;margin:8px 0}.capital-points-chunk{display:block;height:100%;flex:none;box-sizing:border-box;border-right:1px solid #f4efdf}.capital-points-chunk:last-child{border-right:0}</style><style id="full-page-games">html body :is(#startOverlay,#matchingOverlay,#detectiveOverlay,#rapidOverlay,#sprintOverlay,#chainFillOverlay,#mapHuntOverlay,#rankingOverlay,#borderlessOverlay,#subdivisionOverlay){inset:0!important;padding:0!important;background:#f7f4eb!important;backdrop-filter:none!important;align-items:flex-start!important;justify-content:center!important;overflow:auto!important;overscroll-behavior:contain;animation:none!important}html body :is(#startOverlay,#matchingOverlay,#detectiveOverlay,#rapidOverlay,#sprintOverlay,#chainFillOverlay,#mapHuntOverlay,#rankingOverlay,#borderlessOverlay,#subdivisionOverlay)> :is(.start-panel,.matching-panel,.detective-panel,.rapid-panel,.chain-panel,.map-hunt-panel,.ranking-panel,.borderless-panel,.sub-panel){width:min(1120px,100%)!important;max-width:1120px!important;min-height:100dvh!important;max-height:none!important;margin:0 auto!important;border:0!important;border-radius:0!important;box-shadow:none!important;transform:none!important;animation:none!important;padding:max(18px,env(safe-area-inset-top)) max(18px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left))!important;box-sizing:border-box;background:#f7f4eb!important}body.game-page-open{overflow:hidden}@media(max-width:600px){html body :is(#startOverlay,#matchingOverlay,#detectiveOverlay,#rapidOverlay,#sprintOverlay,#chainFillOverlay,#mapHuntOverlay,#rankingOverlay,#borderlessOverlay,#subdivisionOverlay)> :is(.start-panel,.matching-panel,.detective-panel,.rapid-panel,.chain-panel,.map-hunt-panel,.ranking-panel,.borderless-panel,.sub-panel){padding: max(12px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(18px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))!important}}</style><script>(()=>{const ids=["startOverlay","matchingOverlay","detectiveOverlay","rapidOverlay","sprintOverlay","chainFillOverlay","mapHuntOverlay","rankingOverlay","borderlessOverlay","subdivisionOverlay"],pages=()=>ids.map(id=>document.getElementById(id)).filter(Boolean),watched=new WeakSet();let previous=new Set(pages().filter(e=>e.classList.contains('open')));function sync(records=[]){const all=pages();for(const page of all)if(!watched.has(page)){observer.observe(page,{attributes:true,attributeFilter:['class']});watched.add(page);}const opened=[...all.filter(e=>!previous.has(e)&&e.classList.contains('open')),...records.map(r=>r.target).filter(e=>ids.includes(e.id)&&e.classList.contains('open')&&!previous.has(e))];const winner=opened.at(-1);if(winner)for(const page of all)if(page!==winner&&page.classList.contains('open')){if(page.id==='borderlessOverlay')pauseBorderlessClock();page.classList.remove('open');}previous=new Set(all.filter(e=>e.classList.contains('open')));document.body.classList.toggle('game-page-open',previous.size>0);const shell=document.querySelector('main.shell');if(shell)shell.inert=previous.size>0;}const observer=new MutationObserver(sync);observer.observe(document.body,{childList:true});sync();})();</script><style id="daily-status-contrast">html body #startOverlay #homeDailyPicks .daily-mode-card :is(.daily-mode-description,small,.daily-play-action){color:#fffaf0!important;opacity:1!important;font-size:11px!important;line-height:1.45!important}html body #startOverlay #homeDailyPicks .daily-mode-card .challenge-status{color:#294235!important;background:#f1eddc!important;border-radius:6px;padding:4px 7px!important;font-size:11px!important;font-weight:800!important;line-height:1.35!important;flex-basis:auto!important;width:fit-content;max-width:100%;margin:2px 0!important;opacity:1!important}html body #startOverlay #homeDailyPicks .daily-mode-card .challenge-status :is(span,.challenge-status-icon){color:inherit!important;opacity:1!important}</style></body>
 </html>
