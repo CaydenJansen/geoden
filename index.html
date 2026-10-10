@@ -16515,6 +16515,9 @@ html.geoden-light body #startOverlay #discoveryLanding .challenge-collection .di
 .map-outcome-chunk {display:block;height:100%;flex:none;box-sizing:border-box;border-right:1px solid #f6f3eb80;}
 .game-quality-track {display:flex;align-items:stretch;gap:0;height:9px;border-radius:999px;background:#dedfd6;overflow:hidden;margin:7px 0 10px;}
 .game-quality-track>span {display:block;flex:none;height:100%;box-sizing:border-box;border-right:1px solid #f6f3eb80;}
+.sprint-outcome-strip {display:flex;gap:2px;height:9px;margin:7px 0 10px;border-radius:999px;overflow:hidden;background:#dedfd6;}
+.sprint-outcome-strip>span {flex:1;min-width:2px;height:100%;}
+.game-quality-note {margin:2px 0 8px;color:#59645a;font-size:12px;line-height:1.35;}
 
 </style>
 <style id="daily-chevron-v69">
@@ -16548,7 +16551,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
   <script src="assets/ranking-daily-snapshot-2026-10-10.js"></script>
 
   <script>
-    const GEODEN_VERSION = "0.56.110";
+    const GEODEN_VERSION = "0.56.111";
     // v0.56.28 — blank-surface audit: guarded silhouettes/location maps and Matching visual preflight.
     // v0.56.18 — private-beta problem reporting with diagnostic state, recent actions, errors, copy/download/share.
     // v0.56.17 — tester-facing automatic failure reporting with screenshot/copy instructions.
@@ -17470,16 +17473,16 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
 
     function recordDailyMatchingResults(state) {
       if (!state?.countries?.length || !state?.answerFields?.length) return;
-      let total = 0, clean = 0, assisted = 0;
+      let total = 0, clean = 0, lightHelp = 0;
       for (const country of state.countries) {
         for (const field of state.answerFields) {
           if (!ALL_STAGES.includes(field) || field === "historyFacts") continue;
           total += 1;
-          if (state.mistakeKeys.has(`${country.code}|${field}`)) assisted += 1;
+          if (state.mistakeKeys.has(`${country.code}|${field}`)) lightHelp += 1;
           else clean += 1;
         }
       }
-      recordDailyFactCounts({ total, clean, assisted, missed: 0 });
+      recordDailyFactCounts({ total, clean, lightHelp, missed: 0 });
     }
     const POLISH_PREFS_KEY = "flag-by-flag-polish-prefs-v1";
     const WORLD_ATLAS_CACHE_KEY = "flag-by-flag-world-atlas-110m-v1";
@@ -26070,9 +26073,9 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
       if(studySession?.launchPreset?.dailyKey){
         homeTickTimers();
         const outcomes=state.countries.flatMap(country=>state.answerFields.map(field=>
-          state.mistakeKeys.has(`${country.code}|${field}`)?"missed":"clean"));
+          state.mistakeKeys.has(`${country.code}|${field}`)?"light-help":"clean"));
         const correct=outcomes.filter(outcome=>outcome==="clean").length;
-        homeRecordDaily(studySession.launchPreset,100*correct/Math.max(1,outcomes.length),studySession.homeElapsedMs||0,
+        homeRecordDaily(studySession.launchPreset,100*(correct+.7*outcomes.filter(outcome=>outcome==="light-help").length)/Math.max(1,outcomes.length),studySession.homeElapsedMs||0,
           {correct,total:outcomes.length,outcomes});
       }
 
@@ -30339,7 +30342,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
       const rows=[],num=x=>Math.max(0,Number(x)||0),add=row=>{if(Number.isFinite(row.at)&&row.at>0)rows.push(row);};
       for(const [key,r]of Object.entries(homeRecords.dailies||{})){const type=key.split(':').at(-1),borderless=type.startsWith('borderless-'),mode=borderless?'borderless':type;add({id:'daily:'+key,dailyKey:key,mode,target:borderless?type.slice(11):null,title:'Daily '+(borderless?type==='borderless-capital'?'Borderless Capitals':'Borderless Countries':modeDisplayName(mode)),set:'world',at:num(r.completedAt),total:num(r.total),correct:num(r.correct),score:num(r.score),points:num(r.points??(borderless?r.score*r.total:r.score)),elapsedMs:num(r.elapsedMs)});}
       for(const [key,r]of Object.entries(dailyChallengeProgress.days||{}))add({id:'daily:'+key,dailyKey:key,mode:'rapid',title:'Daily Quiz',set:'world',at:num(r.completedAt),correct:num(r.correct),total:num(r.total),elapsedMs:num(r.elapsedMs)});
-      for(const [id,r]of Object.entries(homeRecords.challenges||{})){const spec=homeChallengeSpec(id);if(!spec||!r.last)continue;add({id:'challenge:'+id,mode:spec.mode,title:modeDisplayName(spec.mode)+' · '+HOME_MAP_VARIANTS[spec.mode][spec.variant],set:spec.region,at:num(r.last.completedAt),score:num(r.last.score),total:num(r.last.total),correct:num(r.last.correct),elapsedMs:num(r.last.elapsedMs),challenge:true});}
+      for(const [id,r]of Object.entries(homeRecords.challenges||{})){const spec=homeChallengeSpec(id);if(!spec||!r.last)continue;add({id:'challenge:'+id,mode:spec.mode,title:modeDisplayName(spec.mode)+' · '+HOME_MAP_VARIANTS[spec.mode][spec.variant],set:spec.region,at:num(r.last.completedAt),score:num(r.last.score),total:num(r.last.total),correct:num(r.last.correct),elapsedMs:num(r.last.elapsedMs),challenge:true,legacy:r.last.grading!=='weighted-v1'});}
       for(const item of sessionHistory||[]){const mode=item.interaction||'standard';if(item.dailyKey&&rows.some(r=>r.dailyKey===item.dailyKey))continue;
         // Older Matching/Detective history omitted its daily key. Avoid showing the same recorded finish twice.
         if(!item.dailyKey&&['matching','detective'].includes(mode)&&rows.some(r=>r.dailyKey&&r.mode===mode&&Math.abs(r.at-num(item.endedAt))<1500&&r.total===num(item.total)&&r.correct===num(item.correct)))continue;
@@ -30351,8 +30354,8 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
       if(row.mode==='borderless'&&row.target==='capital')return row.points+' / '+row.total*100+' pts';
       if(row.mode==='detective')return row.correct+' / '+row.total+' solved'+(row.points==null?'':' · '+row.points+' pts');
       if(row.mode==='ranking')return row.score+'% order score';
-      if(row.challenge)return row.score+'% '+(row.mode==='chain'?'unassisted':'first try');
-      if(row.mode==='borderless')return row.correct+' / '+row.total+' first try';
+      if(row.challenge)return row.score+'% '+(row.legacy?'earlier challenge result':'challenge score');
+      if(row.mode==='borderless')return row.target==='country'&&row.score!=null?row.score+'% score · '+row.correct+' first try':row.correct+' / '+row.total+' first try';
       return row.correct+' / '+row.total+' '+(row.mode==='sprint'?'correct':row.mode==='matching'?'first try':'correct');
     }
     function renderProgressActivity(){
@@ -30611,9 +30614,13 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
       if(studySession&&!isLookupMode()&&!isSessionRevisionMode()&&!isReviewPresentation()){
         progressFill.parentElement.classList.add('hidden');
         renderGameQualityBar(progressFill.parentElement,'flash',Array.isArray(studySession.placeOutcomes)?studySession.placeOutcomes:[],sessionTotal,'Places studied and how the answers went');
+        let note=progressFill.parentElement.nextElementSibling?.nextElementSibling;
+        if(!note?.classList.contains('game-quality-note')){note=document.createElement('p');note.className='game-quality-note';progressFill.parentElement.nextElementSibling?.after(note);}
+        note.textContent='One chunk per place; its colour shows the trickiest fact.';
       }else{
         progressFill.parentElement.classList.remove('hidden');
         if(progressFill.parentElement.nextElementSibling?.classList.contains('game-quality-track'))progressFill.parentElement.nextElementSibling.remove();
+        if(progressFill.parentElement.nextElementSibling?.classList.contains('game-quality-note'))progressFill.parentElement.nextElementSibling.remove();
       }
 
       if (finished) {
@@ -35766,6 +35773,7 @@ Answer: ${answer}`;
 
     function rapidDailyOutcome(round, c, correct) {
       if (!correct || round.revealed) return "missed";
+      if(RAPID_TYPES[round.type]?.target==='borderlessCapital'&&Number.isFinite(round.locationScore))return round.locationScore>=90?'clean':round.locationScore>=65?'light-help':round.locationScore>=25?'heavy-help':'missed';
       const hints = Math.max(0, Number(round.hintsUsed) || 0);
       if (!hints) return round.usedSuggestion ? "light-help" : "clean";
       const target = RAPID_TYPES[round.type]?.target;
@@ -35810,9 +35818,9 @@ Answer: ${answer}`;
       state.total += 1;
       if (!Array.isArray(state.outcomes)) state.outcomes=[];
       state.outcomes.push(rapidDailyOutcome(round, c, correct));
-      if(!isSprintSession())renderGameQualityBar(rapidScore.parentElement,'quiz',state.outcomes,sessionCountryTotal(),'Quiz questions completed and how they went');
+      if(isSprintSession())renderSprintOutcomeStrip(rapidScore.parentElement,state.outcomes);else renderGameQualityBar(rapidScore.parentElement,'quiz',state.outcomes,sessionCountryTotal(),'Quiz questions completed and how they went');
       const misses = Math.max(0, Number(round.misses) || 0);
-      const assisted = !!correct && (Math.max(0, Number(round.hintsUsed) || 0) > 0 || round.usedSuggestion === true);
+      const assisted = !!correct && (Math.max(0, Number(round.hintsUsed) || 0) > 0 || round.usedSuggestion === true || (Number.isFinite(round.locationScore)&&round.locationScore<90));
       const clean = !!correct && !assisted && misses === 0;
       if (correct) {
         state.correct += 1;
@@ -36063,7 +36071,7 @@ Answer: ${answer}`;
     async function rapidRenderQuestion() {
       if (studySession?.interaction !== "rapid" || studySession?.active === false) return;
       const state = ensureRapidState();
-      if(!isSprintSession())renderGameQualityBar(rapidScore.parentElement,'quiz',Array.isArray(state.outcomes)?state.outcomes:[],sessionCountryTotal(),'Quiz questions completed and how they went');
+      if(isSprintSession())renderSprintOutcomeStrip(rapidScore.parentElement,Array.isArray(state.outcomes)?state.outcomes:[]);else renderGameQualityBar(rapidScore.parentElement,'quiz',Array.isArray(state.outcomes)?state.outcomes:[],sessionCountryTotal(),'Quiz questions completed and how they went');
       const c = currentCountry();
       if (!c) {
         showRapidComplete();
@@ -37333,12 +37341,13 @@ function multiPromptPicker(select,sub=false,initialValue=select.value){
     }
     function borderlessRecordDaily(s){
       if(!s.dailyKey||s.index!==s.codes.length||homeRecords.dailies[s.dailyKey])return;
-      const result={score:Math.round(s.results.reduce((n,r)=>n+r.score,0)/s.codes.length),elapsedMs:s.elapsedMs,completedAt:Date.now(),date:s.dailyKey.slice(0,10),correct:s.results.filter(r=>r.score===100).length,total:s.codes.length,points:s.results.reduce((n,r)=>n+r.score,0),scores:s.results.map(r=>r.score)};
+      const result={score:Math.round(s.results.reduce((n,r)=>n+r.score,0)/s.codes.length),elapsedMs:s.elapsedMs,completedAt:Date.now(),date:s.dailyKey.slice(0,10),correct:s.results.filter(r=>r.score===100).length,total:s.codes.length,points:s.results.reduce((n,r)=>n+r.score,0),scores:s.results.map(r=>r.score),tries:s.results.map(r=>r.revealed?4:r.tries||1)};
       homeRecords.dailies[s.dailyKey]=result;saveHomeRecords();
     }
     function borderlessDailyShareText(mode,r){
       const tiles=(r.scores||[]).map(score=>score===100?'🟩':score>=50?'🟨':score>0?'🟧':'⬜').join('');
-      return `🌍 GeoDen Daily · ${borderlessDailyName(mode)}\n${r.date}\n\n${tiles}\n${mode==='borderless-country'?r.correct+' countries first try':(r.points??Math.round(r.score*r.total))+' points'}\n⏱ ${homeTime(r.elapsedMs)}\n${mode==='borderless-country'?'First-try accuracy':'Closer guesses earn more points'}`;
+      const breakdown=mode==='borderless-country'&&Array.isArray(r.tries)?'\n'+mapTryBreakdown(r.tries.map(tries=>({tries,revealed:tries>3}))):'';
+      return `🌍 GeoDen Daily · ${borderlessDailyName(mode)}\n${r.date}\n\n${tiles}\n${mode==='borderless-country'?r.score+'% score':(r.points??Math.round(r.score*r.total))+' points'}${breakdown}\n⏱ ${homeTime(r.elapsedMs)}\n${mode==='borderless-country'?'🟩 first · 🟨 second · 🟧 third · ⬜ revealed':'Closer guesses earn more points'}`;
     }
     async function openBorderlessCapitalSetup(){await openBorderless();const target=document.getElementById('borderlessTarget');target.value='capital';target.dispatchEvent(new Event('change'));}
 
@@ -37351,6 +37360,7 @@ function multiPromptPicker(select,sub=false,initialValue=select.value){
     }
     function renderGameQualityBar(anchor,key,outcomes,total,label){
       if(!anchor||!Number.isFinite(total)||total<1)return;
+      if(anchor.nextElementSibling?.classList.contains('sprint-outcome-strip'))anchor.nextElementSibling.remove();
       let track=anchor.nextElementSibling;
       if(!track?.classList.contains('game-quality-track')||track.dataset.qualityKey!==key){track=document.createElement('div');track.className='game-quality-track';track.dataset.qualityKey=key;anchor.after(track);}
       track.replaceChildren();track.setAttribute('role','progressbar');track.setAttribute('aria-label',label);track.setAttribute('aria-valuemin','0');track.setAttribute('aria-valuemax',String(total));track.setAttribute('aria-valuenow',String(Math.min(total,outcomes.filter(Boolean).length)));
@@ -37359,8 +37369,16 @@ function multiPromptPicker(select,sub=false,initialValue=select.value){
       for(let i=0;i<total;i++){const outcome=outcomes[i];const chunk=document.createElement('span');chunk.style.width=`${100/total}%`;chunk.style.background=colors[outcome]||'transparent';chunk.title=outcome?`${i+1}: ${names[outcome]||outcome}`:`${i+1}: Not done`;chunk.setAttribute('aria-hidden','true');track.append(chunk);}
       track.setAttribute('aria-valuetext',`${Math.min(total,outcomes.filter(Boolean).length)} of ${total} answered or placed; colours show how each went`);
     }
+    function renderSprintOutcomeStrip(anchor,outcomes){
+      if(!anchor)return;
+      if(anchor.nextElementSibling?.classList.contains('game-quality-track'))anchor.nextElementSibling.remove();
+      let strip=anchor.nextElementSibling;if(!strip?.classList.contains('sprint-outcome-strip')){strip=document.createElement('div');strip.className='sprint-outcome-strip';anchor.after(strip);}
+      strip.replaceChildren();strip.setAttribute('role','img');strip.setAttribute('aria-label',`${outcomes.length} sprint answers attempted. Colours show the most recent 20 answers.`);
+      const colors={clean:'#39784e','light-help':'#88a75b','heavy-help':'#c09b3d',missed:'#995347'};
+      for(const [i,outcome]of outcomes.slice(-20).entries()){const chunk=document.createElement('span');chunk.style.background=colors[outcome]||'#91a3a3';chunk.title=`Recent answer ${i+1}: ${outcome||'not graded'}`;chunk.setAttribute('aria-hidden','true');strip.append(chunk);}
+    }
     function borderlessResultColor(r){return r.revealed?'#995347':r.score===100?'#39784e':r.score>=50?'#88a75b':'#c09b3d';}
-    function renderCapitalPointsBar(bar,results,total){const max=total*100,points=results.reduce((sum,r)=>sum+r.score,0);bar.className='capital-points-bar';bar.setAttribute('role','progressbar');bar.setAttribute('aria-label','Capital points earned');bar.setAttribute('aria-valuemin','0');bar.setAttribute('aria-valuemax',String(max));bar.setAttribute('aria-valuenow',String(points));bar.setAttribute('aria-valuetext',points+' out of '+max+' points');bar.replaceChildren();for(const [i,r]of results.entries()){const chunk=document.createElement('span');chunk.className='capital-points-chunk';chunk.style.width=(max?100*r.score/max:0)+'%';chunk.style.background=r.revealed||r.score<35?'#995347':r.score<60?'#c09b3d':r.score<90?'#88a75b':'#39784e';chunk.style.display=r.score>0?'block':'none';chunk.title='Guess '+(i+1)+': '+r.score+'/100';chunk.setAttribute('aria-hidden','true');bar.append(chunk);}}
+    function renderCapitalPointsBar(bar,results,total){const points=results.reduce((sum,r)=>sum+r.score,0);bar.className='capital-points-bar';bar.setAttribute('role','progressbar');bar.setAttribute('aria-label','Capitals completed and points earned');bar.setAttribute('aria-valuemin','0');bar.setAttribute('aria-valuemax',String(total));bar.setAttribute('aria-valuenow',String(results.length));bar.setAttribute('aria-valuetext',results.length+' of '+total+' capitals completed · '+points+' points earned');bar.replaceChildren();for(const [i,r]of results.entries()){const chunk=document.createElement('span');chunk.className='capital-points-chunk';chunk.style.width=(100/Math.max(1,total))+'%';chunk.style.background=r.revealed||r.score<35?'#995347':r.score<60?'#c09b3d':r.score<90?'#88a75b':'#39784e';chunk.title='Guess '+(i+1)+': '+r.score+' points';chunk.setAttribute('aria-hidden','true');bar.append(chunk);}}
     function borderlessProgress(s,host){
       const existing=host.querySelector('.borderless-run-progress');if(existing)existing.remove();
       const box=document.createElement('div');box.className='borderless-run-progress';
@@ -37374,9 +37392,9 @@ function multiPromptPicker(select,sub=false,initialValue=select.value){
     function borderlessRecordChallenge(s){
       if(!s.challenge||s.revision||s.challengeRecorded||s.index!==s.codes.length)return;
       const spec=homeChallengeSpec(s.challenge.id);if(!spec||spec.mode!=='borderless')return;
-      const result={correct:s.results.filter(r=>r.score===100&&!r.revealed).length,total:s.codes.length,score:Math.round(s.results.reduce((sum,r)=>sum+r.score,0)/s.codes.length),elapsedMs:s.elapsedMs,completedAt:Date.now(),tries:s.results.map(r=>r.revealed?4:r.tries)};
+      const result={correct:s.results.filter(r=>r.score===100&&!r.revealed).length,total:s.codes.length,score:Math.round(s.results.reduce((sum,r)=>sum+r.score,0)/s.codes.length),elapsedMs:s.elapsedMs,completedAt:Date.now(),tries:s.results.map(r=>r.revealed?4:r.tries),grading:'weighted-v1'};
       const record=homeRecords.challenges[spec.id]||{plays:0};record.plays++;record.last=result;
-      if(!record.best||result.score>record.best.score||(result.score===record.best.score&&result.elapsedMs<record.best.elapsedMs))record.best=result;
+      if(!record.best||record.best.grading!=='weighted-v1'||result.score>record.best.score||(result.score===record.best.score&&result.elapsedMs<record.best.elapsedMs))record.best=result;
       homeRecords.challenges[spec.id]=record;saveHomeRecords();s.challengeRecorded=true;
     }
     async function launchBorderlessChallenge(spec,button){
@@ -37507,7 +37525,7 @@ function scaleCapitalHistory(parent,scale){parent.selectAll('circle').attr('r',4
         if(history||phase!=='prompt'||!current())return;
         if(!attempt.borderlessGuesses)attempt.borderlessGuesses={};attempt.borderlessGuesses[stage]=r;saveAttempt();
         api.reveal(r.geo);api.status.textContent=borderlessResultText(r,target);
-        if(interactive){registerInteractiveResult(r.correct);attempt.results[stage].locationScore=r.score;saveAttempt();host.querySelector('.borderless-reveal')?.remove();completeInteractiveStage(0,false);nextBtn.textContent=nextStageLabel();updateActionControls();}
+        if(interactive){const graded=target==='capital'?r.score>=25:r.correct;registerInteractiveResult(graded);attempt.results[stage].locationScore=r.score;if(target==='capital'){attempt.results[stage].helpLevel=r.score>=90?'clean':r.score>=65?'light':r.score>=25?'heavy':'missed';attempt.results[stage].assisted=r.score<90;}saveAttempt();host.querySelector('.borderless-reveal')?.remove();completeInteractiveStage(0,false);nextBtn.textContent=nextStageLabel();updateActionControls();}
         else nextBtn.click();
       }});
       if(!current())return;
@@ -37519,7 +37537,7 @@ function scaleCapitalHistory(parent,scale){parent.selectAll('circle').attr('r',4
       const host=document.createElement('div');host.className='rapid-borderless';rapidCue.after(host);
       const target=RAPID_TYPES[round.type].target==='borderlessCountry'?'country':'capital';
       const map=await createBorderlessMap(host,c,target,{isCurrent:()=>host.isConnected&&token===rapidRenderToken,revealed:round.status==='answered',geo:round.borderlessGuess?.geo,onGuess:(r,api)=>{
-        if(round.status!=='active'||token!==rapidRenderToken)return;round.borderlessGuess=r;api.reveal(r.geo);api.status.textContent=borderlessResultText(r,target);rapidFinishQuestion(r.correct,null,borderlessResultText(r,target));
+        if(round.status!=='active'||token!==rapidRenderToken)return;round.borderlessGuess=r;round.locationScore=target==='capital'?r.score:null;api.reveal(r.geo);api.status.textContent=borderlessResultText(r,target);rapidFinishQuestion(target==='capital'?r.score>=25:r.correct,null,borderlessResultText(r,target));
       }});return !!map;
     }
 
@@ -37550,9 +37568,9 @@ function scaleCapitalHistory(parent,scale){parent.selectAll('circle').attr('r',4
       const regions=Object.entries(COUNTRY_SET_LABELS).filter(([key])=>key!=='custom'||countrySetIndices('custom').length);
       const region=select('Region','borderlessRegion',regions,borderlessRun?.set||'world');const stateGroup=document.createElement('optgroup');stateGroup.label='States & provinces';for(const[parent,name,detail]of SUB_PARENT_CHOICES){const option=document.createElement('option');option.value='sub:'+parent;option.textContent=name+' · '+detail;stateGroup.append(option);}region.append(stateGroup);region.addEventListener('change',()=>{if(region.value.startsWith('sub:'))subOpenSetup('borderless',region.value.slice(4),{custom:true,target:target.value==='capital'?'capitalLocation':'location',clue:clue.value.replace('country','name'),mapProgress:progress.value});});
       const lengthLabel=document.createElement('label');lengthLabel.className='borderless-field';lengthLabel.textContent='Number of capitals';const length=document.createElement('input');length.id='borderlessLength';length.type='number';length.min='1';length.max='50';length.step='1';length.value='5';lengthLabel.append(length);content.append(lengthLabel);const syncLength=()=>{lengthLabel.hidden=target.value!=='capital';progress.parentElement.hidden=target.value!=='country';};target.addEventListener('change',syncLength);syncLength();
-      const help=document.createElement('p');help.className='borderless-help';help.textContent='Countries: 3 tries, scored by first-try accuracy. Capitals: 1 guess, 100% within 25 km, then a gradually decreasing distance score. Country runs cover the full set. Capital runs sample your chosen number of places (up to the size of the set).';content.append(help);
+      const help=document.createElement('p');help.className='borderless-help';help.textContent='Countries: three tries, with fewer points for later guesses. Capitals: one guess, with more points for closer pins.';content.append(help);
       const start=document.createElement('button');start.type='button';start.className='borderless-primary';start.textContent='Start Borderless →';content.append(start);
-      const syncSetup=()=>{const capital=target.value==='capital';document.getElementById('borderlessTitle').textContent=capital?'Borderless · Pinpoint capitals':'Borderless · Find countries';intro.textContent=capital?'Place your guesses on a borderless map. Earn up to 100 points per capital, based on how close you get.':'Tap inside each country on a borderless map. Complete your chosen region with three tries per country.';help.textContent=capital?'Choose your clues, region and number of capitals. Within 25 km earns 100 points; farther guesses earn fewer points. The run uses up to the number of places in your region.':'First-try accuracy and time are saved. Fill the map as you go, or keep each new country blind.';start.textContent=capital?'Start capital run →':'Start country run →';target.parentElement.hidden=true;};target.addEventListener('change',syncSetup);syncSetup();
+      const syncSetup=()=>{const capital=target.value==='capital';document.getElementById('borderlessTitle').textContent=capital?'Borderless · Pinpoint capitals':'Borderless · Find countries';intro.textContent=capital?'Place your guesses on a borderless map. Earn up to 100 points per capital, based on how close you get.':'Tap inside each country on a borderless map. Complete your chosen region with three tries per country.';help.textContent=capital?'Within 25 km earns 100 points; farther guesses earn fewer points.':'Your score gives some credit for finding a country on your second or third try. Fill the map as you go, or keep each new country blind.';start.textContent=capital?'Start capital run →':'Start country run →';target.parentElement.hidden=true;};target.addEventListener('change',syncSetup);syncSetup();
       start.onclick=async()=>{if(target.value==='capital'&&!length.reportValidity())return;start.disabled=true;const token=++borderlessRenderToken;try{
         const features=await loadBorderlessMapFeatures();if(token!==borderlessRenderToken)return;
         const codes=countrySetIndices(region.value).map(i=>countries[i]).filter(c=>canonicalWorldTargetFeature(c,features)&&(target.value!=='capital'||mapHuntCapitalCities(c).length)&&(!promptParts(clue.value).includes('capital')||capitalNamesForCountry(c).length)).map(c=>c.code);
@@ -41232,7 +41250,7 @@ function studyCapitalPrompt(host,c,stage){if(!capitalPromptDetails||studySession
           : ` · ${total} places`;
         chainFinishMeta.textContent = `${formatChainTime(chainElapsedMs())}${trailText} · ${answerLabel} · ${rules}${hintText}${giveUpText}`;
       }
-      if(chainState?.challenge && chainFinishMeta)chainFinishMeta.textContent=homeRecordMapText(chainState);
+      if(chainState?.challenge && chainFinishMeta){const scoreText=homeRecordMapText(chainState);chainFinishMeta.textContent+=scoreText?' · '+scoreText:' · Challenge unfinished';}
       homeStyleMapCompletion(chainState,"chain");
       chainGuessInput.disabled = true;
       chainGuessBtn.disabled = true;
@@ -43498,18 +43516,16 @@ function rankingTargetValues() {
       return rankingTargetValues().indexOf(item.value);
     }
 
+    function rankingOutcomeForCode(state,code){
+      const first=new Set(state.firstCheckCorrectCodes||[]),known=new Set(state.knownCorrectCodes||[]),hinted=(state.hintedCodes||[]).includes(code);
+      if(first.has(code))return hinted?'light-help':'clean';
+      if(known.has(code))return hinted?'heavy-help':'light-help';
+      return null;
+    }
     function rankingDailyOutcomes(state=rankingState){
       if(!state)return [];
       const order=Array.isArray(state.firstCheckOrder)?state.firstCheckOrder:state.items.map(item=>item.c.code);
-      const first=new Set(state.firstCheckCorrectCodes || []);
-      const hinted=Array.isArray(state.hintedCodes)?state.hintedCodes:[];
-      return order.map(code=>{
-        if(!first.has(code))return "missed";
-        const directed=hinted.filter(value=>value===code).length;
-        if(directed>1 || hinted.length>=3)return "heavy-help";
-        if(hinted.length || state.hints)return "light-help";
-        return "clean";
-      });
+      return order.map(code=>rankingOutcomeForCode(state,code)||'missed');
     }
 
     function recordRankingMastery(revealed = false) {
@@ -43541,9 +43557,9 @@ function rankingTargetValues() {
       recordDailyFactCounts({
         total: outcomes.length,
         clean: outcomes.filter(value=>value==="clean").length,
-        lightHelp: revealed?0:outcomes.filter(value=>value==="light-help").length,
-        heavyHelp: revealed?0:outcomes.filter(value=>value==="heavy-help").length,
-        missed: outcomes.filter(value=>value==="missed").length+(revealed?outcomes.filter(value=>value!=="missed"&&value!=="clean").length:0)
+        lightHelp: outcomes.filter(value=>value==="light-help").length,
+        heavyHelp: outcomes.filter(value=>value==="heavy-help").length,
+        missed: outcomes.filter(value=>value==="missed").length
       });
     }
 
@@ -43552,10 +43568,10 @@ function rankingTargetValues() {
       homeTickTimers();
       rankingState.revealed = true;
       rankingState.verified = true;
-      if(rankingState.launchPreset?.dailyKey){const outcomes=rankingDailyOutcomes();homeRecordDaily(rankingState.launchPreset,100*(rankingState.firstCheckCorrectCodes?.length||0)/rankingState.items.length,rankingState.homeElapsedMs||0,{correct:rankingState.firstCheckCorrectCodes?.length||0,total:rankingState.items.length,checks:rankingState.checks,hints:rankingState.hints,outcomes});homeShowFinishedDaily("ranking",rankingFeedback.parentElement);homeDailyNextNote(rankingFeedback.parentElement,"Ranking","round");}
       rankingState.checkedCorrectCodes = new Set(rankingState.items.map(item => item.c.code));
       rankingState.knownCorrectCodes = new Set(rankingState.items.map(item => item.c.code));
       rankingState.newlyConfirmedCodes = new Set();
+      if(rankingState.launchPreset?.dailyKey){const outcomes=rankingDailyOutcomes(),weighted={clean:100,'light-help':70,'heavy-help':40,missed:0};homeRecordDaily(rankingState.launchPreset,outcomes.reduce((sum,outcome)=>sum+weighted[outcome],0)/outcomes.length,rankingState.homeElapsedMs||0,{correct:rankingState.firstCheckCorrectCodes?.length||0,total:rankingState.items.length,checks:rankingState.checks,hints:rankingState.hints,outcomes});homeShowFinishedDaily("ranking",rankingFeedback.parentElement);homeDailyNextNote(rankingFeedback.parentElement,"Ranking","round");}
       recordRankingMastery(false);
       const checks = Math.max(1, Number(rankingState.checks) || 1);
       rankingFeedback.textContent = `Perfect — solved in ${checks} check${checks === 1 ? "" : "s"}.`;
@@ -43636,8 +43652,7 @@ function rankingTargetValues() {
         const down=document.createElement("button"); down.type="button"; down.textContent="↓"; down.dataset.rankingMove="down"; down.dataset.rankingIndex=String(index); down.setAttribute("aria-label",`Move ${item.c.name} down`); down.disabled=index===rankingState.items.length-1 || rankingState.revealed;
         move.append(up,down); row.append(position,country,direction,move); rankingList.appendChild(row);
       });
-      const known=new Set(rankingState.knownCorrectCodes||[]),first=new Set(rankingState.firstCheckCorrectCodes||[]);
-      const outcomes=rankingState.items.map(item=>!known.has(item.c.code)?null:first.has(item.c.code)?rankingState.hints?'light-help':'clean':rankingState.hints?'heavy-help':'light-help');
+      const outcomes=rankingState.items.map(item=>rankingOutcomeForCode(rankingState,item.c.code));
       renderGameQualityBar(rankingPromptMeta,'ranking',outcomes,rankingState.items.length,'Ranking places confirmed and how many checks or hints they needed');
     }
 
@@ -45887,10 +45902,10 @@ function rankingTargetValues() {
     function homeSeededOrder(items,key){const result=[...items],rng=seededRandom(hashString32('GeoDen:discovery:v1:'+key));for(let i=result.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[result[i],result[j]]=[result[j],result[i]];}return result;}
     function homeChallengeId(mode,variant,region){return `v1:${mode}:${variant}:${region}`;}
     function homeChallengeSpec(id){const [v,mode,variant,region]=String(id||'').split(':');return v==='v1'&&HOME_MAP_VARIANTS[mode]?.[variant]&&HOME_MAP_REGIONS.includes(region)?{id,mode,variant,region}:null;}
-    function homeChallengeProgress(mode,variant=null){const ids=Object.keys(HOME_MAP_VARIANTS[mode]).filter(v=>!variant||variant===v).flatMap(v=>HOME_MAP_REGIONS.map(r=>homeChallengeId(mode,v,r)));const scores=ids.map(id=>homeRecords.challenges[id]?.best?.score??null),completed=scores.filter(score=>score!==null).length,total=ids.length;return {completed,total,percent:total?Math.round(100*completed/total):0,scores};}
+    function homeChallengeProgress(mode,variant=null){const ids=Object.keys(HOME_MAP_VARIANTS[mode]).filter(v=>!variant||variant===v).flatMap(v=>HOME_MAP_REGIONS.map(r=>homeChallengeId(mode,v,r)));const scores=ids.map(id=>homeRecords.challenges[id]?.best||null),completed=scores.filter(Boolean).length,total=ids.length;return {completed,total,percent:total?Math.round(100*completed/total):0,scores};}
     function homeChallengeBar(track,progress){
-      track.replaceChildren();track.setAttribute('role','progressbar');track.setAttribute('aria-valuemin','0');track.setAttribute('aria-valuemax',String(progress.total));track.setAttribute('aria-valuenow',String(progress.completed));track.setAttribute('aria-valuetext',`${progress.completed} of ${progress.total} challenges complete; colours show best results`);
-      for(const score of progress.scores){const segment=document.createElement('span');segment.className='challenge-result-segment';segment.style.width=`${100/Math.max(1,progress.total)}%`;segment.style.setProperty('--segment-color',score===null?'transparent':score>=95?'#39784e':score>=70?'#88a75b':score>=40?'#c09b3d':'#995347');segment.title=score===null?'Not played':`${Math.round(score)}% best score`;track.append(segment);}
+      track.replaceChildren();track.setAttribute('role','progressbar');track.setAttribute('aria-valuemin','0');track.setAttribute('aria-valuemax',String(progress.total));track.setAttribute('aria-valuenow',String(progress.completed));track.setAttribute('aria-valuetext',`${progress.completed} of ${progress.total} challenges complete; colours show best results. Grey segments are earlier results`);
+      for(const result of progress.scores){const score=result?.score,legacy=result&&result.grading!=='weighted-v1';const segment=document.createElement('span');segment.className='challenge-result-segment';segment.style.width=`${100/Math.max(1,progress.total)}%`;segment.style.setProperty('--segment-color',!result?'transparent':legacy?'#9a9b91':score>=95?'#39784e':score>=70?'#88a75b':score>=40?'#c09b3d':'#995347');segment.title=!result?'Not played':legacy?`${Math.round(score)}% earlier result`:`${Math.round(score)}% best score`;track.append(segment);}
     }
     function homeTime(ms){return formatChainTime(Math.max(0,ms||0));}
     function homeButton(title,meta,action,primary=false){const b=document.createElement('button');b.type='button';b.className='discovery-card'+(primary?' discovery-primary':'');const copy=document.createElement('span'),name=document.createElement('strong'),detail=document.createElement('small');name.textContent=title;detail.textContent=meta;copy.append(name,detail);const arrow=document.createElement('span');arrow.className='discovery-arrow';arrow.textContent='→';arrow.setAttribute('aria-hidden','true');b.append(copy,arrow);b.addEventListener('click',()=>action(b));return b;}
@@ -45936,7 +45951,7 @@ function rankingTargetValues() {
       const copy=b.firstChild;copy.prepend(homeStatusBadge(state,label));
       if(result){
         const stats=document.createElement('span');stats.className='challenge-best';
-        for(const [value,title] of [[`${result.score}%`,'Best score'],[homeTime(result.elapsedMs),'Time at best score']]){
+        for(const [value,title] of [[`${result.score}%`,result.grading==='weighted-v1'?'Best score':'Earlier best result'],[homeTime(result.elapsedMs),'Time at best score']]){
           const item=document.createElement('span'),valueEl=document.createElement('b'),caption=document.createElement('span');
           valueEl.textContent=value;caption.textContent=title;item.append(valueEl,caption);stats.append(item);
         }
@@ -46045,7 +46060,7 @@ function rankingTargetValues() {
     function homeCrawlStyleVariants(rule){return Object.keys(HOME_MAP_VARIANTS.chain).filter(variant=>homeCrawlVariantRule(variant)===rule);}
     function homeCrawlStyleCards(cards,desc) {
       desc.textContent='Choose how you want to travel across the map.';
-      for(const [rule,title,copy,color]of [['connected','Connected','Expand from any country you have filled.','#4F6D5D'],['trail','Trail','Follow a route from your current country; backtrack to explore another branch.','#7F6743'],['fortified','Fortified','Fill enough neighbouring countries to unlock the next one.','#73576B']]){const variants=homeCrawlStyleVariants(rule),total=variants.length*HOME_MAP_REGIONS.length,done=variants.flatMap(variant=>HOME_MAP_REGIONS.map(region=>homeChallengeId('chain',variant,region))).filter(id=>homeRecords.challenges[id]?.best).length;const card=homeButton(title,copy,()=>{homeCrawlStyle=rule;renderHomeDiscovery();});card.classList.add('borderless-path-card','crawl-style-card');card.dataset.crawlStyle=rule;card.querySelector('strong').prepend(gameIcon(rule==='connected'?'chain':rule));card.style.setProperty('background',color,'important');const meta=document.createElement('span');meta.className='borderless-path-detail';meta.textContent=done+' of '+total+' challenges completed · Custom practice';card.firstChild.append(meta);cards.append(card);}
+      for(const [rule,title,copy,color]of [['connected','Connected','Expand from any country you have filled.','#4F6D5D'],['trail','Trail','Follow a route from your current country; backtrack to explore another branch.','#7F6743'],['fortified','Fortified','Fill enough neighbouring countries to unlock the next one.','#73576B']]){const variants=homeCrawlStyleVariants(rule),total=variants.length*HOME_MAP_REGIONS.length,done=variants.flatMap(variant=>HOME_MAP_REGIONS.map(region=>homeChallengeId('chain',variant,region))).filter(id=>homeRecords.challenges[id]?.best).length;const card=homeButton(title,copy,()=>{homeCrawlStyle=rule;renderHomeDiscovery();});card.classList.add('borderless-path-card','crawl-style-card');card.dataset.crawlStyle=rule;card.querySelector('strong').prepend(gameIcon(rule==='connected'?'chain':rule));card.style.setProperty('background',color,'important');const meta=document.createElement('span');meta.className='borderless-path-detail';meta.textContent=done+'/'+total+' complete';card.firstChild.append(meta);cards.append(card);}
     }
 
     function homeSetSection(section){homeHuntTarget=null;homeBorderlessCountries=false;homeStateRegions=false;homePendingLaunch=null;startOverlay.dataset.homeView='home';homeSection=section==='games'?'games':'learn';homeMode=null;homeVariant=null;document.getElementById('startSessionCard').classList.add('hidden');startOverlay.dataset.modeArmed='false';renderHomeDiscovery();}
@@ -46081,10 +46096,10 @@ function rankingTargetValues() {
         if(homeVariant)h.textContent+=' · '+HOME_MAP_VARIANTS[homeMode][homeVariant];
         const desc=document.createElement('p');desc.className='discovery-description';landing.append(back,h,desc);
         const cards=document.createElement('div');cards.className='discovery-grid';landing.append(cards);
-        if(homeMode==='borderless'&&!homeBorderlessCountries&&!homeVariant){desc.textContent='Two ways to explore a map without borders. What would you like to find?';for(const [key,title,copy,detail]of [['countries','Find countries','Tap inside each country and fill the map as you go.','Regional challenges · accuracy & time'],['capitals','Pinpoint capitals','Place your guess as close to the capital city as you can.','Short scored runs · points for closeness']]){const card=homeButton(title,copy,()=>{if(key==='capitals')openBorderlessCapitalSetup();else{homeBorderlessCountries=true;renderHomeDiscovery();}});card.classList.add('borderless-path-card');card.dataset.borderlessPath=key;card.style.setProperty('background',key==='capitals'?'#94654D':'#6C754A','important');decorateChallengeTopic(card,key==='capitals'?'capital':'country');const meta=document.createElement('span');meta.className='borderless-path-detail';meta.textContent=detail;if(key==='countries'){const p=homeChallengeProgress('borderless');meta.textContent+=' · '+p.completed+' of '+p.total+' complete';}if(key==='capitals'){const best=progressActivityRows().filter(row=>row.mode==='borderless'&&row.target==='capital'&&row.total===5).sort((a,b)=>b.points-a.points)[0];if(best)meta.textContent+=' · Best 5: '+best.points+' points';}card.firstChild.append(meta);cards.append(card);}}
+        if(homeMode==='borderless'&&!homeBorderlessCountries&&!homeVariant){desc.textContent='Two ways to explore a map without borders. What would you like to find?';for(const [key,title,copy,detail]of [['countries','Find countries','Tap inside each country and fill the map as you go.','Regional challenges'],['capitals','Pinpoint capitals','Place your guess as close to the capital city as you can.','Short scored runs']]){const card=homeButton(title,copy,()=>{if(key==='capitals')openBorderlessCapitalSetup();else{homeBorderlessCountries=true;renderHomeDiscovery();}});card.classList.add('borderless-path-card');card.dataset.borderlessPath=key;card.style.setProperty('background',key==='capitals'?'#94654D':'#6C754A','important');decorateChallengeTopic(card,key==='capitals'?'capital':'country');const meta=document.createElement('span');meta.className='borderless-path-detail';meta.textContent=detail;if(key==='countries'){const p=homeChallengeProgress('borderless');meta.textContent=p.completed+'/'+p.total+' complete';}if(key==='capitals'){const best=progressActivityRows().filter(row=>row.mode==='borderless'&&row.target==='capital'&&row.total===5).sort((a,b)=>b.points-a.points)[0];if(best)meta.textContent='Best five: '+best.points+' points';}card.firstChild.append(meta);cards.append(card);}}
         else if(homeMode==='maphunt'&&!homeHuntTarget&&!homeVariant){
           desc.textContent='What would you like to find? Both have regional challenges and custom games.';
-          for(const [target,title,copy] of [['country','Find countries','Tap the country shapes. Choose name, flag or capital-name clues.'],['capital','Find capitals','Tap the city dots. Choose country-name, flag or capital-name clues.']]){const card=homeButton(title,copy,()=>{homeHuntTarget=target;renderHomeDiscovery();});card.classList.add('borderless-path-card');card.dataset.huntTarget=target;card.style.setProperty('background',target==='capital'?'#716482':'#3E7180','important');decorateChallengeTopic(card,target);const variants=target==='capital'?['city-country','city-flag','city-capital']:['country','flag','capital'];const totals=variants.map(variant=>homeChallengeProgress('maphunt',variant));const done=totals.reduce((n,p)=>n+p.completed,0),all=totals.reduce((n,p)=>n+p.total,0);const meta=document.createElement('span');meta.className='borderless-path-detail';meta.textContent=done+' of '+all+' regional challenges completed';card.firstChild.append(meta);cards.append(card);}
+          for(const [target,title,copy] of [['country','Find countries','Tap the country shapes. Choose name, flag or capital-name clues.'],['capital','Find capitals','Tap the city dots. Choose country-name, flag or capital-name clues.']]){const card=homeButton(title,copy,()=>{homeHuntTarget=target;renderHomeDiscovery();});card.classList.add('borderless-path-card');card.dataset.huntTarget=target;card.style.setProperty('background',target==='capital'?'#716482':'#3E7180','important');decorateChallengeTopic(card,target);const variants=target==='capital'?['city-country','city-flag','city-capital']:['country','flag','capital'];const totals=variants.map(variant=>homeChallengeProgress('maphunt',variant));const done=totals.reduce((n,p)=>n+p.completed,0),all=totals.reduce((n,p)=>n+p.total,0);const meta=document.createElement('span');meta.className='borderless-path-detail';meta.textContent=done+'/'+all+' complete';card.firstChild.append(meta);cards.append(card);}
         }
         else if(homeMode==='chain'&&!homeCrawlStyle){homeCrawlStyleCards(cards,desc);}
         else if(HOME_MAP_VARIANTS[homeMode]){
@@ -46168,7 +46183,7 @@ function rankingTargetValues() {
       const names={quiz:'Daily Quiz',detective:'Daily Detective',matching:'Daily Matching',ranking:'Daily Ranking'};
       const result=homeDailyResult(mode);
       const active=mode==='quiz'?studySession?.active!==false&&studySession?.dailyChallenge?.key===dailyChallengeRunKey():(mode==='ranking'?rankingState:studySession)?.launchPreset?.dailyKey===homeDailyId(mode)&&!result;
-      const meta=result?(mode==='quiz'?`${result.correct}/${result.total} correct`:`${result.score}% · ${homeTime(result.elapsedMs)}`):'';
+      const meta=result?(mode==='quiz'?`${Array.isArray(result.outcomes)?result.outcomes.filter(value=>value==='clean').length:result.correct} without help · ${homeTime(result.elapsedMs)}`:mode==='detective'?`${result.score} points · ${homeTime(result.elapsedMs)}`:`${result.score}% score · ${homeTime(result.elapsedMs)}`):'';
       const b=homeButton(names[mode],meta,button=>{
         if(result){homeShowDailyResult(mode,result);return;}
         if(mode==='quiz'){if(!homeConfirmReplace('study',button,active))return;if(active){startOverlay.classList.remove('open');openRapidMode(true);}else startDailyChallengeSession();}
@@ -46240,11 +46255,11 @@ function rankingTargetValues() {
       const spec=homeChallengeSpec(state?.challenge?.id);if(!spec||state.revision||state.challengeRecorded)return;
       const complete=mode==='maphunt'?state.results.size===state.roundCodes.length:chainFilledCodes().size===state.codes.length;if(!complete)return;
       let total,clean,score,tries=null;if(mode==='maphunt'){total=state.roundCodes.length;const outcomes=state.roundCodes.map(code=>state.results.get(code));clean=outcomes.filter(r=>r&&!r.revealed&&r.tries===1).length;score=Math.round(outcomes.reduce((sum,r)=>sum+mapTryScore(r),0)/Math.max(1,total));tries=outcomes.map(r=>r?.revealed?4:r?.tries||4);}else{total=(state.codes.length-1)*(state.answerMode==='both'?2:1);clean=state.challengeClean||0;const values=[...(state.partOutcomes?.values()||[])];score=values.length?Math.round(values.reduce((sum,value)=>sum+({clean:100,'light-help':70,'heavy-help':40,missed:0}[value]||0),0)/Math.max(1,total)):Math.round(100*clean/Math.max(1,total));}
-      const result={correct:clean,total,score,tries,elapsedMs:mode==='chain'?chainElapsedMs():(state.homeElapsedMs||0),completedAt:Date.now()},record=homeRecords.challenges[spec.id]||{plays:0},best=record.best;
-      record.plays++;record.last=result;if(!best||result.score>best.score||(result.score===best.score&&result.correct>best.correct)||(result.score===best.score&&result.correct===best.correct&&result.elapsedMs<best.elapsedMs))record.best=result;
+      const result={correct:clean,total,score,tries,elapsedMs:mode==='chain'?chainElapsedMs():(state.homeElapsedMs||0),completedAt:Date.now(),grading:'weighted-v1'},record=homeRecords.challenges[spec.id]||{plays:0},best=record.best;
+      record.plays++;record.last=result;if(!best||best.grading!=='weighted-v1'||result.score>best.score||(result.score===best.score&&result.correct>best.correct)||(result.score===best.score&&result.correct===best.correct&&result.elapsedMs<best.elapsedMs))record.best=result;
       homeRecords.challenges[spec.id]=record;state.challengeRecorded=true;saveHomeRecords();
     }
-    function homeRecordMapText(state){const r=homeRecords.challenges[state?.challenge?.id];return r?.last?`Challenge · ${r.last.score}% score · ${homeTime(r.last.elapsedMs)} · Best ${r.best.score}%` :'';}
+    function homeRecordMapText(state){const r=homeRecords.challenges[state?.challenge?.id];return r?.last?`Challenge · ${r.last.score}% ${r.last.grading==='weighted-v1'?'score':'earlier result'} · ${homeTime(r.last.elapsedMs)} · Best ${r.best.score}%` :'';}
     function homeTickTimers(){
       const now=Date.now();for(const [state,visible,finished] of [[mapHuntState,mapHuntOverlay?.classList.contains('open')&&!mapHuntPlay.classList.contains('hidden'),mapHuntState?.finished],[studySession,['matchingOverlay','detectiveOverlay','rapidOverlay'].some(id=>document.getElementById(id)?.classList.contains('open')),studySession?.active===false],[rankingState,rankingOverlay?.classList.contains('open')&&!rankingPlay.classList.contains('hidden'),rankingState?.revealed]]){
         if(!state||(!state.challenge&&!state.launchPreset&&!state.dailyChallenge))continue;
@@ -46263,11 +46278,14 @@ function rankingTargetValues() {
       const ordered=Array.isArray(r.outcomes)&&r.outcomes.length===total?r.outcomes.map(tile):null;
       const cells=mode==='detective'?null:ordered||Array.from({length:total},(_,i)=>i<green?'🟩':'⬜');
       const grid=mode==='detective'?'🔎'.repeat(Math.min(5,r.clues||1))+(r.correct?' ✅':' ⬜'):cells.reduce((rows,cell,i)=>{if(i&&i%5===0)rows+='\n';return rows+cell;},'');
-      const result=mode==='quiz'?`${r.correct}/${r.total} correct`:mode==='detective'?`${r.correct?'Solved':'Revealed'} · ${score} points`:mode==='ranking'?`${r.correct}/${r.total} in place on the first check`:`${score}% first-try accuracy`;
+      const cleanCount=Array.isArray(r.outcomes)?r.outcomes.filter(value=>value==='clean').length:r.correct;
+      const helpedCount=Array.isArray(r.outcomes)?r.outcomes.filter(value=>value==='light-help'||value==='heavy-help').length:Math.max(0,Number(r.assisted)||0);
+      const missedCount=Math.max(0,(r.total||0)-cleanCount-helpedCount);
+      const result=mode==='quiz'?`${cleanCount} without help · ${helpedCount} with help · ${missedCount} missed or over-hinted`:mode==='detective'?`${r.correct?'Solved':'Revealed'} · ${score} points`:mode==='ranking'?`${score}% score · ${r.correct}/${r.total} right on the first check`:`${score}% score · ${r.correct}/${r.total} first try`;
       const time=Number.isFinite(r.elapsedMs)?` · ⏱ ${homeTime(r.elapsedMs)}`:'';
-      const help=mode==='ranking'?`\n${r.checks||1} check${r.checks===1?'':'s'} · ${r.hints||0} hints`:mode==='quiz'&&r.assisted?`\n${r.assisted} with help`:'';
+      const help=mode==='ranking'?`\n${r.checks||1} check${r.checks===1?'':'s'} · ${r.hints||0} hints`:'';
       const url=/^https?:$/.test(location.protocol)&&!['localhost','127.0.0.1'].includes(location.hostname)?'\n'+location.origin+location.pathname:'';
-      const legend=ordered?'🟩 no help · 🟨 a little help · 🟧 lots of help · ⬜ missed or corrected':'🟩 correct · ⬜ missed or corrected';
+      const legend=ordered?'🟩 no help · 🟨 a little help · 🟧 lots of help · ⬜ missed, revealed or over-hinted':'🟩 correct · ⬜ missed or revealed';
       return `🌍 GeoDen Daily · ${name}\n${date}${topicLine}\n\n${grid}\n${result}${time}${help}\n${mode==='detective'?'A little geography mystery.':legend}${url}`;
     }
     function homeDailyReport(mode,result){
@@ -46316,7 +46334,7 @@ function rankingTargetValues() {
       document.getElementById('homeModeBrowserTitle').textContent='Find your next session';
       const groups=playModePicker.querySelectorAll('.mode-discovery-options');groups[0].append(document.getElementById('sprintModeBtn'));for(const id of ['mapHuntModeBtn','chainModeBtn','detectiveModeBtn','matchingModeBtn','rankingModeBtn'])groups[1].append(document.getElementById(id));
       groups[0].closest('section').dataset.homeGroup='learn';groups[1].closest('section').dataset.homeGroup='games';playModePicker.prepend(groups[1].closest('section'));
-      for(const [i,copy] of [[0,'Build your knowledge, one place at a time.'],[1,'Play, explore and complete challenges.']]){const heading=groups[i].previousElementSibling;heading.querySelector('.mode-discovery-title').setAttribute('role','heading');heading.querySelector('.mode-discovery-title').setAttribute('aria-level','2');const intro=document.createElement('p');intro.className='mode-section-intro';intro.textContent=copy;heading.append(intro);}
+      for(const [i,copy] of [[0,'Build your knowledge, one place at a time.'],[1,'Play, explore and complete challenges. Bar colours show your best results; green is strongest.']]){const heading=groups[i].previousElementSibling;heading.querySelector('.mode-discovery-title').setAttribute('role','heading');heading.querySelector('.mode-discovery-title').setAttribute('aria-level','2');const intro=document.createElement('p');intro.className='mode-section-intro';intro.textContent=copy;heading.append(intro);}
       document.getElementById('modeGroupStudy').textContent='Learn';document.getElementById('modeGroupGames').textContent='Games';playModePicker.querySelector('[data-play-mode="standard"] .play-mode-name').textContent='Flash cards';
       for(const [mode,description] of Object.entries(HOME_GAME_DESCRIPTIONS)){
         const card=playModePicker.querySelector(`[data-play-mode="${mode}"], [data-game-icon="${mode}"]`);
@@ -46424,10 +46442,10 @@ function subEl(tag,text,className){const e=document.createElement(tag);if(text!=
 function subButton(text,fn,className=''){const b=subEl('button',text,className);b.type='button';b.onclick=fn;return b;}
 function subChallengeCard(mode,clue,target,set){
  const id=['sub1',mode,clue,target,set].join(':'),best=subStore.challenges[id]?.best,active=subStore.run?.challenge===id&&!subStore.run.finished;
- const card=homeButton(SUB_SETS[set].name,best?`${best.score}% best accuracy · ${homeTime(best.elapsedMs)}`:'Three guesses per place · first-try accuracy',()=>active?subResume():subOpenSetup(mode,SUB_SETS[set].parent,{set,clue,target,challenge:id}));
+ const card=homeButton(SUB_SETS[set].name,best?`${best.score}% ${best.grading==='weighted-v1'?'best score':'earlier result'} · ${homeTime(best.elapsedMs)}`:'Three guesses per place · later tries earn some points',()=>active?subResume():subOpenSetup(mode,SUB_SETS[set].parent,{set,clue,target,challenge:id}));
  card.classList.add('sub-challenge','challenge-region');card.dataset.subChallenge=id;card.dataset.challengeState=active?'active':best?'completed':'unplayed';card.firstChild.prepend(homeStatusBadge(active?'active':best?'completed':'unplayed',active?'Resume':best?'Completed':'Not played'));return card;
 }
-function subChallengeProgress(mode,variant,parent=subSetup?.parent){if(!['US','AU','CA'].includes(parent)||!['maphunt','borderless'].includes(mode))return {completed:0,total:0,scores:[]};const variants=variant?[variant]:Object.keys(HOME_MAP_VARIANTS[mode]);const ids=variants.flatMap(v=>Object.keys(SUB_SETS).filter(set=>SUB_SETS[set].parent===parent&&(!set.startsWith('us-')||set==='us-states')).map(set=>['sub1',mode,v.replace('city-','').replace('country','name'),v.startsWith('city-')?'capitalLocation':'location',set].join(':')));const scores=ids.map(id=>subStore.challenges[id]?.best?.score??null);return {completed:scores.filter(score=>score!==null).length,total:ids.length,scores};}
+function subChallengeProgress(mode,variant,parent=subSetup?.parent){if(!['US','AU','CA'].includes(parent)||!['maphunt','borderless'].includes(mode))return {completed:0,total:0,scores:[]};const variants=variant?[variant]:Object.keys(HOME_MAP_VARIANTS[mode]);const ids=variants.flatMap(v=>Object.keys(SUB_SETS).filter(set=>SUB_SETS[set].parent===parent&&(!set.startsWith('us-')||set==='us-states')).map(set=>['sub1',mode,v.replace('city-','').replace('country','name'),v.startsWith('city-')?'capitalLocation':'location',set].join(':')));const scores=ids.map(id=>subStore.challenges[id]?.best||null);return {completed:scores.filter(Boolean).length,total:ids.length,scores};}
 function subEnsureHost(){if(subHost)return subHost;subHost=subEl('section',undefined,'sub-overlay');subHost.id='subdivisionOverlay';subHost.setAttribute('role','dialog');subHost.setAttribute('aria-modal','true');subHost.setAttribute('aria-label','Subdivision game');document.body.append(subHost);subHost.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();subClose();}});return subHost;}
 function subShow(){mapHuntOverlay?.classList.remove('open');document.getElementById('borderlessOverlay')?.classList.remove('open');subEnsureHost().classList.add('open');startOverlay.classList.remove('open');subTickAt=performance.now();}
 function subClose(){subToken++;subBusy=false;subTick();subHost?.classList.remove('open');if(subHost)subHost.dataset.play='false';if(subStore.run)subSave();openStartOverlay(false);homeSetSection('games');if(subStore.run)noteResumableMode('subdivision');updateActiveSessionResumeCard();}
@@ -46440,7 +46458,7 @@ async function subOpenSetup(mode,parent,options={}){
 }
 function subSelect(parent,label,values,value){const wrap=subEl('label',undefined,'sub-field');wrap.append(subEl('span',label));const select=document.createElement('select');for(const [val,text]of values){const opt=subEl('option',text);opt.value=val;select.append(opt);}select.value=value;wrap.append(select);parent.append(wrap);return select;}
 function subRenderSetup(){
- const c=subSetup,panel=subFrame(SUB_MODES[c.mode]+' · '+subLabel(c.parent)),fixed=!!c.challenge;panel.append(subButton('← Study regions',()=>subReturnToRegions(c),'sub-region-back'));panel.append(subEl('p',fixed?'Scored challenge · complete this set. First-try accuracy, then time.':'Choose your study set and topics. Your country settings stay unchanged.','sub-intro'));
+ const c=subSetup,panel=subFrame(SUB_MODES[c.mode]+' · '+subLabel(c.parent)),fixed=!!c.challenge;panel.append(subButton('← Study regions',()=>subReturnToRegions(c),'sub-region-back'));panel.append(subEl('p',fixed?'Scored challenge · complete this set. Later tries earn some points.':'Choose your study set and topics. Your country settings stay unchanged.','sub-intro'));
  if(['maphunt','borderless'].includes(c.mode)&&!fixed&&!c.custom){
   const grid=subEl('div',undefined,'discovery-grid');panel.append(grid);
   if(c.chooseRegion){panel.insertBefore(subButton('← Topics',()=>subOpenSetup(c.mode,c.parent)),grid);panel.insertBefore(subEl('h3',(c.clue==='name'?'Names':SUB_TOPICS[c.clue])+' · '+(c.target==='location'?'Find the '+subNoun(c.parent):'Capital city dots')),grid);for(const [set,meta]of Object.entries(SUB_SETS).filter(([id,x])=>x.parent===c.parent&&(!id.startsWith('us-')||id==='us-states')))grid.append(subChallengeCard(c.mode,c.clue,c.target,set));}
@@ -46484,7 +46502,7 @@ async function subResume(){const token=++subToken;subShow();try{await subReady()
 function subTick(){const now=performance.now();if(subTickAt&&subHost?.classList.contains('open')&&!document.hidden&&subStore.run&&!subStore.run.finished&&subHost.dataset.play==='true')subStore.run.elapsedMs+=Math.min(1000,now-subTickAt);subTickAt=now;}
 function subCurrent(){return subStore.run?.queue[subStore.run.index];}
 function subRecord(score,revealed=false,extra={}){const r=subStore.run,q=subCurrent();if(!q||r.finished)return;const entry={id:q.id,topic:q.topic,score,tries:Math.min(3,r.misses.length+1),revealed,...extra};r.results.push(entry);const clean=score===100&&!revealed&&r.misses.length===0,lightHelp=!revealed&&!clean&&score>=65,heavyHelp=!revealed&&!clean&&score>0&&score<65;recordDailyFactCounts({total:1,clean:clean?1:0,lightHelp:lightHelp?1:0,heavyHelp:heavyHelp?1:0,missed:clean||lightHelp||heavyHelp?0:1});const key=q.id+':'+q.topic,old=subStore.learning[key]||{attempts:0,correct:0};old.attempts++;if(score===100&&!revealed&&r.misses.length===0)old.correct++;subStore.learning[key]=old;r.index++;r.misses=[];r.feedback='';r.pending=null;subSave();}
-function subFinish(){const r=subStore.run;if(r.recorded)return;r.finished=true;r.recorded=true;const score=Math.round(r.results.reduce((s,x)=>s+x.score,0)/r.results.length);if(r.challenge){const last={score,elapsedMs:r.elapsedMs,completedAt:Date.now()},record=subStore.challenges[r.challenge]||{plays:0};record.plays++;record.last=last;if(!record.best||score>record.best.score||(score===record.best.score&&last.elapsedMs<record.best.elapsedMs))record.best=last;subStore.challenges[r.challenge]=record;}subSave();}
+function subFinish(){const r=subStore.run;if(r.recorded)return;r.finished=true;r.recorded=true;const score=Math.round(r.results.reduce((s,x)=>s+x.score,0)/r.results.length);if(r.challenge){const last={score,elapsedMs:r.elapsedMs,completedAt:Date.now(),grading:'weighted-v1'},record=subStore.challenges[r.challenge]||{plays:0};record.plays++;record.last=last;if(!record.best||record.best.grading!=='weighted-v1'||score>record.best.score||(score===record.best.score&&last.elapsedMs<record.best.elapsedMs))record.best=last;subStore.challenges[r.challenge]=record;}subSave();}
 async function subValue(id,topic){const r=subData.get(id);if(topic==='name')return subEl('strong',r.name);if(topic==='capital')return subEl('strong',r.capital.name);if(topic==='flag'){const image=document.createElement('img');image.src=subData.flagUrl(id);image.alt='Flag to identify';image.className='sub-flag';return image;}if(topic==='silhouette'){const shape=await subData.silhouette(id);const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('viewBox',shape.viewBox);svg.setAttribute('preserveAspectRatio','xMidYMid meet');svg.setAttribute('aria-label','Outline to identify');svg.setAttribute('role','img');svg.classList.add('sub-outline');const path=document.createElementNS(svg.namespaceURI,'path');path.setAttribute('d',shape.path);svg.append(path);return svg;}return subEl('span',SUB_TOPICS[topic]);}
 async function subRenderRun(){
  const token=++subToken,r=subStore.run;if(!r)return;subShow();subHost.dataset.play='true';subHost.dataset.screen='run';const panel=subFrame(SUB_MODES[r.mode]+' · '+subLabel(r.parent));
@@ -46492,7 +46510,7 @@ async function subRenderRun(){
  const stage=subEl('section',undefined,'sub-stage');stage.id='subStage';panel.append(stage);
  if(r.index===r.queue.length){subFinish();subRenderFinish(stage);return;}if(r.mode==='matching'){await subRenderMatching(stage,token);return;}await subRenderQuestion(stage,token);
 }
-function subUpdateProgress(){const r=subStore.run,e=document.getElementById('subRunProgress'),p=document.getElementById('subProgress'),done=r.match?.locked.length??r.index;if(e)e.textContent=SUB_SETS[r.set].name+' · '+done+' of '+r.queue.length+(r.mode==='borderless'&&r.queue[0].topic==='capitalLocation'?' · '+r.results.reduce((s,x)=>s+x.score,0)+' / '+r.queue.length*100+' points':'');if(p){const capitals=r.mode==='borderless'&&r.queue[0].topic==='capitalLocation';p.max=r.queue.length*(capitals?100:1);p.value=capitals?r.results.reduce((sum,result)=>sum+result.score,0):done;p.setAttribute('aria-label',capitals?'Capital points earned':'Session completion');p.setAttribute('aria-valuetext',p.value+' out of '+p.max+(capitals?' points':' answers'));if(capitals)renderCapitalPointsBar(p,r.results,r.queue.length);else{p.classList.add('hidden');const outcomes=r.results.map(result=>result.revealed?'missed':result.score>=95?'clean':result.score>=65?'light-help':result.score>0?'heavy-help':'missed');renderGameQualityBar(p,'subdivision',outcomes,r.queue.length,'Answers completed and how they went');}}}
+function subUpdateProgress(){const r=subStore.run,e=document.getElementById('subRunProgress'),p=document.getElementById('subProgress'),done=r.match?.locked.length??r.index;if(e)e.textContent=SUB_SETS[r.set].name+' · '+done+' of '+r.queue.length+(r.mode==='borderless'&&r.queue[0].topic==='capitalLocation'?' · '+r.results.reduce((s,x)=>s+x.score,0)+' points':'');if(p){const capitals=r.mode==='borderless'&&r.queue[0].topic==='capitalLocation';p.max=r.queue.length*(capitals?100:1);p.value=capitals?r.results.reduce((sum,result)=>sum+result.score,0):done;p.setAttribute('aria-label',capitals?'Capitals completed and points earned':'Session completion');p.setAttribute('aria-valuetext',p.value+' out of '+p.max+(capitals?' points':' answers'));if(capitals)renderCapitalPointsBar(p,r.results,r.queue.length);else{p.classList.add('hidden');const outcomes=r.mode==='matching'?r.queue.map((_,i)=>r.match.locked.includes(String(i))?(r.match.failed.includes(String(i))?'light-help':'clean'):r.match.placements[String(i)]!==undefined?'pending':null):r.results.map(result=>result.revealed?'missed':result.score>=95?'clean':result.score>=65?'light-help':result.score>0?'heavy-help':'missed');renderGameQualityBar(p,'subdivision',outcomes,r.queue.length,'Answers completed and how they went');}}}
 async function subRenderQuestion(stage,token=subToken){
  const r=subStore.run,q=subCurrent();subUpdateProgress();if(!q){subFinish();subRenderFinish(stage);return;}const mapTopic=['location','capitalLocation'].includes(q.topic);
  let map=stage.querySelector('.sub-map');const oldMap=mapTopic&&['maphunt','borderless'].includes(r.mode)?map:null;if(oldMap)oldMap.remove();stage.replaceChildren();
@@ -46518,16 +46536,17 @@ function subAnswer(correct,clicked,stage,reveal=false,extra={}){
 }
 async function subShowAnswer(stage,pending){
  const r=subStore.run,q=subCurrent();if(!q)return;stage.querySelectorAll('.sub-options button,.sub-answer-form input,.sub-answer-form button,.sub-give-up').forEach(b=>b.disabled=true);
- const status=stage.querySelector('#subFeedback');status.replaceChildren();const record=subData.get(q.id);status.append(subEl('strong',pending.correct?'Correct ✓':'Answer revealed'),subEl('p',record.name+' · '+record.capital.name));if(pending.km!==undefined)status.append(subEl('p',Math.round(pending.km)+' km away · '+pending.score+' / 100 points'));stage.querySelector('.sub-map')?.subMap?.reveal(pending.guess);
+ const status=stage.querySelector('#subFeedback');status.replaceChildren();const record=subData.get(q.id);status.append(subEl('strong',pending.km!==undefined?(pending.score===100?'Spot on ✓':pending.score+' points'):pending.correct?'Correct ✓':'Answer revealed'),subEl('p',record.name+' · '+record.capital.name));if(pending.km!==undefined)status.append(subEl('p',Math.round(pending.km)+' km away · '+pending.score+' / 100 points'));stage.querySelector('.sub-map')?.subMap?.reveal(pending.guess);
  if(['flag','silhouette'].includes(q.topic))status.append(await subValue(q.id,q.topic));
  if(!stage.querySelector('.sub-next'))stage.append(subButton(r.index+1===r.queue.length?'See results →':'Next →',()=>{subRecord(pending.score,pending.revealed,{...(pending.km!==undefined?{km:pending.km,guess:pending.guess}:{})});subRenderQuestion(stage);},'sub-primary sub-next'));
  if(pending.correct&&['maphunt','borderless'].includes(r.mode)&&q.topic==='location'&&r.index+1<r.queue.length){const token=subToken;setTimeout(()=>{if(token===subToken&&subStore.run===r&&r.pending===pending&&subHost.classList.contains('open'))stage.querySelector('.sub-next')?.click();},900);}
 }
 function subRenderFinish(stage){
- const r=subStore.run;subUpdateProgress();stage.replaceChildren();const score=Math.round(r.results.reduce((n,x)=>n+x.score,0)/r.queue.length);stage.append(subEl('h3','✓ '+(r.challenge?'Challenge complete!':'Session complete!')),subEl('p',score+'% · '+homeTime(r.elapsedMs),'sub-result'));
+ const r=subStore.run;subUpdateProgress();stage.replaceChildren();const score=Math.round(r.results.reduce((n,x)=>n+x.score,0)/r.queue.length);stage.append(subEl('h3','✓ '+(r.revision?'Review complete!':r.challenge?'Challenge complete!':'Session complete!')),subEl('p',score+'% · '+homeTime(r.elapsedMs),'sub-result'));
  if(r.mode==='borderless'&&r.queue[0].topic==='capitalLocation')stage.append(subEl('p',r.results.reduce((n,x)=>n+x.score,0)+' / '+r.queue.length*100+' points'));
  if(r.challenge)stage.append(subEl('p','Best: '+subStore.challenges[r.challenge].best.score+'% · '+homeTime(subStore.challenges[r.challenge].best.elapsedMs)));
  const list=subEl('div',undefined,'sub-review-list');for(const result of r.results)list.append(subEl('p',(result.score===100?'✓ ':'↻ ')+subData.get(result.id).name+' · '+SUB_TOPICS[result.topic]+' · '+result.score+'%'));stage.append(list);
+ if(['maphunt','borderless'].includes(r.mode)){const tricky=r.queue.filter((q,i)=>r.results[i]?.revealed||r.results[i]?.score<(q.topic==='capitalLocation'?50:100));if(tricky.length)stage.append(subButton(`Review ${tricky.length} tricky ${tricky.length===1?'place':'places'} →`,()=>{const ids=[...new Set(tricky.map(q=>q.id))];subStore.run={...r,ids,queue:tricky,index:0,results:[],misses:[],elapsedMs:0,updatedAt:Date.now(),finished:false,challenge:null,recorded:false,revision:true,pending:null,view:null,feedback:''};subValidateStore(subStore);subSave();subRenderRun();},'sub-primary'));}
  stage.append(subButton('Choose another session',()=>subOpenSetup(r.mode,r.parent),'sub-primary'),subButton('Home',subClose));
 }
 async function subCreateMap(host,token){
@@ -46544,7 +46563,7 @@ async function subCreateMap(host,token){
  function update(){marks.selectAll('*').remove();history.selectAll('*').remove();if(r.mode==='borderless')for(const result of r.results.filter(x=>x.topic==='capitalLocation')){const capital=subData.get(result.id).capital;drawCapitalHistory(history,projection,[{name:capital.name,lng:capital.coordinates[0],lat:capital.coordinates[1]}],result);}const q=subCurrent(),borderless=r.mode==='borderless',done=new Map(r.results.map(x=>[x.id,x]));shapes.attr('fill',f=>done.has(f.id)?done.get(f.id).score===100?'#47734f':'#b38c48':r.ids.includes(f.id)?'#a4ae99':'#c3c5b7').attr('stroke',borderless?null:'#faf5e9').attr('stroke-width',borderless?0:1);if(borderless)shapes.attr('fill',f=>r.mapProgress!=='blind'&&done.has(f.id)&&q?.topic!=='capitalLocation'?(done.get(f.id).score===100?'#47734f':'#b38c48'):'#c2c8b5');dots.selectAll('*').remove();if(q?.topic==='capitalLocation'&&!borderless){dots.selectAll('circle').data(subData.list({set:r.set})).join('circle').attr('cx',d=>projection(d.capital.coordinates)[0]).attr('cy',d=>projection(d.capital.coordinates)[1]).attr('fill',d=>done.has(d.id)?'#47734f':'#78623d').attr('stroke','#fff9ee').attr('stroke-width',2).attr('vector-effect','non-scaling-stroke').attr('data-capital-id',d=>d.id);}rescale();}
  function reveal(guess){marks.selectAll('*').remove();const q=subCurrent();if(!q)return;const record=subData.get(q.id),geo=q.topic==='capitalLocation'?record.capital.coordinates:record.labelPoint;if(q.topic==='location')shapes.filter(f=>f.id===q.id).attr('fill','#47734f').attr('stroke','#fff9ee').attr('stroke-width',2);const actual=projection(geo);marks.append('circle').attr('cx',actual[0]).attr('cy',actual[1]).attr('fill','#47734f').attr('stroke','#fff9ee').attr('stroke-width',2).attr('vector-effect','non-scaling-stroke');if(guess){const pt=projection(guess);drawCapitalConnector(marks,projection,geo,guess);marks.append('circle').attr('cx',pt[0]).attr('cy',pt[1]).attr('fill',borderlessResultColor(r.pending||{score:0})).attr('stroke','#fff9ee').attr('stroke-width',2).attr('vector-effect','non-scaling-stroke');}rescale();}
  function guess(xy){const q=subCurrent();if(!q||r.mode==='standard'||r.pending||r.finished)return;const point=transform.invert(xy),geo=projection.invert(point);if(!geo||!geo.every(Number.isFinite)||Math.abs(geo[1])>90)return;const record=subData.get(q.id),stage=host.parentElement;
-  if(r.mode==='borderless'&&q.topic==='capitalLocation'){const km=d3.geoDistance(geo,record.capital.coordinates)*6371,score=Math.round(100*Math.exp(-km/500));subAnswer(km<=25,null,stage,false,{km,score,guess:geo});return;}
+  if(r.mode==='borderless'&&q.topic==='capitalLocation'){const km=d3.geoDistance(geo,record.capital.coordinates)*6371,score=borderlessCapitalScore(km);subAnswer(score>=25,null,stage,false,{km,score,guess:geo});return;}
   let hit=null;if(q.topic==='capitalLocation'){const screenScale=svg.node().getBoundingClientRect().width/w;const targets=subData.list({set:r.set}).map(d=>({id:d.id,distance:Math.hypot(...projection(d.capital.coordinates).map((v,i)=>v-point[i]))*transform.k*screenScale})).sort((a,b)=>a.distance-b.distance);if(targets[0]?.distance<=22)hit=targets[0].id;}else hit=features.find(f=>d3.geoContains(f,geo))?.id;
   if(!hit)return;const done=r.results.find(x=>x.id===hit);if(done&&['maphunt','borderless'].includes(r.mode)&&!(r.mode==='borderless'&&r.mapProgress==='blind')){document.getElementById('subFeedback').textContent=subData.get(hit).name+' · already completed';return;}if(!r.ids.includes(hit)&&['maphunt','borderless'].includes(r.mode)){document.getElementById('subFeedback').textContent=subData.get(hit).name+' · outside this set';return;}subAnswer(hit===q.id,hit,stage);
  }
@@ -46555,7 +46574,7 @@ async function subRenderMatching(stage,token){
  const r=subStore.run,m=r.match;subUpdateProgress();stage.replaceChildren();const status=subEl('p','Select an item below, then tap its matching slot.','sub-feedback');status.setAttribute('role','status');stage.append(status);const board=subEl('div',undefined,'sub-match-board');stage.append(board);let selected=null;
  for(const id of r.ids){const row=subEl('section',undefined,'sub-match-row');row.append(await subValue(id,r.queue[0].clue));const slots=subEl('div',undefined,'sub-match-slots');row.append(slots);for(let i=0;i<r.queue.length;i++){const q=r.queue[i];if(q.id!==id)continue;const key=String(i),locked=m.locked.includes(key),slot=subButton('',()=>{if(locked)return;if(selected!==null){for(const [other,val]of Object.entries(m.placements))if(val===selected)delete m.placements[other];m.placements[key]=selected;subSave();subRenderMatching(stage,token);}else if(m.placements[key]){delete m.placements[key];subSave();subRenderMatching(stage,token);}else status.textContent='Select an item from the drawer first.';});slot.dataset.slot=key;slot.className='sub-match-slot'+(locked?' is-correct':'');slot.append(subEl('small',SUB_TOPICS[q.topic]));if(m.placements[key]!==undefined){const value=r.queue[Number(m.placements[key])];slot.append(await subValue(value.id,value.topic));}else slot.append(subEl('span','Tap to place'));if(m.previous[key]!==undefined&&!locked){const prev=r.queue[Number(m.previous[key])];const note=subEl('small','Previously tried: ','sub-previous');note.append(await subValue(prev.id,prev.topic));slot.append(note);}slot.disabled=locked;slots.append(slot);}board.append(row);}
  const drawer=subEl('div',undefined,'sub-drawer');drawer.setAttribute('aria-label','Matching items');const used=new Set(Object.values(m.placements));for(const key of homeSeededOrder(r.queue.map((_,i)=>String(i)),r.ids.join(':'))){if(used.has(key))continue;const item=r.queue[Number(key)],b=subButton('',()=>{selected=key;drawer.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));status.textContent='Now tap a '+SUB_TOPICS[item.topic].toLowerCase()+' slot.';});b.dataset.asset=key;b.setAttribute('aria-pressed','false');b.append(subEl('small',SUB_TOPICS[item.topic]),await subValue(item.id,item.topic));drawer.append(b);}stage.append(subEl('h4','Your items'),drawer);
- const check=subButton('Check matches',()=>{const keys=r.queue.map((_,i)=>String(i));for(const key of keys){if(m.locked.includes(key)||m.placements[key]===undefined)continue;const source=r.queue[Number(m.placements[key])],dest=r.queue[Number(key)];if(source.id===dest.id&&source.topic===dest.topic)m.locked.push(key);else{if(!m.failed.includes(key))m.failed.push(key);m.previous[key]=m.placements[key];delete m.placements[key];}}if(m.locked.length===keys.length){for(let i=0;i<r.queue.length;i++)subRecord(m.failed.includes(String(i))?0:100,m.failed.includes(String(i)));subFinish();subRenderFinish(stage);}else{subSave();subRenderMatching(stage,token);}},'sub-primary');stage.append(check);if(token!==subToken)return;
+ const check=subButton('Check matches',()=>{const keys=r.queue.map((_,i)=>String(i));for(const key of keys){if(m.locked.includes(key)||m.placements[key]===undefined)continue;const source=r.queue[Number(m.placements[key])],dest=r.queue[Number(key)];if(source.id===dest.id&&source.topic===dest.topic)m.locked.push(key);else{if(!m.failed.includes(key))m.failed.push(key);m.previous[key]=m.placements[key];delete m.placements[key];}}if(m.locked.length===keys.length){for(let i=0;i<r.queue.length;i++)subRecord(m.failed.includes(String(i))?70:100,false);subFinish();subRenderFinish(stage);}else{subSave();subRenderMatching(stage,token);}},'sub-primary');stage.append(check);if(token!==subToken)return;
 }
 async function subOpenLibrary(progress=false){subShow();subHost.dataset.play='false';const panel=subFrame((progress?'Progress':'Explore')+' · '+subLabel(subdivisionScope)),token=++subToken;try{await subReady();if(token!==subToken)return;const input=document.createElement('input');input.type='search';input.placeholder='Find a name or capital';input.setAttribute('aria-label','Search '+subLabel(subdivisionScope));panel.append(input);const list=subEl('div',undefined,'sub-review-list');list.style.maxHeight='none';panel.append(list);const render=()=>{list.replaceChildren();const query=subData.normalize(input.value);for(const r of subData.list({parent:subdivisionScope}).filter(r=>subData.normalize(r.name+' '+r.capital.name+' '+r.postalCode).includes(query))){const row=subEl('p');row.append(subEl('strong',r.name),document.createTextNode(' · '+r.capital.name));if(progress){const stats=Object.entries(subStore.learning).filter(([key])=>key.startsWith(r.id+':')).map(([,v])=>v),attempts=stats.reduce((n,v)=>n+v.attempts,0),correct=stats.reduce((n,v)=>n+v.correct,0);row.append(document.createTextNode(attempts?' · '+correct+'/'+attempts+' first-try recalls':' · Not studied yet'));}list.append(row);}};input.oninput=render;render();input.focus();}catch{panel.append(subEl('p','Study set unavailable. Please check the assets folder.'),subButton('Retry',()=>subOpenLibrary(progress)));}}
 function installSubdivisionPlay(){if(GEODEN_TEST_WORKER)return;subEnsureHost();for(const [id,progress]of [['searchStartBtn',false],['masteryOpenBtn',true]])document.getElementById(id)?.addEventListener('click',e=>{if(subdivisionScope!=='world'){e.preventDefault();e.stopImmediatePropagation();subOpenLibrary(progress);}},true);setInterval(()=>{subTick();if(subHost?.classList.contains('open')&&subStore.run&&subHost.dataset.play==='true')subSave();},1000);window.addEventListener('pagehide',()=>{subTick();if(subStore.run)subSave();});document.addEventListener('visibilitychange',()=>{subTickAt=performance.now();if(subStore.run)subSave();});}
