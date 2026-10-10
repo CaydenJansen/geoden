@@ -4998,6 +4998,8 @@
       font-weight: 820;
       text-align: center;
     }
+    .interactive-feedback:empty { display:none; }
+    .interactive-feedback:not(:empty) { min-height:0; margin-bottom:8px; }
     .interactive-feedback.correct { color: var(--correct); }
     .interactive-feedback.wrong { color: var(--incorrect-dark); }
 
@@ -9683,6 +9685,11 @@ button,
 .rapid-result.revealed .rapid-result-kicker { color:var(--accent-dark); }
 .rapid-answer { margin-top:3px; font-size:1.25rem; font-weight:950; line-height:1.1; overflow-wrap:anywhere; }
 .rapid-result-meta { margin:5px 0 10px; color:var(--muted); font-size:.72rem; font-weight:800; }
+.rapid-result-meta { white-space:pre-line; line-height:1.5; }
+.rapid-feedback:empty { display:none!important; }
+.rapid-feedback:not(:empty) { min-height:0; margin:0 0 9px; }
+.rapid-question-card:has(.rapid-result:not(.hidden)) .rapid-answer-area:has(.rapid-text-panel.hidden):has(.rapid-choice-grid.hidden) { display:none!important; }
+.rapid-daily-finished { max-width:430px; margin:0 auto 15px; color:var(--text); font-size:.86rem; font-weight:750; line-height:1.45; }
 .rapid-result.correct .rapid-result-meta { color:var(--correct-dark); }
 .rapid-result.wrong .rapid-result-meta { color:var(--incorrect-dark); }
 .rapid-result.revealed .rapid-result-meta { color:var(--accent-dark); }
@@ -9701,6 +9708,8 @@ button,
   .rapid-menu { min-height:40px; min-width:58px; padding-inline:10px; }
   .rapid-question-card { padding:11px; border-radius:17px; }
   .rapid-cue { min-height:132px; }
+  #rapidOverlay:not(.sprint-active) .rapid-cue:has(.rapid-cue-text) { min-height:90px; }
+  #rapidOverlay:not(.sprint-active) .rapid-cue:has(.rapid-cue-text) .rapid-cue-text { padding:12px 9px; font-size:clamp(1.45rem,7vw,2.4rem); }
   .rapid-cue svg { height:180px; }
   .rapid-text-row { grid-template-columns:minmax(0,1fr) 74px; }
   .rapid-check { padding-inline:8px; }
@@ -10567,6 +10576,8 @@ button,
     .chain-input:focus { border-color:rgba(67,105,117,.5); box-shadow:0 0 0 3px rgba(67,105,117,.09); }
     .chain-submit { min-width:92px; min-height:48px; border-radius:13px; background:var(--accent); color:white; }
     .chain-feedback { min-height:22px; margin-top:7px; font-size:.74rem; line-height:1.3; font-weight:820; }
+    .chain-feedback:empty { display:none; }
+    .chain-feedback:not(:empty) { min-height:0; margin:5px 0 8px; }
     .chain-feedback.good { color:var(--correct-dark); }
     .chain-feedback.bad { color:var(--incorrect-dark); }
     .chain-feedback.near { color:var(--near); }
@@ -13917,7 +13928,7 @@ button,
       .geoden-keyboard-open .chain-overlay.playing .chain-status-title { display:none; }
       .geoden-keyboard-open .chain-overlay.playing .chain-toolbar { margin-bottom:3px; }
       .geoden-keyboard-open .chain-overlay.playing .chain-map-wrap { min-height:0; }
-      .geoden-keyboard-open .chain-overlay.playing .chain-feedback:not(.good):not(.bad):not(.near) { display:none; }
+      .geoden-keyboard-open .chain-overlay.playing .chain-feedback:empty { display:none; }
       .geoden-keyboard-open .chain-overlay.playing .chain-help-row { margin-top:1px; }
 
       .map-hunt-overlay.playing .map-hunt-panel {
@@ -14358,6 +14369,7 @@ html:is([data-study-domain="US"],[data-study-domain="CA"],[data-study-domain="AU
           <div class="neighbours-answer hidden" id="neighboursAnswer" aria-live="polite"></div>
 
           <div class="interactive-answer hidden" id="interactiveAnswer" aria-live="polite">
+            <div class="interactive-feedback" id="interactiveFeedback" role="status" aria-live="polite" aria-atomic="true"></div>
             <div class="interactive-text-panel hidden" id="interactiveTextPanel">
               <div class="interactive-neighbour-progress hidden" id="interactiveNeighbourProgress"></div>
               <div class="interactive-input-stack" id="interactiveInputStack">
@@ -14373,7 +14385,6 @@ html:is([data-study-domain="US"],[data-study-domain="CA"],[data-study-domain="AU
               <button class="interactive-hint-button" id="interactiveHintBtn" type="button">Hint</button>
               <button class="interactive-give-up-button" id="interactiveGiveUpBtn" type="button">I give up</button>
             </div>
-            <div class="interactive-feedback" id="interactiveFeedback" role="status" aria-live="polite" aria-atomic="true"></div>
           </div>
 
           <div class="history-facts hidden" id="historyFacts" aria-live="polite">
@@ -15084,6 +15095,7 @@ html:is([data-study-domain="US"],[data-study-domain="CA"],[data-study-domain="AU
         <div class="rapid-cue" id="rapidCue"></div>
 
         <div class="rapid-answer-area">
+          <div class="rapid-feedback" id="rapidFeedback" aria-live="polite"></div>
           <div class="rapid-text-panel" id="rapidTextPanel">
             <div class="rapid-text-row">
               <input class="rapid-input" id="rapidInput" type="text" autocomplete="off" autocapitalize="words" spellcheck="false" aria-label="Type your answer" />
@@ -15092,7 +15104,6 @@ html:is([data-study-domain="US"],[data-study-domain="CA"],[data-study-domain="AU
             <div class="rapid-suggestions hidden" id="rapidSuggestions" role="listbox" aria-label="Possible answers"></div>
           </div>
           <div class="rapid-choice-grid hidden" id="rapidChoiceGrid"></div>
-          <div class="rapid-feedback" id="rapidFeedback" aria-live="polite"></div>
           <div class="rapid-help-actions">
             <button class="rapid-hint" id="rapidHintBtn" type="button">Hint</button>
             <button class="rapid-reveal" id="rapidRevealBtn" type="button">Reveal answer</button>
@@ -15112,6 +15123,7 @@ html:is([data-study-domain="US"],[data-study-domain="CA"],[data-study-domain="AU
         <h3 class="rapid-complete-title">Session complete</h3>
         <div class="rapid-complete-score" id="rapidCompleteScore">0%</div>
         <div class="rapid-complete-meta" id="rapidCompleteMeta"></div>
+        <p class="rapid-daily-finished hidden" id="rapidDailyFinished">Nice work — today’s daily is done. Want to keep playing? Start a separate round below.</p>
         <button class="rapid-next" id="rapidBackToMenuBtn" type="button">Back to menu</button>
       </div>
     </div>
@@ -15306,6 +15318,25 @@ html:is([data-study-domain="US"],[data-study-domain="CA"],[data-study-domain="AU
             <div class="experience-setting-desc" id="dailyGoalBreakdown"></div>
           </details>
         </div>
+        <details class="content-settings-menu" id="answerHelpSettingsMenu">
+          <summary>Answer help <span>Suggestions and forgiving spelling</span></summary>
+          <div class="content-settings-body">
+            <div class="experience-setting-row">
+              <div class="experience-setting-copy">
+                <div class="experience-setting-name">Show answers as you type</div>
+                <div class="experience-setting-desc">Turn off suggestions if you want to recall and type every answer yourself.</div>
+              </div>
+              <label class="switch" aria-label="Show answer suggestions while typing"><input id="answerSuggestionsToggle" type="checkbox" checked /><span class="switch-track"></span></label>
+            </div>
+            <div class="experience-setting-row">
+              <div class="experience-setting-copy">
+                <div class="experience-setting-name">Allow close spellings</div>
+                <div class="experience-setting-desc">Turn off automatic fixes for small typos. Accepted alternate names still work.</div>
+              </div>
+              <label class="switch" aria-label="Allow close spellings"><input id="forgivingSpellingToggle" type="checkbox" checked /><span class="switch-track"></span></label>
+            </div>
+          </div>
+        </details>
         <details class="content-settings-menu" id="contentSettingsMenu">
           <summary>Content &amp; clues <span>Choose places and revealing clues</span></summary>
           <div class="content-settings-body">
@@ -15559,6 +15590,7 @@ html:is([data-study-domain="US"],[data-study-domain="CA"],[data-study-domain="AU
             <button class="chain-zoom-button chain-zoom-reset" id="chainZoomResetBtn" type="button" aria-label="Reset map view">↺</button>
           </div>
         </div>
+        <div class="chain-feedback" id="chainFeedback" aria-live="polite"></div>
         <div class="chain-input-wrap">
           <div class="chain-input-row">
             <input class="chain-input" id="chainGuessInput" type="text" enterkeyhint="enter" autocomplete="off" autocapitalize="words" spellcheck="false" placeholder="Name an available place…" aria-label="Map Crawl answer" aria-autocomplete="list" aria-controls="chainSuggestions" aria-expanded="false" />
@@ -15566,7 +15598,6 @@ html:is([data-study-domain="US"],[data-study-domain="CA"],[data-study-domain="AU
           </div>
           <div class="chain-suggestions hidden" id="chainSuggestions" role="listbox" aria-label="Answer suggestions"></div>
         </div>
-        <div class="chain-feedback" id="chainFeedback" aria-live="polite"></div>
         <div class="chain-help-row">
           <button class="chain-hint" id="chainHintBtn" type="button">Hint · first letter</button>
           <button class="chain-give-up" id="chainGiveUpBtn" type="button">Give up · reveal one</button>
@@ -16055,6 +16086,9 @@ html:is([data-study-domain="US"],[data-study-domain="CA"],[data-study-domain="AU
     .daily-share-actions button+button {background:#e0e5ef;color:#78623d;}
     .daily-share-status {font-size:12px;margin:8px 0 0;}
     .daily-share-report textarea {width:100%;height:180px;box-sizing:border-box;font:14px/1.5 system-ui;}
+    .daily-next-note {margin:12px 0;padding:12px 14px;border:1px solid #bccbb6;border-radius:12px;background:#edf2e9;color:#344f39;font-size:14px;line-height:1.45;font-weight:700;}
+    .daily-fact-key-lightHelp i {background:#8fa654;}
+    .daily-fact-key-heavyHelp i {background:#bb8b39;}
     html body #matchingGame.has-daily-report {display:block!important;overflow:auto!important;}
     html body #matchingGame.has-daily-report .matching-board {max-height:none!important;height:auto!important;overflow:visible!important;}
     html body #matchingGame.has-daily-report .matching-pools {position:static!important;}
@@ -16336,10 +16370,13 @@ html.geoden-light body .daily-share-report { border:2px solid #6c9271!important;
 html.geoden-light body .daily-share-report pre { padding:12px!important;border-radius:10px;font-size:12px!important;line-height:1.65!important; }
 html.geoden-light body .daily-share-status:empty { display:none; }
 @media(max-width:520px) {
- html.geoden-light body #startOverlay .menu-header-actions { width:100%!important; }
- html.geoden-light body #startOverlay .menu-header-tools { width:100%!important; }
- html.geoden-light body #startOverlay .menu-header-tool { width:100%!important; }
- html.geoden-light body #startOverlay .home-header { gap:12px!important; }
+ html.geoden-light body #startOverlay .home-header { flex-wrap:nowrap!important;align-items:flex-start!important;gap:7px!important; }
+ html.geoden-light body #startOverlay .start-brand-block { flex:1 1 auto;min-width:0; }
+ html.geoden-light body #startOverlay .start-title { font-size:clamp(27px,8vw,36px)!important; }
+ html.geoden-light body #startOverlay .menu-header-actions { width:auto!important;flex:0 0 auto;flex-wrap:nowrap!important; }
+ html.geoden-light body #startOverlay .menu-header-tools { display:flex!important;width:auto!important;gap:3px!important; }
+ html.geoden-light body #startOverlay .menu-header-tool { width:44px!important;min-width:44px!important;height:44px!important;min-height:44px!important;padding:0!important;display:grid!important;place-items:center!important; }
+ html.geoden-light body #startOverlay .menu-tool-label { display:none!important; }
  html.geoden-light body #startOverlay .discovery-today { padding:12px!important; }
  html.geoden-light body #startOverlay .discovery-browser { padding:12px!important; }
  html.geoden-light body :is(.matching-head-actions,.detective-head-actions) { max-width:104px; }
@@ -16495,7 +16532,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
   <script src="assets/ranking-daily-snapshot-2026-10-10.js"></script>
 
   <script>
-    const GEODEN_VERSION = "0.56.107";
+    const GEODEN_VERSION = "0.56.109";
     // v0.56.28 — blank-surface audit: guarded silhouettes/location maps and Matching visual preflight.
     // v0.56.18 — private-beta problem reporting with diagnostic state, recent actions, errors, copy/download/share.
     // v0.56.17 — tester-facing automatic failure reporting with screenshot/copy instructions.
@@ -17200,6 +17237,8 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
         facts: Math.max(0, Number(day.facts) || 0),
         clean: Math.max(0, Number(day.clean) || 0),
         assisted: Math.max(0, Number(day.assisted) || 0),
+        lightHelp: Math.max(0, Number(day.lightHelp) || 0),
+        heavyHelp: Math.max(0, Number(day.heavyHelp) || 0),
         missed: Math.max(0, Number(day.missed) || 0)
       };
     }
@@ -17292,6 +17331,8 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
         facts,
         clean: Math.max(0, Number(day.clean) || 0),
         assisted: Math.max(0, Number(day.assisted) || 0),
+        lightHelp: Math.max(0, Number(day.lightHelp) || 0),
+        heavyHelp: Math.max(0, Number(day.heavyHelp) || 0),
         missed: Math.max(0, Number(day.missed) || 0),
         remaining: Math.max(0, goal - facts),
         complete: goal > 0 && facts >= goal,
@@ -17311,11 +17352,12 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
     function renderDailyFactsBar(fill,snapshot){
       if(!fill)return;
       const track=fill.parentElement,denominator=Math.max(1,snapshot.goal,snapshot.facts);
-      const categories=[['clean','First try or strong','#39784e'],['assisted','With help or partial','#b08a39'],['missed','Missed','#995347']];
+      const legacyHelp=Math.max(0,snapshot.assisted-snapshot.lightHelp-snapshot.heavyHelp);
+      const categories=[['clean','No help','#39784e',snapshot.clean],['lightHelp','A little help','#88a75b',snapshot.lightHelp],['heavyHelp','Lots of help','#c09b3d',snapshot.heavyHelp],['assisted','Help used in an older result','#b08a39',legacyHelp],['missed','Missed or revealed','#995347',snapshot.missed]];
       let remaining=snapshot.facts;
       fill.style.display='none';track.replaceChildren(fill);
-      for(const[key,label,color]of categories){
-        const count=Math.min(remaining,Math.max(0,Math.floor(Number(snapshot[key])||0)));
+      for(const[key,label,color,value]of categories){
+        const count=Math.min(remaining,Math.max(0,Math.floor(Number(value)||0)));
         remaining-=count;
         if(!count)continue;
         const segment=document.createElement('span');segment.className='daily-fact-segment daily-fact-'+key;
@@ -17326,13 +17368,15 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
       track.setAttribute('role',snapshot.goal ? 'progressbar' : 'img');track.setAttribute('aria-label','Practice steps today');
       if(snapshot.goal){track.setAttribute('aria-valuemin','0');track.setAttribute('aria-valuemax',String(snapshot.goal));track.setAttribute('aria-valuenow',String(Math.min(snapshot.facts,snapshot.goal)));}
       else {track.removeAttribute('aria-valuemin');track.removeAttribute('aria-valuemax');track.removeAttribute('aria-valuenow');}
-      track.setAttribute('aria-valuetext',snapshot.facts+(snapshot.goal ? ' of '+snapshot.goal : '')+' practice steps today: '+snapshot.clean+' first try or strong, '+snapshot.assisted+' with help, '+snapshot.missed+' missed');
+      track.setAttribute('aria-valuetext',snapshot.facts+(snapshot.goal ? ' of '+snapshot.goal : '')+' practice steps today: '+snapshot.clean+' without help, '+snapshot.lightHelp+' with a little help, '+snapshot.heavyHelp+' with lots of help, '+legacyHelp+' older helped results, '+snapshot.missed+' missed or revealed');
     }
     function renderDailyFactsLegend(host,snapshot){
       if(!host)return;host.replaceChildren();
-      for(const[key,label]of [['clean','First try or strong'],['assisted','With help or partial'],['missed','Missed']]){
+      const legacyHelp=Math.max(0,snapshot.assisted-snapshot.lightHelp-snapshot.heavyHelp);
+      for(const[key,label,value]of [['clean','No help',snapshot.clean],['lightHelp','A little help',snapshot.lightHelp],['heavyHelp','Lots of help',snapshot.heavyHelp],['assisted','Help used',legacyHelp],['missed','Missed or revealed',snapshot.missed]]){
+        if(!value)continue;
         const item=document.createElement('span');item.className='daily-fact-key daily-fact-key-'+key;
-        const dot=document.createElement('i');dot.setAttribute('aria-hidden','true');item.append(dot,document.createTextNode(snapshot[key]+' '+label.toLowerCase()));host.append(item);
+        const dot=document.createElement('i');dot.setAttribute('aria-hidden','true');item.append(dot,document.createTextNode(value+' '+label.toLowerCase()));host.append(item);
       }
     }
     function renderDailyGoalUI() {
@@ -17369,30 +17413,43 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
       renderDailyGoalUI();
     }
 
-    function recordDailyFactCounts({ total = 0, clean = 0, assisted = 0, missed = 0 } = {}) {
+    function recordDailyFactCounts({ total = 0, clean = 0, assisted = 0, lightHelp = 0, heavyHelp = 0, missed = 0 } = {}) {
       total = Math.max(0, Number(total) || 0);
       if (!total) return;
       const today = ensureDailyDay();
       const wasComplete = dailyDayComplete(today);
       today.facts += total;
       today.clean += Math.max(0, Number(clean) || 0);
-      today.assisted += Math.max(0, Number(assisted) || 0);
+      today.lightHelp += Math.max(0, Number(lightHelp) || 0);
+      today.heavyHelp += Math.max(0, Number(heavyHelp) || 0);
+      today.assisted += Math.max(0, Number(assisted) || 0) + Math.max(0, Number(lightHelp) || 0) + Math.max(0, Number(heavyHelp) || 0);
       today.missed += Math.max(0, Number(missed) || 0);
       saveDailyProgress();
       renderDailyGoalUI();
       if (!wasComplete && dailyDayComplete(today)) hapticFeedback("goal");
     }
 
+    function answerHelpLevel(shown, total, otherwiseAssisted = false) {
+      const count = Math.max(0, Number(shown) || 0);
+      const letters = Math.max(0, Number(total) || 0);
+      if (!count) return otherwiseAssisted ? "light" : "clean";
+      if (letters && count >= Math.max(2, letters - 1)) return "missed";
+      return count === 1 ? "light" : "heavy";
+    }
+
     function recordDailyAttemptResults(results = {}) {
-      let total = 0, clean = 0, assisted = 0, missed = 0;
+      let total = 0, clean = 0, assisted = 0, lightHelp = 0, heavyHelp = 0, missed = 0;
       for (const [stage, result] of Object.entries(results || {})) {
         if (!ALL_STAGES.includes(stage) || stage === "historyFacts" || result?.unavailable) continue;
         total += 1;
-        if (result?.correct && result?.assisted) assisted += 1;
+        if (result?.helpLevel === "missed") missed += 1;
+        else if (result?.correct && result?.helpLevel === "heavy") heavyHelp += 1;
+        else if (result?.correct && result?.helpLevel === "light") lightHelp += 1;
+        else if (result?.correct && result?.assisted) assisted += 1;
         else if (result?.correct) clean += 1;
         else missed += 1;
       }
-      recordDailyFactCounts({ total, clean, assisted, missed });
+      recordDailyFactCounts({ total, clean, assisted, lightHelp, heavyHelp, missed });
     }
 
     function recordDailyMatchingResults(state) {
@@ -25133,7 +25190,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
     }
 
     function prepareMatchingBoardBuildUi() {
-      matchingOverlay.querySelectorAll(".daily-share-report").forEach(el=>el.remove());
+      matchingOverlay.querySelectorAll(".daily-share-report,.daily-next-note").forEach(el=>el.remove());
       document.getElementById("matchingGame")?.classList.remove("has-daily-report");
       // A new build owns the screen immediately. Never leave the prior board
       // resumable behind a cleared DOM if this build later fails or is cancelled.
@@ -25988,6 +26045,14 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
       const wasRevisionRound = studySession?.phase === "revision";
       recordMatchingSessionSummary(state, wasRevisionRound);
       commitMatchingRoundStats(state);
+      if(studySession?.launchPreset?.dailyKey){
+        homeTickTimers();
+        const outcomes=state.countries.flatMap(country=>state.answerFields.map(field=>
+          state.mistakeKeys.has(`${country.code}|${field}`)?"missed":"clean"));
+        const correct=outcomes.filter(outcome=>outcome==="clean").length;
+        homeRecordDaily(studySession.launchPreset,100*correct/Math.max(1,outcomes.length),studySession.homeElapsedMs||0,
+          {correct,total:outcomes.length,outcomes});
+      }
 
       const mistakeCodes = [...state.mistakeCountryCodes];
 
@@ -26018,7 +26083,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
 
       if(studySession?.launchPreset?.mode === "matching"){studySession.active=false;studySession.revisionQueue=[];saveStudySession();}
       refreshMatchingCompletionUi(state);
-      const dailyMatching=!!studySession?.launchPreset?.dailyKey;if(dailyMatching)homeShowFinishedDaily("matching",matchingFeedback.parentElement);
+      const dailyMatching=!!studySession?.launchPreset?.dailyKey;if(dailyMatching){homeShowFinishedDaily("matching",matchingFeedback.parentElement);homeDailyNextNote(matchingFeedback.parentElement,"Matching","board");}
       matchingNewRoundBtn.classList.remove("hidden");
       if(dailyMatching)requestAnimationFrame(()=>matchingFeedback.parentElement.querySelector('.daily-share-report')?.scrollIntoView({block:'end',behavior:'smooth'}));
       else ensureProgressionActionVisible(matchingNewRoundBtn, matchingOverlay?.querySelector(".matching-panel"));
@@ -26032,7 +26097,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
       matchingNewRoundBtn.textContent = studySession?.active === false ? "Back to home ✓"
         : count ? `Practise ${count} corrected ${count === 1 ? "place" : "places"} →` : "Continue →";
       matchingRoundStatus.textContent = studySession?.active === false ? "Session complete" : "Board complete";
-      if(studySession?.launchPreset?.mode === "matching")matchingNewRoundBtn.textContent="Play another board →";
+      if(studySession?.launchPreset?.mode === "matching")matchingNewRoundBtn.textContent="Start a new board →";
     }
 
     function nextMatchingRoundOrMenu() {
@@ -26237,6 +26302,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
     }
 
     function interactiveUniqueSpellingMatch(typed, candidates, minLength = 3) {
+      if (!forgivingSpellingEnabled) return null;
       const actual = interactiveLooseNormalize(typed);
       if (!actual || actual.length < minLength) return null;
 
@@ -26447,6 +26513,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
 
     async function updateInteractiveSuggestions() {
       if (!isInteractiveGameplay() || phase !== "prompt") return;
+      if (!answerSuggestionsEnabled) { interactiveSuggestions.replaceChildren(); interactiveSuggestions.classList.add("hidden"); return; }
       const query = interactiveLooseNormalize(interactiveInput.value);
       interactiveSuggestions.replaceChildren();
       resetInteractiveSuggestionSelection();
@@ -27251,11 +27318,32 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
       return submitInteractiveNamedCollectionAnswer(interactiveCurrencyState, renderInteractiveCurrencyProgress, "currencies");
     }
 
+    function interactiveCurrentHelpLevel(correct) {
+      if (!correct) return "missed";
+      const c = currentCountry();
+      const state = currentStage === "languages" ? interactiveLanguageState
+        : currentStage === "neighbours" ? interactiveNeighbourState
+        : currentStage === "capital" ? interactiveCapitalState
+        : currentStage === "currency" ? interactiveCurrencyState : null;
+      if (state?.hints instanceof Map) {
+        const levels = [...state.hints].map(([name, shown]) => answerHelpLevel(shown, countLetters(name)));
+        if (levels.includes("missed")) return "missed";
+        if (levels.includes("heavy")) return "heavy";
+        if (levels.includes("light")) return "light";
+      }
+      if (["country", "capital", "largestCity", "currency"].includes(currentStage)) {
+        const answer = currentStage === "currency" ? (interactiveCurrencyTargets(c)[0] || "") : hintAnswerForStage(c, currentStage);
+        return answerHelpLevel(hintCount(currentStage), countLetters(answer), interactiveStageAssisted || interactiveHadMiss);
+      }
+      return interactiveStageAssisted || interactiveHadMiss ? "light" : "clean";
+    }
+
     function registerInteractiveResult(correct) {
       if (isBrowsingHistory()) return;
       ensureAttemptForCurrent();
       if (!correct) interactiveHadMiss = true;
       const previous = attempt.results[currentStage];
+      const helpLevel = interactiveCurrentHelpLevel(correct);
 
       // Interactive lets the learner retry. A later correct answer is therefore
       // successful recall with assistance/correction, not a permanent miss.
@@ -27264,12 +27352,14 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
         attempt.results[currentStage] = {
           correct: !!correct,
           assisted: !!interactiveStageAssisted || (!!correct && interactiveHadMiss),
+          helpLevel,
           hadMiss: !correct,
           at: Date.now()
         };
       } else {
         previous.correct = !!correct;
         previous.assisted = !!previous.assisted || !!interactiveStageAssisted || (!!correct && interactiveHadMiss);
+        previous.helpLevel = helpLevel;
         previous.hadMiss = !!previous.hadMiss || !correct;
         previous.at = Date.now();
       }
@@ -29201,7 +29291,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
       stat.lastSeenCounter = presentationCounter;
       stat.lastResultAt = now;
 
-      if (!result?.correct) {
+      if (!result?.correct || result?.helpLevel === "missed") {
         // A real retrieval failure is stronger evidence than an old mastery level.
         // Restart the spacing ladder rather than letting one easy retry restore a
         // months-long interval immediately.
@@ -29676,10 +29766,13 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
 
       ensureAttemptForCurrent();
       const assisted = ["country", "capital", "largestCity", "currency"].includes(currentStage) && hintCount(currentStage) > 0;
+      const answer = assisted ? (currentStage === "currency" ? (interactiveCurrencyTargets(currentCountry())[0] || "") : hintAnswerForStage(currentCountry(), currentStage)) : "";
+      const helpLevel = correct ? answerHelpLevel(hintCount(currentStage), countLetters(answer)) : "missed";
 
       attempt.results[currentStage] = {
         correct: !!correct,
         assisted,
+        helpLevel,
         at: Date.now()
       };
       saveAttempt();
@@ -33824,7 +33917,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
     async function prepareDetectiveRound(force = false) {
       if (studySession?.interaction !== "detective" || studySession?.active === false) return;
       detectiveBackToMenuBtn.textContent="Back to menu";
-      detectiveComplete.querySelectorAll(".daily-share-report").forEach(el=>el.remove());
+      detectiveComplete.querySelectorAll(".daily-share-report,.daily-next-note").forEach(el=>el.remove());
       const state = ensureDetectiveState();
       const c = currentCountry();
       if (!state || !c) {
@@ -34286,12 +34379,13 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
       detectiveCompleteScore.textContent = `${state.score} points`;
       const average = state.completed ? (state.totalClues / state.completed).toFixed(1) : "—";
       detectiveCompleteMeta.textContent = `${state.solved} of ${state.completed} cases solved · ${average} clues used on average`;
-      if(studySession?.launchPreset?.mode === "detective")detectiveBackToMenuBtn.textContent="Play another case →";
-      if(studySession?.launchPreset?.dailyKey)homeShowFinishedDaily("detective",detectiveComplete);
+      if(studySession?.launchPreset?.mode === "detective")detectiveBackToMenuBtn.textContent="Start a new case →";
+      if(studySession?.launchPreset?.dailyKey){homeShowFinishedDaily("detective",detectiveComplete);homeDailyNextNote(detectiveComplete,"Detective","case");}
     }
 
     function detectiveUpdateSuggestions() {
       if (!detectiveInput || !detectiveSuggestions) return;
+      if (!answerSuggestionsEnabled) { detectiveSuggestions.replaceChildren(); detectiveSuggestions.classList.add("hidden"); return; }
       const query = interactiveLooseNormalize(detectiveInput.value);
       detectiveSuggestions.replaceChildren();
       detectiveSuggestionIndex = -1;
@@ -35005,9 +35099,9 @@ Answer: ${answer}`;
       return interactiveUniqueSpellingMatch(typed, rapidExpectedValues(round, c));
     }
 
-    function rapidRecordFact(c, stage, correct, assisted = false) {
+    function rapidRecordFact(c, stage, correct, assisted = false, helpLevel = null) {
       if (!c || !ALL_STAGES.includes(stage) || stage === "historyFacts") return;
-      const result = { correct: !!correct, assisted: !!correct && !!assisted, at: Date.now() };
+      const result = { correct: !!correct, assisted: !!correct && !!assisted, helpLevel:helpLevel || (correct ? assisted ? "light" : "clean" : "missed"), at: Date.now() };
       const rec = reviewRecord(c.code);
       const now = Date.now();
       rec.attempts += 1;
@@ -35523,6 +35617,7 @@ Answer: ${answer}`;
     async function rapidUpdateSuggestions() {
       const state = ensureRapidState();
       const round = state?.round;
+      if (!answerSuggestionsEnabled) { rapidSuggestions.replaceChildren(); rapidSuggestions.classList.add("hidden"); return; }
       if (!round || round.status !== "active" || rapidTextPanel.classList.contains("hidden")) return;
       if (round.fullHintReveal && isDailyChallengeSession()) {
         rapidSuggestions.replaceChildren();
@@ -35602,12 +35697,41 @@ Answer: ${answer}`;
 
     function rapidAttemptMeta(round) {
       if (!round || round.correct || round.revealed) return "";
-      if (String(round.userAnswer || "").trim()) return `Your answer: ${String(round.userAnswer).trim()}`;
+      if (String(round.userAnswer || "").trim()) return `You said: ${String(round.userAnswer).trim()}`;
       if (round.choiceCode) {
         const chosen = countries.find(country => country.code === round.choiceCode);
         if (chosen) return `You chose: ${chosen.name}`;
       }
       return "";
+    }
+
+    function rapidReadableResultMeta(round, c, performanceMeta) {
+      const attempt = rapidAttemptMeta(round);
+      const parts = [];
+      if (attempt) parts.push(attempt);
+      if (!round.correct && !round.revealed && ["countryLargest", "countryLargestLocation"].includes(round.type)) {
+        const capital = rapidCapitalTargets(c).find(value => interactiveLooseNormalize(value) === interactiveLooseNormalize(round.userAnswer || ""));
+        if (capital) parts.push(`${capital} is the capital, but not the largest city.`);
+      } else if (["countryCapital", "countryCapitalLocation", "flagCapital"].includes(round.type) && !round.correct) {
+        const largest = rapidLargestCity(c);
+        if (largest && interactiveLooseNormalize(largest) === interactiveLooseNormalize(round.userAnswer || "")) {
+          parts.push(`${largest} is the largest city, but not the capital.`);
+        }
+      }
+      if (performanceMeta) parts.push(performanceMeta.replace(/We’ll revisit this one/g, "We’ll revisit this later."));
+      return parts.join("\n");
+    }
+
+    function rapidDailyOutcome(round, c, correct) {
+      if (!correct || round.revealed) return "missed";
+      const hints = Math.max(0, Number(round.hintsUsed) || 0);
+      if (!hints) return round.usedSuggestion ? "light-help" : "clean";
+      const target = RAPID_TYPES[round.type]?.target;
+      if (["flagChoice", "silhouetteChoice"].includes(target)) return hints > 1 ? "heavy-help" : "light-help";
+      if (["capitalLocation", "largestCityLocation"].includes(target)) return "heavy-help";
+      const letters = countLetters(rapidHintTarget(round, c));
+      if (letters && (Number(round.hintCount) || 0) >= Math.max(2, letters - 1)) return "missed";
+      return hints === 1 ? "light-help" : "heavy-help";
     }
 
     function rapidSprintWrongAttempt(round, detail = "Not quite — try again.") {
@@ -35642,7 +35766,7 @@ Answer: ${answer}`;
       round.answerLabel = label || rapidAnswerLabel(round, c);
       round.resultMeta = meta || "";
       state.total += 1;
-      if (isDailyChallengeSession()) { if (!Array.isArray(state.outcomes)) state.outcomes=[]; state.outcomes.push(!!correct); }
+      if (isDailyChallengeSession()) { if (!Array.isArray(state.outcomes)) state.outcomes=[]; state.outcomes.push(rapidDailyOutcome(round, c, correct)); }
       const misses = Math.max(0, Number(round.misses) || 0);
       const assisted = !!correct && (Math.max(0, Number(round.hintsUsed) || 0) > 0 || round.usedSuggestion === true);
       const clean = !!correct && !assisted && misses === 0;
@@ -35660,14 +35784,15 @@ Answer: ${answer}`;
       }
       // A Sprint solve after one or more wrong tries is still a correct answer,
       // but it is not clean mastery evidence.
-      rapidRecordFact(c, RAPID_TYPES[round.type].stage, correct, assisted || misses > 0);
+      const outcome = rapidDailyOutcome(round, c, correct);
+      rapidRecordFact(c, RAPID_TYPES[round.type].stage, correct, assisted || misses > 0, outcome === "light-help" ? "light" : outcome === "heavy-help" ? "heavy" : outcome);
       saveStudySession();
       document.activeElement?.blur?.();
       hapticFeedback(round.revealed ? "tap" : (correct ? "correct" : "wrong"));
       rapidSuggestions.classList.add("hidden");
       rapidFeedback.textContent = "";
       rapidResultKicker.textContent = round.revealed ? "Revealed" : (correct ? "Correct" : "Incorrect");
-      rapidAnswer.textContent = round.answerLabel;
+      rapidAnswer.textContent = !correct && !round.revealed ? `Answer is: ${round.answerLabel}` : round.answerLabel;
       const relationshipMeta = rapidCityRelationshipMeta(round, c);
       const attemptMeta = rapidAttemptMeta(round);
       const basePerformanceMeta = round.resultMeta || (round.revealed
@@ -35676,7 +35801,7 @@ Answer: ${answer}`;
           ? (misses > 0 ? `Solved in ${misses + 1} tries` : (assisted ? "With help" : (state.streak > 1 ? `${state.streak} clean in a row` : "First try")))
           : "We’ll revisit this one");
       const performanceMeta = meta && assisted && !round.revealed ? `${basePerformanceMeta} · With help` : basePerformanceMeta;
-      rapidResultMeta.textContent = [`Place: ${c.name}`, relationshipMeta, attemptMeta, performanceMeta].filter(Boolean).join(" · ");
+      rapidResultMeta.textContent = rapidReadableResultMeta(round, c, performanceMeta);
       rapidResult.classList.remove("hidden", "correct", "wrong", "revealed");
       rapidResult.classList.add(round.revealed ? "revealed" : (correct ? "correct" : "wrong"));
       rapidTextPanel.classList.add("hidden");
@@ -36007,7 +36132,7 @@ Answer: ${answer}`;
           : ["capitalLocation", "largestCityLocation"].includes(type.target)
             ? (round.locationRevealed ? "Revealed" : (round.correct ? locationAccuracyLabel(Number(round.locationScore) || 0) : "Not quite"))
             : (round.correct ? "Correct" : "Incorrect");
-        rapidAnswer.textContent = round.answerLabel || rapidAnswerLabel(round, c);
+        rapidAnswer.textContent = !round.correct && !round.revealed ? `Answer is: ${round.answerLabel || rapidAnswerLabel(round, c)}` : (round.answerLabel || rapidAnswerLabel(round, c));
         const relationshipMeta = rapidCityRelationshipMeta(round, c);
         const attemptMeta = rapidAttemptMeta(round);
         const assisted = round.correct && (Math.max(0, Number(round.hintsUsed) || 0) > 0 || round.usedSuggestion === true);
@@ -36021,7 +36146,7 @@ Answer: ${answer}`;
             ? (rapidLocationMeta(round) || (round.correct ? solvedMeta : "We’ll revisit this one"))
             : (round.correct ? solvedMeta : "We’ll revisit this one"));
         if (round.resultMeta && assisted && !round.revealed) performanceMeta = `${performanceMeta} · With help`;
-        rapidResultMeta.textContent = [`Place: ${c.name}`, relationshipMeta, attemptMeta, performanceMeta].filter(Boolean).join(" · ");
+        rapidResultMeta.textContent = rapidReadableResultMeta(round, c, performanceMeta);
         rapidResult.classList.remove("hidden", "correct", "wrong", "revealed");
         rapidResult.classList.add(round.revealed ? "revealed" : (round.correct ? "correct" : "wrong"));
         rapidNextBtn.textContent = index + 1 >= sessionCountryTotal() ? "See results →" : "Next question →";
@@ -36206,10 +36331,11 @@ Answer: ${answer}`;
       const title = rapidComplete.querySelector(".rapid-complete-title");
       if (eyebrow) eyebrow.textContent = sprint ? "Sprint" : daily ? "Daily GeoDen" : "Mixed quiz";
       if (title) title.textContent = sprint ? "Time’s up" : daily ? "Today’s quiz complete" : "Session complete";
+      document.getElementById("rapidDailyFinished")?.classList.toggle("hidden", !daily);
       rapidSprintTimer?.classList.add("hidden");
       rapidComplete.querySelectorAll(".daily-share-report").forEach(el=>el.remove());
       if(daily){const r=dailyChallengeProgress.days[studySession.dailyChallenge.key];if(r)homeShowFinishedDaily("quiz",rapidComplete,r);}
-      rapidBackToMenuBtn.textContent=daily||studySession?.launchPreset?.mode==="quiz"?"Play 10 more questions →":"Back to menu";
+      rapidBackToMenuBtn.textContent=daily?"Play a new 10-question round →":studySession?.launchPreset?.mode==="quiz"?"Play 10 more questions →":"Back to menu";
     }
 
     function invalidateRapidPausedRender() {
@@ -39219,6 +39345,7 @@ function studyCapitalPrompt(host,c,stage){if(!capitalPromptDetails||studySession
     function saveSpecialGamePrefs() {
       try {
         localStorage.setItem(SPECIAL_GAME_PREFS_KEY, JSON.stringify({
+          answerSuggestionsEnabled, forgivingSpellingEnabled,
           chainSet, chainAnswerMode, chainRuleMode, chainAutocompleteEnabled,
           mapHuntSet, mapHuntPromptMode, mapHuntTargetMode, capitalPromptDetails,
           rankingMetric, rankingRandomMetric, rankingLastRandomMetric, rankingCount, rankingSet, rankingLastRoundCodes
@@ -39227,6 +39354,30 @@ function studyCapitalPrompt(host,c,stage){if(!capitalPromptDetails||studySession
     }
 
     const specialGamePrefs = loadSpecialGamePrefs();
+    let answerSuggestionsEnabled = specialGamePrefs.answerSuggestionsEnabled !== false;
+    let forgivingSpellingEnabled = specialGamePrefs.forgivingSpellingEnabled !== false;
+    const answerSuggestionsToggle = document.getElementById("answerSuggestionsToggle");
+    const forgivingSpellingToggle = document.getElementById("forgivingSpellingToggle");
+    if (answerSuggestionsToggle) {
+      answerSuggestionsToggle.checked = answerSuggestionsEnabled;
+      answerSuggestionsToggle.addEventListener("change", () => {
+        answerSuggestionsEnabled = answerSuggestionsToggle.checked;
+        if (!answerSuggestionsEnabled) {
+          for (const id of ["interactiveSuggestions", "rapidSuggestions", "detectiveSuggestions", "chainSuggestions"]) {
+            const list = document.getElementById(id);
+            list?.replaceChildren();
+            list?.classList.add("hidden");
+          }
+          document.querySelectorAll('.sub-suggestions').forEach(list=>list.replaceChildren());
+        }
+        saveSpecialGamePrefs();
+        updateChainSetupHelp();
+      });
+    }
+    if (forgivingSpellingToggle) {
+      forgivingSpellingToggle.checked = forgivingSpellingEnabled;
+      forgivingSpellingToggle.addEventListener("change", () => { forgivingSpellingEnabled = forgivingSpellingToggle.checked; saveSpecialGamePrefs(); });
+    }
     let capitalPromptDetails=validPrompt(specialGamePrefs.capitalPromptDetails)?specialGamePrefs.capitalPromptDetails:null;
     const chainSetChoices = new Set(["world", "europe", "africa", "asia", "northAmerica", "southAmerica", "oceania", "caribbean"]);
     let chainSet = chainSetChoices.has(specialGamePrefs.chainSet) ? specialGamePrefs.chainSet : "world";
@@ -39256,7 +39407,14 @@ function studyCapitalPrompt(host,c,stage){if(!capitalPromptDetails||studySession
             ? "Move only from your current place. When a branch runs out, Trail rewinds automatically to the nearest earlier place with another route."
             : "Fill a neighbouring place; islands use their nearest route.";
       }
-      if (chainAutocompleteToggle) chainAutocompleteToggle.checked = !!chainAutocompleteEnabled;
+      if (chainAutocompleteToggle) {
+        chainAutocompleteToggle.checked = !!chainAutocompleteEnabled;
+        chainAutocompleteToggle.disabled = !answerSuggestionsEnabled;
+        const note = chainAutocompleteToggle.closest("label")?.querySelector(".territory-inline-toggle-meta");
+        if (note) note.textContent = answerSuggestionsEnabled
+          ? "Search all GeoDen place or capital names after 1 letter"
+          : "Turn on ‘Show answers as you type’ in Settings to use this";
+      }
     }
 
     function chainStartInstruction() {
@@ -40384,6 +40542,7 @@ function studyCapitalPrompt(host,c,stage){if(!capitalPromptDetails||studySession
     }
 
     function chainTypoSuggestion(raw, allowedCountries) {
+      if (!forgivingSpellingEnabled) return null;
       const actual = interactiveLooseNormalize(raw);
       if (actual.length < 3) return null;
       const matches = [];
@@ -40519,14 +40678,18 @@ function studyCapitalPrompt(host,c,stage){if(!capitalPromptDetails||studySession
       const key = chainMasteryPartKey(country.code, kind);
       if (chainState.recordedMastery.has(key)) return;
       chainState.recordedMastery.add(key);
-      if(chainState.challenge && score>=.95)chainState.challengeClean=(chainState.challengeClean||0)+1;
+      const fullyRevealed = chainState.revealedMastery?.has(key);
+      const heavilyHinted = chainState.heavyMastery?.has(key);
+      const effectiveScore = fullyRevealed ? Math.min(score,.15) : heavilyHinted ? Math.min(score,.35) : score;
+      if(chainState.challenge && effectiveScore>=.95)chainState.challengeClean=(chainState.challengeClean||0)+1;
       const skill = kind === "country" ? "placeNameRecall" : "capitalRecall";
-      recordGameMasteryEvidence(country, skill, score, { weight:1, source:"chain", save:true });
+      recordGameMasteryEvidence(country, skill, effectiveScore, { weight:1, source:"chain", save:true });
       recordDailyFactCounts({
         total: 1,
-        clean: score >= .95 ? 1 : 0,
-        assisted: score > 0 && score < .95 ? 1 : 0,
-        missed: score <= 0 ? 1 : 0
+        clean: effectiveScore >= .95 ? 1 : 0,
+        lightHelp: effectiveScore > .35 && effectiveScore < .95 ? 1 : 0,
+        heavyHelp: effectiveScore > .15 && effectiveScore <= .35 ? 1 : 0,
+        missed: effectiveScore <= .15 ? 1 : 0
       });
     }
 
@@ -40555,7 +40718,16 @@ function studyCapitalPrompt(host,c,stage){if(!capitalPromptDetails||studySession
       const next = Math.min(total, previous + 1);
       chainState.activeHint = { key:chainHintKey(hint), count:next };
       if (!chainState.assistedMastery) chainState.assistedMastery = new Set();
-      chainState.assistedMastery.add(chainMasteryPartKey(hint.code, hint.kind));
+      const masteryKey=chainMasteryPartKey(hint.code, hint.kind);
+      chainState.assistedMastery.add(masteryKey);
+      if(next>=Math.max(2,total-1)){
+        if(!(chainState.heavyMastery instanceof Set))chainState.heavyMastery=new Set();
+        chainState.heavyMastery.add(masteryKey);
+      }
+      if(next>=total){
+        if(!(chainState.revealedMastery instanceof Set))chainState.revealedMastery=new Set();
+        chainState.revealedMastery.add(masteryKey);
+      }
       chainState.hintsUsed = Math.max(0, Number(chainState.hintsUsed) || 0) + 1;
 
       const label = chainHintLabel(hint);
@@ -40659,7 +40831,7 @@ function studyCapitalPrompt(host,c,stage){if(!capitalPromptDetails||studySession
 
     function updateChainSuggestions() {
       if(chainState?.challenge){clearChainSuggestions();return;}
-      if (!chainAutocompleteEnabled || !chainGuessInput || !chainSuggestions || !chainState || chainGuessInput.disabled) {
+      if (!answerSuggestionsEnabled || !chainAutocompleteEnabled || !chainGuessInput || !chainSuggestions || !chainState || chainGuessInput.disabled) {
         clearChainSuggestions();
         return;
       }
@@ -41060,6 +41232,8 @@ function studyCapitalPrompt(host,c,stage){if(!capitalPromptDetails||studySession
           giveUpsUsed:0,
           activeHint:null,
           assistedMastery:new Set(),
+          heavyMastery:new Set(),
+          revealedMastery:new Set(),
           recordedMastery:new Set(),
           assistedInputValue:"",
           startCode,
@@ -43256,6 +43430,20 @@ function rankingTargetValues() {
       return rankingTargetValues().indexOf(item.value);
     }
 
+    function rankingDailyOutcomes(state=rankingState){
+      if(!state)return [];
+      const order=Array.isArray(state.firstCheckOrder)?state.firstCheckOrder:state.items.map(item=>item.c.code);
+      const first=new Set(state.firstCheckCorrectCodes || []);
+      const hinted=Array.isArray(state.hintedCodes)?state.hintedCodes:[];
+      return order.map(code=>{
+        if(!first.has(code))return "missed";
+        const directed=hinted.filter(value=>value===code).length;
+        if(directed>1 || hinted.length>=3)return "heavy-help";
+        if(hinted.length || state.hints)return "light-help";
+        return "clean";
+      });
+    }
+
     function recordRankingMastery(revealed = false) {
       if (!rankingState || rankingState.masteryRecorded) return;
       rankingState.masteryRecorded = true;
@@ -43281,13 +43469,13 @@ function rankingTargetValues() {
       // Ranking is study too. Count each placed country toward the daily goal;
       // positions already correct on the first check are clean recall and the
       // remainder are assisted by subsequent checks/hints.
-      const dailyTotal = rankingState.items.length;
-      const dailyClean = hints > 0 ? 0 : Math.min(dailyTotal, firstCorrect.size);
+      const outcomes=rankingDailyOutcomes();
       recordDailyFactCounts({
-        total: dailyTotal,
-        clean: dailyClean,
-        assisted: revealed ? 0 : Math.max(0, dailyTotal - dailyClean),
-        missed: revealed ? Math.max(0, dailyTotal - dailyClean) : 0
+        total: outcomes.length,
+        clean: outcomes.filter(value=>value==="clean").length,
+        lightHelp: revealed?0:outcomes.filter(value=>value==="light-help").length,
+        heavyHelp: revealed?0:outcomes.filter(value=>value==="heavy-help").length,
+        missed: outcomes.filter(value=>value==="missed").length+(revealed?outcomes.filter(value=>value!=="missed"&&value!=="clean").length:0)
       });
     }
 
@@ -43296,7 +43484,7 @@ function rankingTargetValues() {
       homeTickTimers();
       rankingState.revealed = true;
       rankingState.verified = true;
-      if(rankingState.launchPreset?.dailyKey){homeRecordDaily(rankingState.launchPreset,100*(rankingState.firstCheckCorrectCodes?.length||0)/rankingState.items.length,rankingState.homeElapsedMs||0,{correct:rankingState.firstCheckCorrectCodes?.length||0,total:rankingState.items.length,checks:rankingState.checks,hints:rankingState.hints});homeShowFinishedDaily("ranking",rankingFeedback.parentElement);}
+      if(rankingState.launchPreset?.dailyKey){const outcomes=rankingDailyOutcomes();homeRecordDaily(rankingState.launchPreset,100*(rankingState.firstCheckCorrectCodes?.length||0)/rankingState.items.length,rankingState.homeElapsedMs||0,{correct:rankingState.firstCheckCorrectCodes?.length||0,total:rankingState.items.length,checks:rankingState.checks,hints:rankingState.hints,outcomes});homeShowFinishedDaily("ranking",rankingFeedback.parentElement);homeDailyNextNote(rankingFeedback.parentElement,"Ranking","round");}
       rankingState.checkedCorrectCodes = new Set(rankingState.items.map(item => item.c.code));
       rankingState.knownCorrectCodes = new Set(rankingState.items.map(item => item.c.code));
       rankingState.newlyConfirmedCodes = new Set();
@@ -43304,7 +43492,7 @@ function rankingTargetValues() {
       const checks = Math.max(1, Number(rankingState.checks) || 1);
       rankingFeedback.textContent = `Perfect — solved in ${checks} check${checks === 1 ? "" : "s"}.`;
       const canReplay = rankingCountriesForSet().length >= 2;
-      rankingRevealBtn.textContent = canReplay ? "Next round →" : "Change setup →";
+      rankingRevealBtn.textContent = canReplay ? "Start a new round →" : "Change setup →";
       rankingRevealBtn.dataset.rankingAction = canReplay ? "replay" : "setup";
       rankingRevealBtn.classList.remove("hidden");
       rankingVerifyBtn.disabled = true;
@@ -43413,7 +43601,7 @@ function rankingTargetValues() {
       if (!rankingState || rankingState.revealed) return;
       rankingState.checks = Math.max(0, Number(rankingState.checks) || 0) + 1;
       const correctCodes = rankingCorrectCodes();
-      if (!rankingState.firstCheckCorrectCodes) rankingState.firstCheckCorrectCodes = [...correctCodes];
+      if (!rankingState.firstCheckCorrectCodes){rankingState.firstCheckCorrectCodes = [...correctCodes];rankingState.firstCheckOrder=rankingState.items.map(item=>item.c.code);}
       const knownBefore = rankingState.knownCorrectCodes instanceof Set
         ? new Set(rankingState.knownCorrectCodes)
         : new Set(rankingState.knownCorrectCodes || []);
@@ -43461,6 +43649,8 @@ function rankingTargetValues() {
       const hintPool = unknownMisplaced.length ? unknownMisplaced : misplaced;
       rankingState.hints = Math.max(0, Number(rankingState.hints) || 0) + 1;
       const pick = hintPool[randomInt(hintPool.length)];
+      if(!Array.isArray(rankingState.hintedCodes))rankingState.hintedCodes=[];
+      rankingState.hintedCodes.push(pick.item.c.code);
       const direction = pick.targetIndex < pick.index ? "up" : "down";
       rankingFeedback.textContent = `Hint · move ${pick.item.c.name} ${direction}.`;
       rankingRevealBtn.textContent = "Another hint";
@@ -43468,7 +43658,7 @@ function rankingTargetValues() {
     }
 
     async function startRankingGame(options = {}) {
-      rankingOverlay.querySelectorAll(".daily-share-report").forEach(el=>el.remove());
+      rankingOverlay.querySelectorAll(".daily-share-report,.daily-next-note").forEach(el=>el.remove());
       const token = ++rankingBuildToken;
       const replay = options?.replay === true;
       const avoidPrevious = replay || rankingLastRoundCodes.length > 0;
@@ -43480,7 +43670,7 @@ function rankingTargetValues() {
         const items = options.launchPreset ? await homeRankingItems(options.launchPreset) : await buildRankingItems({ avoidPrevious, metric: roundMetric });
         if (token !== rankingBuildToken || !rankingOverlay?.classList.contains("open")) return;
         if (items.length < 2) throw new Error("Not enough values");
-        rankingState={ launchPreset:options.launchPreset || null, metric:roundMetric, setKey:options.launchPreset ? "world" : rankingSet, items, verified:false, revealed:false, checks:0, firstCheckCorrectCodes:null, checkedCorrectCodes:null, knownCorrectCodes:new Set(), newlyConfirmedCodes:new Set(), hints:0, masteryRecorded:false };
+        rankingState={ launchPreset:options.launchPreset || null, metric:roundMetric, setKey:options.launchPreset ? "world" : rankingSet, items, verified:false, revealed:false, checks:0, firstCheckCorrectCodes:null, firstCheckOrder:null, checkedCorrectCodes:null, knownCorrectCodes:new Set(), newlyConfirmedCodes:new Set(), hintedCodes:[], hints:0, masteryRecorded:false };
         noteResumableMode("ranking");
         rankingLastRoundCodes = items.map(item => item.c.code);
         saveSpecialGamePrefs();
@@ -43542,7 +43732,7 @@ function rankingTargetValues() {
         rankingPromptMeta.textContent = `${rankingState.items.length} places · ${countrySetDisplayName(rankingState.setKey)} · rank 1 is highest${rankingDailySourceNote(rankingState)}`;
         rankingVerifyBtn.disabled = rankingState.verified || rankingState.revealed;
         rankingRevealBtn.classList.remove("hidden");
-        rankingRevealBtn.textContent = rankingState.revealed ? "Next round →" : "Hint";
+        rankingRevealBtn.textContent = rankingState.revealed ? "Start a new round →" : "Hint";
         rankingRevealBtn.dataset.rankingAction = rankingState.revealed ? "next" : "hint";
         rankingFeedback.textContent = rankingState.savedFeedback || "Continue your ranking.";
         renderRankingList(); noteResumableMode("ranking");
@@ -45401,7 +45591,7 @@ function rankingTargetValues() {
         ? Array.isArray(v.$set) ? new Set(v.$set) : Array.isArray(v.$map) ? new Map(v.$map) : v : v);
     }
     function specialRunSnapshot() {
-      const chain = specialRunPick(chainState, 'challenge challengeClean challengeRecorded setKey answerMode ruleMode codes graph parts hintsUsed giveUpsUsed activeHint assistedMastery recordedMastery assistedInputValue startCode lastFilledCode trailCurrentCode trailStack trailBounces trailAdvances trailEndReason elapsedMs finishedAt');
+      const chain = specialRunPick(chainState, 'challenge challengeClean challengeRecorded setKey answerMode ruleMode codes graph parts hintsUsed giveUpsUsed activeHint assistedMastery heavyMastery revealedMastery recordedMastery assistedInputValue startCode lastFilledCode trailCurrentCode trailStack trailBounces trailAdvances trailEndReason elapsedMs finishedAt');
       if (chain) {
         chain.graphLayers={landGraph:chain.graph.landGraph,bridgeGraph:chain.graph.bridgeGraph,anchorGraph:chain.graph.anchorGraph};
         chain.savedFeedback=chainState.needsHydration?chainState.savedFeedback:chainFeedback.textContent;
@@ -45416,7 +45606,7 @@ function rankingTargetValues() {
         maphunt.cursor++; maphunt.misses=0; maphunt.awaitingRevealClick=false;
         maphunt.finished=maphunt.cursor>=maphunt.roundCodes.length;
       }
-      const ranking = specialRunPick(rankingState, 'launchPreset homeElapsedMs metric setKey verified revealed checks firstCheckCorrectCodes checkedCorrectCodes knownCorrectCodes newlyConfirmedCodes hints masteryRecorded savedFeedback');
+      const ranking = specialRunPick(rankingState, 'launchPreset homeElapsedMs metric setKey verified revealed checks firstCheckCorrectCodes firstCheckOrder checkedCorrectCodes knownCorrectCodes newlyConfirmedCodes hintedCodes hints masteryRecorded savedFeedback');
       if (ranking) {
         ranking.items=rankingState.items.map(item=>({code:item.c.code,value:item.value}));
         if (rankingOverlay.classList.contains('open')) ranking.savedFeedback=rankingFeedback.textContent;
@@ -45437,6 +45627,7 @@ function rankingTargetValues() {
             !integer(s.hintsUsed)||!integer(s.giveUpsUsed)||!s.graphLayers||
             !['landGraph','bridgeGraph','anchorGraph'].every(key=>mapLinks(s.graphLayers[key],s.codes))||
             !Number.isFinite(s.elapsedMs)||s.elapsedMs<0||!(s.assistedMastery instanceof Set)||!(s.recordedMastery instanceof Set)||
+            (s.heavyMastery!=null&&!(s.heavyMastery instanceof Set))||(s.revealedMastery!=null&&!(s.revealedMastery instanceof Set))||
             !Array.isArray(s.trailStack)||!s.trailStack.every(c=>s.codes.includes(c))||
             [...s.graph].some(([c,links])=>!s.codes.includes(c)||!(links instanceof Set)||[...links].some(c=>!s.codes.includes(c)))||
             [...s.parts].some(([c,p])=>!s.codes.includes(c)||!p||typeof p.country!=='boolean'||typeof p.capital!=='boolean')) throw new Error('Invalid Map Crawl save');
@@ -45992,15 +46183,18 @@ function rankingTargetValues() {
       const name={quiz:'Quiz',detective:'Detective',matching:'Matching',ranking:'Ranking'}[mode];
       const topicLine=mode==='matching'||mode==='ranking'?'\n'+homeTopicDescription(mode,r):'';
       const score=mode==='quiz'?Math.round(100*r.correct/Math.max(1,r.total)):r.score;
-      const total=mode==='detective'?5:Math.min(10,Math.max(1,r.total||5));
+      const total=mode==='detective'?5:Math.max(1,Math.min(30,Number(r.total)||5));
       const green=mode==='detective'?(r.correct?1:0):Math.round(total*score/100);
-      const tiles=mode==='detective'?'🔎'.repeat(Math.min(5,r.clues||1))+(r.correct?' ✅':' ⬜'):mode==='quiz'&&Array.isArray(r.outcomes)&&r.outcomes.length===total?r.outcomes.map(value=>value?'🟩':'⬜').join(''):'🟩'.repeat(green)+'⬜'.repeat(total-green);
-      const grid=mode!=='detective'&&total>5?[...tiles].slice(0,5).join('')+'\n'+[...tiles].slice(5).join(''):tiles;
-      const result=mode==='quiz'?`${r.correct}/${r.total} correct`:mode==='detective'?`${r.correct?'Solved':'Revealed'} · ${score} points`:mode==='ranking'?`${score}% first check`:`${score}% first-try accuracy`;
+      const tile=value=>value===true||value==='clean'?'🟩':value==='light-help'?'🟨':value==='heavy-help'?'🟧':'⬜';
+      const ordered=Array.isArray(r.outcomes)&&r.outcomes.length===total?r.outcomes.map(tile):null;
+      const cells=mode==='detective'?null:ordered||Array.from({length:total},(_,i)=>i<green?'🟩':'⬜');
+      const grid=mode==='detective'?'🔎'.repeat(Math.min(5,r.clues||1))+(r.correct?' ✅':' ⬜'):cells.reduce((rows,cell,i)=>{if(i&&i%5===0)rows+='\n';return rows+cell;},'');
+      const result=mode==='quiz'?`${r.correct}/${r.total} correct`:mode==='detective'?`${r.correct?'Solved':'Revealed'} · ${score} points`:mode==='ranking'?`${r.correct}/${r.total} in place on the first check`:`${score}% first-try accuracy`;
       const time=Number.isFinite(r.elapsedMs)?` · ⏱ ${homeTime(r.elapsedMs)}`:'';
       const help=mode==='ranking'?`\n${r.checks||1} check${r.checks===1?'':'s'} · ${r.hints||0} hints`:mode==='quiz'&&r.assisted?`\n${r.assisted} with help`:'';
       const url=/^https?:$/.test(location.protocol)&&!['localhost','127.0.0.1'].includes(location.hostname)?'\n'+location.origin+location.pathname:'';
-      return `🌍 GeoDen Daily · ${name}\n${date}${topicLine}\n\n${grid}\n${result}${time}${help}\n${mode==='detective'?'A little geography mystery.':'🟩 correct · ⬜ missed or corrected'}${url}`;
+      const legend=ordered?'🟩 no help · 🟨 a little help · 🟧 lots of help · ⬜ missed or corrected':'🟩 correct · ⬜ missed or corrected';
+      return `🌍 GeoDen Daily · ${name}\n${date}${topicLine}\n\n${grid}\n${result}${time}${help}\n${mode==='detective'?'A little geography mystery.':legend}${url}`;
     }
     function homeDailyReport(mode,result){
       const box=document.createElement('section');box.className='discovery-result daily-share-report';
@@ -46016,6 +46210,13 @@ function rankingTargetValues() {
     function homeShowFinishedDaily(mode,host,result=null){
       if(!host)return;host.querySelectorAll('.daily-share-report').forEach(el=>el.remove());
       const r=result||homeDailyResult(mode);if(r){const report=homeDailyReport(mode,r);host.append(report);if(mode==='matching')host.classList.add('has-daily-report');}
+    }
+    function homeDailyNextNote(host,name,noun){
+      if(!host)return;
+      host.querySelectorAll('.daily-next-note').forEach(el=>el.remove());
+      const note=document.createElement('p');note.className='daily-next-note';
+      note.textContent=`Today’s Daily ${name} is complete. Want to keep playing? The next ${noun} is a separate game.`;
+      host.append(note);
     }
     function installHomeSectionDisclosures() {
       for(const group of playModePicker.querySelectorAll('.mode-discovery-group')){
@@ -46228,7 +46429,7 @@ async function subRenderQuestion(stage,token=subToken){
  if(r.mode==='standard'){
   const reveal=subButton('Reveal answer',async()=>{reveal.remove();if(mapTopic){map.subMap.reveal();}else status.append(await subValue(q.id,q.topic));status.append(subEl('p',subData.get(q.id).name));const actions=subEl('div',undefined,'sub-actions');actions.append(subButton('Missed it',()=>{subRecord(0,true);subRenderQuestion(stage);}),subButton('Got it ✓',()=>{subRecord(100);subRenderQuestion(stage);},'sub-primary'));stage.append(actions);},'sub-primary');stage.append(reveal);return;
  }
- if(!mapTopic){if(r.answer==='typing'&&['name','capital'].includes(q.topic)){const form=subEl('form',undefined,'sub-answer-form'),input=document.createElement('input');input.type='text';input.autocomplete='off';input.placeholder='Type your answer';input.setAttribute('aria-label','Your answer');const list=subEl('div',undefined,'sub-suggestions');input.oninput=()=>{list.replaceChildren();if(!input.value.trim())return;for(const record of subData.search(input.value,{parent:r.parent,field:q.topic,limit:SUBDIVISION_IDENTITIES.length})){const text=q.topic==='name'?record.name:record.capital.name;list.append(subButton(text,()=>{input.value=text;list.replaceChildren();input.focus();}));}};form.append(input,subButton('Check',null,'sub-primary'),list);form.querySelector('button').type='submit';form.onsubmit=e=>{e.preventDefault();if(input.value.trim())subAnswer(subData.matches(q.id,q.topic,input.value),null,stage);};stage.append(form);}
+ if(!mapTopic){if(r.answer==='typing'&&['name','capital'].includes(q.topic)){const form=subEl('form',undefined,'sub-answer-form'),input=document.createElement('input');input.type='text';input.autocomplete='off';input.placeholder='Type your answer';input.setAttribute('aria-label','Your answer');const list=subEl('div',undefined,'sub-suggestions');input.oninput=()=>{list.replaceChildren();if(!answerSuggestionsEnabled||!input.value.trim())return;for(const record of subData.search(input.value,{parent:r.parent,field:q.topic,limit:SUBDIVISION_IDENTITIES.length})){const text=q.topic==='name'?record.name:record.capital.name;list.append(subButton(text,()=>{input.value=text;list.replaceChildren();input.focus();}));}};form.append(input,subButton('Check',null,'sub-primary'),list);form.querySelector('button').type='submit';form.onsubmit=e=>{e.preventDefault();if(input.value.trim())subAnswer(subData.matches(q.id,q.topic,input.value),null,stage);};stage.append(form);}
   else{const grid=subEl('div',undefined,'sub-options');stage.append(grid);const candidates=homeSeededOrder(subData.list({set:r.set}).filter(x=>x.id!==q.id),'choices:'+q.id+q.topic).slice(0,3).map(x=>x.id);candidates.push(q.id);for(const id of homeSeededOrder(candidates,'order:'+q.id+q.topic)){const b=subButton('',()=>subAnswer(id===q.id,id,stage));b.append(await subValue(id,q.topic));b.dataset.choice=id;grid.append(b);}}}
  stage.append(subButton('Give up · reveal',()=>subAnswer(false,null,stage,true),'sub-give-up'));
  if(r.pending)subShowAnswer(stage,r.pending);
