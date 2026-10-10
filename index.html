@@ -16500,6 +16500,22 @@ html.geoden-light body #startOverlay .active-session-resume-action { color:#6552
 @media(max-width:520px){html.geoden-light body #startOverlay #activeSessionResumeBtn{padding:16px!important;gap:12px!important;}}
 html.geoden-light body #startOverlay :is(.discovery-today,.today-focus-card,.discovery-card,.play-mode-button) { box-shadow:none!important; }
 
+/* Finished dailies and scored challenges remain readable at a glance. */
+#startOverlay .discovery-progress:has(.challenge-result-segment) {display:flex!important;align-items:stretch!important;background:#dedfd6!important;border:1px solid #c9cebf!important;overflow:hidden!important;}
+html.geoden-light body #startOverlay .discovery-progress>.challenge-result-segment {display:block!important;flex:none!important;height:100%!important;background:var(--segment-color)!important;border-right:1px solid #f6f3eb80!important;box-sizing:border-box!important;}
+html.geoden-light body #startOverlay .play-mode-button .discovery-progress>.challenge-result-segment,
+html.geoden-light body #startOverlay #discoveryLanding .challenge-collection .discovery-progress>.challenge-result-segment {background:var(--segment-color)!important;border-radius:0!important;}
+#startOverlay .mode-challenge-count {display:block;margin-top:7px;color:inherit;font-size:12px;font-weight:850;line-height:1.3;}
+#startOverlay #homeDailyPicks .daily-mode-card[data-challenge-state="completed"] {filter:saturate(.58) brightness(.88);}
+#startOverlay #homeDailyPicks .daily-complete-label {display:block;align-self:flex-start;padding:5px 9px;border-radius:8px;background:#f6f2e8;color:#274532;font-size:11px;line-height:1.2;font-weight:900;letter-spacing:.02em;margin:0 0 7px;}
+#startOverlay #homeDailyPicks .daily-mode-card[data-challenge-state="completed"] .daily-result-line::before {display:none!important;}
+@media(max-width:520px){#startOverlay #homeDailyPicks .daily-complete-label {flex:0 0 100%;order:-1;width:max-content;box-sizing:border-box;}}
+#mapHuntOverlay .map-hunt-progress-track {display:flex!important;align-items:stretch;height:10px!important;background:#dedfd6!important;margin:7px 0!important;flex:0 0 auto!important;}
+.map-outcome-track {display:flex!important;align-items:stretch;gap:0;height:11px;overflow:hidden;border-radius:999px;background:#dedfd6;}
+.map-outcome-chunk {display:block;height:100%;flex:none;box-sizing:border-box;border-right:1px solid #f6f3eb80;}
+.game-quality-track {display:flex;align-items:stretch;gap:0;height:9px;border-radius:999px;background:#dedfd6;overflow:hidden;margin:7px 0 10px;}
+.game-quality-track>span {display:block;flex:none;height:100%;box-sizing:border-box;border-right:1px solid #f6f3eb80;}
+
 </style>
 <style id="daily-chevron-v69">
 html.geoden-light body #startOverlay :is(.daily-hero-head,.home-section-summary) .daily-collapse-action { display:grid;grid-template-columns:34px 16px;gap:8px;align-items:center;flex-shrink:0;white-space:nowrap;color:#52634f;font-family:inherit;font-weight:750;font-size:12px;line-height:1.3; }
@@ -16532,7 +16548,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
   <script src="assets/ranking-daily-snapshot-2026-10-10.js"></script>
 
   <script>
-    const GEODEN_VERSION = "0.56.109";
+    const GEODEN_VERSION = "0.56.110";
     // v0.56.28 — blank-surface audit: guarded silhouettes/location maps and Matching visual preflight.
     // v0.56.18 — private-beta problem reporting with diagnostic state, recent actions, errors, copy/download/share.
     // v0.56.17 — tester-facing automatic failure reporting with screenshot/copy instructions.
@@ -19622,12 +19638,12 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
       let saved = "";
       try { saved = localStorage.getItem(LAST_RESUMABLE_MODE_KEY) || ""; } catch (_) {}
       const available = {
-        subdivision: !!subStore.run,
-        study: hasActiveStudyRun(),
-        chain: hasResumableChain(),
-        maphunt: hasResumableMapHunt(),
-        borderless: !!borderlessRun?.codes?.length,
-        ranking: !!rankingState?.items?.length
+        subdivision: !!subStore.run&&!subStore.run.finished,
+        study: hasActiveStudyRun()&&!sprintHasEndedPendingResults(studySession),
+        chain: hasResumableChain()&&!chainState?.finishedAt,
+        maphunt: hasResumableMapHunt()&&!mapHuntState?.finished,
+        borderless: !!borderlessRun?.codes?.length&&borderlessRun.index<borderlessRun.codes.length,
+        ranking: !!rankingState?.items?.length&&!rankingState.revealed
       };
       const candidates = Object.keys(available).filter(mode => available[mode]);
       if (!candidates.length) return "";
@@ -25709,6 +25725,12 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
       matchingDrawerPrevBtn.disabled = count <= 1;
       matchingDrawerNextBtn.disabled = count <= 1;
       updateMatchingCheckButton();
+      const outcomes=[...matchingBoard.querySelectorAll('.matching-slot')].map(slot=>{
+        if(slot.classList.contains('correct'))return state.mistakeKeys.has(`${slot.dataset.countryCode}|${slot.dataset.field}`)?'light-help':'clean';
+        if(slot.classList.contains('wrong'))return 'missed';
+        return slot.dataset.cardId?'pending':null;
+      });
+      renderGameQualityBar(matchingRoundStatus.parentElement.parentElement,'matching',outcomes,state.totalSlots,'Matching spaces filled and how they went');
     }
 
     function matchingDrawerIndexForField(field, state = matchingState) {
@@ -29663,6 +29685,12 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
       const mixedCard = activeFlashDeckCard();
       const score = commitAttempt(c);
       const clean = isCleanAttemptScore(score);
+      if(studySession&&!wasRevision&&!wasReview){
+        if(!Array.isArray(studySession.placeOutcomes))studySession.placeOutcomes=[];
+        const results=Object.values(attempt?.results||{}).filter(result=>result&&!result.unavailable);
+        const outcome=!results.length?null:results.some(result=>!result.correct||result.helpLevel==='missed')?'missed':results.some(result=>result.helpLevel==='heavy')?'heavy-help':results.some(result=>result.assisted||result.helpLevel==='light')?'light-help':'clean';
+        studySession.placeOutcomes.push(outcome);
+      }
       const focusedBeforeAdvance = studySession?.pool === "review" ? factFocusForCountry(c) : [];
       const uncleanFocused = focusedBeforeAdvance.length ? uncleanFocusedStagesForAttempt(c) : [];
       recordSessionPresentation(c, score, wasRevision, attempt?.results || {});
@@ -30302,7 +30330,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
       for(const item of strong)renderMasteryRow(strengths,masteryFieldLabel(item.field),item.cleanCorrect+' of '+item.attempts+' correct first time',Math.round(item.cleanAccuracy*100)+'%');
     }
     function archiveBorderlessProgress(s){
-      if(!s||s.dailyKey||s.challenge||!s.codes?.length||s.index!==s.codes.length||s.progressArchivedAt)return;
+      if(!s||s.dailyKey||s.challenge||s.revision||!s.codes?.length||s.index!==s.codes.length||s.progressArchivedAt)return;
       const at=Date.now();s.progressArchivedAt=at;
       const entry={id:'borderless:'+at+':'+Math.random().toString(36).slice(2),interaction:'borderless',target:s.target,clue:s.clue,countrySet:s.set,total:s.codes.length,correct:s.results.filter(r=>r.score===100&&!r.revealed).length,points:s.results.reduce((n,r)=>n+r.score,0),endedAt:at,elapsedMs:s.elapsedMs};
       sessionHistory=[entry,...sessionHistory].slice(0,50);saveSessionHistory();
@@ -30580,6 +30608,13 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
       if (!finished) sessionRecap?.classList.add("hidden");
 
       const sessionTotal = sessionCountryTotal();
+      if(studySession&&!isLookupMode()&&!isSessionRevisionMode()&&!isReviewPresentation()){
+        progressFill.parentElement.classList.add('hidden');
+        renderGameQualityBar(progressFill.parentElement,'flash',Array.isArray(studySession.placeOutcomes)?studySession.placeOutcomes:[],sessionTotal,'Places studied and how the answers went');
+      }else{
+        progressFill.parentElement.classList.remove('hidden');
+        if(progressFill.parentElement.nextElementSibling?.classList.contains('game-quality-track'))progressFill.parentElement.nextElementSibling.remove();
+      }
 
       if (finished) {
         progressText.textContent = `${Math.min(index, sessionTotal)} / ${sessionTotal}`;
@@ -33365,6 +33400,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
         solved: 0,
         completed: 0,
         totalClues: 0,
+        outcomes: [],
         round: null
       };
     }
@@ -33379,6 +33415,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
       state.solved = Math.max(0, Number(state.solved) || 0);
       state.completed = Math.max(0, Number(state.completed) || 0);
       state.totalClues = Math.max(0, Number(state.totalClues) || 0);
+      if(!Array.isArray(state.outcomes))state.outcomes=[];
       if (state.round && typeof state.round === "object") {
         const normalizeWrongGuessKey = value => {
           const raw = String(value || "").trim();
@@ -33838,6 +33875,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
       detectiveCase.classList.remove("hidden");
       detectiveComplete.classList.add("hidden");
       detectiveRoundStatus.textContent = `Case ${Math.min(index + 1, sessionCountryTotal())} of ${sessionCountryTotal()}`;
+      renderGameQualityBar(detectivePointsAvailable.parentElement,'detective',state.outcomes,sessionCountryTotal(),'Detective cases completed and how they went');
       const finished = !!round.finished;
       detectivePointsAvailable.textContent = finished
         ? (round.solved ? `${Math.max(0, Number(round.points) || 0)} pts earned` : "0 pts earned")
@@ -34192,11 +34230,13 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
       const wrongGuesses = Math.max(0, Number(round?.wrongGuesses) || 0);
       const cluesUsed = Math.max(1, Number(round?.revealedCount) || 1);
       const cleanSolve = solved && wrongGuesses === 0 && cluesUsed === 1 && !round?.spellingAssisted;
-      const assistedSolve = solved && !cleanSolve;
+      const lightSolve=solved&&!cleanSolve&&wrongGuesses<=1&&cluesUsed<=3;
+      const heavySolve=solved&&!cleanSolve&&!lightSolve;
       recordDailyFactCounts({
         total: 1,
         clean: cleanSolve ? 1 : 0,
-        assisted: assistedSolve ? 1 : 0,
+        lightHelp: lightSolve ? 1 : 0,
+        heavyHelp: heavySolve ? 1 : 0,
         missed: solved ? 0 : 1
       });
 
@@ -34206,6 +34246,8 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
         state.solved += solved ? 1 : 0;
         state.score += Math.max(0, Number(points) || 0);
         state.totalClues += Math.max(1, Number(round?.revealedCount) || 1);
+        state.outcomes.push(cleanSolve?'clean':lightSolve?'light-help':heavySolve?'heavy-help':'missed');
+        renderGameQualityBar(detectivePointsAvailable.parentElement,'detective',state.outcomes,sessionCountryTotal(),'Detective cases completed and how they went');
       }
       saveStudySession();
     }
@@ -35766,7 +35808,9 @@ Answer: ${answer}`;
       round.answerLabel = label || rapidAnswerLabel(round, c);
       round.resultMeta = meta || "";
       state.total += 1;
-      if (isDailyChallengeSession()) { if (!Array.isArray(state.outcomes)) state.outcomes=[]; state.outcomes.push(rapidDailyOutcome(round, c, correct)); }
+      if (!Array.isArray(state.outcomes)) state.outcomes=[];
+      state.outcomes.push(rapidDailyOutcome(round, c, correct));
+      if(!isSprintSession())renderGameQualityBar(rapidScore.parentElement,'quiz',state.outcomes,sessionCountryTotal(),'Quiz questions completed and how they went');
       const misses = Math.max(0, Number(round.misses) || 0);
       const assisted = !!correct && (Math.max(0, Number(round.hintsUsed) || 0) > 0 || round.usedSuggestion === true);
       const clean = !!correct && !assisted && misses === 0;
@@ -36019,6 +36063,7 @@ Answer: ${answer}`;
     async function rapidRenderQuestion() {
       if (studySession?.interaction !== "rapid" || studySession?.active === false) return;
       const state = ensureRapidState();
+      if(!isSprintSession())renderGameQualityBar(rapidScore.parentElement,'quiz',Array.isArray(state.outcomes)?state.outcomes:[],sessionCountryTotal(),'Quiz questions completed and how they went');
       const c = currentCountry();
       if (!c) {
         showRapidComplete();
@@ -37242,7 +37287,7 @@ Answer: ${answer}`;
       const b=homeButton(borderlessDailyName(mode),result?(mode==='borderless-capital'?`${result.points??Math.round(result.score*(result.total||5))} points · ${homeTime(result.elapsedMs)}`:`${result.score}% · ${homeTime(result.elapsedMs)}`):'',button=>result?homeShowDailyResult(mode,result):launchBorderlessDaily(mode,button));
       b.classList.add('daily-mode-card');b.dataset.dailyMode=mode;
       const description=document.createElement('span');description.className='daily-mode-description';description.textContent=HOME_GAME_DESCRIPTIONS[mode];b.querySelector('strong').after(description);
-      if(result){b.dataset.challengeState='completed';const detail=b.querySelector('small');detail.classList.add('daily-result-line');detail.setAttribute('aria-label','Played today · '+detail.textContent);}
+      if(result){b.dataset.challengeState='completed';const detail=b.querySelector('small');detail.classList.add('daily-result-line');detail.setAttribute('aria-label','Completed today · '+detail.textContent);}
       else if(active){b.dataset.challengeState='active';b.firstChild.prepend(homeStatusBadge('active','In progress'));}
       return homeDailyDecorateCard(b,mode);
     }
@@ -37292,26 +37337,44 @@ function multiPromptPicker(select,sub=false,initialValue=select.value){
       homeRecords.dailies[s.dailyKey]=result;saveHomeRecords();
     }
     function borderlessDailyShareText(mode,r){
-      const tiles=(r.scores||[]).map(score=>score===100?'🟩':score>=50?'🟨':'🟧').join('');
+      const tiles=(r.scores||[]).map(score=>score===100?'🟩':score>=50?'🟨':score>0?'🟧':'⬜').join('');
       return `🌍 GeoDen Daily · ${borderlessDailyName(mode)}\n${r.date}\n\n${tiles}\n${mode==='borderless-country'?r.correct+' countries first try':(r.points??Math.round(r.score*r.total))+' points'}\n⏱ ${homeTime(r.elapsedMs)}\n${mode==='borderless-country'?'First-try accuracy':'Closer guesses earn more points'}`;
     }
     async function openBorderlessCapitalSetup(){await openBorderless();const target=document.getElementById('borderlessTarget');target.value='capital';target.dispatchEvent(new Event('change'));}
 
-    function borderlessResultColor(r){return r.revealed?'#995347':r.score===100?'#39784e':r.score>=50||r.correct?'#88a75b':'#c09b3d';}
+    function mapTryScore(result){if(result?.revealed)return 0;return ({1:100,2:70,3:40})[Math.max(1,Math.min(3,Number(result?.tries)||3))]||0;}
+    function mapTryColor(result){return result?.revealed?'#995347':({1:'#39784e',2:'#88a75b',3:'#c09b3d'})[Math.max(1,Math.min(3,Number(result?.tries)||3))]||'#995347';}
+    function mapTryBreakdown(results){const counts=[0,0,0,0];for(const result of results){if(result?.revealed)counts[3]++;else counts[Math.max(0,Math.min(2,(Number(result?.tries)||3)-1))]++;}return counts.map((count,i)=>count?`${count} ${['first try','second try','third try','revealed'][i]}`:'').filter(Boolean).join(' · ');}
+    function renderMapOutcomeBar(track,results,total){
+      track.replaceChildren();track.classList.add('map-outcome-track');track.setAttribute('role','progressbar');track.setAttribute('aria-label','Places completed and how many tries they took');track.setAttribute('aria-valuemin','0');track.setAttribute('aria-valuemax',String(total));track.setAttribute('aria-valuenow',String(results.length));track.setAttribute('aria-valuetext',`${results.length} of ${total} places completed${results.length?' · '+mapTryBreakdown(results):''}`);
+      for(const result of results){const chunk=document.createElement('span');chunk.className='map-outcome-chunk';chunk.style.width=`${100/Math.max(1,total)}%`;chunk.style.background=mapTryColor(result);chunk.title=result?.revealed?'Revealed':`${result?.tries||3} ${result?.tries===1?'try':'tries'}`;chunk.setAttribute('aria-hidden','true');track.append(chunk);}
+    }
+    function renderGameQualityBar(anchor,key,outcomes,total,label){
+      if(!anchor||!Number.isFinite(total)||total<1)return;
+      let track=anchor.nextElementSibling;
+      if(!track?.classList.contains('game-quality-track')||track.dataset.qualityKey!==key){track=document.createElement('div');track.className='game-quality-track';track.dataset.qualityKey=key;anchor.after(track);}
+      track.replaceChildren();track.setAttribute('role','progressbar');track.setAttribute('aria-label',label);track.setAttribute('aria-valuemin','0');track.setAttribute('aria-valuemax',String(total));track.setAttribute('aria-valuenow',String(Math.min(total,outcomes.filter(Boolean).length)));
+      const names={clean:'No help','light-help':'A little help','heavy-help':'Lots of help',missed:'Missed or revealed',pending:'Placed, not checked'};
+      const colors={clean:'#39784e','light-help':'#88a75b','heavy-help':'#c09b3d',missed:'#995347',pending:'#91a3a3'};
+      for(let i=0;i<total;i++){const outcome=outcomes[i];const chunk=document.createElement('span');chunk.style.width=`${100/total}%`;chunk.style.background=colors[outcome]||'transparent';chunk.title=outcome?`${i+1}: ${names[outcome]||outcome}`:`${i+1}: Not done`;chunk.setAttribute('aria-hidden','true');track.append(chunk);}
+      track.setAttribute('aria-valuetext',`${Math.min(total,outcomes.filter(Boolean).length)} of ${total} answered or placed; colours show how each went`);
+    }
+    function borderlessResultColor(r){return r.revealed?'#995347':r.score===100?'#39784e':r.score>=50?'#88a75b':'#c09b3d';}
     function renderCapitalPointsBar(bar,results,total){const max=total*100,points=results.reduce((sum,r)=>sum+r.score,0);bar.className='capital-points-bar';bar.setAttribute('role','progressbar');bar.setAttribute('aria-label','Capital points earned');bar.setAttribute('aria-valuemin','0');bar.setAttribute('aria-valuemax',String(max));bar.setAttribute('aria-valuenow',String(points));bar.setAttribute('aria-valuetext',points+' out of '+max+' points');bar.replaceChildren();for(const [i,r]of results.entries()){const chunk=document.createElement('span');chunk.className='capital-points-chunk';chunk.style.width=(max?100*r.score/max:0)+'%';chunk.style.background=r.revealed||r.score<35?'#995347':r.score<60?'#c09b3d':r.score<90?'#88a75b':'#39784e';chunk.style.display=r.score>0?'block':'none';chunk.title='Guess '+(i+1)+': '+r.score+'/100';chunk.setAttribute('aria-hidden','true');bar.append(chunk);}}
     function borderlessProgress(s,host){
       const existing=host.querySelector('.borderless-run-progress');if(existing)existing.remove();
       const box=document.createElement('div');box.className='borderless-run-progress';
       const label=document.createElement('p');label.textContent=s.target==='capital'?`${s.index} of ${s.codes.length} capitals · ${s.results.reduce((n,r)=>n+r.score,0)} points`:`${s.index} of ${s.codes.length} places filled · ${Math.round(100*s.index/s.codes.length)}% complete`;
-      const bar=document.createElement(s.target==='capital'?'div':'progress'),points=s.results.reduce((sum,result)=>sum+result.score,0);bar.max=s.target==='capital'?s.codes.length*100:s.codes.length;bar.value=s.target==='capital'?points:s.index;bar.setAttribute('aria-label',s.target==='capital'?'Capital points earned':'Map completion');bar.setAttribute('aria-valuetext',s.target==='capital'?points+' out of '+bar.max+' points':s.index+' out of '+s.codes.length+' places');
-      if(s.target==='capital')renderCapitalPointsBar(bar,s.results,s.codes.length);
-      const legend=document.createElement('p');legend.className='borderless-legend';for(const [label,color]of(s.target==='country'?[['First try','#39784e'],['Later try','#88a75b'],['Revealed','#995347']]:[['100%','#39784e'],['50–99%','#88a75b'],['Below 50%','#c09b3d'],['Revealed','#995347']])){const item=document.createElement('span'),dot=document.createElement('i');dot.style.background=color;item.append(dot,document.createTextNode(label));legend.append(item);}
-      box.append(label,bar);host.querySelector('header')?.after(box);if(!box.isConnected)host.prepend(box);
+      const bar=document.createElement('div'),points=s.results.reduce((sum,result)=>sum+result.score,0);
+      if(s.target==='capital')renderCapitalPointsBar(bar,s.results,s.codes.length);else renderMapOutcomeBar(bar,s.results,s.codes.length);
+      box.append(label,bar);
+      if(s.target==='country'&&s.results.length){const breakdown=document.createElement('p');breakdown.className='borderless-legend';breakdown.textContent=mapTryBreakdown(s.results);box.append(breakdown);}
+      host.querySelector('header')?.after(box);if(!box.isConnected)host.prepend(box);
     }
     function borderlessRecordChallenge(s){
-      if(!s.challenge||s.challengeRecorded||s.index!==s.codes.length)return;
+      if(!s.challenge||s.revision||s.challengeRecorded||s.index!==s.codes.length)return;
       const spec=homeChallengeSpec(s.challenge.id);if(!spec||spec.mode!=='borderless')return;
-      const result={correct:s.results.filter(r=>r.score===100&&!r.revealed).length,total:s.codes.length,score:Math.round(s.results.reduce((sum,r)=>sum+r.score,0)/s.codes.length),elapsedMs:s.elapsedMs,completedAt:Date.now()};
+      const result={correct:s.results.filter(r=>r.score===100&&!r.revealed).length,total:s.codes.length,score:Math.round(s.results.reduce((sum,r)=>sum+r.score,0)/s.codes.length),elapsedMs:s.elapsedMs,completedAt:Date.now(),tries:s.results.map(r=>r.revealed?4:r.tries)};
       const record=homeRecords.challenges[spec.id]||{plays:0};record.plays++;record.last=result;
       if(!record.best||result.score>record.best.score||(result.score===record.best.score&&result.elapsedMs<record.best.elapsedMs))record.best=result;
       homeRecords.challenges[spec.id]=record;saveHomeRecords();s.challengeRecorded=true;
@@ -37330,9 +37393,11 @@ function multiPromptPicker(select,sub=false,initialValue=select.value){
     }
     async function renderBorderlessFinish(content,s,token){
       pauseBorderlessClock();borderlessRecordChallenge(s);borderlessRecordDaily(s);saveBorderlessRun();
-      const h=document.createElement('h3');h.textContent=s.target==='capital'?'✓ Run complete!':'✓ Map complete!';
-      const p=document.createElement('p');p.className='borderless-finish';p.textContent=s.target==='capital'?s.results.reduce((sum,r)=>sum+r.score,0)+' points · '+homeTime(s.elapsedMs):Math.round(s.results.reduce((sum,r)=>sum+r.score,0)/s.results.length)+'% accuracy · '+homeTime(s.elapsedMs);
+      const h=document.createElement('h3');h.textContent=s.revision?'✓ Review complete!':s.target==='capital'?'✓ Run complete!':'✓ Map complete!';
+      const p=document.createElement('p');p.className='borderless-finish';p.textContent=s.target==='capital'?s.results.reduce((sum,r)=>sum+r.score,0)+' points · '+homeTime(s.elapsedMs):Math.round(s.results.reduce((sum,r)=>sum+r.score,0)/s.results.length)+'% score · '+homeTime(s.elapsedMs);
       const map=document.createElement('div');content.append(h,p);borderlessProgress(s,content);content.append(map);
+      const struggled=s.results.filter(r=>r.revealed||(s.target==='country'?r.score<100:r.score<50)).map(r=>r.code);
+      if(struggled.length){const review=document.createElement('button');review.type='button';review.className='borderless-secondary';review.textContent=`Review ${struggled.length} tricky ${struggled.length===1?'place':'places'} →`;review.onclick=()=>{borderlessRun={target:s.target,mapProgress:s.mapProgress,clue:s.clue,set:s.set,codes:struggled,index:0,results:[],misses:0,elapsedMs:0,revision:true};saveBorderlessRun();renderBorderlessRound();};content.append(review);}
       if(s.challenge){const best=document.createElement('p');best.textContent=homeRecordMapText(s);content.append(best);}
       if(s.dailyKey)content.append(homeDailyReport(s.target==='country'?'borderless-country':'borderless-capital',homeRecords.dailies[s.dailyKey]));
       const b=document.createElement('button');b.type='button';b.className='borderless-primary';b.textContent=s.challenge?'More challenges →':s.dailyKey?'Play a custom run':'Play again';
@@ -37505,10 +37570,10 @@ function scaleCapitalHistory(parent,scale){parent.selectAll('circle').attr('r',4
       const reveal=document.createElement('button');reveal.type='button';reveal.className='borderless-reveal';reveal.textContent='Reveal location';reveal.disabled=true;
       content.append(progress,clue,host,feedback,reveal);borderlessProgress(s,content);
       let finished=false;
-      function complete(result,api){if(finished||token!==borderlessRenderToken)return;finished=true;pauseBorderlessClock();api.reveal(result.geo,result);s.results.push({code:c.code,...result,tries:Math.min(3,s.misses+1)});const clean=!result.revealed&&result.score===100,assisted=!result.revealed&&!clean&&(result.score>0||result.correct);recordDailyFactCounts({total:1,clean:clean?1:0,assisted:assisted?1:0,missed:clean||assisted?0:1});s.index++;s.misses=0;borderlessRecordChallenge(s);borderlessRecordDaily(s);archiveBorderlessProgress(s);saveBorderlessRun();borderlessProgress(s,content);const current=s.target==='country'?host.querySelector('.borderless-marks path'):null;if(current)current.setAttribute('fill',borderlessResultColor(result));reveal.remove();feedback.textContent=`${c.name} · ${s.target==='capital'?mapHuntCapitalCities(c).map(p=>p.name).join(' / ')+' · ':''}${result.revealed?'Location revealed':borderlessResultText(result,s.target)}`;
+      function complete(result,api){if(finished||token!==borderlessRenderToken)return;finished=true;pauseBorderlessClock();api.reveal(result.geo,result);const tries=Math.min(3,s.misses+1);s.results.push({code:c.code,...result,tries});const clean=!result.revealed&&result.score===100,lightHelp=!result.revealed&&!clean&&(s.target==='country'?tries===2:result.score>=50),heavyHelp=!result.revealed&&!clean&&!lightHelp&&result.score>0;recordDailyFactCounts({total:1,clean:clean?1:0,lightHelp:lightHelp?1:0,heavyHelp:heavyHelp?1:0,missed:clean||lightHelp||heavyHelp?0:1});s.index++;s.misses=0;borderlessRecordChallenge(s);borderlessRecordDaily(s);archiveBorderlessProgress(s);saveBorderlessRun();borderlessProgress(s,content);const current=s.target==='country'?host.querySelector('.borderless-marks path'):null;if(current)current.setAttribute('fill',borderlessResultColor(result));reveal.remove();feedback.textContent=`${c.name} · ${s.target==='capital'?mapHuntCapitalCities(c).map(p=>p.name).join(' / ')+' · ':''}${result.revealed?'Location revealed':borderlessResultText(result,s.target)}`;
         setTimeout(()=>{if(token===borderlessRenderToken&&document.getElementById('borderlessOverlay').classList.contains('open'))renderBorderlessRound();},s.target==='capital'?2500:1400);}
       const map=await createBorderlessMap(host,c,s.target,{reuse:true,set:s.set,results:s.mapProgress==='blind'?[]:s.results,view:s.mapView,onView:view=>{s.mapView=view;},isCurrent:()=>token===borderlessRenderToken&&document.getElementById('borderlessOverlay').classList.contains('open'),onGuess:(r,api)=>{
-        if(finished)return;if(s.target==='country'&&s.mapProgress!=='blind'&&s.results.some(result=>result.code===r.clickedCode)){feedback.textContent=r.clickedName+' · already filled';return;}if(s.target==='capital'){complete(r,api);return;}if(r.correct){r.score=s.misses===0?100:0;complete(r,api);return;}
+        if(finished)return;if(s.target==='country'&&s.mapProgress!=='blind'&&s.results.some(result=>result.code===r.clickedCode)){feedback.textContent=r.clickedName+' · already filled';return;}if(s.target==='capital'){complete(r,api);return;}if(r.correct){r.score=mapTryScore({tries:Math.min(3,s.misses+1)});complete(r,api);return;}
         s.misses++;saveBorderlessRun();if(s.misses>=3)complete({...r,score:0,revealed:true},api);else feedback.textContent=`${r.clickedName} · try again · ${3-s.misses} guesses left`;
       }});
       if(token!==borderlessRenderToken)return;
@@ -40401,6 +40466,10 @@ function studyCapitalPrompt(host,c,stage){if(!capitalPromptDetails||studySession
           ? `${filledCount} of ${total} filled · ${readyText}${lostCount ? ` · ${lostCount} stranded` : ""}`
           : `${filledCount} of ${total} filled · ${availability.available.size === 1 ? "1 ready" : `${availability.available.size} ready`}`;
       }
+      const kinds=chainState.answerMode==='both'?['country','capital']:[chainState.answerMode];
+      const keys=chainState.codes.filter(code=>code!==chainState.startCode).flatMap(code=>kinds.map(kind=>chainMasteryPartKey(code,kind)));
+      const outcomes=keys.map(key=>chainState.partOutcomes?.get(key)||((chainState.recordedMastery?.has(key))?'pending':null));
+      renderGameQualityBar(chainStatusMeta?.closest('.chain-toolbar'),'chain',outcomes,keys.length,'Map Crawl answers completed and how they went');
       if (chainWorldMap) {
         const ready = availability.available.size;
         chainWorldMap.setAttribute("aria-label", trail
@@ -40681,6 +40750,8 @@ function studyCapitalPrompt(host,c,stage){if(!capitalPromptDetails||studySession
       const fullyRevealed = chainState.revealedMastery?.has(key);
       const heavilyHinted = chainState.heavyMastery?.has(key);
       const effectiveScore = fullyRevealed ? Math.min(score,.15) : heavilyHinted ? Math.min(score,.35) : score;
+      if(!(chainState.partOutcomes instanceof Map))chainState.partOutcomes=new Map();
+      chainState.partOutcomes.set(key,effectiveScore>=.95?'clean':effectiveScore>.35?'light-help':effectiveScore>.15?'heavy-help':'missed');
       if(chainState.challenge && effectiveScore>=.95)chainState.challengeClean=(chainState.challengeClean||0)+1;
       const skill = kind === "country" ? "placeNameRecall" : "capitalRecall";
       recordGameMasteryEvidence(country, skill, effectiveScore, { weight:1, source:"chain", save:true });
@@ -41235,6 +41306,7 @@ function studyCapitalPrompt(host,c,stage){if(!capitalPromptDetails||studySession
           heavyMastery:new Set(),
           revealedMastery:new Set(),
           recordedMastery:new Set(),
+          partOutcomes:new Map(),
           assistedInputValue:"",
           startCode,
           lastFilledCode:startCode,
@@ -41566,7 +41638,8 @@ function studyCapitalPrompt(host,c,stage){if(!capitalPromptDetails||studySession
 
       const done = mapHuntState.results.size;
       const total = mapHuntState.roundCodes.length;
-      if (mapHuntProgressFill) mapHuntProgressFill.style.width = `${total ? done / total * 100 : 0}%`;
+      const progressTrack=mapHuntOverlay?.querySelector('.map-hunt-progress-track');
+      if(progressTrack)renderMapOutcomeBar(progressTrack,mapHuntState.roundCodes.filter(code=>mapHuntState.results.has(code)).map(code=>mapHuntState.results.get(code)),total);
       updateMapHuntMarkerScale(mapHuntState.zoomTransform || d3.zoomIdentity);
       requestMapHuntCanvasDraw();
     }
@@ -41997,12 +42070,7 @@ function studyCapitalPrompt(host,c,stage){if(!capitalPromptDetails||studySession
         recordGameMasteryEvidence(country, "capitalToPlace", score, { weight:.85, source:"maphunt", save:false });
       }
       saveSmartReview();
-      recordDailyFactCounts({
-        total: 1,
-        clean: score >= .95 ? 1 : 0,
-        assisted: score > 0 && score < .95 ? 1 : 0,
-        missed: score <= 0 ? 1 : 0
-      });
+      recordDailyFactCounts({total:1,clean:result.revealed?0:result.tries===1?1:0,lightHelp:!result.revealed&&result.tries===2?1:0,heavyHelp:!result.revealed&&result.tries===3?1:0,missed:result.revealed?1:0});
     }
 
     function handleMapHuntGuess(code) {
@@ -42126,7 +42194,7 @@ function studyCapitalPrompt(host,c,stage){if(!capitalPromptDetails||studySession
         mapHuntFeedback.className = struggled.length ? "map-hunt-feedback near" : "map-hunt-feedback good";
       }
       if (mapHuntFinishTitle) mapHuntFinishTitle.textContent = mapHuntState.revision ? "Revision complete." : "Map complete.";
-      if (mapHuntFinishMeta) mapHuntFinishMeta.textContent = mapHuntState.challenge && !mapHuntState.revision ? homeRecordMapText(mapHuntState) : mapHuntSummaryText();
+      if (mapHuntFinishMeta) mapHuntFinishMeta.textContent = (mapHuntState.challenge && !mapHuntState.revision ? homeRecordMapText(mapHuntState)+' · ' : '')+mapHuntSummaryText();
       homeStyleMapCompletion(mapHuntState,"maphunt");
       if (mapHuntRevisionBtn) {
         mapHuntRevisionBtn.classList.toggle("hidden", struggled.length === 0);
@@ -43568,6 +43636,9 @@ function rankingTargetValues() {
         const down=document.createElement("button"); down.type="button"; down.textContent="↓"; down.dataset.rankingMove="down"; down.dataset.rankingIndex=String(index); down.setAttribute("aria-label",`Move ${item.c.name} down`); down.disabled=index===rankingState.items.length-1 || rankingState.revealed;
         move.append(up,down); row.append(position,country,direction,move); rankingList.appendChild(row);
       });
+      const known=new Set(rankingState.knownCorrectCodes||[]),first=new Set(rankingState.firstCheckCorrectCodes||[]);
+      const outcomes=rankingState.items.map(item=>!known.has(item.c.code)?null:first.has(item.c.code)?rankingState.hints?'light-help':'clean':rankingState.hints?'heavy-help':'light-help');
+      renderGameQualityBar(rankingPromptMeta,'ranking',outcomes,rankingState.items.length,'Ranking places confirmed and how many checks or hints they needed');
     }
 
     function rankingMove(index, delta) {
@@ -45591,7 +45662,7 @@ function rankingTargetValues() {
         ? Array.isArray(v.$set) ? new Set(v.$set) : Array.isArray(v.$map) ? new Map(v.$map) : v : v);
     }
     function specialRunSnapshot() {
-      const chain = specialRunPick(chainState, 'challenge challengeClean challengeRecorded setKey answerMode ruleMode codes graph parts hintsUsed giveUpsUsed activeHint assistedMastery heavyMastery revealedMastery recordedMastery assistedInputValue startCode lastFilledCode trailCurrentCode trailStack trailBounces trailAdvances trailEndReason elapsedMs finishedAt');
+      const chain = specialRunPick(chainState, 'challenge challengeClean challengeRecorded setKey answerMode ruleMode codes graph parts hintsUsed giveUpsUsed activeHint assistedMastery heavyMastery revealedMastery recordedMastery partOutcomes assistedInputValue startCode lastFilledCode trailCurrentCode trailStack trailBounces trailAdvances trailEndReason elapsedMs finishedAt');
       if (chain) {
         chain.graphLayers={landGraph:chain.graph.landGraph,bridgeGraph:chain.graph.bridgeGraph,anchorGraph:chain.graph.anchorGraph};
         chain.savedFeedback=chainState.needsHydration?chainState.savedFeedback:chainFeedback.textContent;
@@ -45627,7 +45698,7 @@ function rankingTargetValues() {
             !integer(s.hintsUsed)||!integer(s.giveUpsUsed)||!s.graphLayers||
             !['landGraph','bridgeGraph','anchorGraph'].every(key=>mapLinks(s.graphLayers[key],s.codes))||
             !Number.isFinite(s.elapsedMs)||s.elapsedMs<0||!(s.assistedMastery instanceof Set)||!(s.recordedMastery instanceof Set)||
-            (s.heavyMastery!=null&&!(s.heavyMastery instanceof Set))||(s.revealedMastery!=null&&!(s.revealedMastery instanceof Set))||
+            (s.heavyMastery!=null&&!(s.heavyMastery instanceof Set))||(s.revealedMastery!=null&&!(s.revealedMastery instanceof Set))||(s.partOutcomes!=null&&!(s.partOutcomes instanceof Map))||
             !Array.isArray(s.trailStack)||!s.trailStack.every(c=>s.codes.includes(c))||
             [...s.graph].some(([c,links])=>!s.codes.includes(c)||!(links instanceof Set)||[...links].some(c=>!s.codes.includes(c)))||
             [...s.parts].some(([c,p])=>!s.codes.includes(c)||!p||typeof p.country!=='boolean'||typeof p.capital!=='boolean')) throw new Error('Invalid Map Crawl save');
@@ -45816,7 +45887,11 @@ function rankingTargetValues() {
     function homeSeededOrder(items,key){const result=[...items],rng=seededRandom(hashString32('GeoDen:discovery:v1:'+key));for(let i=result.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[result[i],result[j]]=[result[j],result[i]];}return result;}
     function homeChallengeId(mode,variant,region){return `v1:${mode}:${variant}:${region}`;}
     function homeChallengeSpec(id){const [v,mode,variant,region]=String(id||'').split(':');return v==='v1'&&HOME_MAP_VARIANTS[mode]?.[variant]&&HOME_MAP_REGIONS.includes(region)?{id,mode,variant,region}:null;}
-    function homeChallengeProgress(mode,variant=null){const ids=Object.keys(HOME_MAP_VARIANTS[mode]).filter(v=>!variant||variant===v).flatMap(v=>HOME_MAP_REGIONS.map(r=>homeChallengeId(mode,v,r)));const completed=ids.filter(id=>homeRecords.challenges[id]?.best).length;const total=ids.length;return {completed,total,percent:total?Math.round(100*completed/total):0};}
+    function homeChallengeProgress(mode,variant=null){const ids=Object.keys(HOME_MAP_VARIANTS[mode]).filter(v=>!variant||variant===v).flatMap(v=>HOME_MAP_REGIONS.map(r=>homeChallengeId(mode,v,r)));const scores=ids.map(id=>homeRecords.challenges[id]?.best?.score??null),completed=scores.filter(score=>score!==null).length,total=ids.length;return {completed,total,percent:total?Math.round(100*completed/total):0,scores};}
+    function homeChallengeBar(track,progress){
+      track.replaceChildren();track.setAttribute('role','progressbar');track.setAttribute('aria-valuemin','0');track.setAttribute('aria-valuemax',String(progress.total));track.setAttribute('aria-valuenow',String(progress.completed));track.setAttribute('aria-valuetext',`${progress.completed} of ${progress.total} challenges complete; colours show best results`);
+      for(const score of progress.scores){const segment=document.createElement('span');segment.className='challenge-result-segment';segment.style.width=`${100/Math.max(1,progress.total)}%`;segment.style.setProperty('--segment-color',score===null?'transparent':score>=95?'#39784e':score>=70?'#88a75b':score>=40?'#c09b3d':'#995347');segment.title=score===null?'Not played':`${Math.round(score)}% best score`;track.append(segment);}
+    }
     function homeTime(ms){return formatChainTime(Math.max(0,ms||0));}
     function homeButton(title,meta,action,primary=false){const b=document.createElement('button');b.type='button';b.className='discovery-card'+(primary?' discovery-primary':'');const copy=document.createElement('span'),name=document.createElement('strong'),detail=document.createElement('small');name.textContent=title;detail.textContent=meta;copy.append(name,detail);const arrow=document.createElement('span');arrow.className='discovery-arrow';arrow.textContent='→';arrow.setAttribute('aria-hidden','true');b.append(copy,arrow);b.addEventListener('click',()=>action(b));return b;}
     function homeStatusBadge(state,label){
@@ -45842,14 +45917,12 @@ function rankingTargetValues() {
 
     function homeProgressCard(title,p,action,topic=null){
       const done=p.completed===p.total,state=done?'completed':p.completed?'active':'unplayed';
-      const b=homeButton(title,`${p.completed} of ${p.total} challenges completed`,action);
+      const b=homeButton(title,`${p.completed}/${p.total} complete`,action);
       if(p.total===10){const grouping=document.createElement('small');grouping.className='challenge-count-detail';grouping.textContent='7 country regions + 3 state / province sets';b.firstChild.append(grouping);}
       b.classList.add('challenge-collection');b.dataset.challengeState=state;
       b.firstChild.prepend(homeStatusBadge(state,done?'All completed':p.completed?'Keep going':'Ready to explore'));
       const bar=document.createElement('span');bar.className='discovery-progress';bar.setAttribute('role','progressbar');
-      bar.setAttribute('aria-label',title+' completion');bar.setAttribute('aria-valuemin','0');bar.setAttribute('aria-valuemax',String(p.total));bar.setAttribute('aria-valuenow',String(p.completed));
-      bar.setAttribute('aria-valuetext',`${p.completed} of ${p.total} challenges completed`);
-      const fill=document.createElement('span');fill.style.width=p.percent+'%';bar.append(fill);b.firstChild.append(bar);
+      bar.setAttribute('aria-label',title+' challenge completion');homeChallengeBar(bar,p);b.firstChild.append(bar);
       if(topic)decorateChallengeTopic(b,topic);
       return b;
     }
@@ -45863,7 +45936,7 @@ function rankingTargetValues() {
       const copy=b.firstChild;copy.prepend(homeStatusBadge(state,label));
       if(result){
         const stats=document.createElement('span');stats.className='challenge-best';
-        for(const [value,title] of [[`${result.score}%`,'Best accuracy'],[homeTime(result.elapsedMs),'Time at best score']]){
+        for(const [value,title] of [[`${result.score}%`,'Best score'],[homeTime(result.elapsedMs),'Time at best score']]){
           const item=document.createElement('span'),valueEl=document.createElement('b'),caption=document.createElement('span');
           valueEl.textContent=value;caption.textContent=title;item.append(valueEl,caption);stats.append(item);
         }
@@ -46046,10 +46119,11 @@ function rankingTargetValues() {
       renderHomePicks();
       for(const mode of ['maphunt','chain','borderless']){
         const button=playModePicker.querySelector(`[data-play-mode="${mode}"],[data-game-icon="${mode}"]`),el=button?.querySelector('.play-mode-meta'),p=homeChallengeProgress(mode);if(!button||!el)continue;
-        el.textContent=`${HOME_GAME_DESCRIPTIONS[mode]} · ${p.completed} of ${p.total} challenges complete`;
+        el.textContent=HOME_GAME_DESCRIPTIONS[mode];
+        let count=button.querySelector('.mode-challenge-count');if(!count){count=document.createElement('span');count.className='mode-challenge-count';el.after(count);}count.textContent=`${p.completed}/${p.total} complete`;
         button.classList.toggle('map-challenges-complete',p.completed===p.total);
         let bar=button.querySelector('.discovery-progress');if(!bar){bar=document.createElement('span');bar.className='discovery-progress';bar.append(document.createElement('span'));button.append(bar);}
-        bar.setAttribute('role','progressbar');bar.setAttribute('aria-label',modeDisplayName(mode)+' challenge completion');bar.setAttribute('aria-valuemin','0');bar.setAttribute('aria-valuemax',String(p.total));bar.setAttribute('aria-valuenow',String(p.completed));bar.firstChild.style.width=p.percent+'%';
+        bar.setAttribute('aria-label',modeDisplayName(mode)+' challenge completion');homeChallengeBar(bar,p);
       }
     }
     // Calendar-day rotation is independent of preferences, time zone offsets,
@@ -46102,7 +46176,7 @@ function rankingTargetValues() {
       });
       b.classList.add('daily-mode-card');b.dataset.dailyMode=mode;
       const description=document.createElement('span');description.className='daily-mode-description';description.textContent=HOME_GAME_DESCRIPTIONS[mode];b.firstChild.querySelector('strong').after(description);
-      if(result){b.dataset.challengeState='completed';const detail=b.querySelector('small');detail.classList.add('daily-result-line');detail.setAttribute('aria-label','Played today · '+detail.textContent);}
+      if(result){b.dataset.challengeState='completed';const detail=b.querySelector('small');detail.classList.add('daily-result-line');detail.setAttribute('aria-label','Completed today · '+detail.textContent);}
       else if(active){b.dataset.challengeState='active';b.firstChild.prepend(homeStatusBadge('active','In progress'));}
       return homeDailyDecorateCard(b,mode);
     }
@@ -46165,12 +46239,12 @@ function rankingTargetValues() {
     function homeRecordMap(state,mode){
       const spec=homeChallengeSpec(state?.challenge?.id);if(!spec||state.revision||state.challengeRecorded)return;
       const complete=mode==='maphunt'?state.results.size===state.roundCodes.length:chainFilledCodes().size===state.codes.length;if(!complete)return;
-      let total,clean;if(mode==='maphunt'){total=state.roundCodes.length;clean=[...state.results.values()].filter(r=>!r.revealed&&r.tries===1).length;}else{total=(state.codes.length-1)*(state.answerMode==='both'?2:1);clean=state.challengeClean||0;}
-      const result={correct:clean,total,score:Math.round(100*clean/Math.max(1,total)),elapsedMs:mode==='chain'?chainElapsedMs():(state.homeElapsedMs||0),completedAt:Date.now()},record=homeRecords.challenges[spec.id]||{plays:0},best=record.best;
-      record.plays++;record.last=result;if(!best||result.correct>best.correct||(result.correct===best.correct&&result.elapsedMs<best.elapsedMs))record.best=result;
+      let total,clean,score,tries=null;if(mode==='maphunt'){total=state.roundCodes.length;const outcomes=state.roundCodes.map(code=>state.results.get(code));clean=outcomes.filter(r=>r&&!r.revealed&&r.tries===1).length;score=Math.round(outcomes.reduce((sum,r)=>sum+mapTryScore(r),0)/Math.max(1,total));tries=outcomes.map(r=>r?.revealed?4:r?.tries||4);}else{total=(state.codes.length-1)*(state.answerMode==='both'?2:1);clean=state.challengeClean||0;const values=[...(state.partOutcomes?.values()||[])];score=values.length?Math.round(values.reduce((sum,value)=>sum+({clean:100,'light-help':70,'heavy-help':40,missed:0}[value]||0),0)/Math.max(1,total)):Math.round(100*clean/Math.max(1,total));}
+      const result={correct:clean,total,score,tries,elapsedMs:mode==='chain'?chainElapsedMs():(state.homeElapsedMs||0),completedAt:Date.now()},record=homeRecords.challenges[spec.id]||{plays:0},best=record.best;
+      record.plays++;record.last=result;if(!best||result.score>best.score||(result.score===best.score&&result.correct>best.correct)||(result.score===best.score&&result.correct===best.correct&&result.elapsedMs<best.elapsedMs))record.best=result;
       homeRecords.challenges[spec.id]=record;state.challengeRecorded=true;saveHomeRecords();
     }
-    function homeRecordMapText(state){const r=homeRecords.challenges[state?.challenge?.id];return r?.last?`Challenge · ${r.last.score}% · ${homeTime(r.last.elapsedMs)} · Best ${r.best.score}% in ${homeTime(r.best.elapsedMs)}`:'';}
+    function homeRecordMapText(state){const r=homeRecords.challenges[state?.challenge?.id];return r?.last?`Challenge · ${r.last.score}% score · ${homeTime(r.last.elapsedMs)} · Best ${r.best.score}%` :'';}
     function homeTickTimers(){
       const now=Date.now();for(const [state,visible,finished] of [[mapHuntState,mapHuntOverlay?.classList.contains('open')&&!mapHuntPlay.classList.contains('hidden'),mapHuntState?.finished],[studySession,['matchingOverlay','detectiveOverlay','rapidOverlay'].some(id=>document.getElementById(id)?.classList.contains('open')),studySession?.active===false],[rankingState,rankingOverlay?.classList.contains('open')&&!rankingPlay.classList.contains('hidden'),rankingState?.revealed]]){
         if(!state||(!state.challenge&&!state.launchPreset&&!state.dailyChallenge))continue;
@@ -46306,6 +46380,7 @@ function rankingTargetValues() {
     function homeDailyDecorateCard(button,mode){
       const icons={quiz:'⚡',detective:'🔎',matching:'🧩',ranking:'↕'};
       const icon=document.createElement('span');icon.className='daily-game-icon';icon.append(gameIcon(mode.startsWith('borderless-')?'borderless':mode));icon.setAttribute('aria-hidden','true');button.firstChild.prepend(icon);
+      if(button.dataset.challengeState==='completed'){const done=document.createElement('span');done.className='daily-complete-label';done.textContent='✓ Done today';button.firstChild.prepend(done);}
       const action=document.createElement('span');action.className='daily-play-action';action.textContent=button.dataset.challengeState==='completed'?'View & share →':button.dataset.challengeState==='active'?'Resume →':'Play today →';button.firstChild.append(action);
       return button;
     }
@@ -46352,7 +46427,7 @@ function subChallengeCard(mode,clue,target,set){
  const card=homeButton(SUB_SETS[set].name,best?`${best.score}% best accuracy · ${homeTime(best.elapsedMs)}`:'Three guesses per place · first-try accuracy',()=>active?subResume():subOpenSetup(mode,SUB_SETS[set].parent,{set,clue,target,challenge:id}));
  card.classList.add('sub-challenge','challenge-region');card.dataset.subChallenge=id;card.dataset.challengeState=active?'active':best?'completed':'unplayed';card.firstChild.prepend(homeStatusBadge(active?'active':best?'completed':'unplayed',active?'Resume':best?'Completed':'Not played'));return card;
 }
-function subChallengeProgress(mode,variant,parent=subSetup?.parent){if(!['US','AU','CA'].includes(parent)||!['maphunt','borderless'].includes(mode))return {completed:0,total:0};const variants=variant?[variant]:Object.keys(HOME_MAP_VARIANTS[mode]);const ids=variants.flatMap(v=>Object.keys(SUB_SETS).filter(set=>SUB_SETS[set].parent===parent&&(!set.startsWith('us-')||set==='us-states')).map(set=>['sub1',mode,v.replace('city-','').replace('country','name'),v.startsWith('city-')?'capitalLocation':'location',set].join(':')));return {completed:ids.filter(id=>subStore.challenges[id]?.best).length,total:ids.length};}
+function subChallengeProgress(mode,variant,parent=subSetup?.parent){if(!['US','AU','CA'].includes(parent)||!['maphunt','borderless'].includes(mode))return {completed:0,total:0,scores:[]};const variants=variant?[variant]:Object.keys(HOME_MAP_VARIANTS[mode]);const ids=variants.flatMap(v=>Object.keys(SUB_SETS).filter(set=>SUB_SETS[set].parent===parent&&(!set.startsWith('us-')||set==='us-states')).map(set=>['sub1',mode,v.replace('city-','').replace('country','name'),v.startsWith('city-')?'capitalLocation':'location',set].join(':')));const scores=ids.map(id=>subStore.challenges[id]?.best?.score??null);return {completed:scores.filter(score=>score!==null).length,total:ids.length,scores};}
 function subEnsureHost(){if(subHost)return subHost;subHost=subEl('section',undefined,'sub-overlay');subHost.id='subdivisionOverlay';subHost.setAttribute('role','dialog');subHost.setAttribute('aria-modal','true');subHost.setAttribute('aria-label','Subdivision game');document.body.append(subHost);subHost.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();subClose();}});return subHost;}
 function subShow(){mapHuntOverlay?.classList.remove('open');document.getElementById('borderlessOverlay')?.classList.remove('open');subEnsureHost().classList.add('open');startOverlay.classList.remove('open');subTickAt=performance.now();}
 function subClose(){subToken++;subBusy=false;subTick();subHost?.classList.remove('open');if(subHost)subHost.dataset.play='false';if(subStore.run)subSave();openStartOverlay(false);homeSetSection('games');if(subStore.run)noteResumableMode('subdivision');updateActiveSessionResumeCard();}
@@ -46408,7 +46483,7 @@ async function subStart(c){
 async function subResume(){const token=++subToken;subShow();try{await subReady();await subPreflight(subStore.run.queue,subStore.run.parent);if(token!==subToken)return;await subRenderRun();noteResumableMode('subdivision');}catch{if(token!==subToken)return;const p=subFrame('Study set unavailable');p.append(subEl('p','Your session is safe. Check the assets folder and retry.'),subButton('Retry',subResume));}}
 function subTick(){const now=performance.now();if(subTickAt&&subHost?.classList.contains('open')&&!document.hidden&&subStore.run&&!subStore.run.finished&&subHost.dataset.play==='true')subStore.run.elapsedMs+=Math.min(1000,now-subTickAt);subTickAt=now;}
 function subCurrent(){return subStore.run?.queue[subStore.run.index];}
-function subRecord(score,revealed=false,extra={}){const r=subStore.run,q=subCurrent();if(!q||r.finished)return;const entry={id:q.id,topic:q.topic,score,tries:Math.min(3,r.misses.length+1),revealed,...extra};r.results.push(entry);const clean=score===100&&!revealed&&r.misses.length===0,assisted=!revealed&&!clean&&(score>0||r.misses.length>0);recordDailyFactCounts({total:1,clean:clean?1:0,assisted:assisted?1:0,missed:clean||assisted?0:1});const key=q.id+':'+q.topic,old=subStore.learning[key]||{attempts:0,correct:0};old.attempts++;if(score===100&&!revealed&&r.misses.length===0)old.correct++;subStore.learning[key]=old;r.index++;r.misses=[];r.feedback='';r.pending=null;subSave();}
+function subRecord(score,revealed=false,extra={}){const r=subStore.run,q=subCurrent();if(!q||r.finished)return;const entry={id:q.id,topic:q.topic,score,tries:Math.min(3,r.misses.length+1),revealed,...extra};r.results.push(entry);const clean=score===100&&!revealed&&r.misses.length===0,lightHelp=!revealed&&!clean&&score>=65,heavyHelp=!revealed&&!clean&&score>0&&score<65;recordDailyFactCounts({total:1,clean:clean?1:0,lightHelp:lightHelp?1:0,heavyHelp:heavyHelp?1:0,missed:clean||lightHelp||heavyHelp?0:1});const key=q.id+':'+q.topic,old=subStore.learning[key]||{attempts:0,correct:0};old.attempts++;if(score===100&&!revealed&&r.misses.length===0)old.correct++;subStore.learning[key]=old;r.index++;r.misses=[];r.feedback='';r.pending=null;subSave();}
 function subFinish(){const r=subStore.run;if(r.recorded)return;r.finished=true;r.recorded=true;const score=Math.round(r.results.reduce((s,x)=>s+x.score,0)/r.results.length);if(r.challenge){const last={score,elapsedMs:r.elapsedMs,completedAt:Date.now()},record=subStore.challenges[r.challenge]||{plays:0};record.plays++;record.last=last;if(!record.best||score>record.best.score||(score===record.best.score&&last.elapsedMs<record.best.elapsedMs))record.best=last;subStore.challenges[r.challenge]=record;}subSave();}
 async function subValue(id,topic){const r=subData.get(id);if(topic==='name')return subEl('strong',r.name);if(topic==='capital')return subEl('strong',r.capital.name);if(topic==='flag'){const image=document.createElement('img');image.src=subData.flagUrl(id);image.alt='Flag to identify';image.className='sub-flag';return image;}if(topic==='silhouette'){const shape=await subData.silhouette(id);const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('viewBox',shape.viewBox);svg.setAttribute('preserveAspectRatio','xMidYMid meet');svg.setAttribute('aria-label','Outline to identify');svg.setAttribute('role','img');svg.classList.add('sub-outline');const path=document.createElementNS(svg.namespaceURI,'path');path.setAttribute('d',shape.path);svg.append(path);return svg;}return subEl('span',SUB_TOPICS[topic]);}
 async function subRenderRun(){
@@ -46417,7 +46492,7 @@ async function subRenderRun(){
  const stage=subEl('section',undefined,'sub-stage');stage.id='subStage';panel.append(stage);
  if(r.index===r.queue.length){subFinish();subRenderFinish(stage);return;}if(r.mode==='matching'){await subRenderMatching(stage,token);return;}await subRenderQuestion(stage,token);
 }
-function subUpdateProgress(){const r=subStore.run,e=document.getElementById('subRunProgress'),p=document.getElementById('subProgress'),done=r.match?.locked.length??r.index;if(e)e.textContent=SUB_SETS[r.set].name+' · '+done+' of '+r.queue.length+(r.mode==='borderless'&&r.queue[0].topic==='capitalLocation'?' · '+r.results.reduce((s,x)=>s+x.score,0)+' / '+r.queue.length*100+' points':'');if(p){const capitals=r.mode==='borderless'&&r.queue[0].topic==='capitalLocation';p.max=r.queue.length*(capitals?100:1);p.value=capitals?r.results.reduce((sum,result)=>sum+result.score,0):done;p.setAttribute('aria-label',capitals?'Capital points earned':'Session completion');p.setAttribute('aria-valuetext',p.value+' out of '+p.max+(capitals?' points':' answers'));if(capitals)renderCapitalPointsBar(p,r.results,r.queue.length);}}
+function subUpdateProgress(){const r=subStore.run,e=document.getElementById('subRunProgress'),p=document.getElementById('subProgress'),done=r.match?.locked.length??r.index;if(e)e.textContent=SUB_SETS[r.set].name+' · '+done+' of '+r.queue.length+(r.mode==='borderless'&&r.queue[0].topic==='capitalLocation'?' · '+r.results.reduce((s,x)=>s+x.score,0)+' / '+r.queue.length*100+' points':'');if(p){const capitals=r.mode==='borderless'&&r.queue[0].topic==='capitalLocation';p.max=r.queue.length*(capitals?100:1);p.value=capitals?r.results.reduce((sum,result)=>sum+result.score,0):done;p.setAttribute('aria-label',capitals?'Capital points earned':'Session completion');p.setAttribute('aria-valuetext',p.value+' out of '+p.max+(capitals?' points':' answers'));if(capitals)renderCapitalPointsBar(p,r.results,r.queue.length);else{p.classList.add('hidden');const outcomes=r.results.map(result=>result.revealed?'missed':result.score>=95?'clean':result.score>=65?'light-help':result.score>0?'heavy-help':'missed');renderGameQualityBar(p,'subdivision',outcomes,r.queue.length,'Answers completed and how they went');}}}
 async function subRenderQuestion(stage,token=subToken){
  const r=subStore.run,q=subCurrent();subUpdateProgress();if(!q){subFinish();subRenderFinish(stage);return;}const mapTopic=['location','capitalLocation'].includes(q.topic);
  let map=stage.querySelector('.sub-map');const oldMap=mapTopic&&['maphunt','borderless'].includes(r.mode)?map:null;if(oldMap)oldMap.remove();stage.replaceChildren();
@@ -46438,7 +46513,7 @@ function subAnswer(correct,clicked,stage,reveal=false,extra={}){
  const r=subStore.run,q=subCurrent();if(!q||r.pending||r.mode==='standard')return;
  const mapGame=['maphunt','borderless'].includes(r.mode),capitalDistance=r.mode==='borderless'&&q.topic==='capitalLocation';
  if(mapGame&&!capitalDistance&&!correct&&!reveal&&r.misses.length<2){if(clicked&&r.misses.includes(clicked))return;r.misses.push(clicked||q.id);r.feedback=(clicked?subData.get(clicked)?.name+' · ':'')+'Not this one. '+(3-r.misses.length)+' guesses left.';const e=document.getElementById('subFeedback');if(e)e.textContent=r.feedback;subSave();return;}
- const score=capitalDistance?(extra.score||0):correct&&!r.misses.length&&!reveal?100:0;
+ const score=capitalDistance?(extra.score||0):correct&&!reveal?(mapGame?mapTryScore({tries:Math.min(3,r.misses.length+1)}):r.misses.length?70:100):0;
  r.pending={correct,score,clicked,revealed:reveal||(!correct&&!capitalDistance),...extra};subSave();subShowAnswer(stage,r.pending);
 }
 async function subShowAnswer(stage,pending){
