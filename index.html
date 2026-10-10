@@ -7134,11 +7134,13 @@
       align-items: center;
       padding: 8px 9px;
       border-radius: 10px;
+      border: 2px solid transparent;
       background: rgba(255,255,255,.56);
     }
 
     .mastery-map-fact-row.due {
-      box-shadow: inset 3px 0 0 #e4ab42;
+      border-color: #c69a46;
+      box-shadow: none;
     }
 
     .mastery-map-fact-name {
@@ -16296,7 +16298,7 @@ html.geoden-light body #startOverlay .discovery-custom-card { min-height:72px!im
 /* All setup selectors use one selected-state language. */
 html.geoden-light body :is(.special-game-option,.interactive-city-mode-button,.interactive-choice-count-button,.tune-preset-button) { border-radius:12px!important;min-height:46px!important;line-height:1.35!important; }
 html.geoden-light body .special-game-option.active,
-html.geoden-light body :is(.interactive-city-mode-button,.interactive-choice-count-button,.tune-preset-button)[aria-pressed="true"] { background:var(--ui-soft)!important;border-color:#8ea9a0!important;color:var(--ui-selected)!important;box-shadow:inset 3px 0 #53796d!important; }
+html.geoden-light body :is(.interactive-city-mode-button,.interactive-choice-count-button,.tune-preset-button)[aria-pressed="true"] { background:var(--ui-soft)!important;border:2px solid #53796d!important;color:var(--ui-selected)!important;box-shadow:none!important; }
 html.geoden-light body :is(.special-game-label,.tune-section-label,.flash-flow-option-label) { font-size:11px!important;line-height:1.4!important;letter-spacing:.075em!important;color:#60685f!important; }
 html.geoden-light body .special-game-setup { gap:14px!important; }
 html.geoden-light body .special-game-help { font-size:12px!important;line-height:1.5!important; }
@@ -16330,7 +16332,7 @@ html.geoden-light body #rankingOverlay .ranking-direction:empty { display:none; 
 html.geoden-light body #rankingOverlay .ranking-move { grid-column:3;grid-row:1 / 3;grid-template-columns:repeat(2,44px)!important;gap:6px!important; }
 html.geoden-light body #rankingOverlay .ranking-move button { width:44px!important;height:44px!important;min-height:44px!important;border-radius:11px!important; }
 html.geoden-light body :is(.rapid-feedback,.detective-feedback,.ranking-feedback) { border-radius:15px!important;line-height:1.5!important; }
-html.geoden-light body .daily-share-report { border-left:4px solid #6c9271!important;border-radius:16px!important;padding:16px!important; }
+html.geoden-light body .daily-share-report { border:2px solid #6c9271!important;border-radius:16px!important;padding:16px!important;box-shadow:none!important; }
 html.geoden-light body .daily-share-report pre { padding:12px!important;border-radius:10px;font-size:12px!important;line-height:1.65!important; }
 html.geoden-light body .daily-share-status:empty { display:none; }
 @media(max-width:520px) {
@@ -16366,6 +16368,8 @@ html.geoden-light body #startOverlay #homeDailyPicks strong { order:1;flex:1;min
 html.geoden-light body #startOverlay #homeDailyPicks .daily-mode-description { order:2;flex-basis:100%;font-size:10px!important;line-height:1.4!important;margin:0!important; }
 html.geoden-light body #startOverlay #homeDailyPicks .challenge-status { order:3;flex-basis:100%;font-size:10px!important;margin:0!important; }
 html.geoden-light body #startOverlay #homeDailyPicks small { order:4;flex-basis:100%;font-size:10px!important; }
+html.geoden-light body #startOverlay #homeDailyPicks small.daily-result-line { display:flex;align-items:center;gap:6px;white-space:nowrap;font-weight:800!important;color:#fffaf0!important; }
+html.geoden-light body #startOverlay #homeDailyPicks small.daily-result-line::before { content:"✓";display:inline-block;font-size:15px;line-height:1;font-weight:900;color:#fffaf0; }
 html.geoden-light body #startOverlay #homeDailyPicks .daily-play-action { order:5;flex-basis:100%;padding-top:2px!important;border:0!important;font-size:11px!important;line-height:1.35!important; }
 html.geoden-light body #startOverlay #dailyPlayedCount { font-size:10px!important;margin:8px 0 0!important; }
 @media(min-width:700px) { html.geoden-light body #startOverlay #homeDailyPicks { grid-template-columns:repeat(4,minmax(0,1fr))!important; } }
@@ -16447,15 +16451,16 @@ html.geoden-light body #startOverlay .discovery-today[open]>.daily-hero-head { m
 html.geoden-light body #startOverlay .daily-hero-head .daily-collapse-action { display:flex;align-items:center;gap:7px;white-space:nowrap;color:#52634f;font-family:inherit;font-weight:750;font-size:12px;line-height:1.3; }
 #startOverlay .daily-collapse-chevron { font-size:18px;line-height:1; }
 #startOverlay .daily-hero-head:focus-visible { outline:3px solid #8a9d79;outline-offset:4px;border-radius:8px; }
-/* Warm sand, a quiet ochre edge, and more room between the resume lines. */
-html.geoden-light body #startOverlay #activeSessionResumeBtn { padding:18px 20px!important;gap:18px!important;min-height:84px;border:1px solid #d5c39e!important;border-left:4px solid #b99558!important;border-radius:17px!important;background:#f0eadb!important;box-shadow:0 3px 12px #6552340a!important; }
-html.geoden-light body #startOverlay #activeSessionResumeBtn:hover { background:#ebe2ce!important;border-color:#b99558!important; }
-html.geoden-light body #startOverlay #activeSessionResumeBtn:focus-visible { outline:3px solid #b99558!important;outline-offset:3px; }
+/* One even stroke makes the resume card legible without a false double outline. */
+html.geoden-light body #startOverlay #activeSessionResumeBtn { padding:18px 20px!important;gap:18px!important;min-height:84px;border:2px solid #c4a469!important;border-radius:17px!important;background:#f0eadb!important;box-shadow:none!important; }
+html.geoden-light body #startOverlay #activeSessionResumeBtn:hover { background:#ebe2ce!important;border-color:#947340!important; }
+html.geoden-light body #startOverlay #activeSessionResumeBtn:focus-visible { outline:none!important;border-color:#594321!important;background:#ebe2ce!important; }
 html.geoden-light body #startOverlay .active-session-resume-copy { gap:6px!important; }
 html.geoden-light body #startOverlay .active-session-resume-title { line-height:1.2!important;color:#403a2d!important; }
 html.geoden-light body #startOverlay .active-session-resume-meta { line-height:1.45!important;color:#6b604b!important; }
 html.geoden-light body #startOverlay .active-session-resume-action { color:#655234!important; }
 @media(max-width:520px){html.geoden-light body #startOverlay #activeSessionResumeBtn{padding:16px!important;gap:12px!important;}}
+html.geoden-light body #startOverlay :is(.discovery-today,.today-focus-card,.discovery-card,.play-mode-button) { box-shadow:none!important; }
 
 </style>
 <style id="daily-chevron-v69">
@@ -16489,7 +16494,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
   <script src="assets/ranking-daily-snapshot-2026-10-10.js"></script>
 
   <script>
-    const GEODEN_VERSION = "0.56.105";
+    const GEODEN_VERSION = "0.56.106";
     // v0.56.28 — blank-surface audit: guarded silhouettes/location maps and Matching visual preflight.
     // v0.56.18 — private-beta problem reporting with diagnostic state, recent actions, errors, copy/download/share.
     // v0.56.17 — tester-facing automatic failure reporting with screenshot/copy instructions.
@@ -37110,7 +37115,8 @@ Answer: ${answer}`;
       const b=homeButton(borderlessDailyName(mode),result?(mode==='borderless-capital'?`${result.points??Math.round(result.score*(result.total||5))} points · ${homeTime(result.elapsedMs)}`:`${result.score}% · ${homeTime(result.elapsedMs)}`):active?'Continue your run':'',button=>result?homeShowDailyResult(mode,result):launchBorderlessDaily(mode,button));
       b.classList.add('daily-mode-card');b.dataset.dailyMode=mode;
       const description=document.createElement('span');description.className='daily-mode-description';description.textContent=HOME_GAME_DESCRIPTIONS[mode];b.querySelector('strong').after(description);
-      if(result||active){b.dataset.challengeState=result?'completed':'active';b.firstChild.prepend(homeStatusBadge(result?'completed':'active',result?'Played today':'In progress'));}
+      if(result){b.dataset.challengeState='completed';const detail=b.querySelector('small');detail.classList.add('daily-result-line');detail.setAttribute('aria-label','Played today · '+detail.textContent);}
+      else if(active){b.dataset.challengeState='active';b.firstChild.prepend(homeStatusBadge('active','In progress'));}
       return homeDailyDecorateCard(b,mode);
     }
 
@@ -45904,7 +45910,8 @@ function rankingTargetValues() {
       });
       b.classList.add('daily-mode-card');b.dataset.dailyMode=mode;
       const description=document.createElement('span');description.className='daily-mode-description';description.textContent=HOME_GAME_DESCRIPTIONS[mode];b.firstChild.querySelector('strong').after(description);
-      if(result||active){b.dataset.challengeState=result?'completed':'active';b.firstChild.prepend(homeStatusBadge(result?'completed':'active',result?'Played today':'In progress'));}
+      if(result){b.dataset.challengeState='completed';const detail=b.querySelector('small');detail.classList.add('daily-result-line');detail.setAttribute('aria-label','Played today · '+detail.textContent);}
+      else if(active){b.dataset.challengeState='active';b.firstChild.prepend(homeStatusBadge('active','In progress'));}
       return homeDailyDecorateCard(b,mode);
     }
     function renderHomePicks(){const modes=['quiz','borderless-country','borderless-capital','detective','matching','ranking'],host=document.getElementById('homeDailyPicks');if(host)host.replaceChildren(...modes.map(mode=>homeDailyButton(mode)));const count=document.getElementById('dailyPlayedCount');if(count)count.textContent=`${modes.filter(mode=>homeDailyResult(mode)).length} of 6 completed today · New puzzles each day`;}
