@@ -16368,6 +16368,7 @@ html.geoden-light body #startOverlay #homeDailyPicks strong { order:1;flex:1;min
 html.geoden-light body #startOverlay #homeDailyPicks .daily-mode-description { order:2;flex-basis:100%;font-size:10px!important;line-height:1.4!important;margin:0!important; }
 html.geoden-light body #startOverlay #homeDailyPicks .challenge-status { order:3;flex-basis:100%;font-size:10px!important;margin:0!important; }
 html.geoden-light body #startOverlay #homeDailyPicks small { order:4;flex-basis:100%;font-size:10px!important; }
+html.geoden-light body #startOverlay #homeDailyPicks small:empty { display:none!important; }
 html.geoden-light body #startOverlay #homeDailyPicks small.daily-result-line { display:flex;align-items:center;gap:6px;white-space:nowrap;font-weight:800!important;color:#fffaf0!important; }
 html.geoden-light body #startOverlay #homeDailyPicks small.daily-result-line::before { content:"✓";display:inline-block;font-size:15px;line-height:1;font-weight:900;color:#fffaf0; }
 html.geoden-light body #startOverlay #homeDailyPicks .daily-play-action { order:5;flex-basis:100%;padding-top:2px!important;border:0!important;font-size:11px!important;line-height:1.35!important; }
@@ -16494,7 +16495,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
   <script src="assets/ranking-daily-snapshot-2026-10-10.js"></script>
 
   <script>
-    const GEODEN_VERSION = "0.56.106";
+    const GEODEN_VERSION = "0.56.107";
     // v0.56.28 — blank-surface audit: guarded silhouettes/location maps and Matching visual preflight.
     // v0.56.18 — private-beta problem reporting with diagnostic state, recent actions, errors, copy/download/share.
     // v0.56.17 — tester-facing automatic failure reporting with screenshot/copy instructions.
@@ -37112,7 +37113,7 @@ Answer: ${answer}`;
     }
     function borderlessDailyButton(mode){
       const result=homeDailyResult(mode),active=borderlessRun?.dailyKey===homeDailyId(mode)&&borderlessRun.index<borderlessRun.codes.length;
-      const b=homeButton(borderlessDailyName(mode),result?(mode==='borderless-capital'?`${result.points??Math.round(result.score*(result.total||5))} points · ${homeTime(result.elapsedMs)}`:`${result.score}% · ${homeTime(result.elapsedMs)}`):active?'Continue your run':'',button=>result?homeShowDailyResult(mode,result):launchBorderlessDaily(mode,button));
+      const b=homeButton(borderlessDailyName(mode),result?(mode==='borderless-capital'?`${result.points??Math.round(result.score*(result.total||5))} points · ${homeTime(result.elapsedMs)}`:`${result.score}% · ${homeTime(result.elapsedMs)}`):'',button=>result?homeShowDailyResult(mode,result):launchBorderlessDaily(mode,button));
       b.classList.add('daily-mode-card');b.dataset.dailyMode=mode;
       const description=document.createElement('span');description.className='daily-mode-description';description.textContent=HOME_GAME_DESCRIPTIONS[mode];b.querySelector('strong').after(description);
       if(result){b.dataset.challengeState='completed';const detail=b.querySelector('small');detail.classList.add('daily-result-line');detail.setAttribute('aria-label','Played today · '+detail.textContent);}
@@ -45902,7 +45903,7 @@ function rankingTargetValues() {
       const names={quiz:'Daily Quiz',detective:'Daily Detective',matching:'Daily Matching',ranking:'Daily Ranking'};
       const result=homeDailyResult(mode);
       const active=mode==='quiz'?studySession?.active!==false&&studySession?.dailyChallenge?.key===dailyChallengeRunKey():(mode==='ranking'?rankingState:studySession)?.launchPreset?.dailyKey===homeDailyId(mode)&&!result;
-      const meta=result?(mode==='quiz'?`${result.correct}/${result.total} correct`:`${result.score}% · ${homeTime(result.elapsedMs)}`):active?'Continue your run':'';
+      const meta=result?(mode==='quiz'?`${result.correct}/${result.total} correct`:`${result.score}% · ${homeTime(result.elapsedMs)}`):'';
       const b=homeButton(names[mode],meta,button=>{
         if(result){homeShowDailyResult(mode,result);return;}
         if(mode==='quiz'){if(!homeConfirmReplace('study',button,active))return;if(active){startOverlay.classList.remove('open');openRapidMode(true);}else startDailyChallengeSession();}
