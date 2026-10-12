@@ -14215,7 +14215,10 @@ html.geoden-light body #startOverlay .borderless-mode-button :is(.play-mode-name
 .borderless-primary{display:block;width:100%;background:#78623d!important;border-color:#78623d!important;color:#fff9ee!important;font-weight:800!important;margin-top:14px;}
 .borderless-secondary{width:100%;margin-top:12px;}.borderless-progress{font-size:13px;font-weight:750;color:#71674f;}
 .borderless-clue{background:#eee6d5;padding:18px;border-radius:18px;font-size:clamp(22px,4vw,38px);font-weight:850;text-align:center;}.borderless-clue img{display:block;max-width:160px;max-height:90px;margin:auto;}
-.borderless-map{margin:12px 0;border:1px solid #ccc6b1;border-radius:18px;background:#e3e3d3;overflow:hidden;width:100%;min-width:0;}
+.borderless-map{position:relative;margin:12px 0;border:1px solid #ccc6b1;border-radius:18px;background:#e3e3d3;overflow:hidden;width:100%;min-width:0;}
+.borderless-tap-hint{position:absolute;z-index:3;display:grid;gap:3px;min-width:100px;max-width:min(190px,55%);padding:7px 10px;border:1px solid #bfaa88;border-radius:11px;background:#fffaf0;color:#354d3c;box-shadow:0 2px 8px #283a2a26;font-size:12px;font-weight:800;line-height:1.2;text-align:center;pointer-events:none;transform:translate(-50%,-100%);}
+.borderless-tap-hint .map-hunt-direction{display:flex;align-items:center;justify-content:center;gap:5px;color:#805d2e;font-size:11px;}
+.borderless-tap-hint .map-hunt-direction-arrow svg{display:block;width:20px;height:20px;}
 .borderless-map svg{display:block;width:100%!important;height:auto!important;min-height:0!important;max-height:none!important;touch-action:none;cursor:crosshair;}
 .borderless-map svg:focus{outline:none;}.borderless-map svg:focus-visible{outline:3px solid #9a693d;outline-offset:-3px;}
 .borderless-map-status{padding:10px 14px;margin:0!important;font-size:13px!important;line-height:1.5!important;background:#f3efdf;color:#5d5743;}
@@ -15472,7 +15475,7 @@ html:is([data-study-domain="US"],[data-study-domain="CA"],[data-study-domain="AU
             <p>If you email feedback to Cayden Jansen at caydenjansen2@gmail.com, your email address and message are received through Gmail and used to investigate your feedback. You can request deletion of feedback by emailing the same address.</p>
             <p>Reset progress removes study records while retaining preferences. Remove your optional name in Personalisation, or clear this site’s browser data to remove all local records. Copies you export or email must be deleted separately.</p>
             <p>Importing a backup asks before replacing your saved data and keeps one copy of the previous data on this device. Download that copy to undo the import. Reset progress or clearing this site’s browser data also removes that recovery copy.</p>
-            <p>Maps: Natural Earth via world-atlas; high-detail boundaries © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>, available under the <a href="https://opendatacommons.org/licenses/odbl/1-0/" target="_blank" rel="noopener noreferrer">Open Database License</a>, packaged by <a href="https://github.com/simonepri/geo-maps" target="_blank" rel="noopener noreferrer">geo-maps</a>. Flags: <a href="https://flagpedia.net" target="_blank" rel="noopener noreferrer">Flagpedia / FlagCDN</a>. Library notices are included in this download.</p>
+            <p>Maps: Natural Earth via world-atlas; Borderless lakes from <a href="https://www.naturalearthdata.com/downloads/50m-physical-vectors/" target="_blank" rel="noopener noreferrer">Natural Earth 1:50m</a>; high-detail boundaries © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>, available under the <a href="https://opendatacommons.org/licenses/odbl/1-0/" target="_blank" rel="noopener noreferrer">Open Database License</a>, packaged by <a href="https://github.com/simonepri/geo-maps" target="_blank" rel="noopener noreferrer">geo-maps</a>. Flags: <a href="https://flagpedia.net" target="_blank" rel="noopener noreferrer">Flagpedia / FlagCDN</a>. Library notices are included in this download.</p>
           </div>
         </details>
       </section>
@@ -16123,6 +16126,10 @@ html:is([data-study-domain="US"],[data-study-domain="CA"],[data-study-domain="AU
     .daily-share-actions button+button {background:#e0e5ef;color:#78623d;}
     .daily-share-status {font-size:12px;margin:8px 0 0;}
     .daily-share-report textarea {width:100%;height:180px;box-sizing:border-box;font:14px/1.5 system-ui;}
+    .daily-finish-next{margin-top:18px;padding-top:16px;border-top:1px solid #afc3a4;}
+    .daily-finish-next h4{margin:0 0 10px;font-size:15px;color:#304b35;}
+    .daily-more-games{display:block;width:100%;min-height:52px;padding:12px 18px;border:1px solid #466a55;border-radius:12px;background:#466a55;color:#fff8e8;font-size:15px;font-weight:800;line-height:1.25;cursor:pointer;text-align:center;}
+    .daily-more-games:hover{background:#355741;}
     .daily-next-note {margin:12px 0;padding:12px 14px;border:1px solid #bccbb6;border-radius:12px;background:#edf2e9;color:#344f39;font-size:14px;line-height:1.45;font-weight:700;}
     .daily-fact-key-lightHelp i {background:#8fa654;}
     .daily-fact-key-heavyHelp i {background:#bb8b39;}
@@ -16616,10 +16623,12 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
   <script src="assets/d3-7.9.0.min.js"></script>
   <script src="assets/topojson-3.1.0.min.js"></script>
   <script src="assets/geography.js"></script>
-  <script src="assets/ranking-daily-snapshot-2026-10-10.js"></script>
+  <script src="assets/ne_50m_lakes.js"></script>
+  <script>/* GeoDen Daily Ranking snapshot. World Bank WDI, CC BY 4.0; retrieved 2026-10-10. */
+window.GeoDenDailyRankingSnapshot = {"schema":1,"asOf":"2026-10-10","provider":"World Bank, World Development Indicators","license":"CC BY 4.0","populationIndicator":"SP.POP.TOTL","areaIndicator":"AG.SRF.TOTL.K2","sourceUpdated":{"population":"2026-10-08","area":"2026-10-08"},"sources":{"population":"https://api.worldbank.org/v2/country/all/indicator/SP.POP.TOTL?format=json&mrnev=1&per_page=500","area":"https://api.worldbank.org/v2/country/all/indicator/AG.SRF.TOTL.K2?format=json&mrnev=1&per_page=500"},"values":{"AF":[43844111,2025,652870,2024],"AL":[2349580,2025,28750,2024],"DZ":[47435312,2025,2381740,2024],"AD":[82904,2025,468,2024],"AO":[39040039,2025,1246700,2024],"AG":[94209,2025,440.298,2024],"AR":[45851378,2025,2780400,2024],"AM":[3086700,2025,29740,2024],"AU":[27614411,2025,7741220,2024],"AT":[9208163,2025,83879,2024],"AZ":[10246996,2025,86600,2024],"BS":[403033,2025,13878,2024],"BH":[1600366,2025,800,2024],"BD":[175686899,2025,147570,2024],"BB":[282623,2025,431,2024],"BY":[9085991,2025,207629,2024],"BE":[11941781,2025,30689.17,2024],"BZ":[422924,2025,22966,2024],"BJ":[14814460,2025,114760,2024],"BT":[796682,2025,38390,2024],"BO":[12581843,2025,1098580,2024],"BA":[3140095,2025,51210,2023],"BW":[2562122,2025,581730,2024],"BR":[212812405,2025,8510420,2024],"BN":[466330,2025,5770,2024],"BG":[6433302,2025,111000,2024],"BF":[24074580,2025,274200,2024],"BI":[14390003,2025,27834,2024],"CV":[527326,2025,4030,2024],"KH":[17847982,2025,181035,2024],"CM":[29879337,2025,475442,2024],"CA":[41651653,2025,15634410,2024],"CF":[5513282,2025,622980,2024],"TD":[21003705,2025,1284000,2024],"CL":[19859921,2025,756556.4,2024],"CN":[1406585000,2025,9562910,2024],"CO":[53425635,2025,1140619.1,2024],"KM":[882847,2025,1869.7,2024],"CR":[5152950,2025,51100,2024],"CI":[32711547,2025,322460,2024],"HR":[3876200,2025,88070,2024],"CU":[10937203,2025,109884.01,2024],"CY":[1370754,2025,9250,2024],"CZ":[10886878,2025,78871.42,2024],"CD":[112832473,2025,2345410,2024],"DK":[6009169,2025,42920,2024],"DJ":[1184076,2025,23200,2024],"DM":[65871,2025,751,2024],"DO":[11520487,2025,146839.46,2024],"EC":[18289896,2025,256370,2024],"EG":[118365995,2025,1001450,2024],"SV":[6365503,2025,21040,2024],"GQ":[1938431,2025,28051.5,2024],"ER":[3607003,2025,121630,2024],"EE":[1366475,2025,45340,2024],"SZ":[1256174,2025,17364,2024],"ET":[135472051,2025,1129818.8,2024],"FJ":[933154,2025,18333,2024],"FI":[5646436,2025,338485,2024],"FR":[68720337,2025,606410,2024],"GA":[2593130,2025,267670,2024],"GM":[2822093,2025,11295,2024],"GE":[3935766,2025,69700,2024],"DE":[83491249,2025,357680,2024],"GH":[35064272,2025,238539,2024],"GR":[10413962,2025,131960,2024],"GD":[117303,2025,344,2024],"GT":[18687881,2025,108889,2024],"GN":[15099727,2025,245857,2024],"GW":[2249515,2025,36125,2024],"GY":[835986,2025,214970,2024],"HT":[11906095,2025,27750,2024],"HN":[11005850,2025,112492,2024],"HU":[9514251,2025,93030,2024],"IS":[392404,2025,103000,2024],"IN":[1463865525,2025,3287263,2024],"ID":[285721236,2025,1916906.8,2024],"IR":[92417681,2025,1745150,2024],"IQ":[47020774,2025,435050,2024],"IE":[5484367,2025,70280,2024],"IL":[10122800,2025,22070,2024],"IT":[58915656,2025,302070,2024],"JM":[2837077,2025,10991,2024],"JP":[123366734,2025,377974.71,2024],"JO":[11520684,2025,89318,2024],"KZ":[20843754,2025,2724902,2024],"KE":[57532493,2025,591970,2024],"KI":[136488,2025,811,2024],"KW":[4865298,2025,17820,2024],"KG":[7343064,2025,199950,2024],"LA":[7873046,2025,236800,2024],"LV":[1847785,2025,64590,2024],"LB":[5849421,2025,10452,2024],"LS":[2363325,2025,30360,2024],"LR":[5731206,2025,111370,2024],"LY":[7458555,2025,1759540,2024],"LI":[41024,2025,160,2024],"LT":[2888774,2025,65290,2024],"LU":[686970,2025,2590,2024],"MG":[32740678,2025,591896,2024],"MW":[22216120,2025,118484,2024],"MY":[35977838,2025,330534,2024],"MV":[529676,2025,300,2024],"ML":[25198821,2025,1241238,2024],"MT":[579704,2025,315.15,2024],"MH":[36282,2025,181,2024],"MR":[5315065,2025,1030700,2024],"MU":[1243741,2025,2010,2024],"MX":[131946900,2025,1957193.9,2024],"FM":[113683,2025,701,2024],"MD":[2360527,2025,33849,2024],"MC":[38341,2025,74.9,2024],"MN":[3568978,2025,1564115.746,2024],"ME":[623129,2025,13883,2024],"MA":[38430770,2025,446550,2024],"MZ":[35631653,2025,799380,2024],"MM":[54850648,2025,676578,2024],"NA":[3092816,2025,824292,2024],"NR":[12025,2025,21,2024],"NP":[29618118,2025,147181,2024],"NL":[18087633,2025,41540,2024],"NZ":[5324700,2025,267710,2024],"NI":[7007502,2025,130370,2023],"NE":[27917831,2025,1267000,2024],"NG":[237527782,2025,923768,2024],"KP":[26571036,2025,120540,2024],"MK":[1820909,2025,25713,2024],"NO":[5610870,2025,624500,2024],"OM":[5494691,2025,309500,2024],"PK":[255219554,2025,796100,2024],"PW":[17663,2025,460,2024],"PS":[5413596,2025,6025,2024],"PA":[4571189,2025,75320,2024],"PG":[10762817,2025,462840,2024],"PY":[7013078,2025,406752,2024],"PE":[34576665,2025,1285215.6,2024],"PH":[116786962,2025,300000,2024],"PL":[36435861,2025,313940,2024],"PT":[10804871,2025,92230,2024],"QA":[2972215,2025,11636.8,2024],"CG":[6484437,2025,342000,2024],"RO":[19020271,2025,238397,2024],"RU":[143513328,2025,17125190,2024],"RW":[14569341,2025,26340,2024],"KN":[46922,2025,261,2024],"LC":[180149,2025,616,2024],"VC":[99924,2025,389,2024],"WS":[219306,2025,2840,2024],"SM":[34109,2025,61.2,2024],"ST":[240254,2025,960,2024],"SA":[36973555,2025,2149690,2024],"SN":[18931966,2025,196710,2024],"RS":[6549143,2025,88490,2024],"SC":[122730,2025,457,2024],"SL":[8819794,2025,72300,2024],"SG":[6111175,2025,735.6,2024],"SK":[5413813,2025,49030,2024],"SI":[2130986,2025,20480,2024],"SB":[838645,2025,28446,2024],"SO":[19654739,2025,637657,2024],"ZA":[64747319,2025,1219602,2024],"KR":[51684564,2025,100460,2024],"SS":[12188788,2025,646883,2024],"ES":[49355143,2025,505981.25,2024],"LK":[21756000,2025,65610,2024],"SD":[51662147,2025,1878000,2024],"SR":[639850,2025,163820,2024],"SE":[10596620,2025,528860,2024],"CH":[9092436,2025,41290.7,2024],"SY":[25620427,2025,185180,2024],"TJ":[10786734,2025,141379,2024],"TZ":[70545865,2025,945500,2024],"TH":[71619863,2025,513115,2024],"TL":[1418517,2025,14870,2024],"TG":[8591626,2025,56785,2024],"TO":[103742,2025,749,2024],"TT":[1367764,2025,5128,2024],"TN":[12348573,2025,163610,2024],"TR":[85878556,2025,785350,2024],"TM":[7618847,2025,491209,2024],"TV":[9492,2025,26,2024],"UG":[51384894,2025,241551,2024],"UA":[38980376,2025,603550,2024],"AE":[11513149,2025,98647.9,2024],"GB":[69487000,2025,243610,2024],"US":[341784857,2025,9831510,2024],"UY":[3384688,2025,176215,2024],"UZ":[37053428,2025,448923,2024],"VU":[335169,2025,12189,2024],"VE":[28516896,2025,912050,2024],"VN":[101598527,2025,331338.31,2024],"YE":[41773878,2025,527968,2024],"ZM":[21913874,2025,752612,2024],"ZW":[16950795,2025,390760,2024]}};</script>
 
   <script>
-    const GEODEN_VERSION = "0.56.116";
+    const GEODEN_VERSION = "0.56.117";
     // v0.56.28 — blank-surface audit: guarded silhouettes/location maps and Matching visual preflight.
     // v0.56.18 — private-beta problem reporting with diagnostic state, recent actions, errors, copy/download/share.
     // v0.56.17 — tester-facing automatic failure reporting with screenshot/copy instructions.
@@ -30992,6 +31001,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
     // A few common adjectival forms are not close enough to the country spelling
     // for the conservative prefix test below (Spain → Spanish, Switzerland → Swiss, etc.).
     const GIVEAWAY_NAME_ALIASES = {
+      BS: ["bahamian"],
       CH: ["swiss"],
       DK: ["danish"],
       ES: ["spanish"],
@@ -30999,13 +31009,19 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
       FR: ["french"],
       GB: ["british"],
       IE: ["irish"],
-      LA: ["lao"],
+      KG: ["kyrgyz", "kyrgystani"],
+      KM: ["comorian"],
+      LA: ["lao", "laotian"],
+      LB: ["lebanese"],
+      MG: ["malagasy"],
+      MZ: ["mozambican"],
       NL: ["dutch"],
       NO: ["norwegian"],
       PH: ["filipino", "philippine"],
       PL: ["polish"],
       PT: ["portuguese"],
       SE: ["swedish"],
+      SZ: ["swazi"],
       TR: ["turkish"],
       UA: ["ukrainian"],
       US: ["us", "american"]
@@ -35081,6 +35097,7 @@ Answer: ${answer}`;
       round.hintTarget = null;
       round.hintsUsed = 0;
       round.usedSuggestion = false;
+      round.hintAutofillExposed = false;
       round.misses = 0;
       round.eliminatedCodes = [];
       round.revealed = false;
@@ -35743,6 +35760,11 @@ Answer: ${answer}`;
         .filter(item => item.rank < 99)
         .sort((a,b) => a.rank - b.rank || a.value.localeCompare(b.value))
         .slice(0, query.length < 2 ? 8 : 20);
+      if (round.hintCount >= 2 && matches.length === 1 && rapidExpectedValues(round, currentCountry()).some(value => interactiveLooseNormalize(value) === interactiveLooseNormalize(matches[0].value))) {
+        // At this point autocomplete has effectively supplied the answer.
+        round.hintAutofillExposed = true;
+        saveStudySession();
+      }
       if (!matches.length) {
         rapidSuggestions.classList.add("hidden");
         return;
@@ -35832,7 +35854,7 @@ Answer: ${answer}`;
       if (["flagChoice", "silhouetteChoice"].includes(target)) return hints > 1 ? "heavy-help" : "light-help";
       if (["capitalLocation", "largestCityLocation"].includes(target)) return "heavy-help";
       const letters = countLetters(rapidHintTarget(round, c));
-      if (letters && (Number(round.hintCount) || 0) >= Math.max(2, letters - 1)) return "missed";
+      if (round.hintAutofillExposed || (letters && (Number(round.hintCount) || 0) >= Math.max(2, letters - 1))) return "missed";
       return hints === 1 ? "light-help" : "heavy-help";
     }
 
@@ -37264,6 +37286,9 @@ Answer: ${answer}`;
 
     // Session-local city map: never shares Map Hunt's run state or SVG.
     let borderlessExtraFeaturesPromise=null;
+    function loadBorderlessLakes(){
+      return Promise.resolve(Array.isArray(window.GeoDenBorderlessLakes)?window.GeoDenBorderlessLakes:[]);
+    }
     async function loadBorderlessMapFeatures(){
       const base=await loadCanonicalWorldMapFeatures();
       if(!borderlessExtraFeaturesPromise)borderlessExtraFeaturesPromise=Promise.all(countries.filter(c=>!canonicalWorldTargetFeature(c,base)).map(async c=>{const feature=await ultraDetailSilhouetteFeatureForCountry(c,null);return feature?{...feature,id:c.numeric,properties:{...feature.properties,__geodenCode:c.code}}:null;})).catch(error=>{borderlessExtraFeaturesPromise=null;throw error;});
@@ -37480,7 +37505,7 @@ function multiPromptPicker(select,sub=false,initialValue=select.value){
       if(s.revision&&s.originalRun){const original=document.createElement('button');original.type='button';original.className='borderless-secondary';original.textContent='Back to original results';original.onclick=()=>{borderlessRun=clonePlain(s.originalRun);saveBorderlessRun();renderBorderlessRound();};content.append(original);}
       if(s.challenge){const best=document.createElement('p');best.textContent=homeRecordMapText(s);content.append(best);}
       if(s.dailyKey)content.append(homeDailyReport(s.target==='country'?'borderless-country':'borderless-capital',homeRecords.dailies[s.dailyKey]));
-      const b=document.createElement('button');b.type='button';b.className='borderless-primary';b.textContent=s.challenge?'More challenges →':s.dailyKey?'Play a custom run':'Play again';
+      const b=document.createElement('button');b.type='button';b.className='borderless-primary';b.textContent=s.challenge?'More challenges →':s.dailyKey?'Play another Borderless run →':'Play again';
       b.onclick=()=>{if(s.challenge){closeBorderless();homeOpenMode('borderless');}else openBorderless();};content.append(b);
       await createBorderlessMap(map,countryByCode(s.codes.at(-1)),s.target,{set:s.set,results:s.results,view:s.mapView,revealed:true,overview:true,isCurrent:()=>token===borderlessRenderToken});
     }
@@ -37506,7 +37531,7 @@ function scaleCapitalHistory(parent,scale){parent.selectAll('circle').attr('r',4
       host.classList.add('borderless-map');
       const status=document.createElement('p');status.className='borderless-map-status';status.setAttribute('role','status');status.textContent='Loading map…';host.append(status);
       try {
-        const features=await loadBorderlessMapFeatures();
+        const [features,lakes]=await Promise.all([loadBorderlessMapFeatures(),loadBorderlessLakes()]);
         if(!host.isConnected||options.isCurrent?.()===false)return null;
         let targetFeature=canonicalWorldTargetFeature(c,features);
         if(!targetFeature||(target==='capital'&&!mapHuntCapitalCities(c).length))throw Error('Missing target');
@@ -37521,6 +37546,8 @@ function scaleCapitalHistory(parent,scale){parent.selectAll('circle').attr('r',4
         const completed=layer.append('g').attr('class','borderless-completed');
         function drawCompleted(){completed.selectAll('*').remove();for(const r of options.results||[]){const country=countryByCode(r.code),feature=canonicalWorldTargetFeature(country,features);if(!feature)continue;if(target==='country')completed.append('path').datum(feature).attr('d',path).attr('data-code',r.code).attr('fill',borderlessResultColor(r)).attr('stroke','#fff9ee').attr('stroke-width',1).attr('vector-effect','non-scaling-stroke');else drawCapitalHistory(completed,projection,mapHuntCapitalCities(country),r,options.overview);}
         }drawCompleted();
+        layer.append('g').attr('class','borderless-lakes').attr('pointer-events','none').selectAll('path').data(lakes).join('path')
+          .attr('d',path).attr('fill','#9dbcc1').attr('stroke','#81a6ac').attr('stroke-width',.55).attr('vector-effect','non-scaling-stroke');
         const marks=layer.append('g').attr('class','borderless-marks');
         let transform=d3.zoomIdentity,locked=!!options.revealed;
         const crosshair=svg.append('g').attr('class','borderless-crosshair').attr('pointer-events','none').style('display','none');
@@ -37550,10 +37577,26 @@ function scaleCapitalHistory(parent,scale){parent.selectAll('circle').attr('r',4
           g.append('circle').attr('fill',color).attr('stroke','#fff9ee').attr('stroke-width',2).attr('vector-effect','non-scaling-stroke');
           if(label)g.append('text').attr('text-anchor','middle').attr('class','borderless-map-label').text(label);rescale();
         }
+        function showDirection(result,clue){
+          host.querySelector('.borderless-tap-hint')?.remove();
+          if(!result?.geo||!clue)return;
+          const point=projection(result.geo),matrix=layer.node().getScreenCTM();if(!point||!matrix)return;
+          const screen=new DOMPoint(point[0],point[1]).matrixTransform(matrix),rect=host.getBoundingClientRect();
+          const label=document.createElement('div');label.className='borderless-tap-hint';
+          label.style.left=Math.max(70,Math.min(host.clientWidth-70,screen.x-rect.left))+'px';
+          label.style.top=Math.max(76,screen.y-rect.top-9)+'px';
+          const name=document.createElement('span');name.textContent=result.clickedName||'Water';
+          const line=document.createElement('span');line.className='map-hunt-direction';
+          const arrow=document.createElement('span');arrow.className='map-hunt-direction-arrow';arrow.setAttribute('aria-hidden','true');
+          arrow.innerHTML='<svg viewBox="0 0 28 28" focusable="false"><path d="M14 25V3M5 12L14 3L23 12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+          arrow.querySelector('svg').style.transform=`rotate(${clue.angle}deg)`;
+          const text=document.createElement('span');text.textContent=`Try ${clue.direction}`;
+          line.append(arrow,text);label.append(name,line);host.append(label);
+        }
         function reveal(geo=null,result=null){
-          locked=true;marks.selectAll('*').remove();
+          locked=true;marks.selectAll('*').remove();host.querySelector('.borderless-tap-hint')?.remove();
           if(target==='country')marks.append('path').datum(targetFeature).attr('d',path).attr('fill','#4b7955').attr('stroke','#fff9ee').attr('stroke-width',1.5).attr('vector-effect','non-scaling-stroke');
-          else {geography.attr('stroke','#778376').attr('stroke-width',.8);marks.append('path').datum(targetFeature).attr('d',path).attr('fill','none').attr('stroke','#39784e').attr('stroke-width',2).attr('vector-effect','non-scaling-stroke');const cities=mapHuntCapitalCities(c);if(geo){const nearest=[...cities].sort((a,b)=>d3.geoDistance(geo,[a.lng,a.lat])-d3.geoDistance(geo,[b.lng,b.lat]))[0];drawCapitalConnector(marks,projection,[nearest.lng,nearest.lat],geo);}cities.forEach(city=>marker([city.lng,city.lat],'#39784e',options.hideNames?'Capital':city.name));}
+          else {marks.append('path').datum(targetFeature).attr('d',path).attr('fill','#88a75b').attr('fill-opacity',.85).attr('stroke','none').attr('pointer-events','none');const cities=mapHuntCapitalCities(c);if(geo){const nearest=[...cities].sort((a,b)=>d3.geoDistance(geo,[a.lng,a.lat])-d3.geoDistance(geo,[b.lng,b.lat]))[0];drawCapitalConnector(marks,projection,[nearest.lng,nearest.lat],geo);}cities.forEach(city=>marker([city.lng,city.lat],'#39784e',options.hideNames?'Capital':city.name));}
           if(geo)marker(geo,borderlessResultColor(result||borderlessEvaluate(c,target,geo,targetFeature))); 
         }
         function guess(point){
@@ -37570,7 +37613,7 @@ function scaleCapitalHistory(parent,scale){parent.selectAll('circle').attr('r',4
             if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key)){event.preventDefault();const step=event.shiftKey?2:12;cursor=[Math.max(0,Math.min(width,cursor[0]+(event.key==='ArrowRight'?step:event.key==='ArrowLeft'?-step:0))),Math.max(0,Math.min(height,cursor[1]+(event.key==='ArrowDown'?step:event.key==='ArrowUp'?-step:0)))];crosshair.style('display',null).attr('transform',`translate(${cursor})`);}
             if(event.key==='Enter'||event.key===' '){event.preventDefault();guess(cursor);}});
         status.textContent=target==='country'?'Tap inside the country.':'Tap where you think the capital is.';
-        const api={reveal,status,projection,svg,targetFeature,guess,setQuestion:(nextCountry,nextTarget,nextOptions)=>{c=nextCountry;target=nextTarget;options=nextOptions;targetFeature=canonicalWorldTargetFeature(c,features);api.targetFeature=targetFeature;locked=!!options.revealed;marks.selectAll('*').remove();geography.attr('stroke','#c2c8b5').attr('stroke-width',.7);drawCompleted();rescale();status.textContent=target==='country'?'Tap inside the country.':'Tap where you think the capital is. Closer guesses earn more points.';return api;}};host.borderlessMap=api;
+        const api={reveal,showDirection,status,projection,svg,targetFeature,guess,setQuestion:(nextCountry,nextTarget,nextOptions)=>{c=nextCountry;target=nextTarget;options=nextOptions;targetFeature=canonicalWorldTargetFeature(c,features);api.targetFeature=targetFeature;locked=!!options.revealed;marks.selectAll('*').remove();host.querySelector('.borderless-tap-hint')?.remove();geography.attr('stroke','#c2c8b5').attr('stroke-width',.7);drawCompleted();rescale();status.textContent=target==='country'?'Tap inside the country.':'Tap where you think the capital is. Closer guesses earn more points.';return api;}};host.borderlessMap=api;
         if(options.revealed&&!options.overview)reveal(options.geo);if(options.overview)status.textContent='Your completed map · pinch or scroll to explore';return api;
       }catch(error){if(host.isConnected)status.textContent='Map unavailable. Please retry; this will not count against your score.';return null;}
     }
@@ -37657,13 +37700,13 @@ function scaleCapitalHistory(parent,scale){parent.selectAll('circle').attr('r',4
       const reveal=document.createElement('button');reveal.type='button';reveal.className='borderless-reveal';reveal.textContent='Reveal location';reveal.disabled=true;
       content.append(progress,clue,host,feedback,reveal);borderlessProgress(s,content);
       let finished=false;
-      function directionFor(result,api){if(!mapDirectionHintsEnabled||!result?.geo||!api?.projection)return '';const cities=s.target==='capital'?mapHuntCapitalCities(c):[];const destination=cities.length?[...cities].sort((a,b)=>d3.geoDistance(result.geo,[a.lng,a.lat])-d3.geoDistance(result.geo,[b.lng,b.lat]))[0]:null;const targetGeo=destination?[destination.lng,destination.lat]:d3.geoCentroid(api.targetFeature);const from=api.projection(result.geo),to=api.projection(targetGeo);if(!from||!to)return '';const clue=mapHuntDirectionBetweenPoints({x:from[0],y:from[1]},{x:to[0],y:to[1]});if(!clue)return '';return ' · '+['↑','↗','→','↘','↓','↙','←','↖'][Math.round(clue.angle/45)%8]+' try '+clue.direction;}
-      function complete(result,api){if(finished||token!==borderlessRenderToken)return;finished=true;pauseBorderlessClock();api.reveal(result.geo,result);const tries=Math.min(3,s.misses+1);s.results.push({code:c.code,...result,tries});const clean=!result.revealed&&result.score===100,lightHelp=!result.revealed&&!clean&&(s.target==='country'?tries===2:result.score>=50),heavyHelp=!result.revealed&&!clean&&!lightHelp&&result.score>0;recordDailyFactCounts({total:1,clean:clean?1:0,lightHelp:lightHelp?1:0,heavyHelp:heavyHelp?1:0,missed:clean||lightHelp||heavyHelp?0:1});s.index++;s.misses=0;borderlessRecordChallenge(s);borderlessRecordDaily(s);archiveBorderlessProgress(s);saveBorderlessRun();borderlessProgress(s,content);const current=s.target==='country'?host.querySelector('.borderless-marks path'):null;if(current)current.setAttribute('fill',borderlessResultColor(result));reveal.remove();feedback.textContent=`${c.name} · ${s.target==='capital'?mapHuntCapitalCities(c).map(p=>p.name).join(' / ')+' · ':''}${result.revealed?'Location revealed':borderlessResultText(result,s.target)}${s.target==='capital'&&!result.revealed&&result.score<90?directionFor(result,api):''}`;
+      function directionFor(result,api){if(!mapDirectionHintsEnabled||s.target!=='country'||!result?.geo||!api?.projection)return null;const targetGeo=d3.geoCentroid(api.targetFeature);const from=api.projection(result.geo),to=api.projection(targetGeo);if(!from||!to)return null;return mapHuntDirectionBetweenPoints({x:from[0],y:from[1]},{x:to[0],y:to[1]});}
+      function complete(result,api){if(finished||token!==borderlessRenderToken)return;finished=true;pauseBorderlessClock();api.reveal(result.geo,result);const tries=Math.min(3,s.misses+1);s.results.push({code:c.code,...result,tries});const clean=!result.revealed&&result.score===100,lightHelp=!result.revealed&&!clean&&(s.target==='country'?tries===2:result.score>=50),heavyHelp=!result.revealed&&!clean&&!lightHelp&&result.score>0;recordDailyFactCounts({total:1,clean:clean?1:0,lightHelp:lightHelp?1:0,heavyHelp:heavyHelp?1:0,missed:clean||lightHelp||heavyHelp?0:1});s.index++;s.misses=0;borderlessRecordChallenge(s);borderlessRecordDaily(s);archiveBorderlessProgress(s);saveBorderlessRun();borderlessProgress(s,content);const current=s.target==='country'?host.querySelector('.borderless-marks path'):null;if(current)current.setAttribute('fill',borderlessResultColor(result));reveal.remove();feedback.textContent=`${c.name} · ${s.target==='capital'?mapHuntCapitalCities(c).map(p=>p.name).join(' / ')+' · ':''}${result.revealed?'Location revealed':borderlessResultText(result,s.target)}`;
         setTimeout(()=>{if(token===borderlessRenderToken&&document.getElementById('borderlessOverlay').classList.contains('open'))renderBorderlessRound();},s.target==='capital'?2500:1400);}
       const map=await createBorderlessMap(host,c,s.target,{reuse:true,set:s.set,results:s.mapProgress==='blind'?[]:s.results,view:s.mapView,onView:view=>{s.mapView=view;},isCurrent:()=>token===borderlessRenderToken&&document.getElementById('borderlessOverlay').classList.contains('open'),onGuess:(r,api)=>{
         if(finished)return;if(s.target==='country'&&s.mapProgress!=='blind'&&s.results.some(result=>result.code===r.clickedCode)){feedback.textContent=r.clickedName+' · already filled';return;}if(s.target==='capital'){complete(r,api);return;}if(r.correct){r.score=mapTryScore({tries:Math.min(3,s.misses+1)});complete(r,api);return;}
         if(r.clickedCode&&r.clickedCode!==c.code)recordCountryConfusion(c.code,r.clickedCode,s.target==='capital'?'capitalPosition':'country');
-        s.misses++;saveBorderlessRun();if(s.misses>=3)complete({...r,score:0,revealed:true},api);else feedback.textContent=`${r.clickedName} · ${3-s.misses} guesses left${directionFor(r,api)}`;
+        s.misses++;saveBorderlessRun();if(s.misses>=3)complete({...r,score:0,revealed:true},api);else {api.showDirection(r,directionFor(r,api));feedback.textContent=`${3-s.misses} guesses left`;}
       }});
       if(token!==borderlessRenderToken)return;
       if(!map){reveal.textContent='Retry map';reveal.disabled=false;reveal.onclick=renderBorderlessRound;return;}
@@ -43861,9 +43904,7 @@ function rankingTargetValues() {
         rankingPlay.classList.add("hidden");
         if(options.launchPreset?.dailyKey){
           rankingSetup.classList.add('hidden');rankingLoading.classList.remove('hidden');rankingLoading.replaceChildren();
-          const message=document.createElement('p');message.textContent=['population','area','density'].includes(roundMetric)
-            ? 'Today’s Ranking data could not be loaded. Make sure the daily Ranking snapshot file is in the assets folder, then retry.'
-            : 'Today’s Ranking puzzle could not be prepared. Please retry; your daily puzzle will stay the same.';
+          const message=document.createElement('p');message.textContent='Today’s Ranking couldn’t open. Please retry; your daily puzzle will stay the same.';
           const retry=document.createElement('button');retry.type='button';retry.className='special-game-start';retry.textContent='Retry daily Ranking';retry.onclick=()=>startRankingGame({launchPreset:options.launchPreset});rankingLoading.append(message,retry);return;
         }
         rankingSetup.classList.remove("hidden");
@@ -44897,6 +44938,20 @@ function rankingTargetValues() {
         ['State','Autocomplete drops results from an obsolete input query', () => {
           geoDenSelfTestAssert(updateInteractiveSuggestions.toString().includes('interactiveLooseNormalize(interactiveInput.value) !== query'));
           geoDenSelfTestAssert(rapidUpdateSuggestions.toString().includes('interactiveLooseNormalize(rapidInput.value) !== query'));
+        }],
+        ['Daily','Country-derived currency names are not Daily Quiz clues', () => {
+          for(const code of ['LA','BS','KM','SZ','KG','LB','MG','MZ']){
+            const country=geoDenSelfTestCountry(code);
+            geoDenSelfTestAssert(rapidCurrencyTargets(country).some(value=>textObviouslyNamesCountry(value,country)),`${code} currency leaked`);
+            geoDenSelfTestAssert(!rapidAvailableTypes(country,{daily:true,sprint:false}).includes('countryCurrency'),`${code} Daily Quiz included currency`);
+          }
+        }],
+        ['Daily','A unique autocomplete answer after multiple hints counts as over-hinted', () => {
+          geoDenSelfTestEqual(rapidDailyOutcome({type:'countryCapital',hintsUsed:3,hintCount:3,hintAutofillExposed:true},geoDenSelfTestCountry('LA'),true),'missed');
+        }],
+        ['Daily','Ranking values and Borderless lake shapes are bundled', () => {
+          geoDenSelfTestAssert(!!rankingDailySnapshotValue('population',geoDenSelfTestCountry('RW')));
+          geoDenSelfTestAssert(Array.isArray(window.GeoDenBorderlessLakes)&&window.GeoDenBorderlessLakes.length>100);
         }],
         ['Matching','Closing or rebuilding cancels pending Matching gestures', () => {
           const build=prepareMatchingBoardBuildUi.toString();
@@ -46374,14 +46429,27 @@ function rankingTargetValues() {
     }
     function homeDailyReport(mode,result){
       const box=document.createElement('section');box.className='discovery-result daily-share-report';
-      const title=document.createElement('h3');title.textContent='Your daily result';
+      const title=document.createElement('h3');title.textContent='Today’s game complete';
       const preview=document.createElement('pre');preview.textContent=homeDailyShareText(mode,result);
       const actions=document.createElement('div');actions.className='daily-share-actions';
       const status=document.createElement('p');status.setAttribute('role','status');status.className='daily-share-status';
       const manual=()=>{if(box.querySelector('textarea'))return;const field=document.createElement('textarea');field.readOnly=true;field.value=preview.textContent;field.setAttribute('aria-label','Daily report to copy');box.append(field);field.focus();field.select();status.textContent='Select and copy the report below.';};
       const copy=document.createElement('button');copy.type='button';copy.textContent='Copy result';copy.onclick=async()=>{try{await geoDenCopyText(preview.textContent);status.textContent='Copied! Ready to paste.';}catch(_){manual();}};
       const share=document.createElement('button');share.type='button';share.textContent='Share';share.onclick=async()=>{if(!navigator.share){copy.click();return;}try{await navigator.share({title:'GeoDen Daily',text:preview.textContent});status.textContent='Shared!';}catch(e){if(e?.name!=='AbortError')copy.click();}};
-      actions.append(copy,share);box.append(title,preview,actions,status);return box;
+      actions.append(copy,share);box.append(title,preview,actions,status);
+      const next=document.createElement('div');next.className='daily-finish-next';
+      const nextTitle=document.createElement('h4');nextTitle.textContent='What next?';
+      const more=document.createElement('button');more.type='button';more.className='daily-more-games';more.textContent='See the other Daily games →';
+      more.onclick=()=>{
+        if(mode==='quiz')closeRapidToMenu();
+        else if(mode==='matching')closeMatchingToMenu();
+        else if(mode==='detective')closeDetectiveToMenu();
+        else if(mode==='ranking')closeRanking();
+        else if(mode.startsWith('borderless-'))closeBorderless();
+        homeSetSection('games');
+        const daily=document.getElementById('homeDailySection');if(daily){daily.open=true;daily.scrollIntoView({block:'start',behavior:'smooth'});}
+      };
+      next.append(nextTitle,more);box.append(next);return box;
     }
     function homeShowFinishedDaily(mode,host,result=null){
       if(!host)return;host.querySelectorAll('.daily-share-report').forEach(el=>el.remove());
@@ -46391,8 +46459,9 @@ function rankingTargetValues() {
       if(!host)return;
       host.querySelectorAll('.daily-next-note').forEach(el=>el.remove());
       const note=document.createElement('p');note.className='daily-next-note';
-      note.textContent=`Today’s Daily ${name} is complete. Want to keep playing? The next ${noun} is a separate game.`;
-      host.append(note);
+      note.textContent=`Play another ${noun} whenever you like. It won’t change today’s result.`;
+      const next=host.querySelector('.daily-share-report .daily-finish-next');
+      if(next)next.before(note);else host.append(note);
     }
     function installHomeSectionDisclosures() {
       for(const group of playModePicker.querySelectorAll('.mode-discovery-group')){
