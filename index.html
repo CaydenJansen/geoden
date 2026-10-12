@@ -14527,7 +14527,7 @@ html:is([data-study-domain="US"],[data-study-domain="CA"],[data-study-domain="AU
             <button class="menu-header-tool menu-header-progress mastery-open" id="masteryOpenBtn" type="button" aria-label="Open progress" title="Progress">
               <svg class="menu-tool-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V11"></path><path d="M10 19V6"></path><path d="M16 19V9"></path><path d="M22 19H2"></path></svg>
             <span class="menu-tool-label" aria-hidden="true">Progress</span></button>
-            <button class="menu-header-tool menu-header-report" id="bugReportMenuBtn" type="button" aria-label="Report a problem" title="Report a problem">
+            <button class="menu-header-tool menu-header-report" id="bugReportMenuBtn" type="button" aria-label="Feedback" title="Feedback">
               <svg class="menu-tool-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.5v5.5"></path><path d="M12 16.5h.01"></path></svg>
             <span class="menu-tool-label" aria-hidden="true">Feedback</span></button>
             <button class="menu-header-tool menu-header-settings menu-settings-button" id="menuSettingsBtn" type="button" aria-label="Open settings" title="Settings">
@@ -15828,12 +15828,16 @@ html:is([data-study-domain="US"],[data-study-domain="CA"],[data-study-domain="AU
     .bug-report-action { min-height:42px; padding:0 10px; border-radius:11px; background:var(--button-muted); color:var(--text); font-size:.76rem; }
     .bug-report-action.primary { background:var(--accent); color:#fff; }
     .bug-report-status { min-height:18px; margin-top:8px; color:var(--muted); font-size:.72rem; line-height:1.35; }
+    .feedback-tabs { display:grid; grid-template-columns:1fr 1fr; gap:7px; margin:12px 0; }
+    .feedback-tabs .bug-report-action[aria-pressed="true"] { background:var(--accent); color:#fff; }
+    .bug-report-email { display:flex; align-items:center; justify-content:center; min-height:44px; padding:8px 12px; margin-top:10px; border-radius:11px; text-align:center; text-decoration:none; font-weight:800; }
     @media (max-width:520px) {
       .bug-report-overlay { padding:7px; align-items:flex-start; }
       .bug-report-panel { max-height:calc(100dvh - 14px); padding:12px; border-radius:18px; }
       .bug-report-title { font-size:1.2rem; }
       .bug-report-actions { grid-template-columns:1fr; gap:6px; }
       .bug-report-action { min-height:40px; }
+      .feedback-tabs { grid-template-columns:1fr 1fr; }
     }
   </style>
   <div class="bug-report-overlay" id="bugReportOverlay" role="dialog" aria-modal="true" aria-labelledby="bugReportTitle">
@@ -15841,10 +15845,21 @@ html:is([data-study-domain="US"],[data-study-domain="CA"],[data-study-domain="AU
       <div class="bug-report-head">
         <div>
           <h2 class="bug-report-title" id="bugReportTitle">Report a problem</h2>
-          <div class="bug-report-kicker">GeoDen will package useful diagnostic information from just before you opened this report.</div>
+          <div class="bug-report-kicker" id="feedbackIntro">Share an idea or tell us about a problem.</div>
         </div>
         <button class="bug-report-close" id="bugReportCloseBtn" type="button">Close</button>
       </div>
+      <div class="feedback-tabs" role="group" aria-label="Feedback type">
+        <button class="bug-report-action" id="feedbackSuggestionTab" type="button">Share an idea</button>
+        <button class="bug-report-action" id="feedbackProblemTab" type="button">Report a problem</button>
+      </div>
+      <div id="feedbackSuggestionPane" hidden>
+        <label class="bug-report-label" for="feedbackSuggestionText">What would make GeoDen better?</label>
+        <textarea class="bug-report-description" id="feedbackSuggestionText" maxlength="2000" placeholder="Tell us your idea…"></textarea>
+        <a class="bug-report-action primary bug-report-email" id="feedbackSuggestionEmail" href="mailto:caydenjansen2@gmail.com?subject=GeoDen%20suggestion">Email your idea to Cayden</a>
+        <p class="bug-report-kicker">This opens an email draft. Nothing is sent automatically.</p>
+      </div>
+      <div id="feedbackProblemPane">
       <div class="bug-report-privacy">This report includes the GeoDen version, current game/session state, the most recent in-app actions, automatic self-test status, JavaScript errors, and basic browser/screen information. It does <strong>not</strong> include passwords, browsing history, your saved profile name, or a full copy of your GeoDen storage. Nothing is sent automatically.</div>
       <label class="bug-report-label" for="bugReportDescription">What went wrong?</label>
       <textarea class="bug-report-description" id="bugReportDescription" maxlength="2000" placeholder="Example: I tapped Forward after going Back and the question changed unexpectedly."></textarea>
@@ -15857,6 +15872,7 @@ html:is([data-study-domain="US"],[data-study-domain="CA"],[data-study-domain="AU
       <a class="beta-link" href="mailto:caydenjansen2@gmail.com?subject=GeoDen%20beta%20feedback">Email Cayden</a>
       <p class="bug-report-kicker">Copy the report and paste it into your email to caydenjansen2@gmail.com, or attach the downloaded report. Email opens a draft; nothing is sent automatically.</p>
       <div class="bug-report-status" id="bugReportStatus" role="status" aria-live="polite"></div>
+      </div>
     </div>
   </div>
 
@@ -16603,7 +16619,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
   <script src="assets/ranking-daily-snapshot-2026-10-10.js"></script>
 
   <script>
-    const GEODEN_VERSION = "0.56.114";
+    const GEODEN_VERSION = "0.56.115";
     // v0.56.28 — blank-surface audit: guarded silhouettes/location maps and Matching visual preflight.
     // v0.56.18 — private-beta problem reporting with diagnostic state, recent actions, errors, copy/download/share.
     // v0.56.17 — tester-facing automatic failure reporting with screenshot/copy instructions.
@@ -16613,7 +16629,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
     // v0.56.11 — behavioral Quiz-history regressions: exact Back/Forward restore and view-only historical prompts.
     // Input policy: autocomplete/typeahead is ordinary entry and remains unassisted.
     // Only an actual spelling correction (or an explicit hint/reveal) counts as help.
-    const GEODEN_BUILD_DATE = "2026-10-07";
+    const GEODEN_BUILD_DATE = "2026-10-12";
     const GEODEN_TEST_WORKER = window.parent !== window && window.name === 'geoden-self-test-worker';
 
     // v0.56.6 — Storage can be unavailable in privacy-restricted browsers,
@@ -17422,18 +17438,19 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
 
     function renderDailyFactsBar(fill,snapshot){
       if(!fill)return;
-      const track=fill.parentElement,denominator=Math.max(1,snapshot.goal,snapshot.facts);
+      const track=fill.parentElement,denominator=Math.max(1,snapshot.goal||snapshot.facts);
       const legacyHelp=Math.max(0,snapshot.assisted-snapshot.lightHelp-snapshot.heavyHelp);
       const categories=[['clean','No help','#39784e',snapshot.clean],['lightHelp','A little help','#88a75b',snapshot.lightHelp],['heavyHelp','Lots of help','#c09b3d',snapshot.heavyHelp],['assisted','Help used in an older result','#b08a39',legacyHelp],['missed','Missed or revealed','#995347',snapshot.missed]];
-      let remaining=snapshot.facts;
+      let remaining=Math.min(snapshot.facts,denominator);
+      const scale=snapshot.facts>denominator?denominator/snapshot.facts:1;
       fill.style.display='none';track.replaceChildren(fill);
       for(const[key,label,color,value]of categories){
-        const count=Math.min(remaining,Math.max(0,Math.floor(Number(value)||0)));
+        const count=Math.min(remaining,Math.max(0,Number(value)||0)*scale);
         remaining-=count;
         if(!count)continue;
         const segment=document.createElement('span');segment.className='daily-fact-segment daily-fact-'+key;
         segment.style.width=(100*count/denominator)+'%';segment.style.background=color;
-        segment.setAttribute('aria-hidden','true');segment.title=count+' '+label.toLowerCase();track.append(segment);
+        segment.setAttribute('aria-hidden','true');segment.title=value+' '+label.toLowerCase()+' today';track.append(segment);
       }
       if(remaining>0){const segment=document.createElement('span');segment.className='daily-fact-segment daily-fact-unclassified';segment.style.width=(100*remaining/denominator)+'%';segment.setAttribute('aria-hidden','true');segment.title=remaining+' earlier answers without a saved result';track.append(segment);}
       track.setAttribute('role',snapshot.goal ? 'progressbar' : 'img');track.setAttribute('aria-label','Practice steps today');
@@ -17525,16 +17542,24 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
 
     function recordDailyMatchingResults(state) {
       if (!state?.countries?.length || !state?.answerFields?.length) return;
-      let total = 0, clean = 0, lightHelp = 0;
+      let total = 0, clean = 0, lightHelp = 0, heavyHelp = 0;
       for (const country of state.countries) {
         for (const field of state.answerFields) {
           if (!ALL_STAGES.includes(field) || field === "historyFacts") continue;
           total += 1;
-          if (state.mistakeKeys.has(`${country.code}|${field}`)) lightHelp += 1;
+          const outcome=matchingSlotOutcome(state,country.code,field);
+          if(outcome==='heavy-help')heavyHelp += 1;
+          else if(outcome==='light-help')lightHelp += 1;
           else clean += 1;
         }
       }
-      recordDailyFactCounts({ total, clean, lightHelp, missed: 0 });
+      recordDailyFactCounts({ total, clean, lightHelp, heavyHelp, missed: 0 });
+    }
+    function matchingSlotOutcome(state,code,field){
+      const key=`${code}|${field}`;
+      if(!state.mistakeKeys?.has(key))return 'clean';
+      const distinct=[...(state.gradedWrongAssignments||[])].filter(value=>String(value).startsWith(key+'|')).length;
+      return distinct>=2?'heavy-help':'light-help';
     }
     const POLISH_PREFS_KEY = "flag-by-flag-polish-prefs-v1";
     const WORLD_ATLAS_CACHE_KEY = "flag-by-flag-world-atlas-110m-v1";
@@ -18513,6 +18538,8 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
         : { a: codes[0], b: codes[1], count: 0, stages: {}, directions: {} };
       entry.count = Math.max(0, Number(entry.count) || 0) + 1;
       entry.lastAt = Date.now();
+      entry.confirmedAfterMixup = {};
+      entry.resolvedAt = 0;
       entry.stages = entry.stages && typeof entry.stages === "object" ? entry.stages : {};
       entry.stages[stage] = Math.max(0, Number(entry.stages[stage]) || 0) + 1;
       entry.directions = entry.directions && typeof entry.directions === "object" ? entry.directions : {};
@@ -18522,9 +18549,22 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
       saveConfusionStats();
     }
 
+    function recordCountryDistinction(code,stage) {
+      let changed=false;
+      for(const pair of Object.values(confusionStats?.pairs||{})){
+        if(!pair||(pair.resolvedAt&&pair.resolvedAt>=pair.lastAt)||![pair.a,pair.b].includes(code))continue;
+        if(stage&&Object.keys(pair.stages||{}).length&&!pair.stages[stage])continue;
+        pair.confirmedAfterMixup ||= {};
+        pair.confirmedAfterMixup[code]=Date.now();
+        if(pair.confirmedAfterMixup[pair.a]>=pair.lastAt&&pair.confirmedAfterMixup[pair.b]>=pair.lastAt)pair.resolvedAt=Date.now();
+        changed=true;
+      }
+      if(changed)saveConfusionStats();
+    }
+
     function confusionPairList() {
       return Object.values(confusionStats?.pairs || {})
-        .filter(item => item && countries.some(c => c.code === item.a) && countries.some(c => c.code === item.b) && Number(item.count) > 0)
+        .filter(item => item && countries.some(c => c.code === item.a) && countries.some(c => c.code === item.b) && Number(item.count) > 0 && !(item.resolvedAt&&Number(item.resolvedAt)>=Number(item.lastAt||0)) && Date.now()-Number(item.lastAt||0)<30*86400000)
         .sort((a, b) => Number(b.count) - Number(a.count) || Number(b.lastAt) - Number(a.lastAt));
     }
 
@@ -19335,7 +19375,8 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
     function updateCustomCountrySetCount() {
       if (!customSetCount || !customSetSaveBtn) return;
       const count = [...customCountryDraft].filter(code => geographyEntityIncluded(countryByCode(code))).length;
-      customSetCount.textContent = `${count} ${count === 1 ? "place" : "places"} selected`;
+      const hidden = customCountryDraft.size - count;
+      customSetCount.textContent = `${count} ${count === 1 ? "place" : "places"} selected${hidden ? ` · ${hidden} saved but excluded by your Additional places setting` : ""}`;
       customSetSaveBtn.disabled = count === 0;
     }
 
@@ -19393,6 +19434,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
 
     function saveCustomCountrySetFromDraft() {
       if (!customCountryDraft.size) return;
+      // Hidden optional places remain selected for when the user enables them again.
       customCountryCodes = [...customCountryDraft];
       saveCustomCountryCodes();
       selectedCountrySet = "custom";
@@ -19452,7 +19494,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
       }
       if (smartReviewPoolMeta) {
         smartReviewPoolMeta.textContent = !reviewSupported
-          ? (menuPlayMode === "rapid" ? "Use Country deep dive" : `Not used in ${modeDisplayName(menuPlayMode)}`)
+          ? studyFocusUnavailableReason("review",menuPlayMode)
           : reviewPlan.dueFacts > 0
             ? `${reviewPlan.dueFacts} due now`
             : reviewCount > 0
@@ -19467,8 +19509,12 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
           (selectedCountryPool === "review" && (!reviewSupported || reviewCount === 0))
         )
       ) {
+        const previousFocus=selectedCountryPool;
         selectedCountryPool = "random";
         localStorage.setItem(COUNTRY_POOL_KEY, selectedCountryPool);
+        let notice=countryPoolPicker?.querySelector('.country-pool-fallback-note');
+        if(!notice&&countryPoolPicker){notice=document.createElement('p');notice.className='country-pool-fallback-note';notice.setAttribute('role','status');countryPoolPicker.append(notice);}
+        if(notice)notice.textContent=`${previousFocus==='fresh'?'Fresh':'Review'} isn’t available for this setup, so Study focus is now Random.`;
         if (selectedSessionMode === "unlimited") {
           selectedSessionMode = "finite";
           selectedSessionLimit = 5;
@@ -20216,7 +20262,9 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
         };
       }
 
-      if (fresh.length) {
+      // Alternate fresh material with weaker familiar places when both exist.
+      const focusRotation = Math.floor((Date.now() / 86400000)) % 2;
+      if (fresh.length && (!review.indices.length || focusRotation === 0)) {
         const count = Math.min(5, fresh.length);
         return {
           kind: "fresh", set, count,
@@ -22237,7 +22285,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
       return `Captured ${ctx.mode || "current screen"}${ctx.country ? ` · ${ctx.country.name}` : ""}${ctx.stage ? ` · ${ctx.stage}` : ""}\n${snapshot?.recentActions?.length || 0} recent actions · ${snapshot?.javascriptErrors?.length || 0} JavaScript errors · ${testText}`;
     }
 
-    function openGeoDenBugReport() {
+    function openGeoDenBugReport(mode='problem') {
       if (!bugReportOverlay) return;
       geoDenBugReportReturnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
       // Freeze the diagnostic moment before opening the report UI itself changes
@@ -22247,9 +22295,10 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
       if (bugReportSummary) bugReportSummary.textContent = geoDenBugReportSummaryText(geoDenBugReportDraft);
       if (bugReportStatus) bugReportStatus.textContent = "Nothing has been sent. Choose Copy, Download or Share when ready.";
       if (bugReportShareBtn) bugReportShareBtn.hidden = typeof navigator.share !== "function";
+      document.getElementById(mode==='suggestion'?'feedbackSuggestionTab':'feedbackProblemTab')?.click();
       bugReportOverlay.classList.add("open");
       geoDenDiagnosticLog("problem-report-opened", { recentActions:geoDenBugReportDraft.recentActions?.length || 0 });
-      geoDenFocusWhenOverlayOpen(bugReportOverlay, bugReportDescription, 0);
+      geoDenFocusWhenOverlayOpen(bugReportOverlay, mode==='suggestion'?document.getElementById('feedbackSuggestionText'):bugReportDescription, 0);
     }
 
     function closeGeoDenBugReport() {
@@ -22265,7 +22314,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
       const report = geoDenBugReportWithDescription();
       try {
         await geoDenCopyText(geoDenBugReportText(report));
-        if (bugReportStatus) bugReportStatus.textContent = "Copied. Send the pasted report to Cayden.";
+        if (bugReportStatus) bugReportStatus.textContent = "Copied. Paste it into an email to caydenjansen2@gmail.com.";
         geoDenDiagnosticLog("problem-report-copied");
       } catch (_) {
         if (bugReportStatus) bugReportStatus.textContent = "Copy failed in this browser. Try Download report or take a screenshot.";
@@ -22285,7 +22334,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
         link.click();
         link.remove();
         window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-        if (bugReportStatus) bugReportStatus.textContent = "Downloaded. Send the JSON file to Cayden.";
+        if (bugReportStatus) bugReportStatus.textContent = "Downloaded. Attach the JSON file to an email to caydenjansen2@gmail.com.";
         geoDenDiagnosticLog("problem-report-downloaded");
       } catch (_) {
         if (bugReportStatus) bugReportStatus.textContent = "Download failed in this browser. Try Copy report instead.";
@@ -24081,23 +24130,10 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
     }
 
     function flashHintStepCount(c, stage) {
-      if (stage === "capital" && hasMultipleCapitals(c)) {
-        const lengths = capitalNamesForCountry(c).map(name => countLetters(name));
-        return Math.max(0, ...lengths);
-      }
       return countLetters(hintAnswerForStage(c, stage));
     }
 
     function flashHintDisplay(c, stage, count) {
-      if (stage === "capital" && hasMultipleCapitals(c)) {
-        return capitalNamesForCountry(c)
-          .map(name => {
-            const letters = countLetters(name);
-            const shown = capitalPrefix(name, Math.min(count, letters));
-            return `${shown}${count < letters ? "…" : ""}`;
-          })
-          .join(" · ");
-      }
       const answer = hintAnswerForStage(c, stage);
       const shown = capitalPrefix(answer, count);
       return `${shown}${count < countLetters(answer) ? "…" : ""}`;
@@ -24112,9 +24148,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
 
       if (count === 0) {
         capitalHintText.textContent = "";
-        capitalHintBtn.textContent = hasMultipleCapitals(c) && stage === "capital"
-          ? "Hint · first letters · ↑"
-          : "Hint · first letter · ↑";
+        capitalHintBtn.textContent = "Hint · first letter · ↑";
         capitalHintBtn.disabled = total <= 0;
       } else {
         capitalHintText.textContent = `Starts with ${flashHintDisplay(c, stage, count)}`;
@@ -25771,7 +25805,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
       matchingDrawerNextBtn.disabled = count <= 1;
       updateMatchingCheckButton();
       const outcomes=[...matchingBoard.querySelectorAll('.matching-slot')].map(slot=>{
-        if(slot.classList.contains('correct'))return state.mistakeKeys.has(`${slot.dataset.countryCode}|${slot.dataset.field}`)?'light-help':'clean';
+        if(slot.classList.contains('correct'))return matchingSlotOutcome(state,slot.dataset.countryCode,slot.dataset.field);
         if(slot.classList.contains('wrong'))return 'missed';
         return slot.dataset.cardId?'pending':null;
       });
@@ -26115,9 +26149,9 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
       if(studySession?.launchPreset?.dailyKey){
         homeTickTimers();
         const outcomes=state.countries.flatMap(country=>state.answerFields.map(field=>
-          state.mistakeKeys.has(`${country.code}|${field}`)?"light-help":"clean"));
+          matchingSlotOutcome(state,country.code,field)));
         const correct=outcomes.filter(outcome=>outcome==="clean").length;
-        homeRecordDaily(studySession.launchPreset,100*(correct+.7*outcomes.filter(outcome=>outcome==="light-help").length)/Math.max(1,outcomes.length),studySession.homeElapsedMs||0,
+        homeRecordDaily(studySession.launchPreset,100*(correct+.7*outcomes.filter(outcome=>outcome==="light-help").length+.4*outcomes.filter(outcome=>outcome==="heavy-help").length)/Math.max(1,outcomes.length),studySession.homeElapsedMs||0,
           {correct,total:outcomes.length,outcomes});
       }
 
@@ -27182,7 +27216,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
       }
 
       state.found.add(canonicalTarget);
-      state.hints.delete(canonicalTarget);
+      // Retain used hints until this question is graded.
       interactiveInput.value = "";
       interactiveInput.classList.remove("wrong");
       interactiveInput.classList.add("correct");
@@ -27265,7 +27299,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
       }
 
       state.found.add(canonicalTarget);
-      state.hints.delete(canonicalTarget);
+      // Retain used hints until this question is graded.
       interactiveInput.value = "";
       interactiveInput.classList.remove("wrong");
       interactiveInput.classList.add("correct");
@@ -27348,7 +27382,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
       }
 
       state.found.add(canonicalTarget);
-      state.hints.delete(canonicalTarget);
+      // Retain used hints until this question is graded.
       interactiveInput.value = "";
       interactiveInput.classList.remove("wrong");
       interactiveInput.classList.add("correct");
@@ -27431,6 +27465,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
         previous.at = Date.now();
       }
       saveAttempt();
+      if(correct&&helpLevel==='clean')recordCountryDistinction(currentCountry()?.code,currentStage);
       hapticFeedback(correct ? "correct" : "wrong");
     }
 
@@ -29849,6 +29884,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
         at: Date.now()
       };
       saveAttempt();
+      if(correct&&helpLevel==='clean')recordCountryDistinction(currentCountry()?.code,currentStage);
       hapticFeedback(correct ? "correct" : "wrong");
 
       advanceAfterReveal();
@@ -29905,6 +29941,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
       else if (value > 0) stat.assistedEvents += 1;
       else stat.missedEvents += 1;
       stat.lastAt = Date.now();
+      if(value>=.95)recordCountryDistinction(code,GAME_MASTERY_META[skill].practiceStage);
       const source = String(options.source || "game");
       stat.sources[source] = Math.max(0, Number(stat.sources[source]) || 0) + 1;
       if (options.save !== false) saveSmartReview();
@@ -30221,17 +30258,21 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
           .map(([stage]) => stage)
           .find(stage => ALL_STAGES.includes(stage) && stage !== "historyFacts") || "country";
         const pairIndices = [a, b].map(country => countries.findIndex(item => item.code === country.code)).filter(index => index >= 0);
+        const direction=Object.entries(pair.directions||{}).sort((x,y)=>Number(y[1])-Number(x[1]))[0]?.[0]||'';
+        const [wanted,chosen]=direction.split('>');
+        const directionText=wanted&&chosen?`You chose ${countryByCode(chosen)?.name||chosen} for ${countryByCode(wanted)?.name||wanted}`:`${a.name} and ${b.name}`;
+        const stages=Object.keys(pair.stages||{}).filter(stage=>ALL_STAGES.includes(stage)&&stage!=='historyFacts');
         renderMasteryRow(
           masteryConfusionsList,
           `${a.name} ↔ ${b.name}`,
-          `${dominantConfusionStage(pair)} · last mixed up ${confusionDateLabel(pair.lastAt)}`,
+          `${directionText} · ${stages.map(masteryFieldLabel).join(', ')||dominantConfusionStage(pair)} · last mixed up ${confusionDateLabel(pair.lastAt)}`,
           `${Number(pair.count) || 0}×`,
           {
             actionLabel: "Practice",
             ariaLabel: `Practice ${a.name} and ${b.name}`,
             onPractice: () => startFocusedMasteryPractice(
               pairIndices,
-              { [a.code]: [practiceStage], [b.code]: [practiceStage] },
+              { [a.code]: stages.length?stages:[practiceStage], [b.code]: stages.length?stages:[practiceStage] },
               `${a.name} ↔ ${b.name}`
             )
           }
@@ -33092,16 +33133,13 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
       }
 
       if (!profile.factCount && profile.detectiveAttempts > 0 && !profile.gameEvents) {
-        const solveRate = Math.round(profile.detectiveCorrect / Math.max(1, profile.detectiveAttempts) * 100);
-        const avgScore = profile.detectiveAverageScore == null ? "—" : `${Math.round(profile.detectiveAverageScore)} pts`;
-        const bestClues = profile.detectiveBestClues == null ? "—" : `${profile.detectiveBestClues} clue${profile.detectiveBestClues === 1 ? "" : "s"}`;
         masteryMapCountryMeta.textContent = `${profile.detectiveAttempts} Detective case${profile.detectiveAttempts === 1 ? "" : "s"} played`;
         masteryMapDetailStats.replaceChildren();
         [
-          [`${solveRate}%`, "Cases solved"],
-          [avgScore, "Average score"],
-          [bestClues, "Best solve"],
-          ["—", "Review level"]
+          ["—", "Learning: answered right"],
+          ["—", "Right first try"],
+          ["—", "Practise next"],
+          ["0", "Ready to review"]
         ].forEach(([value, label]) => {
           const card = document.createElement("div");
           card.className = "mastery-map-detail-stat";
@@ -33117,7 +33155,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
         masteryMapFacts.replaceChildren();
         const note = document.createElement("div");
         note.className = "mastery-map-empty-detail";
-        note.textContent = "Try a quiz or flash card to see more about what you know here.";
+        note.textContent = "Detective shows you have explored this place. Try a learning question to measure what you know about its facts.";
         masteryMapFacts.appendChild(note);
         return;
       }
@@ -33134,12 +33172,7 @@ html.geoden-light body #startOverlay #discoveryLanding .discovery-card.challenge
       const directTypes = Math.max(0, Number(profile.directFactCount) || 0);
       masteryMapCountryMeta.textContent = `${directTypes} learning topic${directTypes === 1 ? "" : "s"} tried · ${profile.gameEvents || 0} game round${profile.gameEvents === 1 ? "" : "s"} played · ${dueText}`;
 
-      const stats = profile.gameEvents ? [
-        [clean, "Learning: right first try"],
-        [gameScore, "Average game result"],
-        [weak, "Practise next"],
-        [String(profile.dueStages.length), "Ready to review"]
-      ] : [
+      const stats = [
         [recall, "Learning: answered right"],
         [clean, "Right first try"],
         [weak, "Practise next"],
@@ -35709,7 +35742,7 @@ Answer: ${answer}`;
         .map(value => ({ value, rank: autocompleteMatchRank(value, query, queryAlias) }))
         .filter(item => item.rank < 99)
         .sort((a,b) => a.rank - b.rank || a.value.localeCompare(b.value))
-        .slice(0, 50);
+        .slice(0, query.length < 2 ? 8 : 20);
       if (!matches.length) {
         rapidSuggestions.classList.add("hidden");
         return;
@@ -36723,7 +36756,7 @@ Answer: ${answer}`;
         for (const key of universe) matchingConfig.enabled[key] = target.has(key);
         saveMatchingConfig();
       } else if (normalized === "detective") {
-        detectiveConfig.order = [...DEFAULT_DETECTIVE_CONFIG.order];
+        // A preset changes which clues are enabled, not the player's chosen order.
         const detectiveTarget = setName === "basic"
           ? new Set(DETECTIVE_RECOMMENDED_CLUES)
           : new Set(DETECTIVE_ALL_CLUES);
@@ -36745,6 +36778,8 @@ Answer: ${answer}`;
       renderSettingsRows();
       renderTunePresetUI();
       updatePlayModePicker();
+      if(normalized==='matching'&&matchingState&&matchingOverlay.classList.contains('open'))settingsWarning.textContent='These topic changes will start a new Matching board when you close Settings.';
+      else if(['standard','interactive'].includes(normalized)&&studySession?.active!==false)settingsWarning.textContent='Back and Forward history will be cleared when you close Settings.';
     }
 
     function shuffleEnabledTuneOrder() {
@@ -36837,10 +36872,12 @@ Answer: ${answer}`;
               : "Flash card";
       if (title) title.textContent = `Topics · ${modeLabel}`;
       if (subtitle) subtitle.textContent = settingsModeAtOpen === "detective"
-        ? "Choose clues and order."
+        ? "Choose clues and order. Changes apply to the next case."
         : settingsModeAtOpen === "rapid"
           ? "Choose clues and answers. Changes apply when you close this panel."
-          : "Choose what to include.";
+          : settingsModeAtOpen === "matching"
+            ? "Choose what to include. Changing topics starts a new board when you close this panel."
+            : "Choose what to include. Changing topics clears Back and Forward history.";
 
       renderSettingsRows();
       renderTunePresetUI();
@@ -36963,7 +37000,9 @@ Answer: ${answer}`;
           return;
         }
 
-        settingsWarning.textContent = "";
+        settingsWarning.textContent = matchingState&&matchingOverlay.classList.contains('open')
+          ? "This topic change will start a new Matching board when you close Settings."
+          : "";
         matchingConfig.enabled = proposed;
         saveMatchingConfig();
         renderTunePresetUI();
@@ -37007,7 +37046,9 @@ Answer: ${answer}`;
         return;
       }
 
-      settingsWarning.textContent = "";
+      settingsWarning.textContent = studySession?.active!==false&&['standard','interactive'].includes(settingsModeAtOpen)
+        ? "This topic change will clear Back and Forward history when you close Settings."
+        : "";
       if (settingsModeAtOpen === "rapid") {
         rapidConfig.enabled = proposed;
         saveRapidConfig();
@@ -37434,8 +37475,9 @@ function multiPromptPicker(select,sub=false,initialValue=select.value){
       const h=document.createElement('h3');h.textContent=s.revision?'✓ Review complete!':s.target==='capital'?'✓ Run complete!':'✓ Map complete!';
       const p=document.createElement('p');p.className='borderless-finish';p.textContent=s.target==='capital'?s.results.reduce((sum,r)=>sum+r.score,0)+' points · '+homeTime(s.elapsedMs):Math.round(s.results.reduce((sum,r)=>sum+r.score,0)/s.results.length)+'% score · '+homeTime(s.elapsedMs);
       const map=document.createElement('div');content.append(h,p);borderlessProgress(s,content);content.append(map);
-      const struggled=s.results.filter(r=>r.revealed||(s.target==='country'?r.score<100:r.score<50)).map(r=>r.code);
-      if(struggled.length){const review=document.createElement('button');review.type='button';review.className='borderless-secondary';review.textContent=`Review ${struggled.length} tricky ${struggled.length===1?'place':'places'} →`;review.onclick=()=>{borderlessRun={target:s.target,mapProgress:s.mapProgress,clue:s.clue,set:s.set,codes:struggled,index:0,results:[],misses:0,elapsedMs:0,revision:true};saveBorderlessRun();renderBorderlessRound();};content.append(review);}
+      const struggled=s.results.filter(r=>r.revealed||r.score<100).map(r=>r.code);
+      if(struggled.length){const review=document.createElement('button');review.type='button';review.className='borderless-secondary';review.textContent=`Review ${struggled.length} tricky ${struggled.length===1?'place':'places'} →`;review.onclick=()=>{borderlessRun={target:s.target,mapProgress:s.mapProgress,clue:s.clue,set:s.set,codes:struggled,index:0,results:[],misses:0,elapsedMs:0,revision:true,originalRun:clonePlain(s.originalRun||s)};saveBorderlessRun();renderBorderlessRound();};content.append(review);}
+      if(s.revision&&s.originalRun){const original=document.createElement('button');original.type='button';original.className='borderless-secondary';original.textContent='Back to original results';original.onclick=()=>{borderlessRun=clonePlain(s.originalRun);saveBorderlessRun();renderBorderlessRound();};content.append(original);}
       if(s.challenge){const best=document.createElement('p');best.textContent=homeRecordMapText(s);content.append(best);}
       if(s.dailyKey)content.append(homeDailyReport(s.target==='country'?'borderless-country':'borderless-capital',homeRecords.dailies[s.dailyKey]));
       const b=document.createElement('button');b.type='button';b.className='borderless-primary';b.textContent=s.challenge?'More challenges →':s.dailyKey?'Play a custom run':'Play again';
@@ -37620,6 +37662,7 @@ function scaleCapitalHistory(parent,scale){parent.selectAll('circle').attr('r',4
         setTimeout(()=>{if(token===borderlessRenderToken&&document.getElementById('borderlessOverlay').classList.contains('open'))renderBorderlessRound();},s.target==='capital'?2500:1400);}
       const map=await createBorderlessMap(host,c,s.target,{reuse:true,set:s.set,results:s.mapProgress==='blind'?[]:s.results,view:s.mapView,onView:view=>{s.mapView=view;},isCurrent:()=>token===borderlessRenderToken&&document.getElementById('borderlessOverlay').classList.contains('open'),onGuess:(r,api)=>{
         if(finished)return;if(s.target==='country'&&s.mapProgress!=='blind'&&s.results.some(result=>result.code===r.clickedCode)){feedback.textContent=r.clickedName+' · already filled';return;}if(s.target==='capital'){complete(r,api);return;}if(r.correct){r.score=mapTryScore({tries:Math.min(3,s.misses+1)});complete(r,api);return;}
+        if(r.clickedCode&&r.clickedCode!==c.code)recordCountryConfusion(c.code,r.clickedCode,s.target==='capital'?'capitalPosition':'country');
         s.misses++;saveBorderlessRun();if(s.misses>=3)complete({...r,score:0,revealed:true},api);else feedback.textContent=`${r.clickedName} · ${3-s.misses} guesses left${directionFor(r,api)}`;
       }});
       if(token!==borderlessRenderToken)return;
@@ -39096,12 +39139,31 @@ function studyCapitalPrompt(host,c,stage){if(!capitalPromptDetails||studySession
       geoDenFocusWhenOverlayOpen(searchOverlay, countrySearchInput, 20);
     });
 
-    bugReportMenuBtn?.addEventListener("click", openGeoDenBugReport);
-    bugReportSettingsBtn?.addEventListener("click", openGeoDenBugReport);
+    bugReportMenuBtn?.addEventListener("click", ()=>openGeoDenBugReport('suggestion'));
+    bugReportSettingsBtn?.addEventListener("click", ()=>openGeoDenBugReport('problem'));
     bugReportCloseBtn?.addEventListener("click", closeGeoDenBugReport);
     bugReportCopyBtn?.addEventListener("click", copyGeoDenBugReport);
     bugReportDownloadBtn?.addEventListener("click", downloadGeoDenBugReport);
     bugReportShareBtn?.addEventListener("click", shareGeoDenBugReport);
+    document.getElementById('feedbackSuggestionTab')?.addEventListener('click',()=>{
+      document.getElementById('feedbackSuggestionPane').hidden=false;
+      document.getElementById('feedbackProblemPane').hidden=true;
+      document.getElementById('bugReportTitle').textContent='Share an idea';
+      document.getElementById('feedbackIntro').textContent='Tell Cayden what would make GeoDen better.';
+      document.getElementById('feedbackSuggestionTab').setAttribute('aria-pressed','true');
+      document.getElementById('feedbackProblemTab').setAttribute('aria-pressed','false');
+    });
+    document.getElementById('feedbackProblemTab')?.addEventListener('click',()=>{
+      document.getElementById('feedbackSuggestionPane').hidden=true;
+      document.getElementById('feedbackProblemPane').hidden=false;
+      document.getElementById('bugReportTitle').textContent='Report a problem';
+      document.getElementById('feedbackIntro').textContent='GeoDen can package details that help us investigate.';
+      document.getElementById('feedbackSuggestionTab').setAttribute('aria-pressed','false');
+      document.getElementById('feedbackProblemTab').setAttribute('aria-pressed','true');
+    });
+    document.getElementById('feedbackSuggestionText')?.addEventListener('input',event=>{
+      document.getElementById('feedbackSuggestionEmail').href='mailto:caydenjansen2@gmail.com?subject=GeoDen%20suggestion&body='+encodeURIComponent(event.target.value);
+    });
     bugReportOverlay?.addEventListener("click", event => { if (event.target === bugReportOverlay) closeGeoDenBugReport(); });
 
     // Capture-phase logging records the state before a button handler changes it
@@ -40510,7 +40572,7 @@ function studyCapitalPrompt(host,c,stage){if(!capitalPromptDetails||studySession
         chainStatusTitle.textContent = `Current: ${current.name}`;
       }
       if (chainStatusMeta) {
-        const readyText = availability.available.size === 1 ? "1 route" : `${availability.available.size} routes`;
+        const readyText = availability.available.size === 1 ? "1 place available" : `${availability.available.size} places available`;
         chainStatusMeta.textContent = trail
           ? `${filledCount} of ${total} filled · ${readyText}${lostCount ? ` · ${lostCount} stranded` : ""}`
           : `${filledCount} of ${total} filled · ${availability.available.size === 1 ? "1 ready" : `${availability.available.size} ready`}`;
@@ -40522,7 +40584,7 @@ function studyCapitalPrompt(host,c,stage){if(!capitalPromptDetails||studySession
       if (chainWorldMap) {
         const ready = availability.available.size;
         chainWorldMap.setAttribute("aria-label", trail
-          ? `${countrySetDisplayName(chainState.setKey)} Trail Map Crawl map. Current place ${current?.name || "unknown"}. ${filledCount} of ${total} filled; ${ready} route${ready === 1 ? "" : "s"} available; ${lostCount} stranded.`
+          ? `${countrySetDisplayName(chainState.setKey)} Trail Map Crawl map. Current place ${current?.name || "unknown"}. ${filledCount} of ${total} filled; ${ready} place${ready === 1 ? "" : "s"} available; ${lostCount} stranded.`
           : `${countrySetDisplayName(chainState.setKey)} Map Crawl map. ${filledCount} of ${total} filled; ${ready} place${ready === 1 ? "" : "s"} ready.`);
       }
       if (chainGiveUpBtn) chainGiveUpBtn.disabled = !!chainState.finishedAt || availability.available.size === 0;
@@ -41735,17 +41797,19 @@ function studyCapitalPrompt(host,c,stage){if(!capitalPromptDetails||studySession
           }
           setQuizFlag(mapHuntPromptFlag, c, "Flag clue", () => {
             if (!mapHuntState || mapHuntState.finished || mapHuntCurrentCountry()?.code !== promptCode) return;
-            // If the flag CDN is unavailable, keep the round playable rather
-            // than forcing a blind answer. Fall back to the place-name prompt
-            // for this one question only.
+            // A missing clue must never quietly inflate a scored challenge.
+            // Keep the round playable, but do not save this challenge result.
             mapHuntPromptFlag.classList.add("hidden");
             mapHuntPromptFlag.style.visibility = "";
             mapHuntState.promptFallbackToName = true;
+            mapHuntState.flagUnavailable = true;
             mapHuntPromptText?.classList.remove("hidden");
             if (mapHuntPromptText) mapHuntPromptText.textContent = c.name;
             mapHuntState.locked = false;
             if (mapHuntFeedback) {
-              mapHuntFeedback.textContent = "Flag unavailable · using the place name for this one.";
+              mapHuntFeedback.textContent = mapHuntState.challenge
+                ? "Flag unavailable · using the place name. This challenge run won’t be scored; retry later."
+                : "Flag unavailable · using the place name for this one.";
               mapHuntFeedback.className = "map-hunt-feedback near";
             }
           });
@@ -42236,7 +42300,7 @@ function studyCapitalPrompt(host,c,stage){if(!capitalPromptDetails||studySession
         mapHuntFeedback.className = struggled.length ? "map-hunt-feedback near" : "map-hunt-feedback good";
       }
       if (mapHuntFinishTitle) mapHuntFinishTitle.textContent = mapHuntState.revision ? "Revision complete." : "Map complete.";
-      if (mapHuntFinishMeta) mapHuntFinishMeta.textContent = (mapHuntState.challenge && !mapHuntState.revision ? homeRecordMapText(mapHuntState)+' · ' : '')+mapHuntSummaryText();
+      if (mapHuntFinishMeta) mapHuntFinishMeta.textContent = (mapHuntState.flagUnavailable&&mapHuntState.challenge?'Not scored because a flag clue was unavailable · ':mapHuntState.challenge && !mapHuntState.revision ? homeRecordMapText(mapHuntState)+' · ' : '')+mapHuntSummaryText();
       homeStyleMapCompletion(mapHuntState,"maphunt");
       if (mapHuntRevisionBtn) {
         mapHuntRevisionBtn.classList.toggle("hidden", struggled.length === 0);
@@ -42938,7 +43002,8 @@ function studyCapitalPrompt(host,c,stage){if(!capitalPromptDetails||studySession
       mapHuntFinish?.classList.add("hidden");
       try {
         const baseCodes = options.challenge ? mapHuntChallengeCountries(options.challenge).map(c=>c.code) : mapHuntCodesForSet(mapHuntSet);
-        const allCodes = mapHuntTargetMode==='capital'?baseCodes.filter(code=>mapHuntCapitalCities(countryByCode(code)).length):baseCodes;
+        const allCodes = baseCodes.filter(code=>(mapHuntTargetMode!=='capital'||mapHuntCapitalCities(countryByCode(code)).length)&&
+          (!promptParts(mapHuntPromptMode).includes('capital')||mapHuntTargetMode==='capital'||!countryStageHasObviousNameAnswer(countryByCode(code),'capital')));
         if (!allCodes.length) throw new Error("No places available");
         const state = makeMapHuntState(allCodes, allCodes, false);
         state.challenge=options.challenge || null;
@@ -43531,7 +43596,7 @@ function rankingTargetValues() {
     function rankingOutcomeForCode(state,code){
       const first=new Set(state.firstCheckCorrectCodes||[]),known=new Set(state.knownCorrectCodes||[]),hinted=(state.hintedCodes||[]).includes(code);
       if(first.has(code))return hinted?'light-help':'clean';
-      if(known.has(code))return hinted?'heavy-help':'light-help';
+      if(known.has(code))return hinted||Number(state.firstCorrectCheck?.[code]||2)>2?'heavy-help':'light-help';
       return null;
     }
     function rankingDailyOutcomes(state=rankingState){
@@ -43556,7 +43621,7 @@ function rankingTargetValues() {
         if (revealed) score = firstCorrect.has(item.c.code) ? .55 : .15;
         else if (checks <= 1 && perfectFirstCheck && hints === 0) score = .9;
         else score = firstCorrect.has(item.c.code) ? .8 : .55;
-        if (hints) score = Math.max(.25, score - Math.min(.25, hints * .06));
+        if (hints && (rankingState.hintedCodes || []).includes(item.c.code)) score = Math.max(.25, score - Math.min(.25, hints * .06));
         // Ranking demonstrates relative/comparative knowledge, not exact-value
         // recall, so deliberately give it less weight than a direct answer.
         recordGameMasteryEvidence(item.c, skill, score, { weight:.45, source:"ranking", save:false });
@@ -43704,6 +43769,8 @@ function rankingTargetValues() {
         ? new Set(rankingState.knownCorrectCodes)
         : new Set(rankingState.knownCorrectCodes || []);
       const newlyConfirmed = new Set([...correctCodes].filter(code => !knownBefore.has(code)));
+      rankingState.firstCorrectCheck ||= {};
+      for(const code of newlyConfirmed)rankingState.firstCorrectCheck[code]=rankingState.checks;
       const knownCorrect = new Set([...knownBefore, ...correctCodes]);
       rankingState.checkedCorrectCodes = correctCodes;
       rankingState.knownCorrectCodes = knownCorrect;
@@ -43768,7 +43835,7 @@ function rankingTargetValues() {
         const items = options.launchPreset ? await homeRankingItems(options.launchPreset) : await buildRankingItems({ avoidPrevious, metric: roundMetric });
         if (token !== rankingBuildToken || !rankingOverlay?.classList.contains("open")) return;
         if (items.length < 2) throw new Error("Not enough values");
-        rankingState={ launchPreset:options.launchPreset || null, metric:roundMetric, setKey:options.launchPreset ? "world" : rankingSet, items, verified:false, revealed:false, checks:0, firstCheckCorrectCodes:null, firstCheckOrder:null, checkedCorrectCodes:null, knownCorrectCodes:new Set(), newlyConfirmedCodes:new Set(), hintedCodes:[], hints:0, masteryRecorded:false };
+        rankingState={ launchPreset:options.launchPreset || null, metric:roundMetric, setKey:options.launchPreset ? "world" : rankingSet, items, verified:false, revealed:false, checks:0, firstCheckCorrectCodes:null, firstCorrectCheck:{}, firstCheckOrder:null, checkedCorrectCodes:null, knownCorrectCodes:new Set(), newlyConfirmedCodes:new Set(), hintedCodes:[], hints:0, masteryRecorded:false };
         noteResumableMode("ranking");
         rankingLastRoundCodes = items.map(item => item.c.code);
         saveSpecialGamePrefs();
@@ -45699,13 +45766,13 @@ function rankingTargetValues() {
         if(chain.finishedAt){chain.finishTitle=chainState.needsHydration?chainState.finishTitle:chainFinishTitle.textContent;chain.finishMeta=chainState.needsHydration?chainState.finishMeta:chainFinishMeta.textContent;}
       }
       if (chain && chainState.timerStartedAt != null) chain.elapsedMs += Math.max(0,Date.now()-chainState.timerStartedAt);
-      const maphunt = specialRunPick(mapHuntState, 'challenge challengeRecorded homeElapsedMs setKey promptMode targetMode allCodes roundCodes results cursor misses awaitingRevealClick revision finished');
+      const maphunt = specialRunPick(mapHuntState, 'challenge challengeRecorded flagUnavailable homeElapsedMs setKey promptMode targetMode allCodes roundCodes results cursor misses awaitingRevealClick revision finished');
       // A correct-answer animation may still be pending when the page closes.
       if (maphunt && !maphunt.finished && maphunt.results.has(maphunt.roundCodes[maphunt.cursor])) {
         maphunt.cursor++; maphunt.misses=0; maphunt.awaitingRevealClick=false;
         maphunt.finished=maphunt.cursor>=maphunt.roundCodes.length;
       }
-      const ranking = specialRunPick(rankingState, 'launchPreset homeElapsedMs metric setKey verified revealed checks firstCheckCorrectCodes firstCheckOrder checkedCorrectCodes knownCorrectCodes newlyConfirmedCodes hintedCodes hints masteryRecorded savedFeedback');
+      const ranking = specialRunPick(rankingState, 'launchPreset homeElapsedMs metric setKey verified revealed checks firstCheckCorrectCodes firstCorrectCheck firstCheckOrder checkedCorrectCodes knownCorrectCodes newlyConfirmedCodes hintedCodes hints masteryRecorded savedFeedback');
       if (ranking) {
         ranking.items=rankingState.items.map(item=>({code:item.c.code,value:item.value}));
         if (rankingOverlay.classList.contains('open')) ranking.savedFeedback=rankingFeedback.textContent;
@@ -46268,7 +46335,7 @@ function rankingTargetValues() {
       homeRecordDaily(preset,score,session.homeElapsedMs||0,{correct:metrics.correct,total:metrics.total,clues:session.detective?.round?.revealedCount||0});
     }
     function homeRecordMap(state,mode){
-      const spec=homeChallengeSpec(state?.challenge?.id);if(!spec||state.revision||state.challengeRecorded)return;
+      const spec=homeChallengeSpec(state?.challenge?.id);if(!spec||state.revision||state.challengeRecorded||state.flagUnavailable)return;
       const complete=mode==='maphunt'?state.results.size===state.roundCodes.length:chainFilledCodes().size===state.codes.length;if(!complete)return;
       let total,clean,score,tries=null;if(mode==='maphunt'){total=state.roundCodes.length;const outcomes=state.roundCodes.map(code=>state.results.get(code));clean=outcomes.filter(r=>r&&!r.revealed&&r.tries===1).length;score=Math.round(outcomes.reduce((sum,r)=>sum+mapTryScore(r),0)/Math.max(1,total));tries=outcomes.map(r=>r?.revealed?4:r?.tries||4);}else{total=(state.codes.length-1)*(state.answerMode==='both'?2:1);clean=state.challengeClean||0;const values=[...(state.partOutcomes?.values()||[])];score=values.length?Math.round(values.reduce((sum,value)=>sum+({clean:100,'light-help':70,'heavy-help':40,missed:0}[value]||0),0)/Math.max(1,total)):Math.round(100*clean/Math.max(1,total));}
       const result={correct:clean,total,score,tries,elapsedMs:mode==='chain'?chainElapsedMs():(state.homeElapsedMs||0),completedAt:Date.now(),grading:'weighted-v1'},record=homeRecords.challenges[spec.id]||{plays:0},best=record.best;
@@ -46449,7 +46516,7 @@ function subValidateStore(v){
  }
  return v;
 }
-function subChallengeParts(id){const p=String(id).split(':');return p.length===5&&p[0]==='sub1'&&['maphunt','borderless'].includes(p[1])&&['name','flag','capital'].includes(p[2])&&['location','capitalLocation'].includes(p[3])&&!(p[1]==='borderless'&&p[3]==='capitalLocation')&&SUB_SET_IDENTITIES.includes(p[4])?{mode:p[1],clue:p[2],target:p[3],set:p[4]}:null;}
+function subChallengeParts(id){const p=String(id).split(':');return p.length===5&&p[0]==='sub1'&&['maphunt','borderless'].includes(p[1])&&['name','flag','capital'].includes(p[2])&&['location','capitalLocation'].includes(p[3])&&SUB_SET_IDENTITIES.includes(p[4])?{mode:p[1],clue:p[2],target:p[3],set:p[4]}:null;}
 function subSave(){subStore.run&&(subStore.run.updatedAt=Date.now());localStorage.setItem(SUBDIVISION_PLAY_KEY,JSON.stringify(subStore));}
 function subMode(mode){return ['rapid','interactive'].includes(mode)?'quiz':mode;}
 function subLabel(parent){return parent==='US'?'US states':parent==='AU'?'Australian states & territories':'Canadian provinces & territories';}
@@ -46470,7 +46537,7 @@ async function subReady(){subData=await loadGeoDenSubdivisions();return subData;
 async function subPreflight(queue,parent){await subData.loadGeometry(parent);if(queue.some(q=>q.clue==='flag'||q.topic==='flag'))await Promise.all([...new Set(queue.map(q=>q.id))].map(id=>new Promise((resolve,reject)=>{const image=new Image(),timer=setTimeout(()=>reject(Error('Flag assets unavailable; please retry.')),8000);image.onload=()=>{clearTimeout(timer);resolve();};image.onerror=()=>{clearTimeout(timer);reject(Error('Flag asset missing for '+subData.get(id).name));};image.src=subData.flagUrl(id);})));}
 async function subOpenSetup(mode,parent,options={}){
  mode=subMode(mode);if(!SUB_MODES[mode])return;const token=++subToken;subShow();subHost.dataset.play='false';subHost.dataset.screen='setup';const panel=subFrame(SUB_MODES[mode]);panel.append(subEl('p','Loading study set…','sub-status'));
- try{await subReady();if(token!==subToken)return;subSetup={mode,parent,set:parent==='US'?'us-states':parent==='AU'?'australia-states-territories':'canada-provinces-territories',clue:'name',target:'location',...options};subRenderSetup();}catch(e){if(token===subToken){panel.lastChild.textContent='Study set unavailable. Check that the complete assets folder was uploaded.';panel.append(subButton('Try again',()=>subOpenSetup(mode,parent,options)));}}
+ try{await subReady();if(token!==subToken)return;const remembered=JSON.parse(localStorage.getItem('geoden-subdivision-setup-v1')||'{}');const previous=remembered[`${mode}:${parent}`]||{};subSetup={mode,parent,set:parent==='US'?'us-states':parent==='AU'?'australia-states-territories':'canada-provinces-territories',clue:'name',target:'location',...previous,...options};subRenderSetup();}catch(e){if(token===subToken){panel.lastChild.textContent='Study set unavailable. Check that the complete assets folder was uploaded.';panel.append(subButton('Try again',()=>subOpenSetup(mode,parent,options)));}}
 }
 function subSelect(parent,label,values,value){const wrap=subEl('label',undefined,'sub-field');wrap.append(subEl('span',label));const select=document.createElement('select');for(const [val,text]of values){const opt=subEl('option',text);opt.value=val;select.append(opt);}select.value=value;wrap.append(select);parent.append(wrap);return select;}
 function subRenderSetup(){
@@ -46478,8 +46545,7 @@ function subRenderSetup(){
  if(['maphunt','borderless'].includes(c.mode)&&!fixed&&!c.custom){
   const grid=subEl('div',undefined,'discovery-grid');panel.append(grid);
   if(c.chooseRegion){panel.insertBefore(subButton('← Topics',()=>subOpenSetup(c.mode,c.parent)),grid);panel.insertBefore(subEl('h3',(c.clue==='name'?'Names':SUB_TOPICS[c.clue])+' · '+(c.target==='location'?'Find the '+subNoun(c.parent):'Capital city dots')),grid);for(const [set,meta]of Object.entries(SUB_SETS).filter(([id,x])=>x.parent===c.parent&&(!id.startsWith('us-')||id==='us-states')))grid.append(subChallengeCard(c.mode,c.clue,c.target,set));}
-  else for(const target of c.mode==='maphunt'?['location','capitalLocation']:['location']){grid.append(subEl('h4',target==='location'?(c.mode==='borderless'?'Locations · no borders':'Locations · tap the shapes'):'Capital city locations · tap the dots','hunt-challenge-group'));for(const clue of ['name','flag','capital']){const variant=(target==='capitalLocation'?'city-':'')+(clue==='name'?'country':clue),progress=subChallengeProgress(c.mode,variant);grid.append(homeProgressCard(clue==='name'?(c.parent==='US'?'State names':c.parent==='AU'?'State & territory names':'Province & territory names'):SUB_TOPICS[clue]+'s',{...progress,percent:Math.round(100*progress.completed/progress.total)},()=>subOpenSetup(c.mode,c.parent,{clue,target,chooseRegion:true}),clue==='name'?'country':clue));}}
-  if(c.mode==='borderless'&&!c.chooseRegion)panel.append(homeButton('Pinpoint the capitals','Short distance-scoring runs · choose 5, 10 or all',()=>subOpenSetup(c.mode,c.parent,{custom:true,target:'capitalLocation'})));
+  else for(const target of ['location','capitalLocation']){grid.append(subEl('h4',target==='location'?(c.mode==='borderless'?'Locations · no borders':'Locations · tap the shapes'):'Capital city locations · tap the dots','hunt-challenge-group'));for(const clue of ['name','flag','capital']){const variant=(target==='capitalLocation'?'city-':'')+(clue==='name'?'country':clue),progress=subChallengeProgress(c.mode,variant);grid.append(homeProgressCard(clue==='name'?(c.parent==='US'?'State names':c.parent==='AU'?'State & territory names':'Province & territory names'):SUB_TOPICS[clue]+'s',{...progress,percent:Math.round(100*progress.completed/progress.total)},()=>subOpenSetup(c.mode,c.parent,{clue,target,chooseRegion:true}),clue==='name'?'country':clue));}}
   const custom=subEl('section',undefined,'discovery-custom-section');const b=homeButton('Custom game','Choose your clue, map target and length',()=>subOpenSetup(c.mode,c.parent,{custom:true}));b.classList.add('discovery-custom-card');custom.append(b);panel.append(custom);return;
  }
  const form=subEl('form',undefined,'sub-setup');panel.append(form);
@@ -46499,7 +46565,7 @@ function subRenderSetup(){
  if(['quiz','standard'].includes(c.mode))capitalPromptSettings(form);
  const help=subEl('p',undefined,'sub-status');help.setAttribute('role','status');form.append(help);
  const start=subButton(fixed?'Start challenge →':'Start '+SUB_MODES[c.mode]+' →',null,'sub-primary');start.type='submit';form.append(start);start.disabled=true;setTimeout(()=>{if(start.isConnected)start.disabled=false;},350);
- form.onsubmit=async e=>{e.preventDefault();if(subBusy)return;const selected=topics.filter(x=>x.checked&&!x.disabled).map(x=>x.value);if(topics.length&&!selected.length){help.textContent='Choose at least one answer topic.';return;}if(c.mode==='matching'&&selected.length>3){help.textContent='Choose up to three matching topics.';return;}if(subStore.run&&!subStore.run.finished&&start.dataset.confirm!=='yes'){start.dataset.confirm='yes';help.textContent='Starting this replaces your unfinished subdivision session. Country sessions are kept.';start.textContent='Replace session & start →';return;}subBusy=true;start.disabled=true;try{await subStart({...c,set:set.value,clue:clue.value,target:target?.value,topics:selected,style:style?.value||'mixed',answer:answer?.value||'choices',count:fixed?'all':length.value,mapProgress:mapProgress&&target.value==='location'?mapProgress.value:'fill'});}catch(err){help.textContent='Could not start: '+err.message;start.disabled=false;}finally{subBusy=false;}};
+ form.onsubmit=async e=>{e.preventDefault();if(subBusy)return;const selected=topics.filter(x=>x.checked&&!x.disabled).map(x=>x.value);if(topics.length&&!selected.length){help.textContent='Choose at least one answer topic.';return;}if(c.mode==='matching'&&selected.length>3){help.textContent='Choose up to three matching topics.';return;}if(subStore.run&&!subStore.run.finished&&start.dataset.confirm!=='yes'){start.dataset.confirm='yes';help.textContent='Starting this replaces your unfinished subdivision session. Country sessions are kept.';start.textContent='Replace session & start →';return;}subBusy=true;start.disabled=true;try{const selectedSetup={...c,set:set.value,clue:clue.value,target:target?.value,topics:selected,style:style?.value||'mixed',answer:answer?.value||'choices',count:fixed?'all':length.value,mapProgress:mapProgress&&target.value==='location'?mapProgress.value:'fill'};if(!fixed){const remembered=JSON.parse(localStorage.getItem('geoden-subdivision-setup-v1')||'{}');remembered[`${c.mode}:${c.parent}`]={set:selectedSetup.set,clue:selectedSetup.clue,target:selectedSetup.target,mapProgress:selectedSetup.mapProgress,custom:true};localStorage.setItem('geoden-subdivision-setup-v1',JSON.stringify(remembered));}await subStart(selectedSetup);}catch(err){help.textContent='Could not start: '+err.message;start.disabled=false;}finally{subBusy=false;}};
 }
 async function subStart(c){
  const generation=subToken;
