@@ -15798,6 +15798,7 @@ html:is([data-study-domain="US"],[data-study-domain="CA"],[data-study-domain="AU
           <div class="map-hunt-finish-meta" id="mapHuntFinishMeta"></div>
           <div class="map-hunt-finish-actions">
             <button class="map-hunt-revision hidden" id="mapHuntRevisionBtn" type="button">Revise struggled places →</button>
+            <button class="map-hunt-change hidden" id="mapHuntOriginalResultBtn" type="button">Back to original results</button>
             <button class="map-hunt-replay" id="mapHuntReplayBtn" type="button">Play again</button>
             <button class="map-hunt-change" id="mapHuntChangeBtn" type="button">Change setup</button>
           </div>
@@ -16103,6 +16104,12 @@ html:is([data-study-domain="US"],[data-study-domain="CA"],[data-study-domain="AU
     #startOverlay .start-panel > * {
       box-sizing:border-box; width:100%; min-width:0; margin-inline:0;
       grid-column:1 !important; grid-row:auto !important;
+    }
+    /* Full-page overlays scroll as one surface. An unconstrained inner panel
+       must not trap desktop wheel events with overscroll-behavior:contain. */
+    html body :is(#startOverlay,#detectiveOverlay,#rapidOverlay,#sprintOverlay,#chainFillOverlay,#mapHuntOverlay,#rankingOverlay,#borderlessOverlay,#subdivisionOverlay).open > :is(.start-panel,.detective-panel,.rapid-panel,.sprint-panel,.chain-panel,.map-hunt-panel,.ranking-panel,.borderless-panel,.sub-panel) {
+      overflow:visible !important;
+      overscroll-behavior-y:auto !important;
     }
     /* Today is a transparent wrapper, not an inset card. Its progress track
        and nested Daily card must reach the same edges as the other sections. */
@@ -16715,7 +16722,7 @@ window.GeoDenBorderlessLakes=[{"type":"Feature","geometry":{"type":"Polygon","co
 window.GeoDenDailyRankingSnapshot = {"schema":1,"asOf":"2026-10-10","provider":"World Bank, World Development Indicators","license":"CC BY 4.0","populationIndicator":"SP.POP.TOTL","areaIndicator":"AG.SRF.TOTL.K2","sourceUpdated":{"population":"2026-10-08","area":"2026-10-08"},"sources":{"population":"https://api.worldbank.org/v2/country/all/indicator/SP.POP.TOTL?format=json&mrnev=1&per_page=500","area":"https://api.worldbank.org/v2/country/all/indicator/AG.SRF.TOTL.K2?format=json&mrnev=1&per_page=500"},"values":{"AF":[43844111,2025,652870,2024],"AL":[2349580,2025,28750,2024],"DZ":[47435312,2025,2381740,2024],"AD":[82904,2025,468,2024],"AO":[39040039,2025,1246700,2024],"AG":[94209,2025,440.298,2024],"AR":[45851378,2025,2780400,2024],"AM":[3086700,2025,29740,2024],"AU":[27614411,2025,7741220,2024],"AT":[9208163,2025,83879,2024],"AZ":[10246996,2025,86600,2024],"BS":[403033,2025,13878,2024],"BH":[1600366,2025,800,2024],"BD":[175686899,2025,147570,2024],"BB":[282623,2025,431,2024],"BY":[9085991,2025,207629,2024],"BE":[11941781,2025,30689.17,2024],"BZ":[422924,2025,22966,2024],"BJ":[14814460,2025,114760,2024],"BT":[796682,2025,38390,2024],"BO":[12581843,2025,1098580,2024],"BA":[3140095,2025,51210,2023],"BW":[2562122,2025,581730,2024],"BR":[212812405,2025,8510420,2024],"BN":[466330,2025,5770,2024],"BG":[6433302,2025,111000,2024],"BF":[24074580,2025,274200,2024],"BI":[14390003,2025,27834,2024],"CV":[527326,2025,4030,2024],"KH":[17847982,2025,181035,2024],"CM":[29879337,2025,475442,2024],"CA":[41651653,2025,15634410,2024],"CF":[5513282,2025,622980,2024],"TD":[21003705,2025,1284000,2024],"CL":[19859921,2025,756556.4,2024],"CN":[1406585000,2025,9562910,2024],"CO":[53425635,2025,1140619.1,2024],"KM":[882847,2025,1869.7,2024],"CR":[5152950,2025,51100,2024],"CI":[32711547,2025,322460,2024],"HR":[3876200,2025,88070,2024],"CU":[10937203,2025,109884.01,2024],"CY":[1370754,2025,9250,2024],"CZ":[10886878,2025,78871.42,2024],"CD":[112832473,2025,2345410,2024],"DK":[6009169,2025,42920,2024],"DJ":[1184076,2025,23200,2024],"DM":[65871,2025,751,2024],"DO":[11520487,2025,146839.46,2024],"EC":[18289896,2025,256370,2024],"EG":[118365995,2025,1001450,2024],"SV":[6365503,2025,21040,2024],"GQ":[1938431,2025,28051.5,2024],"ER":[3607003,2025,121630,2024],"EE":[1366475,2025,45340,2024],"SZ":[1256174,2025,17364,2024],"ET":[135472051,2025,1129818.8,2024],"FJ":[933154,2025,18333,2024],"FI":[5646436,2025,338485,2024],"FR":[68720337,2025,606410,2024],"GA":[2593130,2025,267670,2024],"GM":[2822093,2025,11295,2024],"GE":[3935766,2025,69700,2024],"DE":[83491249,2025,357680,2024],"GH":[35064272,2025,238539,2024],"GR":[10413962,2025,131960,2024],"GD":[117303,2025,344,2024],"GT":[18687881,2025,108889,2024],"GN":[15099727,2025,245857,2024],"GW":[2249515,2025,36125,2024],"GY":[835986,2025,214970,2024],"HT":[11906095,2025,27750,2024],"HN":[11005850,2025,112492,2024],"HU":[9514251,2025,93030,2024],"IS":[392404,2025,103000,2024],"IN":[1463865525,2025,3287263,2024],"ID":[285721236,2025,1916906.8,2024],"IR":[92417681,2025,1745150,2024],"IQ":[47020774,2025,435050,2024],"IE":[5484367,2025,70280,2024],"IL":[10122800,2025,22070,2024],"IT":[58915656,2025,302070,2024],"JM":[2837077,2025,10991,2024],"JP":[123366734,2025,377974.71,2024],"JO":[11520684,2025,89318,2024],"KZ":[20843754,2025,2724902,2024],"KE":[57532493,2025,591970,2024],"KI":[136488,2025,811,2024],"KW":[4865298,2025,17820,2024],"KG":[7343064,2025,199950,2024],"LA":[7873046,2025,236800,2024],"LV":[1847785,2025,64590,2024],"LB":[5849421,2025,10452,2024],"LS":[2363325,2025,30360,2024],"LR":[5731206,2025,111370,2024],"LY":[7458555,2025,1759540,2024],"LI":[41024,2025,160,2024],"LT":[2888774,2025,65290,2024],"LU":[686970,2025,2590,2024],"MG":[32740678,2025,591896,2024],"MW":[22216120,2025,118484,2024],"MY":[35977838,2025,330534,2024],"MV":[529676,2025,300,2024],"ML":[25198821,2025,1241238,2024],"MT":[579704,2025,315.15,2024],"MH":[36282,2025,181,2024],"MR":[5315065,2025,1030700,2024],"MU":[1243741,2025,2010,2024],"MX":[131946900,2025,1957193.9,2024],"FM":[113683,2025,701,2024],"MD":[2360527,2025,33849,2024],"MC":[38341,2025,74.9,2024],"MN":[3568978,2025,1564115.746,2024],"ME":[623129,2025,13883,2024],"MA":[38430770,2025,446550,2024],"MZ":[35631653,2025,799380,2024],"MM":[54850648,2025,676578,2024],"NA":[3092816,2025,824292,2024],"NR":[12025,2025,21,2024],"NP":[29618118,2025,147181,2024],"NL":[18087633,2025,41540,2024],"NZ":[5324700,2025,267710,2024],"NI":[7007502,2025,130370,2023],"NE":[27917831,2025,1267000,2024],"NG":[237527782,2025,923768,2024],"KP":[26571036,2025,120540,2024],"MK":[1820909,2025,25713,2024],"NO":[5610870,2025,624500,2024],"OM":[5494691,2025,309500,2024],"PK":[255219554,2025,796100,2024],"PW":[17663,2025,460,2024],"PS":[5413596,2025,6025,2024],"PA":[4571189,2025,75320,2024],"PG":[10762817,2025,462840,2024],"PY":[7013078,2025,406752,2024],"PE":[34576665,2025,1285215.6,2024],"PH":[116786962,2025,300000,2024],"PL":[36435861,2025,313940,2024],"PT":[10804871,2025,92230,2024],"QA":[2972215,2025,11636.8,2024],"CG":[6484437,2025,342000,2024],"RO":[19020271,2025,238397,2024],"RU":[143513328,2025,17125190,2024],"RW":[14569341,2025,26340,2024],"KN":[46922,2025,261,2024],"LC":[180149,2025,616,2024],"VC":[99924,2025,389,2024],"WS":[219306,2025,2840,2024],"SM":[34109,2025,61.2,2024],"ST":[240254,2025,960,2024],"SA":[36973555,2025,2149690,2024],"SN":[18931966,2025,196710,2024],"RS":[6549143,2025,88490,2024],"SC":[122730,2025,457,2024],"SL":[8819794,2025,72300,2024],"SG":[6111175,2025,735.6,2024],"SK":[5413813,2025,49030,2024],"SI":[2130986,2025,20480,2024],"SB":[838645,2025,28446,2024],"SO":[19654739,2025,637657,2024],"ZA":[64747319,2025,1219602,2024],"KR":[51684564,2025,100460,2024],"SS":[12188788,2025,646883,2024],"ES":[49355143,2025,505981.25,2024],"LK":[21756000,2025,65610,2024],"SD":[51662147,2025,1878000,2024],"SR":[639850,2025,163820,2024],"SE":[10596620,2025,528860,2024],"CH":[9092436,2025,41290.7,2024],"SY":[25620427,2025,185180,2024],"TJ":[10786734,2025,141379,2024],"TZ":[70545865,2025,945500,2024],"TH":[71619863,2025,513115,2024],"TL":[1418517,2025,14870,2024],"TG":[8591626,2025,56785,2024],"TO":[103742,2025,749,2024],"TT":[1367764,2025,5128,2024],"TN":[12348573,2025,163610,2024],"TR":[85878556,2025,785350,2024],"TM":[7618847,2025,491209,2024],"TV":[9492,2025,26,2024],"UG":[51384894,2025,241551,2024],"UA":[38980376,2025,603550,2024],"AE":[11513149,2025,98647.9,2024],"GB":[69487000,2025,243610,2024],"US":[341784857,2025,9831510,2024],"UY":[3384688,2025,176215,2024],"UZ":[37053428,2025,448923,2024],"VU":[335169,2025,12189,2024],"VE":[28516896,2025,912050,2024],"VN":[101598527,2025,331338.31,2024],"YE":[41773878,2025,527968,2024],"ZM":[21913874,2025,752612,2024],"ZW":[16950795,2025,390760,2024]}};</script>
 
   <script>
-    const GEODEN_VERSION = "0.56.129";
+    const GEODEN_VERSION = "0.56.131";
     const GEODEN_PLAY_URL = "https://caydenjansen.github.io/geoden/";
     // v0.56.28 — blank-surface audit: guarded silhouettes/location maps and Matching visual preflight.
     // v0.56.18 — private-beta problem reporting with diagnostic state, recent actions, errors, copy/download/share.
@@ -17543,6 +17550,8 @@ window.GeoDenDailyRankingSnapshot = {"schema":1,"asOf":"2026-10-10","provider":"
       let remaining=Math.min(snapshot.facts,denominator);
       const scale=snapshot.facts>denominator?denominator/snapshot.facts:1;
       fill.style.display='none';track.replaceChildren(fill);
+      track.hidden=snapshot.goal===0;
+      track.style.display=snapshot.goal===0?'none':'';
       for(const[key,label,color,value]of categories){
         const count=Math.min(remaining,Math.max(0,Number(value)||0)*scale);
         remaining-=count;
@@ -20465,7 +20474,7 @@ window.GeoDenDailyRankingSnapshot = {"schema":1,"asOf":"2026-10-10","provider":"
       startStudySession("finite", 10, "rapid", "daily", "world");
     }
 
-    function handleDailyChallengeButton() {
+    async function handleDailyChallengeButton() {
       const key = dailyChallengeRunKey();
       // Starting today's challenge can replace an older run only after the
       // ordinary explicit replacement confirmation below. Its Resume stays valid.
@@ -20475,7 +20484,7 @@ window.GeoDenDailyRankingSnapshot = {"schema":1,"asOf":"2026-10-10","provider":"
         return;
       }
 
-      if (hasActiveStudyRun() && !window.confirm('Start today’s quiz? This will replace your unfinished run.')) return;
+      if (hasActiveStudyRun() && !await geoDenConfirm('Replace unfinished run?','Starting today’s Quiz will replace your unfinished learning session.','Replace run')) return;
       startDailyChallengeSession();
     }
 
@@ -26695,11 +26704,14 @@ window.GeoDenDailyRankingSnapshot = {"schema":1,"asOf":"2026-10-10","provider":"
       return setInteractiveSuggestionIndex((interactiveSuggestionIndex + direction + buttons.length) % buttons.length);
     }
 
+    function autocompleteChoiceIndex(optionCount, selectedIndex) {
+      return selectedIndex >= 0 && selectedIndex < optionCount ? selectedIndex : optionCount === 1 ? 0 : -1;
+    }
+
     function chooseInteractiveSuggestion() {
       if (interactiveSuggestions.classList.contains("hidden")) return false;
       const buttons = interactiveSuggestionButtons();
-      let choiceIndex = interactiveSuggestionIndex;
-      if (choiceIndex < 0) return false; // Enter submits typed text unless an option was explicitly selected.
+      const choiceIndex = autocompleteChoiceIndex(buttons.length, interactiveSuggestionIndex);
       if (choiceIndex < 0 || !buttons[choiceIndex]) return false;
       interactiveInput.value = buttons[choiceIndex].dataset.value || buttons[choiceIndex].textContent || "";
       interactiveSuggestions.classList.add("hidden");
@@ -26797,7 +26809,7 @@ window.GeoDenDailyRankingSnapshot = {"schema":1,"asOf":"2026-10-10","provider":"
           interactiveInput.value = match.value;
           interactiveSuggestions.classList.add("hidden");
           resetInteractiveSuggestionSelection();
-          interactiveInput.focus();
+          submitInteractiveTextAnswer();
         });
         interactiveSuggestions.appendChild(button);
       }
@@ -30515,7 +30527,7 @@ window.GeoDenDailyRankingSnapshot = {"schema":1,"asOf":"2026-10-10","provider":"
       }
     }
     function renderProgressOverview(snapshot){
-      const plan=progressRecommendation(snapshot);document.getElementById('progressRecommendationTitle').textContent=plan.title;masteryNextReview.textContent=plan.copy;masteryReviewNowBtn.textContent=plan.action;masteryReviewNowBtn.disabled=false;delete masteryReviewNowBtn.dataset.replaceUntil;
+      const plan=progressRecommendation(snapshot);document.getElementById('progressRecommendationTitle').textContent=plan.title;const reviewSet=selectedCountrySet||'world';masteryNextReview.textContent=plan.kind==='review'&&reviewSet!=='world'?`${countrySetDisplayName(reviewSet)} study set · ${plan.copy}`:plan.copy;masteryReviewNowBtn.textContent=plan.action;masteryReviewNowBtn.disabled=false;delete masteryReviewNowBtn.dataset.replaceUntil;
       const universe=countrySetIndices('world').length,track=masteryOverlay.querySelector('.mastery-progress-track');masteryCoverageText.textContent=snapshot.studied+' of '+universe;
       track.setAttribute('aria-valuemin','0');track.setAttribute('aria-valuemax',String(universe));track.setAttribute('aria-valuenow',String(snapshot.studied));track.setAttribute('aria-valuetext',snapshot.studied+' of '+universe+' places practised');
       const direct=snapshot.fields.filter(item=>item.kind==='direct'&&item.field!=='historyFacts');
@@ -34669,7 +34681,7 @@ window.GeoDenDailyRankingSnapshot = {"schema":1,"asOf":"2026-10-10","provider":"
           detectiveInput.value = item.country.name;
           detectiveSuggestions.classList.add("hidden");
           detectiveSuggestionIndex = -1;
-          detectiveInput.focus();
+          submitDetectiveGuess();
         });
         detectiveSuggestions.appendChild(button);
       });
@@ -34688,8 +34700,7 @@ window.GeoDenDailyRankingSnapshot = {"schema":1,"asOf":"2026-10-10","provider":"
     function chooseDetectiveSuggestion() {
       if (detectiveSuggestions.classList.contains("hidden")) return false;
       const options = [...detectiveSuggestions.querySelectorAll(".detective-suggestion")];
-      let choiceIndex = detectiveSuggestionIndex;
-      if (choiceIndex < 0 && options.length) choiceIndex = 0;
+      const choiceIndex = autocompleteChoiceIndex(options.length, detectiveSuggestionIndex);
       const button = options[choiceIndex];
       if (!button) return false;
       detectiveInput.value = button.dataset.detectiveSuggestion || button.textContent || "";
@@ -35942,7 +35953,7 @@ Answer: ${answer}`;
     function rapidAcceptSuggestion(submit = false) {
       if (rapidSuggestions.classList.contains("hidden")) return false;
       const options = [...rapidSuggestions.querySelectorAll(".rapid-suggestion")];
-      let choiceIndex = rapidSuggestionIndex;
+      const choiceIndex = autocompleteChoiceIndex(options.length, rapidSuggestionIndex);
       if (choiceIndex < 0) return false;
       const button = options[choiceIndex];
       if (!button) return false;
@@ -36013,7 +36024,7 @@ Answer: ${answer}`;
 
     function rapidDailyOutcome(round, c, correct) {
       if (!correct || round.revealed) return "missed";
-      if(RAPID_TYPES[round.type]?.target==='borderlessCapital'&&Number.isFinite(round.locationScore))return round.locationScore>=90?'clean':round.locationScore>=65?'light-help':round.locationScore>=25?'heavy-help':'missed';
+      if(RAPID_TYPES[round.type]?.target==='borderlessCapital'&&Number.isFinite(round.locationScore))return round.locationScore>=60?'clean':'missed';
       const hints = Math.max(0, Number(round.hintsUsed) || 0);
       if (!hints) return round.usedSuggestion ? "light-help" : "clean";
       const target = RAPID_TYPES[round.type]?.target;
@@ -37674,7 +37685,7 @@ function multiPromptPicker(select,sub=false,initialValue=select.value){
     }
     function borderlessRecordDaily(s){
       if(!s.dailyKey||s.index!==s.codes.length||homeRecords.dailies[s.dailyKey])return;
-      const result={score:Math.round(s.results.reduce((n,r)=>n+r.score,0)/s.codes.length),elapsedMs:s.elapsedMs,completedAt:Date.now(),date:s.dailyKey.slice(0,10),correct:s.results.filter(r=>r.score===100).length,total:s.codes.length,points:s.results.reduce((n,r)=>n+r.score,0),scores:s.results.map(r=>r.score),tries:s.results.map(r=>r.revealed?4:r.tries||1)};
+      const result={score:Math.round(s.results.reduce((n,r)=>n+r.score,0)/s.codes.length),elapsedMs:s.elapsedMs,completedAt:Date.now(),date:s.dailyKey.slice(0,10),correct:s.results.filter(r=>s.target==='capital'?r.score>=60:r.score===100).length,total:s.codes.length,points:s.results.reduce((n,r)=>n+r.score,0),scores:s.results.map(r=>r.score),tries:s.results.map(r=>r.revealed?4:r.tries||1)};
       homeRecords.dailies[s.dailyKey]=result;saveHomeRecords();
     }
     function borderlessDailyShareText(mode,r){
@@ -37700,7 +37711,9 @@ function multiPromptPicker(select,sub=false,initialValue=select.value){
       const names={clean:'No help','light-help':'A little help','medium-help':'Some help','heavy-help':'Lots of help',missed:'Missed or revealed',pending:'Placed, not checked'};
       const colors={clean:'#39784e','light-help':'#88a75b','medium-help':'#a5a34a','heavy-help':'#c09b3d',missed:'#995347',pending:'#91a3a3'};
       for(let i=0;i<total;i++){const outcome=outcomes[i];const chunk=document.createElement('span');chunk.style.width=`${100/total}%`;chunk.style.background=colors[outcome]||'transparent';chunk.title=outcome?`${i+1}: ${names[outcome]||outcome}`:`${i+1}: Not done`;chunk.setAttribute('aria-hidden','true');track.append(chunk);}
-      track.setAttribute('aria-valuetext',`${Math.min(total,outcomes.filter(Boolean).length)} of ${total} answered or placed; colours show how each went`);
+      const counts=Object.fromEntries(Object.keys(names).map(outcome=>[outcome,outcomes.filter(value=>value===outcome).length]));
+      const breakdown=Object.entries(counts).filter(([,count])=>count).map(([outcome,count])=>`${count} ${names[outcome].toLowerCase()}`).join(', ');
+      track.setAttribute('aria-valuetext',`${Math.min(total,outcomes.filter(Boolean).length)} of ${total} answered or placed${breakdown?'; '+breakdown:''}`);
       let keyRow=track.nextElementSibling;
       if(!keyRow?.classList.contains('game-quality-key')){keyRow=document.createElement('div');keyRow.className='game-quality-key';track.after(keyRow);}
       keyRow.replaceChildren();
@@ -37773,7 +37786,7 @@ function multiPromptPicker(select,sub=false,initialValue=select.value){
       if(target==='country') return {correct:!!feature&&d3.geoContains(feature,geo),score:feature&&d3.geoContains(feature,geo)?100:0,geo};
       const targets=mapHuntCapitalCities(c).map(city=>({...city,km:d3.geoDistance(geo,[city.lng,city.lat])*6371})).sort((a,b)=>a.km-b.km);
       if(!targets.length)return null;
-      const km=targets[0].km;return {correct:km<=25,score:borderlessCapitalScore(km),km,geo};
+      const km=targets[0].km,score=borderlessCapitalScore(km);return {correct:score>=60,score,km,geo};
     }
 function drawCapitalHistory(parent,projection,cities,result,overview=false){if(result.guess)result={...result,revealed:false};const group=parent.append('g').attr('class','capital-history').attr('opacity',overview?.8:.45).attr('pointer-events','none'),geo=result.geo||result.guess;
 if(geo&&cities.length){const nearest=[...cities].sort((a,b)=>d3.geoDistance(geo,[a.lng,a.lat])-d3.geoDistance(geo,[b.lng,b.lat]))[0];drawCapitalConnector(group,projection,[nearest.lng,nearest.lat],geo);group.select('.city-location-line').attr('stroke',borderlessResultColor(result));}group.append('title').text((cities.map(c=>c.name).join(' / '))+' · '+(result.revealed?'Revealed':result.score+'/100'));
@@ -37897,7 +37910,7 @@ function scaleCapitalHistory(parent,scale){parent.selectAll('circle').attr('r',4
         if(history||phase!=='prompt'||!current())return;
         if(!attempt.borderlessGuesses)attempt.borderlessGuesses={};attempt.borderlessGuesses[stage]=r;saveAttempt();
         api.reveal(r.geo);api.status.textContent=borderlessResultText(r,target);
-        if(interactive){const graded=target==='capital'?r.score>=25:r.correct;registerInteractiveResult(graded);attempt.results[stage].locationScore=r.score;if(target==='capital'){attempt.results[stage].helpLevel=r.score>=90?'clean':r.score>=65?'light':r.score>=25?'heavy':'missed';attempt.results[stage].assisted=r.score<90;}saveAttempt();host.querySelector('.borderless-reveal')?.remove();completeInteractiveStage(0,false);nextBtn.textContent=nextStageLabel();updateActionControls();}
+        if(interactive){const graded=target==='capital'?r.score>=60:r.correct;registerInteractiveResult(graded);attempt.results[stage].locationScore=r.score;if(target==='capital'){attempt.results[stage].helpLevel=graded?'clean':'missed';attempt.results[stage].assisted=false;}saveAttempt();host.querySelector('.borderless-reveal')?.remove();completeInteractiveStage(0,false);nextBtn.textContent=nextStageLabel();updateActionControls();}
         else nextBtn.click();
       }});
       if(!current())return;
@@ -37909,7 +37922,7 @@ function scaleCapitalHistory(parent,scale){parent.selectAll('circle').attr('r',4
       const host=document.createElement('div');host.className='rapid-borderless';rapidCue.after(host);
       const target=RAPID_TYPES[round.type].target==='borderlessCountry'?'country':'capital';
       const map=await createBorderlessMap(host,c,target,{isCurrent:()=>host.isConnected&&token===rapidRenderToken,revealed:round.status==='answered',geo:round.borderlessGuess?.geo,onGuess:(r,api)=>{
-        if(round.status!=='active'||token!==rapidRenderToken)return;round.borderlessGuess=r;round.locationScore=target==='capital'?r.score:null;api.reveal(r.geo);api.status.textContent=borderlessResultText(r,target);rapidFinishQuestion(target==='capital'?r.score>=25:r.correct,null,borderlessResultText(r,target));
+        if(round.status!=='active'||token!==rapidRenderToken)return;round.borderlessGuess=r;round.locationScore=target==='capital'?r.score:null;api.reveal(r.geo);api.status.textContent=borderlessResultText(r,target);rapidFinishQuestion(target==='capital'?r.score>=60:r.correct,null,borderlessResultText(r,target));
       }});return !!map;
     }
 
@@ -37970,7 +37983,7 @@ function scaleCapitalHistory(parent,scale){parent.selectAll('circle').attr('r',4
       content.append(progress,clue,host,feedback,reveal);borderlessProgress(s,content);
       let finished=false;
       function directionFor(result,api){if(!mapDirectionHintsEnabled||s.target!=='country'||!result?.geo||!api?.projection)return null;const targetGeo=d3.geoCentroid(api.targetFeature);const from=api.projection(result.geo),to=api.projection(targetGeo);if(!from||!to)return null;return mapHuntDirectionBetweenPoints({x:from[0],y:from[1]},{x:to[0],y:to[1]});}
-      function complete(result,api){if(finished||token!==borderlessRenderToken)return;finished=true;pauseBorderlessClock();api.reveal(result.geo,result);const tries=Math.min(3,s.misses+1);s.results.push({code:c.code,...result,tries});const clean=!result.revealed&&result.score===100,lightHelp=!result.revealed&&!clean&&(s.target==='country'?tries===2:result.score>=50),heavyHelp=!result.revealed&&!clean&&!lightHelp&&result.score>0;recordDailyFactCounts({total:1,clean:clean?1:0,lightHelp:lightHelp?1:0,heavyHelp:heavyHelp?1:0,missed:clean||lightHelp||heavyHelp?0:1});s.index++;s.misses=0;borderlessRecordChallenge(s);borderlessRecordDaily(s);archiveBorderlessProgress(s);saveBorderlessRun();borderlessProgress(s,content);const current=s.target==='country'?host.querySelector('.borderless-marks path'):null;if(current)current.setAttribute('fill',borderlessResultColor(result));reveal.remove();feedback.textContent=`${c.name} · ${s.target==='capital'?mapHuntCapitalCities(c).map(p=>p.name).join(' / ')+' · ':''}${result.revealed?'Location revealed':borderlessResultText(result,s.target)}`;
+      function complete(result,api){if(finished||token!==borderlessRenderToken)return;finished=true;pauseBorderlessClock();api.reveal(result.geo,result);const tries=Math.min(3,s.misses+1);s.results.push({code:c.code,...result,tries});const capitalGuess=s.target==='capital',clean=!result.revealed&&(capitalGuess?result.score>=60:result.score===100),lightHelp=!capitalGuess&&!result.revealed&&!clean&&tries===2,heavyHelp=!capitalGuess&&!result.revealed&&!clean&&!lightHelp&&result.score>0;recordDailyFactCounts({total:1,clean:clean?1:0,lightHelp:lightHelp?1:0,heavyHelp:heavyHelp?1:0,missed:clean||lightHelp||heavyHelp?0:1});s.index++;s.misses=0;borderlessRecordChallenge(s);borderlessRecordDaily(s);archiveBorderlessProgress(s);saveBorderlessRun();borderlessProgress(s,content);const current=s.target==='country'?host.querySelector('.borderless-marks path'):null;if(current)current.setAttribute('fill',borderlessResultColor(result));reveal.remove();feedback.textContent=`${c.name} · ${s.target==='capital'?mapHuntCapitalCities(c).map(p=>p.name).join(' / ')+' · ':''}${result.revealed?'Location revealed':borderlessResultText(result,s.target)}`;
         setTimeout(()=>{if(token===borderlessRenderToken&&document.getElementById('borderlessOverlay').classList.contains('open'))renderBorderlessRound();},s.target==='capital'?2500:1400);}
       const map=await createBorderlessMap(host,c,s.target,{reuse:true,set:s.set,results:s.mapProgress==='blind'?[]:s.results,view:s.mapView,onView:view=>{s.mapView=view;},isCurrent:()=>token===borderlessRenderToken&&document.getElementById('borderlessOverlay').classList.contains('open'),onGuess:(r,api)=>{
         if(finished)return;if(s.target==='country'&&s.mapProgress!=='blind'&&s.results.some(result=>result.code===r.clickedCode)){feedback.textContent=r.clickedName+' · already filled';return;}if(s.target==='capital'){complete(r,api);return;}if(r.correct){r.score=mapTryScore({tries:Math.min(3,s.misses+1)});complete(r,api);return;}
@@ -39399,8 +39412,8 @@ function studyCapitalPrompt(host,c,stage){if(!capitalPromptDetails||studySession
         if (now > armedUntil) {
           armedUntil = now + 7000;
           button.classList.add("armed");
-          button.textContent = "Reset all progress";
-          if (status) status.textContent = "Tap Reset all progress again within 7 seconds to erase study history and any pre-import recovery copy. Settings and custom sets stay.";
+          button.textContent = "Confirm reset";
+          if (status) status.textContent = "Tap Confirm reset within 7 seconds to erase study history and any pre-import recovery copy. Settings and custom sets stay.";
           if (disarmTimer) window.clearTimeout(disarmTimer);
           disarmTimer = window.setTimeout(disarm, 7000);
           hapticFeedback?.("warning");
@@ -41368,14 +41381,14 @@ function studyCapitalPrompt(host,c,stage){if(!capitalPromptDetails||studySession
         kind.className = "chain-suggestion-kind";
         kind.textContent = entry.kind;
         button.append(answer, kind);
-        // Keep the keyboard/list in place until click; do not select on down,
-        // so a touch drag can still scroll the suggestion list.
-        button.addEventListener("pointerdown", event => { if (event.button === 0) event.preventDefault(); });
+        // Keep the input focused on desktop; leave touch gestures native so
+        // dragging still scrolls the suggestion list.
+        button.addEventListener("pointerdown", event => { if (event.pointerType === "mouse") event.preventDefault(); });
         button.addEventListener("click", () => {
           chainGuessInput.value = entry.answer;
           clearChainSuggestions();
           updateChainGuessButtonState();
-          chainGuessInput.focus({ preventScroll:true });
+          submitChainGuess();
         });
         chainSuggestions.appendChild(button);
       }
@@ -41395,8 +41408,7 @@ function studyCapitalPrompt(host,c,stage){if(!capitalPromptDetails||studySession
     function chooseChainSuggestion() {
       if (!chainSuggestions || chainSuggestions.classList.contains("hidden")) return false;
       const options = [...chainSuggestions.querySelectorAll(".chain-suggestion")];
-      let choiceIndex = chainSuggestionIndex;
-      if (choiceIndex < 0 && options.length) choiceIndex = 0;
+      const choiceIndex = autocompleteChoiceIndex(options.length, chainSuggestionIndex);
       const button = options[choiceIndex];
       if (!button) return false;
       chainGuessInput.value = button.dataset.chainSuggestion || button.textContent || "";
@@ -41981,6 +41993,7 @@ function studyCapitalPrompt(host,c,stage){if(!capitalPromptDetails||studySession
     const mapHuntFinishTitle = document.getElementById("mapHuntFinishTitle");
     const mapHuntFinishMeta = document.getElementById("mapHuntFinishMeta");
     const mapHuntRevisionBtn = document.getElementById("mapHuntRevisionBtn");
+    const mapHuntOriginalResultBtn = document.getElementById("mapHuntOriginalResultBtn");
     const mapHuntReplayBtn = document.getElementById("mapHuntReplayBtn");
     const mapHuntChangeBtn = document.getElementById("mapHuntChangeBtn");
 
@@ -41990,6 +42003,7 @@ function studyCapitalPrompt(host,c,stage){if(!capitalPromptDetails||studySession
       : "country";
     let mapHuntTargetMode = specialGamePrefs.mapHuntTargetMode === "capital" ? "capital" : "country";
     let mapHuntBuildToken = 0;
+    let mapHuntOriginalResult = null;
     let mapHuntAdvanceTimer = null;
     let mapHuntWrongFeedbackTimer = null;
     let mapHuntRevealTimer = null;
@@ -42609,7 +42623,7 @@ function studyCapitalPrompt(host,c,stage){if(!capitalPromptDetails||studySession
       mapHuntPromptFlag?.classList.add("hidden");
       if (mapHuntFeedback) {
         mapHuntFeedback.textContent = struggled.length
-          ? `${struggled.length} place${struggled.length === 1 ? "" : "s"} took more than one try.`
+          ? `${struggled.length} place${struggled.length === 1 ? "" : "s"} needed another try or were revealed.`
           : "Every place was correct on the first try.";
         mapHuntFeedback.className = struggled.length ? "map-hunt-feedback near" : "map-hunt-feedback good";
       }
@@ -42622,6 +42636,7 @@ function studyCapitalPrompt(host,c,stage){if(!capitalPromptDetails||studySession
           ? `Revise struggled places · ${struggled.length} →`
           : "Revise struggled places →";
       }
+      mapHuntOriginalResultBtn?.classList.toggle("hidden", !mapHuntState.revision || !mapHuntOriginalResult);
       mapHuntFinish?.classList.remove("hidden");
       // The finish panel changes the map container height on phones. Rebuild the
       // Canvas at the new CSS size instead of stretching the old bitmap.
@@ -43302,6 +43317,7 @@ function studyCapitalPrompt(host,c,stage){if(!capitalPromptDetails||studySession
     }
 
     async function startMapHuntGame(options = {}) {
+      mapHuntOriginalResult = null;
       if(options.challenge){mapHuntTargetMode=options.challenge.variant.startsWith('city-')?'capital':'country';mapHuntPromptMode=options.challenge.variant.replace(/^city-/,'');mapHuntSet=options.challenge.region;}
       const token = ++mapHuntBuildToken;
       mapHuntOverlay?.classList.remove("map-hunt-complete");
@@ -43359,6 +43375,7 @@ function studyCapitalPrompt(host,c,stage){if(!capitalPromptDetails||studySession
       const previousState = mapHuntState;
       const struggled = mapHuntStruggledCodes();
       if (!struggled.length) return;
+      if (!previousState.revision) mapHuntOriginalResult = previousState;
       const allCodes = [...previousState.allCodes];
       const token = ++mapHuntBuildToken;
 
@@ -43507,6 +43524,12 @@ function studyCapitalPrompt(host,c,stage){if(!capitalPromptDetails||studySession
     mapHuntStartBtn?.addEventListener("click", startMapHuntGame);
     mapHuntRestartBtn?.addEventListener("click", editMapHuntSetup);
     mapHuntRevisionBtn?.addEventListener("click", startMapHuntRevision);
+    mapHuntOriginalResultBtn?.addEventListener("click", async () => {
+      if (!mapHuntOriginalResult) return;
+      mapHuntState = mapHuntOriginalResult;
+      mapHuntState.needsHydration = true;
+      await openMapHunt();
+    });
     mapHuntReplayBtn?.addEventListener("click", () => startMapHuntGame({challenge:mapHuntState?.challenge || null}));
     mapHuntChangeBtn?.addEventListener("click", editMapHuntSetup);
     mapHuntZoomOutBtn?.addEventListener("click", event => { event.stopPropagation(); mapHuntZoomBy(1 / BIG_MAP_ZOOM_STEP); });
@@ -45860,6 +45883,12 @@ function rankingTargetValues() {
             geoDenSelfTestAssert(codes.length===5&&codes.every(code=>rankingDailySnapshotValue('area',countryByCode(code))));
           }
         }],
+        ['Autocomplete','Enter only auto-selects an unambiguous suggestion', () => {
+          geoDenSelfTestEqual(autocompleteChoiceIndex(0,-1),-1);
+          geoDenSelfTestEqual(autocompleteChoiceIndex(1,-1),0);
+          geoDenSelfTestEqual(autocompleteChoiceIndex(3,-1),-1);
+          geoDenSelfTestEqual(autocompleteChoiceIndex(3,2),2);
+        }],
         ['Borderless','Capital map dots and score bar use the same colours', () => {
           const results=[{score:100},{score:70},{score:45},{score:20},{score:0,revealed:true}];
           const bar=document.createElement('div');renderCapitalPointsBar(bar,results,results.length);
@@ -46681,7 +46710,7 @@ function rankingTargetValues() {
         const backdrop=progressNode('div',null,'geoden-confirm-backdrop'),box=progressNode('div',null,'geoden-confirm-box'),heading=progressNode('h3',title),body=progressNode('p',message),actions=progressNode('div',null,'geoden-confirm-actions'),cancel=progressNode('button','Cancel'),confirm=progressNode('button',confirmLabel);
         box.setAttribute('role','dialog');box.setAttribute('aria-modal','true');box.setAttribute('aria-label',title);
         const close=value=>{backdrop.remove();resolve(value);};cancel.type=confirm.type='button';cancel.onclick=()=>close(false);confirm.onclick=()=>close(true);backdrop.onclick=event=>{if(event.target===backdrop)close(false);};
-        backdrop.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();close(false);}});
+        backdrop.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();close(false);}});
         actions.append(cancel,confirm);box.append(heading,body,actions);backdrop.append(box);document.body.append(backdrop);cancel.focus();
       });
     }
@@ -47041,8 +47070,8 @@ async function subStart(c){
 async function subResume(){const token=++subToken;subShow();try{await subReady();await subPreflight(subStore.run.queue,subStore.run.parent);if(token!==subToken)return;await subRenderRun();noteResumableMode('subdivision');}catch{if(token!==subToken)return;const p=subFrame('Study set unavailable');p.append(subEl('p','Your session is safe. Please try again.'),subButton('Retry',subResume));}}
 function subTick(){const now=performance.now();if(subTickAt&&subHost?.classList.contains('open')&&!document.hidden&&subStore.run&&!subStore.run.finished&&subHost.dataset.play==='true')subStore.run.elapsedMs+=Math.min(1000,now-subTickAt);subTickAt=now;}
 function subCurrent(){return subStore.run?.queue[subStore.run.index];}
-function subRecord(score,revealed=false,extra={}){const r=subStore.run,q=subCurrent();if(!q||r.finished)return;const entry={id:q.id,topic:q.topic,score,tries:Math.min(3,r.misses.length+1),revealed,...extra};r.results.push(entry);const clean=score===100&&!revealed&&r.misses.length===0,lightHelp=!revealed&&!clean&&score>=65,heavyHelp=!revealed&&!clean&&score>0&&score<65;recordDailyFactCounts({total:1,clean:clean?1:0,lightHelp:lightHelp?1:0,heavyHelp:heavyHelp?1:0,missed:clean||lightHelp||heavyHelp?0:1});const key=q.id+':'+q.topic,old=subStore.learning[key]||{attempts:0,correct:0};old.attempts++;if(score===100&&!revealed&&r.misses.length===0)old.correct++;subStore.learning[key]=old;r.index++;r.misses=[];r.feedback='';r.pending=null;subSave();}
-function subFinish(){const r=subStore.run;if(r.recorded)return;r.finished=true;r.recorded=true;const score=Math.round(r.results.reduce((s,x)=>s+x.score,0)/r.results.length);if(r.challenge){const last={score,elapsedMs:r.elapsedMs,completedAt:Date.now(),grading:'weighted-v1'},record=subStore.challenges[r.challenge]||{plays:0};record.plays++;record.last=last;if(!record.best||record.best.grading!=='weighted-v1'||score>record.best.score||(score===record.best.score&&last.elapsedMs<record.best.elapsedMs))record.best=last;subStore.challenges[r.challenge]=record;}subSave();}
+function subRecord(score,revealed=false,extra={}){const r=subStore.run,q=subCurrent();if(!q||r.finished)return;const entry={id:q.id,topic:q.topic,score,tries:Math.min(3,r.misses.length+1),revealed,...extra};r.results.push(entry);const capitalGuess=r.mode==='borderless'&&q.topic==='capitalLocation',clean=!revealed&&(capitalGuess?score>=60:score===100&&r.misses.length===0),lightHelp=!capitalGuess&&!revealed&&!clean&&score>=65,heavyHelp=!capitalGuess&&!revealed&&!clean&&score>0&&score<65;recordDailyFactCounts({total:1,clean:clean?1:0,lightHelp:lightHelp?1:0,heavyHelp:heavyHelp?1:0,missed:clean||lightHelp||heavyHelp?0:1});const key=q.id+':'+q.topic,old=subStore.learning[key]||{attempts:0,correct:0};old.attempts++;if(clean)old.correct++;subStore.learning[key]=old;r.index++;r.misses=[];r.feedback='';r.pending=null;subSave();}
+function subFinish(){const r=subStore.run;if(r.recorded)return;r.finished=true;r.recorded=true;const points=r.results.reduce((s,x)=>s+x.score,0),score=Math.round(points/r.results.length);if(r.challenge){const last={score,...(r.mode==='borderless'&&r.queue[0].topic==='capitalLocation'?{points}:{}),elapsedMs:r.elapsedMs,completedAt:Date.now(),grading:'weighted-v1'},record=subStore.challenges[r.challenge]||{plays:0};record.plays++;record.last=last;if(!record.best||record.best.grading!=='weighted-v1'||score>record.best.score||(score===record.best.score&&last.elapsedMs<record.best.elapsedMs))record.best=last;subStore.challenges[r.challenge]=record;}subSave();}
 async function subValue(id,topic){const r=subData.get(id);if(topic==='name')return subEl('strong',r.name);if(topic==='capital')return subEl('strong',r.capital.name);if(topic==='flag'){const image=document.createElement('img');image.src=subData.flagUrl(id);image.alt='Flag to identify';image.className='sub-flag';return image;}if(topic==='silhouette'){const shape=await subData.silhouette(id);const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('viewBox',shape.viewBox);svg.setAttribute('preserveAspectRatio','xMidYMid meet');svg.setAttribute('aria-label','Outline to identify');svg.setAttribute('role','img');svg.classList.add('sub-outline');const path=document.createElementNS(svg.namespaceURI,'path');path.setAttribute('d',shape.path);svg.append(path);return svg;}return subEl('span',SUB_TOPICS[topic]);}
 async function subRenderRun(){
  const token=++subToken,r=subStore.run;if(!r)return;subShow();subHost.dataset.play='true';subHost.dataset.screen='run';const panel=subFrame(SUB_MODES[r.mode]+' · '+subLabel(r.parent));
@@ -47062,7 +47091,22 @@ async function subRenderQuestion(stage,token=subToken){
  if(r.mode==='standard'){
   const reveal=subButton('Reveal answer',async()=>{reveal.remove();if(mapTopic){map.subMap.reveal();}else status.append(await subValue(q.id,q.topic));status.append(subEl('p',subData.get(q.id).name));const actions=subEl('div',undefined,'sub-actions');actions.append(subButton('Missed it',()=>{subRecord(0,true);subRenderQuestion(stage);}),subButton('Got it ✓',()=>{subRecord(100);subRenderQuestion(stage);},'sub-primary'));stage.append(actions);},'sub-primary');stage.append(reveal);return;
  }
- if(!mapTopic){if(r.answer==='typing'&&['name','capital'].includes(q.topic)){const form=subEl('form',undefined,'sub-answer-form'),input=document.createElement('input');input.type='text';input.autocomplete='off';input.placeholder='Type your answer';input.setAttribute('aria-label','Your answer');const list=subEl('div',undefined,'sub-suggestions');input.oninput=()=>{list.replaceChildren();if(!answerSuggestionsEnabled||!input.value.trim())return;for(const record of subData.search(input.value,{parent:r.parent,field:q.topic,limit:SUBDIVISION_IDENTITIES.length})){const text=q.topic==='name'?record.name:record.capital.name;list.append(subButton(text,()=>{input.value=text;list.replaceChildren();input.focus();}));}};form.append(input,subButton('Check',null,'sub-primary'),list);form.querySelector('button').type='submit';form.onsubmit=e=>{e.preventDefault();if(input.value.trim())subAnswer(subData.matches(q.id,q.topic,input.value),null,stage);};stage.append(form);}
+ if(!mapTopic){if(r.answer==='typing'&&['name','capital'].includes(q.topic)){
+  const form=subEl('form',undefined,'sub-answer-form'),input=document.createElement('input');
+  input.type='text';input.autocomplete='off';input.placeholder='Type your answer';input.setAttribute('aria-label','Your answer');
+  const list=subEl('div',undefined,'sub-suggestions');
+  input.oninput=()=>{
+   list.replaceChildren();if(!answerSuggestionsEnabled||!input.value.trim())return;
+   for(const record of subData.search(input.value,{parent:r.parent,field:q.topic,limit:SUBDIVISION_IDENTITIES.length})){
+    const text=q.topic==='name'?record.name:record.capital.name;
+    list.append(subButton(text,()=>{input.value=text;list.replaceChildren();form.requestSubmit();}));
+   }
+  };
+  input.onkeydown=event=>{
+   if(event.key==='Enter'&&list.children.length===1){input.value=list.firstElementChild.textContent;list.replaceChildren();}
+  };
+  form.append(input,subButton('Check',null,'sub-primary'),list);form.querySelector('button').type='submit';
+  form.onsubmit=e=>{e.preventDefault();if(input.value.trim())subAnswer(subData.matches(q.id,q.topic,input.value),null,stage);};stage.append(form);}
   else{const grid=subEl('div',undefined,'sub-options');stage.append(grid);const candidates=homeSeededOrder(subData.list({set:r.set}).filter(x=>x.id!==q.id),'choices:'+q.id+q.topic).slice(0,3).map(x=>x.id);candidates.push(q.id);for(const id of homeSeededOrder(candidates,'order:'+q.id+q.topic)){const b=subButton('',()=>subAnswer(id===q.id,id,stage));b.append(await subValue(id,q.topic));b.dataset.choice=id;grid.append(b);}}}
  stage.append(subButton('Give up · reveal',()=>subAnswer(false,null,stage,true),'sub-give-up'));
  if(r.pending)subShowAnswer(stage,r.pending);
@@ -47082,11 +47126,11 @@ async function subShowAnswer(stage,pending){
  if(pending.correct&&['maphunt','borderless'].includes(r.mode)&&q.topic==='location'&&r.index+1<r.queue.length){const token=subToken;setTimeout(()=>{if(token===subToken&&subStore.run===r&&r.pending===pending&&subHost.classList.contains('open'))stage.querySelector('.sub-next')?.click();},900);}
 }
 function subRenderFinish(stage){
- const r=subStore.run;subUpdateProgress();stage.replaceChildren();const score=Math.round(r.results.reduce((n,x)=>n+x.score,0)/r.queue.length);stage.append(subEl('h3','✓ '+(r.revision?'Review complete!':r.challenge?'Challenge complete!':'Session complete!')),subEl('p',score+'% · '+homeTime(r.elapsedMs),'sub-result'));
- if(r.mode==='borderless'&&r.queue[0].topic==='capitalLocation')stage.append(subEl('p',r.results.reduce((n,x)=>n+x.score,0)+' / '+r.queue.length*100+' points'));
- if(r.challenge)stage.append(subEl('p','Best: '+subStore.challenges[r.challenge].best.score+'% · '+homeTime(subStore.challenges[r.challenge].best.elapsedMs)));
- const list=subEl('div',undefined,'sub-review-list');for(const result of r.results)list.append(subEl('p',(result.score===100?'✓ ':'↻ ')+subData.get(result.id).name+' · '+SUB_TOPICS[result.topic]+' · '+result.score+'%'));stage.append(list);
- if(['maphunt','borderless'].includes(r.mode)){const tricky=r.queue.filter((q,i)=>r.results[i]?.revealed||r.results[i]?.score<100);if(tricky.length)stage.append(subButton(`Review ${tricky.length} tricky ${tricky.length===1?'place':'places'} →`,()=>{const ids=[...new Set(tricky.map(q=>q.id))];subStore.run={...r,ids,queue:tricky,index:0,results:[],misses:[],elapsedMs:0,updatedAt:Date.now(),finished:false,challenge:null,recorded:false,revision:true,pending:null,view:null,feedback:''};subValidateStore(subStore);subSave();subRenderRun();},'sub-primary'));}
+ const r=subStore.run;subUpdateProgress();stage.replaceChildren();const points=r.results.reduce((n,x)=>n+x.score,0),score=Math.round(points/r.queue.length),capitalRound=r.mode==='borderless'&&r.queue[0].topic==='capitalLocation';stage.append(subEl('h3','✓ '+(r.revision?'Review complete!':r.challenge?'Challenge complete!':'Session complete!')),subEl('p',(capitalRound?points+' points':score+'%')+' · '+homeTime(r.elapsedMs),'sub-result'));
+ if(r.challenge){const best=subStore.challenges[r.challenge].best;stage.append(subEl('p','Best: '+(capitalRound?(best.points??Math.round(best.score*r.queue.length))+' points':best.score+'%')+' · '+homeTime(best.elapsedMs)));}
+ const list=subEl('div',undefined,'sub-review-list');for(const result of r.results)list.append(subEl('p',(result.score===100?'✓ ':'↻ ')+subData.get(result.id).name+' · '+SUB_TOPICS[result.topic]+' · '+result.score+(capitalRound?' points':'%')));stage.append(list);
+ if(['maphunt','borderless'].includes(r.mode)){const tricky=r.queue.filter((q,i)=>r.results[i]?.revealed||r.results[i]?.score<100);if(tricky.length)stage.append(subButton(`Review ${tricky.length} tricky ${tricky.length===1?'place':'places'} →`,()=>{const ids=[...new Set(tricky.map(q=>q.id))];subStore.run={...r,originalRun:clonePlain(r.originalRun||r),ids,queue:tricky,index:0,results:[],misses:[],elapsedMs:0,updatedAt:Date.now(),finished:false,challenge:null,recorded:false,revision:true,pending:null,view:null,feedback:''};subValidateStore(subStore);subSave();subRenderRun();},'sub-primary'));}
+ if(r.revision&&r.originalRun)stage.append(subButton('Back to original results',()=>{subStore.run=clonePlain(r.originalRun);subSave();subRenderRun();}));
  stage.append(subButton('Choose another session',()=>subOpenSetup(r.mode,r.parent),'sub-primary'),subButton('Home',subClose));
 }
 async function subCreateMap(host,token){
@@ -47103,7 +47147,7 @@ async function subCreateMap(host,token){
  function update(){marks.selectAll('*').remove();history.selectAll('*').remove();if(r.mode==='borderless')for(const result of r.results.filter(x=>x.topic==='capitalLocation')){const capital=subData.get(result.id).capital;drawCapitalHistory(history,projection,[{name:capital.name,lng:capital.coordinates[0],lat:capital.coordinates[1]}],result);}const q=subCurrent(),borderless=r.mode==='borderless',done=new Map(r.results.map(x=>[x.id,x]));shapes.attr('fill',f=>done.has(f.id)?done.get(f.id).score===100?'#47734f':'#b38c48':r.ids.includes(f.id)?'#a4ae99':'#c3c5b7').attr('stroke',borderless?null:'#faf5e9').attr('stroke-width',borderless?0:1);if(borderless)shapes.attr('fill',f=>r.mapProgress!=='blind'&&done.has(f.id)&&q?.topic!=='capitalLocation'?(done.get(f.id).score===100?'#47734f':'#b38c48'):'#c2c8b5');dots.selectAll('*').remove();if(q?.topic==='capitalLocation'&&!borderless){dots.selectAll('circle').data(subData.list({set:r.set})).join('circle').attr('cx',d=>projection(d.capital.coordinates)[0]).attr('cy',d=>projection(d.capital.coordinates)[1]).attr('fill',d=>done.has(d.id)?'#47734f':'#78623d').attr('stroke','#fff9ee').attr('stroke-width',2).attr('vector-effect','non-scaling-stroke').attr('data-capital-id',d=>d.id);}rescale();}
  function reveal(guess){marks.selectAll('*').remove();const q=subCurrent();if(!q)return;const record=subData.get(q.id),geo=q.topic==='capitalLocation'?record.capital.coordinates:record.labelPoint;if(q.topic==='location')shapes.filter(f=>f.id===q.id).attr('fill','#47734f').attr('stroke','#fff9ee').attr('stroke-width',2);const actual=projection(geo);marks.append('circle').attr('cx',actual[0]).attr('cy',actual[1]).attr('fill','#47734f').attr('stroke','#fff9ee').attr('stroke-width',2).attr('vector-effect','non-scaling-stroke');if(guess){const pt=projection(guess);drawCapitalConnector(marks,projection,geo,guess);marks.append('circle').attr('cx',pt[0]).attr('cy',pt[1]).attr('fill',borderlessResultColor(r.pending||{score:0})).attr('stroke','#fff9ee').attr('stroke-width',2).attr('vector-effect','non-scaling-stroke');}rescale();}
  function guess(xy){const q=subCurrent();if(!q||r.mode==='standard'||r.pending||r.finished)return;const point=transform.invert(xy),geo=projection.invert(point);if(!geo||!geo.every(Number.isFinite)||Math.abs(geo[1])>90)return;const record=subData.get(q.id),stage=host.parentElement;
-  if(r.mode==='borderless'&&q.topic==='capitalLocation'){const km=d3.geoDistance(geo,record.capital.coordinates)*6371,score=borderlessCapitalScore(km);subAnswer(score>=25,null,stage,false,{km,score,guess:geo});return;}
+  if(r.mode==='borderless'&&q.topic==='capitalLocation'){const km=d3.geoDistance(geo,record.capital.coordinates)*6371,score=borderlessCapitalScore(km);subAnswer(score>=60,null,stage,false,{km,score,guess:geo});return;}
   let hit=null;if(q.topic==='capitalLocation'){const screenScale=svg.node().getBoundingClientRect().width/w;const targets=subData.list({set:r.set}).map(d=>({id:d.id,distance:Math.hypot(...projection(d.capital.coordinates).map((v,i)=>v-point[i]))*transform.k*screenScale})).sort((a,b)=>a.distance-b.distance);if(targets[0]?.distance<=22)hit=targets[0].id;}else hit=features.find(f=>d3.geoContains(f,geo))?.id;
   if(!hit)return;const done=r.results.find(x=>x.id===hit);if(done&&['maphunt','borderless'].includes(r.mode)&&!(r.mode==='borderless'&&r.mapProgress==='blind')){document.getElementById('subFeedback').textContent=subData.get(hit).name+' · already completed';return;}if(!r.ids.includes(hit)&&['maphunt','borderless'].includes(r.mode)){document.getElementById('subFeedback').textContent=subData.get(hit).name+' · outside this set';return;}subAnswer(hit===q.id,hit,stage);
  }
