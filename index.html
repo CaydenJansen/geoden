@@ -7038,10 +7038,16 @@
     .mastery-map-legend-dot.status-mastered,
     .mastery-map-status-pill.status-mastered { fill: #2f7c52; background: #2f7c52; }
 
-    .mastery-map-country.status-due,
-    .mastery-map-marker.status-due,
-    .mastery-map-legend-dot.status-due,
-    .mastery-map-status-pill.status-due { fill: #e4ab42; background: #e4ab42; }
+    /* Review timing is a separate signal; it must not replace the mastery fill. */
+    .mastery-map-country.is-due:not(.selected),
+    .mastery-map-marker.is-due:not(.selected) {
+      stroke: #a66c1c;
+      stroke-width: 2.4;
+    }
+    .mastery-map-legend-dot.status-due {
+      background: transparent;
+      border: 2px solid #a66c1c;
+    }
 
     .mastery-map-loading {
       position: absolute;
@@ -7099,6 +7105,20 @@
     }
 
     .mastery-map-status-pill.status-mastered { color: #fff; }
+
+    .mastery-map-detail-badges { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 5px; }
+    .mastery-map-due-badge {
+      flex: 0 0 auto;
+      padding: 5px 8px;
+      border-radius: 999px;
+      border: 1px solid #a66c1c;
+      color: #765016;
+      background: #fff7e8;
+      font-size: .62rem;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+    .mastery-map-due-badge[hidden] { display: none; }
 
     .mastery-map-detail-summary {
       display: grid;
@@ -15033,7 +15053,10 @@ html:is([data-study-domain="US"],[data-study-domain="CA"],[data-study-domain="AU
               <div class="mastery-map-country-name" id="masteryMapCountryName">Place</div>
               <div class="mastery-map-country-meta" id="masteryMapCountryMeta">Select a place on the map.</div>
             </div>
-            <div class="mastery-map-status-pill status-unseen" id="masteryMapStatus">Unseen</div>
+            <div class="mastery-map-detail-badges">
+              <div class="mastery-map-status-pill status-unseen" id="masteryMapStatus">Unseen</div>
+              <div class="mastery-map-due-badge" id="masteryMapDueBadge" hidden>Review due</div>
+            </div>
           </div>
 
           <div class="mastery-map-detail-summary" id="masteryMapDetailStats"></div>
@@ -15045,7 +15068,7 @@ html:is([data-study-domain="US"],[data-study-domain="CA"],[data-study-domain="AU
       <details class="mastery-map-method-details">
         <summary>How statuses work</summary>
         <div class="mastery-map-method">
-          Due means a scheduled direct-recall fact is ready for review, even if that topic is currently switched off. Games add weighted mastery evidence without changing the spaced-review clock. Weak and Strong use both direct recall and gameplay evidence; Mastered still requires sustained clean retrieval over time.
+          The map colour shows what you have learned. Strong means at least one topic has been recalled reliably, or a game skill has been played well repeatedly. Mastered means three topics have reached long-term recall; starting a new topic does not undo that achievement. A gold outline means at least one fact is due for review, even if that topic is switched off.
         </div>
       </details>
     </div>
@@ -16774,7 +16797,7 @@ window.GeoDenBorderlessLakes=[{"type":"Feature","geometry":{"type":"Polygon","co
 window.GeoDenDailyRankingSnapshot = {"schema":1,"asOf":"2026-10-10","provider":"World Bank, World Development Indicators","license":"CC BY 4.0","populationIndicator":"SP.POP.TOTL","areaIndicator":"AG.SRF.TOTL.K2","sourceUpdated":{"population":"2026-10-08","area":"2026-10-08"},"sources":{"population":"https://api.worldbank.org/v2/country/all/indicator/SP.POP.TOTL?format=json&mrnev=1&per_page=500","area":"https://api.worldbank.org/v2/country/all/indicator/AG.SRF.TOTL.K2?format=json&mrnev=1&per_page=500"},"values":{"AF":[43844111,2025,652870,2024],"AL":[2349580,2025,28750,2024],"DZ":[47435312,2025,2381740,2024],"AD":[82904,2025,468,2024],"AO":[39040039,2025,1246700,2024],"AG":[94209,2025,440.298,2024],"AR":[45851378,2025,2780400,2024],"AM":[3086700,2025,29740,2024],"AU":[27614411,2025,7741220,2024],"AT":[9208163,2025,83879,2024],"AZ":[10246996,2025,86600,2024],"BS":[403033,2025,13878,2024],"BH":[1600366,2025,800,2024],"BD":[175686899,2025,147570,2024],"BB":[282623,2025,431,2024],"BY":[9085991,2025,207629,2024],"BE":[11941781,2025,30689.17,2024],"BZ":[422924,2025,22966,2024],"BJ":[14814460,2025,114760,2024],"BT":[796682,2025,38390,2024],"BO":[12581843,2025,1098580,2024],"BA":[3140095,2025,51210,2023],"BW":[2562122,2025,581730,2024],"BR":[212812405,2025,8510420,2024],"BN":[466330,2025,5770,2024],"BG":[6433302,2025,111000,2024],"BF":[24074580,2025,274200,2024],"BI":[14390003,2025,27834,2024],"CV":[527326,2025,4030,2024],"KH":[17847982,2025,181035,2024],"CM":[29879337,2025,475442,2024],"CA":[41651653,2025,15634410,2024],"CF":[5513282,2025,622980,2024],"TD":[21003705,2025,1284000,2024],"CL":[19859921,2025,756556.4,2024],"CN":[1406585000,2025,9562910,2024],"CO":[53425635,2025,1140619.1,2024],"KM":[882847,2025,1869.7,2024],"CR":[5152950,2025,51100,2024],"CI":[32711547,2025,322460,2024],"HR":[3876200,2025,88070,2024],"CU":[10937203,2025,109884.01,2024],"CY":[1370754,2025,9250,2024],"CZ":[10886878,2025,78871.42,2024],"CD":[112832473,2025,2345410,2024],"DK":[6009169,2025,42920,2024],"DJ":[1184076,2025,23200,2024],"DM":[65871,2025,751,2024],"DO":[11520487,2025,146839.46,2024],"EC":[18289896,2025,256370,2024],"EG":[118365995,2025,1001450,2024],"SV":[6365503,2025,21040,2024],"GQ":[1938431,2025,28051.5,2024],"ER":[3607003,2025,121630,2024],"EE":[1366475,2025,45340,2024],"SZ":[1256174,2025,17364,2024],"ET":[135472051,2025,1129818.8,2024],"FJ":[933154,2025,18333,2024],"FI":[5646436,2025,338485,2024],"FR":[68720337,2025,606410,2024],"GA":[2593130,2025,267670,2024],"GM":[2822093,2025,11295,2024],"GE":[3935766,2025,69700,2024],"DE":[83491249,2025,357680,2024],"GH":[35064272,2025,238539,2024],"GR":[10413962,2025,131960,2024],"GD":[117303,2025,344,2024],"GT":[18687881,2025,108889,2024],"GN":[15099727,2025,245857,2024],"GW":[2249515,2025,36125,2024],"GY":[835986,2025,214970,2024],"HT":[11906095,2025,27750,2024],"HN":[11005850,2025,112492,2024],"HU":[9514251,2025,93030,2024],"IS":[392404,2025,103000,2024],"IN":[1463865525,2025,3287263,2024],"ID":[285721236,2025,1916906.8,2024],"IR":[92417681,2025,1745150,2024],"IQ":[47020774,2025,435050,2024],"IE":[5484367,2025,70280,2024],"IL":[10122800,2025,22070,2024],"IT":[58915656,2025,302070,2024],"JM":[2837077,2025,10991,2024],"JP":[123366734,2025,377974.71,2024],"JO":[11520684,2025,89318,2024],"KZ":[20843754,2025,2724902,2024],"KE":[57532493,2025,591970,2024],"KI":[136488,2025,811,2024],"KW":[4865298,2025,17820,2024],"KG":[7343064,2025,199950,2024],"LA":[7873046,2025,236800,2024],"LV":[1847785,2025,64590,2024],"LB":[5849421,2025,10452,2024],"LS":[2363325,2025,30360,2024],"LR":[5731206,2025,111370,2024],"LY":[7458555,2025,1759540,2024],"LI":[41024,2025,160,2024],"LT":[2888774,2025,65290,2024],"LU":[686970,2025,2590,2024],"MG":[32740678,2025,591896,2024],"MW":[22216120,2025,118484,2024],"MY":[35977838,2025,330534,2024],"MV":[529676,2025,300,2024],"ML":[25198821,2025,1241238,2024],"MT":[579704,2025,315.15,2024],"MH":[36282,2025,181,2024],"MR":[5315065,2025,1030700,2024],"MU":[1243741,2025,2010,2024],"MX":[131946900,2025,1957193.9,2024],"FM":[113683,2025,701,2024],"MD":[2360527,2025,33849,2024],"MC":[38341,2025,74.9,2024],"MN":[3568978,2025,1564115.746,2024],"ME":[623129,2025,13883,2024],"MA":[38430770,2025,446550,2024],"MZ":[35631653,2025,799380,2024],"MM":[54850648,2025,676578,2024],"NA":[3092816,2025,824292,2024],"NR":[12025,2025,21,2024],"NP":[29618118,2025,147181,2024],"NL":[18087633,2025,41540,2024],"NZ":[5324700,2025,267710,2024],"NI":[7007502,2025,130370,2023],"NE":[27917831,2025,1267000,2024],"NG":[237527782,2025,923768,2024],"KP":[26571036,2025,120540,2024],"MK":[1820909,2025,25713,2024],"NO":[5610870,2025,624500,2024],"OM":[5494691,2025,309500,2024],"PK":[255219554,2025,796100,2024],"PW":[17663,2025,460,2024],"PS":[5413596,2025,6025,2024],"PA":[4571189,2025,75320,2024],"PG":[10762817,2025,462840,2024],"PY":[7013078,2025,406752,2024],"PE":[34576665,2025,1285215.6,2024],"PH":[116786962,2025,300000,2024],"PL":[36435861,2025,313940,2024],"PT":[10804871,2025,92230,2024],"QA":[2972215,2025,11636.8,2024],"CG":[6484437,2025,342000,2024],"RO":[19020271,2025,238397,2024],"RU":[143513328,2025,17125190,2024],"RW":[14569341,2025,26340,2024],"KN":[46922,2025,261,2024],"LC":[180149,2025,616,2024],"VC":[99924,2025,389,2024],"WS":[219306,2025,2840,2024],"SM":[34109,2025,61.2,2024],"ST":[240254,2025,960,2024],"SA":[36973555,2025,2149690,2024],"SN":[18931966,2025,196710,2024],"RS":[6549143,2025,88490,2024],"SC":[122730,2025,457,2024],"SL":[8819794,2025,72300,2024],"SG":[6111175,2025,735.6,2024],"SK":[5413813,2025,49030,2024],"SI":[2130986,2025,20480,2024],"SB":[838645,2025,28446,2024],"SO":[19654739,2025,637657,2024],"ZA":[64747319,2025,1219602,2024],"KR":[51684564,2025,100460,2024],"SS":[12188788,2025,646883,2024],"ES":[49355143,2025,505981.25,2024],"LK":[21756000,2025,65610,2024],"SD":[51662147,2025,1878000,2024],"SR":[639850,2025,163820,2024],"SE":[10596620,2025,528860,2024],"CH":[9092436,2025,41290.7,2024],"SY":[25620427,2025,185180,2024],"TJ":[10786734,2025,141379,2024],"TZ":[70545865,2025,945500,2024],"TH":[71619863,2025,513115,2024],"TL":[1418517,2025,14870,2024],"TG":[8591626,2025,56785,2024],"TO":[103742,2025,749,2024],"TT":[1367764,2025,5128,2024],"TN":[12348573,2025,163610,2024],"TR":[85878556,2025,785350,2024],"TM":[7618847,2025,491209,2024],"TV":[9492,2025,26,2024],"UG":[51384894,2025,241551,2024],"UA":[38980376,2025,603550,2024],"AE":[11513149,2025,98647.9,2024],"GB":[69487000,2025,243610,2024],"US":[341784857,2025,9831510,2024],"UY":[3384688,2025,176215,2024],"UZ":[37053428,2025,448923,2024],"VU":[335169,2025,12189,2024],"VE":[28516896,2025,912050,2024],"VN":[101598527,2025,331338.31,2024],"YE":[41773878,2025,527968,2024],"ZM":[21913874,2025,752612,2024],"ZW":[16950795,2025,390760,2024]}};</script>
 
   <script>
-    const GEODEN_VERSION = "0.56.145";
+    const GEODEN_VERSION = "0.56.147";
     function setAlignedBackLabel(button, label) {
       if (!button) return;
       const text = String(label ?? "");
@@ -21809,7 +21832,10 @@ window.GeoDenDailyRankingSnapshot = {"schema":1,"asOf":"2026-10-10","provider":"
           return {
             presentationCounter: Math.max(0, Number(saved.presentationCounter) || 0),
             sinceReview: Math.max(0, Number(saved.sinceReview) || 0),
-            countries: normalizedCountries
+            countries: normalizedCountries,
+            recentRecall: Array.isArray(saved.recentRecall)
+              ? saved.recentRecall.filter(item=>item&&Number.isFinite(Number(item.at))&&typeof item.clean==='boolean').slice(-50)
+              : []
           };
         }
       } catch (_) {}
@@ -21817,7 +21843,8 @@ window.GeoDenDailyRankingSnapshot = {"schema":1,"asOf":"2026-10-10","provider":"
       return {
         presentationCounter: 0,
         sinceReview: 0,
-        countries: {}
+        countries: {},
+        recentRecall: []
       };
     }
 
@@ -29660,6 +29687,9 @@ window.GeoDenDailyRankingSnapshot = {"schema":1,"asOf":"2026-10-10","provider":"
       const currentLevel = Math.max(0, Math.min(9, Number(stat.level) || 0));
       stat.lastSeenCounter = presentationCounter;
       stat.lastResultAt = now;
+      smartReview.recentRecall ||= [];
+      smartReview.recentRecall.push({at:now,clean:!!result?.correct&&!result?.assisted&&(!result?.helpLevel||result.helpLevel==='clean')});
+      if(smartReview.recentRecall.length>50)smartReview.recentRecall.splice(0,smartReview.recentRecall.length-50);
 
       if (!result?.correct || result?.helpLevel === "missed") {
         // A real retrieval failure is stronger evidence than an old mastery level.
@@ -30364,7 +30394,9 @@ window.GeoDenDailyRankingSnapshot = {"schema":1,"asOf":"2026-10-10","provider":"
         .sort((a, b) => a.cleanAccuracy - b.cleanAccuracy || a.accuracy - b.accuracy || b.attempts - a.attempts)
 ;
 
-      return { studied, fresh, correct, total, recall, due, dueFacts, weakCountries, fields };
+      const recentEvents=(smartReview.recentRecall||[]).slice(-20);
+      const recent={total:recentEvents.length,clean:recentEvents.filter(item=>item.clean).length};
+      return { studied, fresh, correct, total, recall, recent, due, dueFacts, weakCountries, fields };
     }
 
     function renderMasteryRow(container, name, meta, score, options = {}) {
@@ -30572,7 +30604,7 @@ window.GeoDenDailyRankingSnapshot = {"schema":1,"asOf":"2026-10-10","provider":"
       document.getElementById('masteryStudied').closest('.mastery-stat').hidden=true;document.getElementById('masteryFresh').closest('.mastery-stat').hidden=true;
       masteryRecall.nextElementSibling.textContent='Correct first time';masteryDue.nextElementSibling.textContent='Facts ready to review';
       coverage.querySelector('.mastery-coverage-copy span').textContent='Places you’ve practised';
-      const note=progressNode('p','Practised doesn’t mean mastered.','progress-explanation');coverage.querySelector('.mastery-progress-track').after(note);
+      const note=progressNode('p','Practised doesn’t mean mastered.','progress-explanation');note.id='progressRecentRecall';coverage.querySelector('.mastery-progress-track').after(note);
       const track=coverage.querySelector('.mastery-progress-track');track.removeAttribute('aria-hidden');track.setAttribute('role','progressbar');track.setAttribute('aria-label','Places practised');
       const details=progressNode('details',null,'progress-method');details.append(progressNode('summary','What do these numbers mean?'),progressNode('p','Correct first time counts recorded learning answers without retries or help. Game skill scores are shown separately. Needs practice combines learning and game results to suggest where to focus. Places explored counts places you have practised; it does not mean you know every topic. Reviews use your existing learning schedule.'));stats.after(details);details.after(map);
       stats.hidden=true;details.remove();
@@ -30580,7 +30612,7 @@ window.GeoDenDailyRankingSnapshot = {"schema":1,"asOf":"2026-10-10","provider":"
       const grid=panel.querySelector('.mastery-grid');
       // Keep recent activity alongside knowledge, with a collapsible summary.
       const strengths=progressNode('section',null,'mastery-section mastery-section-wide progress-strengths');strengths.innerHTML='<h3>What’s going well</h3><div id="progressStrengths"></div><details class="progress-method"><summary>How is this chosen?</summary><p>A topic becomes a strength after at least five questions, with four in five answered right on the first try. Before then, we show early signs without calling them mastered.</p></details>';grid.prepend(strengths);
-      strengths.querySelector('.progress-method p').textContent='A topic becomes a strength after at least ten questions, with four in five answered right on the first try. Before then, we show early signs without calling them mastered.';
+      strengths.querySelector('.progress-method p').textContent='A learning topic appears after ten questions with at least 80% right first time. A game skill appears after five scored results averaging at least 80%. Earlier results are shown as early signs.';
 
       document.getElementById('masteryFieldsTitle').textContent='Learning by topic';document.getElementById('masteryFieldsTitle').nextElementSibling.textContent='Direct answers · correct first time. Games also inform Needs practice.';
       const regionKnowledge=progressNode('section',null,'mastery-section mastery-section-wide progress-region-knowledge');regionKnowledge.innerHTML='<h3>What you know by region</h3><label class="progress-region-label" for="progressRegionTopic">Topic</label><select id="progressRegionTopic" class="progress-region-select"></select><div id="progressRegionRows" class="progress-region-rows"></div>';
@@ -30624,9 +30656,25 @@ window.GeoDenDailyRankingSnapshot = {"schema":1,"asOf":"2026-10-10","provider":"
       if(plan.kind==='review'){selectedCountryPool='review';selectSessionChoice('finite',5);updateSessionChoiceUI();}
     }
     const PROGRESS_REGION_TOPICS=[['country','Country names'],['capital','Capital cities'],['flag','Flags'],['globe','Country locations'],['capitalMap','Capital city locations'],['silhouette','Silhouettes'],['largestCity','Largest cities'],['languages','Languages'],['currency','Currencies']];
+    const PROGRESS_REGION_GAME_SKILLS={country:['placeNameRecall','countryIdentification'],capital:['capitalRecall','capitalToPlace'],flag:['flagRecognition'],globe:['mapLocation'],capitalMap:['capitalMapLocation']};
     const PROGRESS_REGIONS=['europe','africa','asia','northAmerica','caribbean','southAmerica','oceania'];
     let progressRegionTopic='country';
-    function progressRegionMetrics(region,field){const eligible=countrySetIndices(region).filter(index=>countryStageIsAvailable(countries[index],field));let tried=0,attempts=0,correct=0;for(const index of eligible){const stat=smartReview.countries?.[countries[index].code]?.stageStats?.[field];const count=Math.max(0,Number(stat?.attempts)||0);if(count){tried++;attempts+=count;correct+=Math.max(0,Number(stat?.cleanCorrect)||0);}}return{eligible:eligible.length,tried,attempts,correct,accuracy:attempts?Math.round(100*correct/attempts):null};}
+    function progressRegionMetrics(region,field){
+      const eligible=countrySetIndices(region).filter(index=>countryStageIsAvailable(countries[index],field));
+      const skills=PROGRESS_REGION_GAME_SKILLS[field]||[];
+      let tried=0,attempts=0,correct=0,gamePlaces=0,gameEvents=0,gameWeight=0,gameScoreTotal=0;
+      for(const index of eligible){
+        const rec=smartReview.countries?.[countries[index].code];
+        const stat=rec?.stageStats?.[field],count=Math.max(0,Number(stat?.attempts)||0);
+        const gameRows=gameMasteryRows(rec).filter(row=>skills.includes(row.skill));
+        if(count||gameRows.length)tried++;
+        if(count){attempts+=count;correct+=Math.max(0,Number(stat?.cleanCorrect)||0);}
+        if(gameRows.length)gamePlaces++;
+        for(const row of gameRows){gameEvents+=row.events;gameWeight+=row.weightTotal;gameScoreTotal+=row.scoreTotal;}
+      }
+      return{eligible:eligible.length,tried,attempts,correct,accuracy:attempts?Math.round(100*correct/attempts):null,
+        gamePlaces,gameEvents,gameScore:gameWeight?Math.round(100*gameScoreTotal/gameWeight):null};
+    }
     function enhanceProgressRegionRows(){
       const field=document.getElementById('progressRegionTopic')?.value||progressRegionTopic;
       document.querySelectorAll('#progressRegionRows .progress-region-row').forEach((row,index)=>{
@@ -30651,7 +30699,27 @@ window.GeoDenDailyRankingSnapshot = {"schema":1,"asOf":"2026-10-10","provider":"
         row.append(button);
       });
     }
-    function renderProgressRegionKnowledge(){const host=document.getElementById('progressRegionRows');if(!host)return;host.replaceChildren();const field=document.getElementById('progressRegionTopic')?.value||progressRegionTopic;for(const region of PROGRESS_REGIONS){const m=progressRegionMetrics(region,field),row=progressNode('div',null,'progress-region-row'),top=progressNode('div',null,'progress-region-top'),name=progressNode('strong',countrySetDisplayName(region));top.append(name);const coverageCopy=progressNode('div',m.tried+' of '+m.eligible+' places tried','progress-region-meta'),coverage=progressNode('div',null,'progress-region-track progress-region-coverage'),coverageFill=progressNode('span',null,'progress-region-fill');coverage.setAttribute('role','progressbar');coverage.setAttribute('aria-label',countrySetDisplayName(region)+' places tried');coverage.setAttribute('aria-valuemin','0');coverage.setAttribute('aria-valuemax',String(m.eligible));coverage.setAttribute('aria-valuenow',String(m.tried));coverageFill.style.width=(m.eligible?100*m.tried/m.eligible:0)+'%';coverage.append(coverageFill);const accuracyRow=progressNode('div',null,'progress-region-accuracy-row'),accuracyLabel=progressNode('span','First-try answers'),badge=progressNode('strong',m.accuracy==null?'Not tried':m.accuracy+'%','progress-region-accuracy-badge');accuracyRow.append(accuracyLabel,badge);const detail=progressNode('div',m.attempts?m.correct+' of '+m.attempts+' questions right first time':'Answer a question to see your accuracy','progress-region-meta'),accuracyTrack=progressNode('div',null,'progress-region-track progress-region-accuracy-track'),accuracyFill=progressNode('span',null,'progress-region-accuracy-fill');if(m.accuracy==null){accuracyTrack.hidden=true;badge.dataset.level='none';}else{accuracyTrack.setAttribute('role','progressbar');accuracyTrack.setAttribute('aria-label',countrySetDisplayName(region)+' first-try accuracy');accuracyTrack.setAttribute('aria-valuemin','0');accuracyTrack.setAttribute('aria-valuemax','100');accuracyTrack.setAttribute('aria-valuenow',String(m.accuracy));accuracyFill.style.width=m.accuracy+'%';badge.dataset.level=accuracyFill.dataset.level=m.accuracy>=80?'strong':m.accuracy>=50?'growing':'needs-work';}accuracyTrack.append(accuracyFill);row.append(top,coverageCopy,coverage,accuracyRow,detail,accuracyTrack);host.append(row);}}
+    function renderProgressRegionKnowledge(){
+      const host=document.getElementById('progressRegionRows');if(!host)return;host.replaceChildren();
+      const field=document.getElementById('progressRegionTopic')?.value||progressRegionTopic;
+      for(const region of PROGRESS_REGIONS){
+        const m=progressRegionMetrics(region,field),row=progressNode('div',null,'progress-region-row'),top=progressNode('div',null,'progress-region-top'),name=progressNode('strong',countrySetDisplayName(region));top.append(name);
+        const coverageCopy=progressNode('div',m.tried+' of '+m.eligible+' places tried','progress-region-meta'),coverage=progressNode('div',null,'progress-region-track progress-region-coverage'),coverageFill=progressNode('span',null,'progress-region-fill');
+        coverage.setAttribute('role','progressbar');coverage.setAttribute('aria-label',countrySetDisplayName(region)+' places tried');coverage.setAttribute('aria-valuemin','0');coverage.setAttribute('aria-valuemax',String(m.eligible));coverage.setAttribute('aria-valuenow',String(m.tried));coverageFill.style.width=(m.eligible?100*m.tried/m.eligible:0)+'%';coverage.append(coverageFill);
+        const accuracyRow=progressNode('div',null,'progress-region-accuracy-row'),accuracyLabel=progressNode('span','First-try answers'),badge=progressNode('strong',m.accuracy==null?'Not tried':m.accuracy+'%','progress-region-accuracy-badge');accuracyRow.append(accuracyLabel,badge);
+        const detail=progressNode('div',m.attempts?m.correct+' of '+m.attempts+' questions right first time':'No learning answers yet','progress-region-meta'),accuracyTrack=progressNode('div',null,'progress-region-track progress-region-accuracy-track'),accuracyFill=progressNode('span',null,'progress-region-accuracy-fill');
+        if(m.accuracy==null){accuracyTrack.hidden=true;badge.dataset.level='none';}else{accuracyTrack.setAttribute('role','progressbar');accuracyTrack.setAttribute('aria-label',countrySetDisplayName(region)+' first-try accuracy');accuracyTrack.setAttribute('aria-valuemin','0');accuracyTrack.setAttribute('aria-valuemax','100');accuracyTrack.setAttribute('aria-valuenow',String(m.accuracy));accuracyFill.style.width=m.accuracy+'%';badge.dataset.level=accuracyFill.dataset.level=m.accuracy>=80?'strong':m.accuracy>=50?'growing':'needs-work';}accuracyTrack.append(accuracyFill);
+        row.append(top,coverageCopy,coverage,accuracyRow,detail,accuracyTrack);
+        if(m.gameEvents){
+          const gameRow=progressNode('div',null,'progress-region-accuracy-row progress-region-game-row');
+          const gameLabel=progressNode('span',`Game results · ${m.gameEvents} ${m.gameEvents===1?'result':'results'}`);
+          const gameBadge=progressNode('strong',m.gameScore+'%','progress-region-accuracy-badge');
+          gameBadge.dataset.level=m.gameScore>=80?'strong':m.gameScore>=50?'growing':'needs-work';
+          gameRow.append(gameLabel,gameBadge);row.append(gameRow);
+        }
+        host.append(row);
+      }
+    }
     function progressTopicCoverageMeta(item){const eligible=countrySetIndices('world').filter(index=>countryStageIsAvailable(countries[index],item.field));const tried=eligible.filter(index=>Number(smartReview.countries?.[countries[index].code]?.stageStats?.[item.field]?.attempts)>0).length;return tried+' of '+eligible.length+' places tried'+(item.attempts<5?'':` · ${item.cleanCorrect} of ${item.attempts} questions right first time`);}
     function progressLearningRows(host,items,game=false){
       host.replaceChildren();
@@ -30675,18 +30743,24 @@ window.GeoDenDailyRankingSnapshot = {"schema":1,"asOf":"2026-10-10","provider":"
     }
     function renderProgressOverview(snapshot){
       const plan=progressRecommendation(snapshot);document.getElementById('progressRecommendationTitle').textContent=plan.title;const reviewSet=selectedCountrySet||'world';masteryNextReview.textContent=plan.kind==='review'&&reviewSet!=='world'?`${countrySetDisplayName(reviewSet)} study set · ${plan.copy}`:plan.copy;masteryReviewNowBtn.textContent=plan.action;masteryReviewNowBtn.disabled=false;delete masteryReviewNowBtn.dataset.replaceUntil;
+      const recentNote=document.getElementById('progressRecentRecall');
+      if(recentNote){const recent=snapshot.recent||{total:0,clean:0};recentNote.textContent=recent.total
+        ? `Recent first-try answers: ${recent.clean} of ${recent.total}${recent.total<5?' (early result)':''}${snapshot.recall==null?'':` · Lifetime: ${snapshot.recall}%`}`
+        : 'Practised doesn’t mean mastered. Recent first-try results will appear here as you play.';}
       const universe=countrySetIndices('world').length,track=masteryOverlay.querySelector('.mastery-progress-track');masteryCoverageText.textContent=snapshot.studied+' of '+universe;
       track.setAttribute('aria-valuemin','0');track.setAttribute('aria-valuemax',String(universe));track.setAttribute('aria-valuenow',String(snapshot.studied));track.setAttribute('aria-valuetext',snapshot.studied+' of '+universe+' places practised');
       const direct=snapshot.fields.filter(item=>item.kind==='direct'&&item.field!=='historyFacts');
+      const game=snapshot.fields.filter(item=>item.kind==='game');
       progressLearningRows(masteryFieldStats,direct);renderProgressRegionKnowledge();enhanceProgressRegionRows();renderProgressStateKnowledge();renderProgressActivity();
       const strengths=document.getElementById('progressStrengths');strengths.replaceChildren();
-      const strong=direct.filter(item=>item.attempts>=10&&item.cleanAccuracy>=.8).sort((a,b)=>b.cleanAccuracy-a.cleanAccuracy||b.attempts-a.attempts).slice(0,3);
+      const strong=[...direct.filter(item=>item.attempts>=10&&item.cleanAccuracy>=.8),...game.filter(item=>item.attempts>=5&&item.cleanAccuracy>=.8)]
+        .sort((a,b)=>b.cleanAccuracy-a.cleanAccuracy||b.attempts-a.attempts).slice(0,3);
       if(!strong.length){
-        const early=direct.filter(item=>item.attempts>0).sort((a,b)=>b.cleanCorrect-a.cleanCorrect||b.attempts-a.attempts).slice(0,2);
+        const early=[...direct,...game].filter(item=>item.attempts>0).sort((a,b)=>b.cleanAccuracy-a.cleanAccuracy||b.attempts-a.attempts).slice(0,2);
         strengths.append(progressNode('p',early.length?'Early signs of what you know—keep going to build a clearer picture.':'Your strongest topics will appear here as you learn. Try a few questions to get started.','mastery-empty'));
-        for(const item of early)renderMasteryRow(strengths,masteryFieldLabel(item.field),item.cleanCorrect+' of '+item.attempts+' right first time','Getting started');
+        for(const item of early)renderMasteryRow(strengths,masteryFieldLabel(item.field),item.kind==='game'?`${item.attempts} game results · ${Math.round(item.cleanAccuracy*100)}% average`:`${item.cleanCorrect} of ${item.attempts} right first time`,'Getting started');
       }
-      for(const item of strong)renderMasteryRow(strengths,masteryFieldLabel(item.field),item.cleanCorrect+' of '+item.attempts+' correct first time',Math.round(item.cleanAccuracy*100)+'%');
+      for(const item of strong)renderMasteryRow(strengths,masteryFieldLabel(item.field),item.kind==='game'?`${item.attempts} game results · average score`:`${item.cleanCorrect} of ${item.attempts} correct first time`,Math.round(item.cleanAccuracy*100)+'%');
       for(const section of masteryOverlay.querySelectorAll('.progress-section-disclosure')){
         const head=section.querySelector(':scope > summary');if(!head)continue;
         head.querySelector('.progress-section-hint')?.remove();
@@ -30700,18 +30774,21 @@ window.GeoDenDailyRankingSnapshot = {"schema":1,"asOf":"2026-10-10","provider":"
     function archiveBorderlessProgress(s){
       if(!s||s.dailyKey||s.challenge||s.revision||!s.codes?.length||s.index!==s.codes.length||s.progressArchivedAt)return;
       const at=Date.now();s.progressArchivedAt=at;
-      const entry={id:'borderless:'+at+':'+Math.random().toString(36).slice(2),interaction:'borderless',target:s.target,clue:s.clue,countrySet:s.set,total:s.codes.length,correct:s.results.filter(r=>r.score===100&&!r.revealed).length,points:s.results.reduce((n,r)=>n+r.score,0),endedAt:at,elapsedMs:s.elapsedMs};
+      const points=s.results.reduce((n,r)=>n+r.score,0);
+      const entry={id:'borderless:'+at+':'+Math.random().toString(36).slice(2),interaction:'borderless',target:s.target,clue:s.clue,countrySet:s.set,total:s.codes.length,correct:s.results.filter(r=>r.score===100&&!r.revealed).length,points,score:Math.round(points/s.codes.length),endedAt:at,elapsedMs:s.elapsedMs};
       sessionHistory=[entry,...sessionHistory].slice(0,50);saveSessionHistory();
     }
     function progressActivityRows(){
       const rows=[],num=x=>Math.max(0,Number(x)||0),add=row=>{if(Number.isFinite(row.at)&&row.at>0)rows.push(row);};
       for(const [key,r]of Object.entries(homeRecords.dailies||{})){const type=key.split(':').at(-1),borderless=type.startsWith('borderless-'),mode=borderless?'borderless':type;add({id:'daily:'+key,dailyKey:key,mode,target:borderless?type.slice(11):null,title:'Daily '+(borderless?type==='borderless-capital'?'Borderless Capitals':'Borderless Countries':modeDisplayName(mode)),set:'world',at:num(r.completedAt),total:num(r.total),correct:num(r.correct),score:num(r.score),points:num(r.points??(borderless?r.score*r.total:r.score)),elapsedMs:num(r.elapsedMs)});}
-      for(const [key,r]of Object.entries(dailyChallengeProgress.days||{}))add({id:'daily:'+key,dailyKey:key,mode:'rapid',title:'Daily Quiz',set:'world',at:num(r.completedAt),correct:num(r.correct),total:num(r.total),elapsedMs:num(r.elapsedMs)});
+      for(const [key,r]of Object.entries(dailyChallengeProgress.days||{}))add({id:'daily:'+key,dailyKey:key,mode:'rapid',title:'Daily Quiz',set:'world',at:num(r.completedAt),correct:num(r.correct),total:num(r.total),score:dailyQuizQualityScore(r),elapsedMs:num(r.elapsedMs)});
       for(const [id,r]of Object.entries(homeRecords.challenges||{})){const spec=homeChallengeSpec(id);if(!spec||!r.last)continue;add({id:'challenge:'+id,mode:spec.mode,title:modeDisplayName(spec.mode)+' · '+HOME_MAP_VARIANTS[spec.mode][spec.variant],set:spec.region,at:num(r.last.completedAt),score:num(r.last.score),total:num(r.last.total),correct:num(r.last.correct),elapsedMs:num(r.last.elapsedMs),challenge:true,legacy:r.last.grading!=='weighted-v1'});}
       for(const item of sessionHistory||[]){const mode=item.interaction||'standard';if(item.dailyKey&&rows.some(r=>r.dailyKey===item.dailyKey))continue;
         // Older Matching/Detective history omitted its daily key. Avoid showing the same recorded finish twice.
         if(!item.dailyKey&&['matching','detective'].includes(mode)&&rows.some(r=>r.dailyKey&&r.mode===mode&&Math.abs(r.at-num(item.endedAt))<1500&&r.total===num(item.total)&&r.correct===num(item.correct)))continue;
-        add({id:item.id,mode,title:item.dailyKey?'Daily '+modeDisplayName(mode):mode==='borderless'?'Borderless '+(item.target==='capital'?'Capitals':'Countries'):sessionHistoryModeLabel(item),target:item.target,set:item.countrySet||'world',clue:item.clue,at:num(item.endedAt),total:num(item.total),correct:num(item.correct),points:item.points==null?null:num(item.points),elapsedMs:num(item.elapsedMs),dailyKey:item.dailyKey,review:Array.isArray(item.review)?item.review:null});
+        const borderlessScore=mode==='borderless'&&item.target==='country'&&Number(item.total)>0&&item.points!=null
+          ?Math.round(Number(item.points)/Number(item.total)):null;
+        add({id:item.id,mode,title:item.dailyKey?'Daily '+modeDisplayName(mode):mode==='borderless'?'Borderless '+(item.target==='capital'?'Capitals':'Countries'):sessionHistoryModeLabel(item),target:item.target,set:item.countrySet||'world',clue:item.clue,at:num(item.endedAt),total:num(item.total),correct:num(item.correct),score:item.score!=null?num(item.score):borderlessScore,points:item.points==null?null:num(item.points),elapsedMs:num(item.elapsedMs),dailyKey:item.dailyKey,review:Array.isArray(item.review)?item.review:null});
       }
       return rows.sort((a,b)=>b.at-a.at);
     }
@@ -30721,6 +30798,8 @@ window.GeoDenDailyRankingSnapshot = {"schema":1,"asOf":"2026-10-10","provider":"
       if(row.mode==='ranking')return row.score+'% order score';
       if(row.challenge)return row.score+'% '+(row.legacy?'earlier challenge result':'challenge score');
       if(row.mode==='borderless')return row.target==='country'&&row.score!=null?row.score+'% score · '+row.correct+' first try':row.correct+' / '+row.total+' first try';
+      if(row.mode==='matching'&&row.dailyKey&&row.score!=null)return row.score+'% score · '+row.correct+'/'+row.total+' first try';
+      if(row.mode==='rapid'&&row.dailyKey&&row.score!=null)return row.correct+'/'+row.total+' correct · '+row.score+'% score';
       return row.correct+' / '+row.total+' '+(row.mode==='sprint'?'correct':row.mode==='matching'?'first try':'correct');
     }
     function renderProgressActivity(){
@@ -33150,7 +33229,6 @@ window.GeoDenDailyRankingSnapshot = {"schema":1,"asOf":"2026-10-10","provider":"
 
     function masteryMapStatusForMetrics(metrics = {}) {
       if (!metrics.studied) return "unseen";
-      if ((Number(metrics.dueCount) || 0) > 0) return "due";
 
       const attempts = Number(metrics.attempts) || 0;
       const hasAccuracy = metrics.accuracy !== null && metrics.accuracy !== undefined && Number.isFinite(Number(metrics.accuracy));
@@ -33167,17 +33245,19 @@ window.GeoDenDailyRankingSnapshot = {"schema":1,"asOf":"2026-10-10","provider":"
       const minLevel = Math.max(0, Number(metrics.minLevel) || 0);
       const factCount = Math.max(0, Number(metrics.factCount) || 0);
       const directFactCount = Math.max(factCount, Number(metrics.directFactCount) || 0);
+      const strongFactCount = Math.max(0, Number(metrics.strongFactCount) || 0);
+      const masteredFactCount = Math.max(0, Number(metrics.masteredFactCount) || 0);
 
-      if (attempts >= 2 && combinedScore < .60) return "weak";
-      // Mastered remains intentionally strict: gameplay and Matching-only facts
-      // can make a place Strong, but long-term spaced retrieval is still required
-      // for the top status.
-      if (factCount >= 3 && minLevel >= 4 && cleanAccuracy >= .90) return "mastered";
+      // Count established topics individually. Trying a new topic must not
+      // erase mastery already earned on three other topics.
+      if (masteredFactCount >= 3 || (factCount >= 3 && minLevel >= 4 && cleanAccuracy >= .90)) return "mastered";
       if (
+        strongFactCount >= 1 ||
         (factCount >= 2 && minLevel >= 2 && cleanAccuracy >= .80) ||
         (directFactCount >= 2 && directWeight >= 2 && cleanAccuracy >= .82) ||
-        (gameWeight >= 2 && combinedScore >= .82)
+        (gameWeight >= 2 && gameScore >= .82)
       ) return "strong";
+      if (attempts >= 2 && combinedScore < .60) return "weak";
       return "learning";
     }
 
@@ -33265,6 +33345,8 @@ window.GeoDenDailyRankingSnapshot = {"schema":1,"asOf":"2026-10-10","provider":"
       const attempts = directAttempts + gameAggregate.events;
       const levels = reviewFacts.map(item => item.level).filter(Number.isFinite);
       const minLevel = levels.length ? Math.min(...levels) : 0;
+      const strongFactCount=directFacts.filter(item=>item.attempts>=2&&item.cleanAccuracy>=.8&&item.level>=2).length;
+      const masteredFactCount=reviewFacts.filter(item=>item.attempts>=4&&item.cleanAccuracy>=.9&&item.level>=4).length;
       const nextValues = reviewFacts.map(item => item.nextDueAt).filter(value => Number.isFinite(value) && value < Number.MAX_SAFE_INTEGER);
       const nextDueAt = nextValues.length ? Math.min(...nextValues) : null;
 
@@ -33286,7 +33368,9 @@ window.GeoDenDailyRankingSnapshot = {"schema":1,"asOf":"2026-10-10","provider":"
         directWeight: directAttempts,
         minLevel,
         factCount: reviewFacts.length,
-        directFactCount: directFacts.length
+        directFactCount: directFacts.length,
+        strongFactCount,
+        masteredFactCount
       });
 
       return {
@@ -33306,6 +33390,8 @@ window.GeoDenDailyRankingSnapshot = {"schema":1,"asOf":"2026-10-10","provider":"
         gameWeight: gameAggregate.weight,
         gameEvents: gameAggregate.events,
         minLevel,
+        strongFactCount,
+        masteredFactCount,
         dueStages,
         nextDueAt,
         weakestFact: facts[0] || null,
@@ -33326,7 +33412,7 @@ window.GeoDenDailyRankingSnapshot = {"schema":1,"asOf":"2026-10-10","provider":"
       }
       const currentCode = currentCountry()?.code;
       if (currentCode && profiles.some(item => item.country.code === currentCode && item.studied)) return currentCode;
-      return profiles.find(item => item.status === "due")?.country.code ||
+      return profiles.find(item => item.dueStages.length > 0)?.country.code ||
         profiles.find(item => item.status === "weak")?.country.code ||
         profiles.find(item => item.studied)?.country.code ||
         profiles[0]?.country.code || null;
@@ -33335,6 +33421,7 @@ window.GeoDenDailyRankingSnapshot = {"schema":1,"asOf":"2026-10-10","provider":"
     function renderMasteryMapLegend(profiles) {
       const counts = Object.fromEntries(Object.keys(MASTERY_MAP_STATUS_META).map(key => [key, 0]));
       profiles.forEach(item => { counts[item.status] = (counts[item.status] || 0) + 1; });
+      counts.due = profiles.filter(item => item.dueStages.length > 0).length;
       masteryMapLegend.replaceChildren();
 
       const definitions = [
@@ -33376,7 +33463,7 @@ window.GeoDenDailyRankingSnapshot = {"schema":1,"asOf":"2026-10-10","provider":"
         .forEach(item => {
           const option = document.createElement("option");
           option.value = item.country.code;
-          option.textContent = `${item.country.name} · ${MASTERY_MAP_STATUS_META[item.status].label}`;
+          option.textContent = `${item.country.name} · ${MASTERY_MAP_STATUS_META[item.status].label}${item.dueStages.length ? ' · review due' : ''}`;
           masteryMapCountrySelect.appendChild(option);
         });
       masteryMapCountrySelect.value = masteryMapSelectedCode || "";
@@ -33384,7 +33471,9 @@ window.GeoDenDailyRankingSnapshot = {"schema":1,"asOf":"2026-10-10","provider":"
 
     function applyMasteryMapFilter() {
       masteryWorldMap.querySelectorAll("[data-mastery-map-status]").forEach(node => {
-        const hidden = masteryMapFilter !== "all" && node.dataset.masteryMapStatus !== masteryMapFilter;
+        const hidden = masteryMapFilter !== "all" && (masteryMapFilter === "due"
+          ? node.dataset.masteryMapDue !== "true"
+          : node.dataset.masteryMapStatus !== masteryMapFilter);
         node.classList.toggle("filtered-out", hidden);
       });
       masteryMapLegend.querySelectorAll("[data-mastery-map-filter]").forEach(button => {
@@ -33422,6 +33511,7 @@ window.GeoDenDailyRankingSnapshot = {"schema":1,"asOf":"2026-10-10","provider":"
       masteryMapCountryName.textContent = profile.country.name;
       masteryMapStatus.textContent = statusMeta.label;
       masteryMapStatus.className = `mastery-map-status-pill status-${profile.status}`;
+      document.getElementById('masteryMapDueBadge').hidden = profile.dueStages.length === 0;
 
       if (!profile.studied) {
         masteryMapCountryMeta.textContent = "Not practised yet";
@@ -33472,7 +33562,8 @@ window.GeoDenDailyRankingSnapshot = {"schema":1,"asOf":"2026-10-10","provider":"
           ? `Next review ${masteryMapRelativeReviewTime(profile.nextDueAt)}`
           : "Nothing to review yet";
       const directTypes = Math.max(0, Number(profile.directFactCount) || 0);
-      masteryMapCountryMeta.textContent = `${directTypes} learning topic${directTypes === 1 ? "" : "s"} tried · ${profile.gameEvents || 0} game round${profile.gameEvents === 1 ? "" : "s"} played · ${dueText}`;
+      const achieved=profile.masteredFactCount>=3?`${profile.masteredFactCount} topics mastered`:profile.strongFactCount?`${profile.strongFactCount} topic${profile.strongFactCount===1?'':'s'} going well`:'';
+      masteryMapCountryMeta.textContent = `${directTypes} learning topic${directTypes === 1 ? "" : "s"} tried${achieved?' · '+achieved:''} · ${profile.gameEvents || 0} game round${profile.gameEvents === 1 ? "" : "s"} played · ${dueText}`;
 
       const stats = [
         [recall, "Learning: answered right"],
@@ -33616,12 +33707,13 @@ window.GeoDenDailyRankingSnapshot = {"schema":1,"asOf":"2026-10-10","provider":"
             if (!safeFeature || path.area(feature) < 18) tinyCodes.add(profile.country.code);
             const node = d3.select(this);
             node
-              .attr("class", `mastery-map-country status-${profile.status}`)
+              .attr("class", `mastery-map-country status-${profile.status}${profile.dueStages.length ? ' is-due' : ''}`)
               .attr("data-country-code", profile.country.code)
               .attr("data-mastery-map-status", profile.status)
+              .attr("data-mastery-map-due", profile.dueStages.length ? "true" : "false")
               .attr("tabindex", 0)
               .attr("role", "button")
-              .attr("aria-label", `${profile.country.name}: ${MASTERY_MAP_STATUS_META[profile.status].label}`)
+              .attr("aria-label", `${profile.country.name}: ${MASTERY_MAP_STATUS_META[profile.status].label}${profile.dueStages.length ? ', review due' : ''}`)
               .on("click", event => handleMasteryMapTap(event, profile.country.code))
               .on("keydown", event => {
                 if (event.key === "Enter" || event.key === " ") {
@@ -33629,7 +33721,7 @@ window.GeoDenDailyRankingSnapshot = {"schema":1,"asOf":"2026-10-10","provider":"
                   selectMasteryMapCountry(profile.country.code);
                 }
               });
-            node.append("title").text(`${profile.country.name} · ${MASTERY_MAP_STATUS_META[profile.status].label}`);
+            node.append("title").text(`${profile.country.name} · ${MASTERY_MAP_STATUS_META[profile.status].label}${profile.dueStages.length ? ' · review due' : ''}`);
           })
           .attr("d", item => item.__safeFeature ? path(item.feature) : null);
 
@@ -33640,15 +33732,16 @@ window.GeoDenDailyRankingSnapshot = {"schema":1,"asOf":"2026-10-10","provider":"
           .selectAll("circle")
           .data(markerProfiles)
           .join("circle")
-          .attr("class", profile => `mastery-map-marker status-${profile.status}`)
+          .attr("class", profile => `mastery-map-marker status-${profile.status}${profile.dueStages.length ? ' is-due' : ''}`)
           .attr("data-country-code", profile => profile.country.code)
           .attr("data-mastery-map-status", profile => profile.status)
+          .attr("data-mastery-map-due", profile => profile.dueStages.length ? "true" : "false")
           .attr("cx", profile => projection([profile.country.lon, profile.country.lat])?.[0] ?? -20)
           .attr("cy", profile => projection([profile.country.lon, profile.country.lat])?.[1] ?? -20)
           .attr("r", 4.2)
           .attr("tabindex", 0)
           .attr("role", "button")
-          .attr("aria-label", profile => `${profile.country.name}: ${MASTERY_MAP_STATUS_META[profile.status].label}`)
+          .attr("aria-label", profile => `${profile.country.name}: ${MASTERY_MAP_STATUS_META[profile.status].label}${profile.dueStages.length ? ', review due' : ''}`)
           .on("click", (event, profile) => handleMasteryMapTap(event, profile.country.code))
           .on("keydown", (event, profile) => {
             if (event.key === "Enter" || event.key === " ") {
@@ -33657,7 +33750,7 @@ window.GeoDenDailyRankingSnapshot = {"schema":1,"asOf":"2026-10-10","provider":"
             }
           })
           .append("title")
-          .text(profile => `${profile.country.name} · ${MASTERY_MAP_STATUS_META[profile.status].label}`);
+          .text(profile => `${profile.country.name} · ${MASTERY_MAP_STATUS_META[profile.status].label}${profile.dueStages.length ? ' · review due' : ''}`);
 
         // Wrapped copies remain tappable, without tripling keyboard tab stops.
         copies.filter(offset => offset !== 0).selectAll("[tabindex]").attr("tabindex", -1);
@@ -46077,6 +46170,24 @@ function rankingTargetValues() {
             checkRows:[[1,0,0,0,0]],gaveUp:true});
           geoDenSelfTestAssert(gaveUp.includes('🟨⬜⬜⬜⬜')&&gaveUp.includes('Gave up · 1 check · 20%'));
         }],
+        ['Progress map','Review timing does not hide learning status', () => {
+          const strong={studied:true,dueCount:1,attempts:4,accuracy:1,cleanAccuracy:.9,
+            factCount:2,directFactCount:2,directWeight:4,minLevel:2};
+          geoDenSelfTestEqual(masteryMapStatusForMetrics(strong),'strong');
+          geoDenSelfTestEqual(masteryMapStatusForMetrics({...strong,dueCount:0}),'strong');
+          geoDenSelfTestEqual(masteryMapStatusForMetrics({...strong,attempts:4,accuracy:.5,cleanAccuracy:.5}),'weak');
+        }],
+        ['Progress map','New topics do not erase established strengths', () => {
+          const baseline={studied:true,attempts:4,cleanAccuracy:.9,directWeight:4,gameWeight:0,factCount:1,directFactCount:1};
+          geoDenSelfTestEqual(masteryMapStatusForMetrics({...baseline,strongFactCount:1}),'strong');
+          geoDenSelfTestEqual(masteryMapStatusForMetrics({...baseline,masteredFactCount:3,factCount:4,minLevel:1,cleanAccuracy:.75}),'mastered');
+        }],
+        ['Progress','Activity keeps weighted scores alongside first-try counts', () => {
+          geoDenSelfTestEqual(progressActivityScore({mode:'matching',dailyKey:'today',score:73,correct:8,total:15}),'73% score · 8/15 first try');
+          geoDenSelfTestEqual(progressActivityScore({mode:'borderless',target:'country',score:78,correct:2,total:5}),'78% score · 2 first try');
+          geoDenSelfTestEqual(progressActivityScore({mode:'rapid',dailyKey:'today',score:80,correct:9,total:10}),'9/10 correct · 80% score');
+          geoDenSelfTestEqual(dailyQuizQualityScore({correct:5,total:5,outcomes:['clean','light-help','medium-help','heavy-help','missed']}),55);
+        }],
         ['Daily share','Detective guess colours reflect distance in order', () => {
           const solved=homeDailyShareText('detective',{date:'2026-10-15',correct:1,total:1,clues:5,score:52,elapsedMs:1000,guessDistancesKm:[5000,3000,1400,300]});
           const revealed=homeDailyShareText('detective',{date:'2026-10-15',correct:0,total:1,clues:2,score:0,elapsedMs:1000,guessDistancesKm:[null]});
@@ -46936,12 +47047,18 @@ function rankingTargetValues() {
 
     function homeDailyId(mode){return `${dailyDateKey()}:v1:${mode}`;}
     function homeDailyResult(mode){return mode==='quiz'?dailyChallengeProgress?.days?.[dailyChallengeRunKey()]:homeRecords.dailies[homeDailyId(mode)];}
+    function dailyQuizQualityScore(result){
+      const total=Math.max(1,Number(result?.total)||10);
+      const outcomes=Array.isArray(result?.outcomes)&&result.outcomes.length===total?result.outcomes:null;
+      const weighted=outcomes?outcomes.reduce((sum,value)=>sum+({clean:1,'light-help':.8,'medium-help':.6,'heavy-help':.35,missed:0}[value]||0),0):Math.max(0,Number(result?.correct)||0);
+      return Math.round(100*weighted/total);
+    }
     function homeDailyButton(mode){
       if(mode.startsWith('borderless-'))return borderlessDailyButton(mode);
       const names={quiz:'Daily Quiz',detective:'Daily Detective',matching:'Daily Matching',ranking:'Daily Ranking'};
       const result=homeDailyResult(mode);
       const active=mode==='quiz'?studySession?.active!==false&&studySession?.dailyChallenge?.key===dailyChallengeRunKey():(mode==='ranking'?rankingState:studySession)?.launchPreset?.dailyKey===homeDailyId(mode)&&!result;
-      const meta=result?(mode==='quiz'?`${Math.round(100*result.correct/Math.max(1,result.total||10))}% correct · ${homeTime(result.elapsedMs)}`:mode==='detective'?`${result.score} pts · ${homeTime(result.elapsedMs)}`:`${result.score}% · ${homeTime(result.elapsedMs)}`):'';
+      const meta=result?(mode==='quiz'?`${result.correct}/${result.total||10} · ${dailyQuizQualityScore(result)}% score · ${homeTime(result.elapsedMs)}`:mode==='detective'?`${result.score} pts · ${homeTime(result.elapsedMs)}`:`${result.score}% · ${homeTime(result.elapsedMs)}`):'';
       const b=homeButton(names[mode],meta,button=>{
         if(result){homeShowDailyResult(mode,result);return;}
         if(mode==='quiz'){if(!homeConfirmReplace('study',button,active))return;if(active){startOverlay.classList.remove('open');openRapidMode(true);}else startDailyChallengeSession();}
@@ -46949,7 +47066,7 @@ function rankingTargetValues() {
       });
       b.classList.add('daily-mode-card');b.dataset.dailyMode=mode;
       const description=document.createElement('span');description.className='daily-mode-description';description.textContent=HOME_GAME_DESCRIPTIONS[mode];b.firstChild.querySelector('strong').after(description);
-      if(result){b.dataset.challengeState='completed';const detail=b.querySelector('small');detail.classList.add('daily-result-line');detail.textContent='✓ '+detail.textContent;detail.setAttribute('aria-label','Completed today · '+detail.textContent);const quality=mode==='quiz'?Math.round(100*(Array.isArray(result.outcomes)?result.outcomes.reduce((sum,value)=>sum+({clean:1,'light-help':.8,'medium-help':.6,'heavy-help':.35,missed:0}[value]||0),0):result.correct)/Math.max(1,result.total||10)):result.score;b.dataset.dailyQuality=quality>=80?'strong':quality>=50?'growing':'needs-work';detail.title=quality>=80?'Strong result':quality>=50?'Building confidence':'Keep practising';}
+      if(result){b.dataset.challengeState='completed';const detail=b.querySelector('small');detail.classList.add('daily-result-line');detail.textContent='✓ '+detail.textContent;detail.setAttribute('aria-label',mode==='quiz'?`Completed today · ${result.correct} of ${result.total||10} correct · ${dailyQuizQualityScore(result)} percent help-adjusted score · ${homeTime(result.elapsedMs)}`:'Completed today · '+detail.textContent);const quality=mode==='quiz'?dailyQuizQualityScore(result):result.score;b.dataset.dailyQuality=quality>=80?'strong':quality>=50?'growing':'needs-work';detail.title=quality>=80?'Strong result':quality>=50?'Building confidence':'Keep practising';}
       else if(active){b.dataset.challengeState='active';b.firstChild.prepend(homeStatusBadge('active','In progress'));}
       return homeDailyDecorateCard(b,mode);
     }
